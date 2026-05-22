@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -n '27,666p' \"/Users/webmaster/Downloads/APP Champagne/index.html\")",
+      "Bash(sed -n '2341,4556p' \"/Users/webmaster/Downloads/APP Champagne/index.html\")",
+      "Bash(sed -n '669,2339p' \"/Users/webmaster/Downloads/APP Champagne/index.html\")",
+      "Read(//tmp/**)",
+      "Read(//private/tmp/**)",
+      "Bash(sed -n '670,2339p' \"/Users/webmaster/Downloads/APP Champagne/index.html.tmp\")",
+      "Bash(sed -n '670,2339p' /tmp/body_content.html)",
+      "Bash(sed -n '670,2339p' \"/Users/webmaster/Downloads/APP Champagne/backup/index.backup.html\" > /tmp/body_content2.html *)"
+    ]
+  }
+}
