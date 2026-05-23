@@ -2502,6 +2502,56 @@ async function toggleWishlist(iconEl, bottId) {
   iconEl.className = 'ti ' + (wishlistIds.has(bottId) ? 'ti-heart-filled' : 'ti-heart') + ' bott-wish' + (wishlistIds.has(bottId) ? ' on' : '');
 }
 
+function renderAssemblaggio(b) {
+  const section = document.getElementById('bott-detail-assembl-section');
+  const el = document.getElementById('bott-detail-assembl');
+  const totalEl = document.getElementById('bott-detail-assembl-total');
+  if (!section || !el) return;
+
+  let items = null;
+
+  // 1. Dati strutturati da DB (JSONB)
+  if (b.assemblaggio && Array.isArray(b.assemblaggio) && b.assemblaggio.length) {
+    items = b.assemblaggio;
+  }
+  // 2. Fallback automatico: millesimato → 100% dell'annata dichiarata
+  else if ((b.tipo === 'millesimato' || b.tipo === 'prestige') && b.annata) {
+    items = [{ anno: b.annata, perc: 100 }];
+  }
+
+  if (!items || !items.length) {
+    section.style.display = 'none';
+    return;
+  }
+
+  // Colori per distinguere annate vs riserva
+  const colors = ['#b8922a','#c4a855','#7a6234','#9a7a3a','#d4b06a'];
+  let colorIdx = 0;
+
+  section.style.display = 'block';
+
+  // Label totale anni (es. "da 3 annate" o "100% 2015")
+  const anni = items.filter(i => i.anno).map(i => i.anno);
+  if (totalEl) {
+    if (anni.length === 1 && items.length === 1) totalEl.textContent = '100% ' + anni[0];
+    else if (anni.length > 1) totalEl.textContent = anni.length + ' annate in assemblaggio';
+    else totalEl.textContent = '';
+  }
+
+  el.innerHTML = items.map(item => {
+    const label = item.anno
+      ? String(item.anno)
+      : (item.tipo === 'riserva' ? 'Vini di riserva' : (item.label || 'Vini base'));
+    const perc = item.perc || 0;
+    const color = item.anno ? colors[colorIdx++ % colors.length] : '#c4b49a';
+    return '<div class="assembl-row">' +
+      '<div class="assembl-year">' + label + '</div>' +
+      '<div class="assembl-bar-wrap"><div class="assembl-bar-fill" style="width:' + perc + '%;background:' + color + ';"></div></div>' +
+      '<div class="assembl-perc">' + perc + '%</div>' +
+    '</div>';
+  }).join('') + '<div class="assembl-divider"></div>';
+}
+
 async function openBottigliaDetail(bottId) {
   const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
   if (!b) return;
@@ -2582,15 +2632,20 @@ async function openBottigliaDetail(bottId) {
   if (noteEl) noteEl.textContent = b.note_degustazione || '';
 
   // Scheda tecnica
+  // Assemblaggio vini di base
+  renderAssemblaggio(b);
+
   const schedaEl = document.getElementById('bott-detail-scheda');
   if (schedaEl) {
     const uvaggi = [b.pct_pinot_noir ? b.pct_pinot_noir + '% Pinot Noir' : null, b.pct_chardonnay ? b.pct_chardonnay + '% Chardonnay' : null, b.pct_meunier ? b.pct_meunier + '% Meunier' : null].filter(Boolean).join(' · ');
+    // Mostra vini_base come testo solo se non c'è assemblaggio strutturato
+    const hasAssembl = (b.assemblaggio && b.assemblaggio.length) || (b.tipo === 'millesimato' && b.annata);
     const rows = [
-      { l:'Maison', v: b.maison?.nome || null },
+      { l:'Produttore', v: b.maison?.nome || null },
       { l:'Uvaggi', v: uvaggi || null },
       { l:'Dosaggio', v: b.dosaggio_gl != null ? b.dosaggio_gl + ' g/l — ' + (b.dosaggio_tipo||'') : (b.dosaggio_tipo||null) },
       { l:'Provenienza uve', v: b.provenienza_uve || null },
-      { l:'Vini base', v: b.vini_base || null },
+      { l:'Note assemblaggio', v: !hasAssembl ? (b.vini_base || null) : null },
       { l:'Vinificazione', v: b.vinificazione || null },
       { l:'Malolattica', v: b.malolattica || null },
       { l:'Maturazione sui lieviti', v: b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null },

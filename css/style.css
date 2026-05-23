@@ -701,3 +701,14 @@ input[type=range]{width:100%;accent-color:var(--gold);}
 .finestra-bar-fill{height:6px;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:4px;}
 .finestra-labels{display:flex;justify-content:space-between;font-family:var(--sans);font-size:12px;color:var(--ink-4);}
 
+/* ── Assemblaggio / Vini di base ── */
+.assembl-header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;margin-bottom:14px;margin-top:20px;}
+.assembl-total{font-family:var(--sans);font-size:12px;color:var(--ink-5);font-style:italic;}
+.assembl-row{display:flex;align-items:center;gap:10px;padding:0 18px;margin-bottom:11px;}
+.assembl-year{font-family:var(--sans);font-size:13px;color:var(--ink-2);font-weight:600;width:90px;flex-shrink:0;line-height:1.3;}
+.assembl-bar-wrap{flex:1;height:7px;background:var(--ivory-3);border-radius:4px;overflow:hidden;}
+.assembl-bar-fill{height:100%;border-radius:4px;}
+.assembl-perc{font-family:var(--sans);font-size:13px;color:var(--ink-3);width:36px;text-align:right;flex-shrink:0;font-weight:500;}
+/* divisore sotto la sezione */
+.assembl-divider{height:1px;background:var(--border);margin:18px 18px 0;}
+
