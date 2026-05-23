@@ -1293,89 +1293,86 @@ async function _execHomeSearch(q) {
   const ql = q.toLowerCase();
   let html = '';
 
-  // — PRODUTTORI —
+  // Query sempre dirette a Supabase — nessuna dipendenza dalla cache
+  const searches = [];
+
   if (cat === 'tutti' || cat === 'produttori') {
-    let res = [];
-    if (allMaison.length > 0) {
-      // Cerca nella cache locale
-      res = allMaison.filter(m =>
-        (m.nome||'').toLowerCase().includes(ql) ||
-        (m.sede||'').toLowerCase().includes(ql) ||
-        (m.descrizione||'').toLowerCase().includes(ql)
-      ).slice(0, 6);
-    } else {
-      // Query diretta Supabase con ilike (non or)
-      const { data, error } = await supa.from('maison')
-        .select('id, nome, sede, anno_fondazione, zone(nome, colore)')
+    searches.push(
+      supa.from('maison')
+        .select('id, nome, sede, anno_fondazione, zone(nome)')
         .ilike('nome', '%' + q + '%')
-        .order('ordine', { ascending: true })
-        .limit(6);
-      if (error) { console.log('search maison error:', error); }
-      else { res = data || []; }
+        .eq('is_published', true)
+        .order('nome', { ascending: true })
+        .limit(6)
+        .then(({ data, error }) => ({ tipo: 'produttori', data: data || [], error }))
+    );
+  }
+
+  if (cat === 'tutti' || cat === 'champagne') {
+    searches.push(
+      supa.from('bottiglie')
+        .select('id, nome, dosaggio_tipo, maison(nome)')
+        .ilike('nome', '%' + q + '%')
+        .eq('is_published', true)
+        .order('nome', { ascending: true })
+        .limit(6)
+        .then(({ data, error }) => ({ tipo: 'champagne', data: data || [], error }))
+    );
+  }
+
+  if (cat === 'tutti' || cat === 'glossario') {
+    // Glossario: usa cache se disponibile, altrimenti Supabase
+    if (allGlossario.length > 0) {
+      const res = allGlossario.filter(t =>
+        (t.termine||'').toLowerCase().includes(ql) ||
+        (t.definizione||'').toLowerCase().includes(ql)
+      ).slice(0, 6);
+      searches.push(Promise.resolve({ tipo: 'glossario', data: res, error: null }));
+    } else {
+      searches.push(
+        supa.from('glossario')
+          .select('id, termine, definizione, livello')
+          .ilike('termine', '%' + q + '%')
+          .eq('is_published', true)
+          .limit(6)
+          .then(({ data, error }) => ({ tipo: 'glossario', data: data || [], error }))
+      );
     }
-    if (res.length > 0) {
+  }
+
+  const allResults = await Promise.all(searches);
+
+  allResults.forEach(({ tipo, data, error }) => {
+    if (error) { console.log('search error [' + tipo + ']:', error); return; }
+    if (!data.length) return;
+
+    if (tipo === 'produttori') {
       html += '<div class="home-search-section">Produttori</div>';
-      html += res.map(m => {
-        const zoneName = m.zone?.nome || '';
+      html += data.map(m => {
+        const zona = m.zone?.nome || '';
         const anno = m.anno_fondazione ? 'dal ' + m.anno_fondazione : '';
-        const sub = [zoneName, m.sede, anno].filter(Boolean).join(' · ');
+        const sub = [zona, m.sede, anno].filter(Boolean).join(' · ');
         return '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedMaison(\'' + m.id + '\')">' +
           '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + m.nome + '</div>' +
           (sub ? '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + sub + '</div>' : '') +
         '</div>';
       }).join('');
     }
-  }
 
-  // — CHAMPAGNE —
-  if (cat === 'tutti' || cat === 'champagne') {
-    let res = [];
-    if (allBottiglie.length > 0) {
-      res = allBottiglie.filter(b =>
-        (b.nome||'').toLowerCase().includes(ql) ||
-        (b.maison?.nome||'').toLowerCase().includes(ql)
-      ).slice(0, 6);
-    } else {
-      // Query diretta per nome bottiglia
-      const { data, error } = await supa.from('bottiglie')
-        .select('id, nome, dosaggio_tipo, maison(nome)')
-        .ilike('nome', '%' + q + '%')
-        .limit(6);
-      if (error) { console.log('search bottiglie error:', error); }
-      else { res = data || []; }
-    }
-    if (res.length > 0) {
+    if (tipo === 'champagne') {
       html += '<div class="home-search-section">Champagne</div>';
-      html += res.map(b =>
+      html += data.map(b =>
         '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedBottiglia(\'' + b.id + '\')">' +
           '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + b.nome + '</div>' +
           '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + (b.maison?.nome||'') + (b.dosaggio_tipo ? ' · ' + b.dosaggio_tipo : '') + '</div>' +
         '</div>'
       ).join('');
     }
-  }
 
-  // — GLOSSARIO —
-  if (cat === 'tutti' || cat === 'glossario') {
-    let res = [];
-    if (allGlossario.length > 0) {
-      res = allGlossario.filter(t =>
-        (t.termine||'').toLowerCase().includes(ql) ||
-        (t.definizione||'').toLowerCase().includes(ql)
-      ).slice(0, 6);
-    } else {
-      const { data, error } = await supa.from('glossario')
-        .select('id, termine, definizione, livello')
-        .ilike('termine', '%' + q + '%')
-        .eq('is_published', true)
-        .limit(6);
-      if (error) { console.log('search glossario error:', error); }
-      else { res = data || []; }
-    }
-    if (res.length > 0) {
+    if (tipo === 'glossario') {
       const livelloBadge = { base:'badge-rm', avanzato:'badge-pres', premium:'badge-prem' };
       html += '<div class="home-search-section">Glossario</div>';
-      html += res.map(t =>
+      html += data.map(t =>
         '<div class="card" style="padding:12px 14px;margin-bottom:8px;">' +
           '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:4px;">' + t.termine + '</div>' +
           '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.55;">' + t.definizione + '</div>' +
@@ -1383,7 +1380,7 @@ async function _execHomeSearch(q) {
         '</div>'
       ).join('');
     }
-  }
+  });
 
   results.innerHTML = html ||
     '<div class="home-search-empty">Nessun risultato per "<strong>' + q + '</strong>"</div>';
