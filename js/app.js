@@ -2013,7 +2013,8 @@ function renderMaison() {
   listEl.innerHTML = filtered.map(m => {
     const isLocked = !m.is_free && !premium;
     const badge = tipoBadge[m.tipo] || 'badge-rm';
-    const label = m.tipo ? (tipoCategoria[m.tipo] ? tipoCategoria[m.tipo] + ' · ' + m.tipo : m.tipo) : '—';
+    const categoria = tipoCategoria[m.tipo] || null;
+    const label = m.tipo || '—';
     const fav = isFav(m.id);
     const zonaNome = m.zone?.nome || '';
     const meta = [m.anno_fondazione ? 'dal ' + m.anno_fondazione : '', m.chef_de_cave || ''].filter(Boolean).join(' · ');
@@ -2031,12 +2032,13 @@ function renderMaison() {
           '</div>' +
         '</div>' +
         (m.zone ? '<div class="maison-card-zona">' +
-          '<span class="zona-badge-sm" style="background:' + (m.zone.colore||'#b8922a') + '18;color:' + (m.zone.colore||'#b8922a') + ';border:0.5px solid ' + (m.zone.colore||'#b8922a') + '55;">' + (m.zone.nome||'').toLowerCase() + '</span>' +
+          '<span class="zona-badge-sm" style="background:' + (m.zone.colore||'#b8922a') + '18;color:' + (m.zone.colore||'#b8922a') + ';border:0.5px solid ' + (m.zone.colore||'#b8922a') + '55;">' + (m.zone.nome||'') + '</span>' +
           (m.sede_comune ? '<span class="maison-sede">· ' + m.sede_comune + '</span>' : '') +
         '</div>' : '') +
         (meta ? '<div class="maison-meta">' + meta + '</div>' : '') +
         '<div class="badges-row">' +
-          '<span class="badge ' + badge + '">' + label + '</span>' +
+          (categoria ? '<span class="badge ' + badge + '">' + categoria + '</span>' : '') +
+          '<span class="badge ' + badge + '" style="opacity:.75;">' + label + '</span>' +
           (m.certificazioni && m.certificazioni.length ? m.certificazioni.map(c => '<span class="badge badge-bio">' + c + '</span>').join('') : '') +
         '</div>' +
       '</div>' +
