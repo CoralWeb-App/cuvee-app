@@ -1079,7 +1079,7 @@ async function updateSalvatiUI() {
       '<div class="maison-body">' +
       '<div class="maison-header-row">' +
       '<div class="maison-name">' + m.nome + '</div>' +
-      '<i class="ti ti-heart-filled maison-heart" style="color:var(--gold);" data-id="' + item.id + '" onclick="event.stopPropagation();removeFavorite(this.dataset.id)"></i>' +
+      '<i class="ti ti-trash" style="font-size:20px;color:#c0a080;cursor:pointer;flex-shrink:0;" data-id="' + item.id + '" onclick="event.stopPropagation();removeFavorite(this.dataset.id)"></i>' +
       '</div>' +
       '<div class="maison-meta">' + [m.sede_comune, m.anno_fondazione ? 'dal ' + m.anno_fondazione : ''].filter(Boolean).join(' · ') + '</div>' +
       '<div class="badges-row"><span class="badge badge-gm">' + tipoLabel + '</span></div>' +
@@ -1126,7 +1126,7 @@ async function updateWishlistUI() {
       '<div class="bottle-type">' + [b.maison?.nome, tipoLabel, b.annata].filter(Boolean).join(' · ') + '</div>' +
       (prezzo ? '<div class="bottle-price">' + prezzo + '</div>' : '') +
       '</div>' +
-      '<i class="ti ti-heart-filled" style="font-size:20px;color:var(--gold);cursor:pointer;flex-shrink:0;" data-id="' + item.id + '" onclick="event.stopPropagation();removeFromWishlist(this.dataset.id)"></i>' +
+      '<i class="ti ti-trash" style="font-size:20px;color:#c0a080;cursor:pointer;flex-shrink:0;" data-id="' + item.id + '" onclick="event.stopPropagation();removeFromWishlist(this.dataset.id)"></i>' +
       '</div>';
   }).join('');
 }
