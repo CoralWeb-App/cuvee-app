@@ -541,11 +541,11 @@ async function loadUserProfile() {
     updateCarnetUI().catch(() => {});
     loadSalvati().then(items => {
       const el = document.getElementById('profile-fav-count');
-      if (el) el.textContent = items.length + ' maison';
+      if (el) el.textContent = items.length + (items.length === 1 ? ' salvato' : ' salvati');
     }).catch(() => {});
     loadWishlist().then(items => {
       const el = document.getElementById('profile-wish-count');
-      if (el) el.textContent = items.length + (items.length === 1 ? ' bottiglia' : ' bottiglie');
+      if (el) el.textContent = items.length + (items.length === 1 ? ' salvato' : ' salvati');
     }).catch(() => {});
 
   } catch(e) {
@@ -1030,7 +1030,7 @@ async function loadWishlist() {
   try {
     const { data, error } = await supa
       .from('wishlist')
-      .select('*, bottiglie(id, nome, tipo, dosage, annata, prezzo_min, prezzo_max, foto_url, maison(nome))')
+      .select('*, bottiglie(id, nome, tipo, dosaggio_tipo, annata, prezzo_min, prezzo_max, foto_url, maison(nome))')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
     if (error) throw error;
@@ -1047,7 +1047,7 @@ async function updateSalvatiUI() {
   const listEl = document.getElementById('salvati-list');
   const countEl = document.getElementById('profile-fav-count');
 
-  if (countEl) countEl.textContent = items.length + (items.length === 1 ? ' maison' : ' maison');
+  if (countEl) countEl.textContent = items.length + (items.length === 1 ? ' salvato' : ' salvati');
 
   if (!listEl) return;
   if (items.length === 0) {
@@ -1093,7 +1093,7 @@ async function updateWishlistUI() {
   const listEl = document.getElementById('wishlist-list');
   const countEl = document.getElementById('profile-wish-count');
 
-  if (countEl) countEl.textContent = items.length + (items.length === 1 ? ' bottiglia' : ' bottiglie');
+  if (countEl) countEl.textContent = items.length + (items.length === 1 ? ' salvato' : ' salvati');
 
   if (!listEl) return;
   if (items.length === 0) {

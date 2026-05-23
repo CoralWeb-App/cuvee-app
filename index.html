@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=8"/>
+<link rel="stylesheet" href="css/style.css?v=9"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -983,19 +983,21 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div style="width:60px;height:60px;border-radius:50%;background:var(--gold-pale);border:2px solid var(--gold-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--serif);font-size:24px;color:#8a6a1e;font-weight:500;" id="profile-avatar">?</div>
       <div><div style="font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:500;" id="profile-name">—</div><div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-top:2px;" id="profile-email">—</div><div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 10px;"><i class="ti ti-crown" style="font-size:15px;color:var(--gold);"></i><span style="font-family:var(--sans);font-size:13px;color:#8a6a1e;font-weight:500;">Premium attivo</span></div></div>
     </div>
-    <div class="section-label">Le mie collezioni</div>
+    <div class="section-label">I miei preferiti</div>
 
     <!-- COLLEZIONI DINAMICHE -->
-    <div style="padding:0 18px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px 14px;text-align:center;cursor:pointer;" onclick="go('v-salvati')">
-        <i class="ti ti-heart" style="font-size:28px;color:var(--gold);display:block;margin-bottom:8px;"></i>
-        <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Salvati</div>
-        <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);" id="profile-fav-count">0 maison</div>
-      </div>
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px 14px;text-align:center;cursor:pointer;" onclick="go('v-wishlist')">
-        <i class="ti ti-star" style="font-size:28px;color:var(--gold);display:block;margin-bottom:8px;"></i>
-        <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Wishlist</div>
-        <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);" id="profile-wish-count">0 bottiglie</div>
+    <div style="padding:0 18px 16px;">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;">
+        <div style="padding:18px 14px;text-align:center;cursor:pointer;border-right:1px solid var(--border);" onclick="go('v-salvati')">
+          <i class="ti ti-heart" style="font-size:26px;color:var(--gold);display:block;margin-bottom:7px;"></i>
+          <div style="font-family:var(--sans);font-size:14px;color:var(--ink);font-weight:600;margin-bottom:4px;">Produttori</div>
+          <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);" id="profile-fav-count">0 salvati</div>
+        </div>
+        <div style="padding:18px 14px;text-align:center;cursor:pointer;" onclick="go('v-wishlist')">
+          <i class="ti ti-heart" style="font-size:26px;color:var(--gold);display:block;margin-bottom:7px;"></i>
+          <div style="font-family:var(--sans);font-size:14px;color:var(--ink);font-weight:600;margin-bottom:4px;">Champagne</div>
+          <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);" id="profile-wish-count">0 salvati</div>
+        </div>
       </div>
     </div>
     <div class="section-label">Impostazioni</div>
@@ -1548,7 +1550,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-salvati">
   <div class="topbar">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Profilo</button>
-    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Maison Salvate</div>
+    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Produttori Salvati</div>
     <div style="width:60px;"></div>
   </div>
   <div class="scroll">
@@ -1557,9 +1559,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div style="width:68px;height:68px;border-radius:50%;background:var(--gold-pale);border:1.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
         <i class="ti ti-heart" style="font-size:28px;color:var(--gold);"></i>
       </div>
-      <div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:8px;">Nessuna maison salvata</div>
-      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.65;margin-bottom:24px;">Sfoglia il catalogo e tocca il cuore per salvare le tue maison preferite.</div>
-      <button class="btn-gold" onclick="go('v-maison')" style="font-size:16px;">Esplora le Maison</button>
+      <div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:8px;">Nessun produttore salvato</div>
+      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.65;margin-bottom:24px;">Sfoglia i produttori e tocca il cuore per salvarli.</div>
+      <button class="btn-gold" onclick="go('v-maison')" style="font-size:16px;">Esplora i Produttori</button>
     </div>
     <!-- Lista maison salvate -->
     <div id="salvati-list" style="display:none;padding-top:10px;">
@@ -1578,30 +1580,36 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
-<!-- ═══ WISHLIST — Bottiglie ═══ -->
+<!-- ═══ CHAMPAGNE SALVATI ═══ -->
 <div class="view" id="v-wishlist">
   <div class="topbar">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Profilo</button>
-    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Wishlist Bottiglie</div>
+    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Champagne Salvati</div>
     <div style="width:60px;"></div>
   </div>
   <div class="scroll">
     <!-- Stato vuoto -->
     <div id="wishlist-empty" style="padding:60px 28px;text-align:center;">
       <div style="width:68px;height:68px;border-radius:50%;background:var(--gold-pale);border:1.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
-        <i class="ti ti-star" style="font-size:28px;color:var(--gold);"></i>
+        <i class="ti ti-heart" style="font-size:28px;color:var(--gold);"></i>
       </div>
-      <div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:8px;">Wishlist vuota</div>
-      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.65;margin-bottom:24px;">Aggiungi le bottiglie che vuoi provare — le trovi nelle schede delle maison.</div>
-      <button class="btn-gold" onclick="go('v-maison')" style="font-size:16px;">Esplora le Maison</button>
+      <div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:8px;">Nessun champagne salvato</div>
+      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.65;margin-bottom:24px;">Sfoglia le cuvée e tocca il cuore per salvarle.</div>
+      <button class="btn-gold" onclick="go('v-bottiglie')" style="font-size:16px;">Esplora i Champagne</button>
     </div>
-    <!-- Lista bottiglie wishlist -->
+    <!-- Lista champagne salvati -->
     <div id="wishlist-list" style="display:none;padding-top:10px;">
       <!-- popolato via JS -->
     </div>
     <div style="height:20px;"></div>
   </div>
-  
+  <div class="bottom-nav">
+    <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
+    <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
+    <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
+    <div class="bn on" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
+  </div>
 </div>
 
 
@@ -1725,6 +1733,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=8"></script>
+<script src="js/app.js?v=9"></script>
 </body>
 </html>
