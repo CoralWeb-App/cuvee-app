@@ -2082,7 +2082,7 @@ function buildCertFilters() {
   // Render bottoni
   let html = '<div class="f-btn on" onclick="setCertFilter(this,\'tutti\')">Tutte</div>';
   certs.forEach(c => {
-    html += '<div class="f-btn" onclick="setCertFilter(this,' + JSON.stringify(c) + ')">' + c + '</div>';
+    html += '<div class="f-btn" onclick="setCertFilter(this,\'' + c.replace(/'/g,"\\'") + '\')">' + c + '</div>';
   });
   row.innerHTML = html;
   row.style.display = 'flex';
