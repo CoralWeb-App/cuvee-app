@@ -357,7 +357,7 @@ html,body{
 .maison-meta{font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:7px;}
 .maison-cdc{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--ivory-2);border-top:1px solid var(--border);}
 .maison-cdc-icon{font-size:16px;color:var(--gold);flex-shrink:0;}
-.maison-cdc-label{font-family:var(--sans);font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--ink-5);font-weight:500;line-height:1;margin-bottom:3px;}
+.maison-cdc-label{font-family:var(--sans);font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--ink-3);font-weight:600;line-height:1;margin-bottom:3px;}
 .maison-cdc-name{font-family:var(--sans);font-size:13px;color:var(--ink-2);font-weight:600;line-height:1.2;}
 .fascia-tag{font-family:var(--sans);font-size:13px;color:var(--gold);font-weight:600;letter-spacing:.5px;flex-shrink:0;}
 .badges-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}

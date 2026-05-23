@@ -2025,7 +2025,7 @@ function renderMaison() {
     const label = m.tipo || '—';
     const fav = isFav(m.id);
     const zonaNome = m.zone?.nome || '';
-    const meta = [m.anno_fondazione ? 'dal ' + m.anno_fondazione : ''].filter(Boolean).join(' · ');
+    const meta = '';
 
     return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openMaisonDetail('" + m.id + "')") + '">' +
       '<div class="img-ph maison-card-ph" style="height:90px;">' +
@@ -2039,11 +2039,11 @@ function renderMaison() {
             (!isLocked ? '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>' : '') +
           '</div>' +
         '</div>' +
-        (m.zone ? '<div class="maison-card-zona">' +
-          '<span class="zona-badge-sm" style="background:' + (m.zone.colore||'#b8922a') + '18;color:' + (m.zone.colore||'#b8922a') + ';border:0.5px solid ' + (m.zone.colore||'#b8922a') + '55;">' + (m.zone.nome||'') + '</span>' +
+        '<div class="maison-card-zona">' +
+          (m.zone ? '<span class="zona-badge-sm" style="background:' + (m.zone.colore||'#b8922a') + '18;color:' + (m.zone.colore||'#b8922a') + ';border:0.5px solid ' + (m.zone.colore||'#b8922a') + '55;">' + (m.zone.nome||'') + '</span>' : '') +
           (m.sede_comune ? '<span class="maison-sede">· ' + m.sede_comune + '</span>' : '') +
-        '</div>' : '') +
-        (meta ? '<div class="maison-meta">' + meta + '</div>' : '') +
+          (m.anno_fondazione ? '<span class="maison-sede">· dal ' + m.anno_fondazione + '</span>' : '') +
+        '</div>' +
         '<div class="badges-row">' +
           (categoria ? '<span class="badge ' + badge + '">' + categoria + '</span>' : '') +
           '<span class="badge ' + badge + '" style="opacity:.75;">' + label + '</span>' +
