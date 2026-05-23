@@ -169,15 +169,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="q-title">Guida</div>
         <div class="q-sub">Méthode, terroir, dosages</div>
       </div>
-      <div class="q-card" onclick="go('v-maison')">
-        <i class="ti ti-building"></i>
-        <div class="q-title">Produttori</div>
-        <div class="q-sub" id="home-count-produttori">Caricamento…</div>
-      </div>
       <div class="q-card" onclick="go('v-mappa')">
         <i class="ti ti-map-2"></i>
         <div class="q-title">Terroirs</div>
         <div class="q-sub">Zone e cru</div>
+      </div>
+      <div class="q-card" onclick="go('v-maison')">
+        <i class="ti ti-building"></i>
+        <div class="q-title">Produttori</div>
+        <div class="q-sub" id="home-count-produttori">Caricamento…</div>
       </div>
       <div class="q-card" onclick="go('v-bottiglie')">
         <i class="ti ti-bottle"></i>
