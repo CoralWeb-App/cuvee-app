@@ -1297,28 +1297,31 @@ async function _execHomeSearch(q) {
   if (cat === 'tutti' || cat === 'produttori') {
     let res = [];
     if (allMaison.length > 0) {
+      // Cerca nella cache locale
       res = allMaison.filter(m =>
         (m.nome||'').toLowerCase().includes(ql) ||
         (m.sede||'').toLowerCase().includes(ql) ||
         (m.descrizione||'').toLowerCase().includes(ql)
       ).slice(0, 6);
     } else {
-      try {
-        const { data } = await supa.from('maison')
-          .select('id, nome, sede, anno_fondazione, zone(nome, colore)')
-          .or('nome.ilike.%' + q + '%,sede.ilike.%' + q + '%')
-          .limit(6);
-        res = data || [];
-      } catch(e) {}
+      // Query diretta Supabase con ilike (non or)
+      const { data, error } = await supa.from('maison')
+        .select('id, nome, sede, anno_fondazione, zone(nome, colore)')
+        .ilike('nome', '%' + q + '%')
+        .order('ordine', { ascending: true })
+        .limit(6);
+      if (error) { console.log('search maison error:', error); }
+      else { res = data || []; }
     }
     if (res.length > 0) {
       html += '<div class="home-search-section">Produttori</div>';
       html += res.map(m => {
         const zoneName = m.zone?.nome || '';
-        const anno = m.anno_fondazione ? ' · dal ' + m.anno_fondazione : '';
+        const anno = m.anno_fondazione ? 'dal ' + m.anno_fondazione : '';
+        const sub = [zoneName, m.sede, anno].filter(Boolean).join(' · ');
         return '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedMaison(\'' + m.id + '\')">' +
           '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + m.nome + '</div>' +
-          '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + [zoneName, m.sede, anno].filter(Boolean).join(' · ') + '</div>' +
+          (sub ? '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + sub + '</div>' : '') +
         '</div>';
       }).join('');
     }
@@ -1333,13 +1336,13 @@ async function _execHomeSearch(q) {
         (b.maison?.nome||'').toLowerCase().includes(ql)
       ).slice(0, 6);
     } else {
-      try {
-        const { data } = await supa.from('bottiglie')
-          .select('id, nome, dosaggio_tipo, maison(nome)')
-          .or('nome.ilike.%' + q + '%')
-          .limit(6);
-        res = data || [];
-      } catch(e) {}
+      // Query diretta per nome bottiglia
+      const { data, error } = await supa.from('bottiglie')
+        .select('id, nome, dosaggio_tipo, maison(nome)')
+        .ilike('nome', '%' + q + '%')
+        .limit(6);
+      if (error) { console.log('search bottiglie error:', error); }
+      else { res = data || []; }
     }
     if (res.length > 0) {
       html += '<div class="home-search-section">Champagne</div>';
@@ -1361,14 +1364,13 @@ async function _execHomeSearch(q) {
         (t.definizione||'').toLowerCase().includes(ql)
       ).slice(0, 6);
     } else {
-      try {
-        const { data } = await supa.from('glossario')
-          .select('id, termine, definizione, livello')
-          .or('termine.ilike.%' + q + '%,definizione.ilike.%' + q + '%')
-          .eq('is_published', true)
-          .limit(6);
-        res = data || [];
-      } catch(e) {}
+      const { data, error } = await supa.from('glossario')
+        .select('id, termine, definizione, livello')
+        .ilike('termine', '%' + q + '%')
+        .eq('is_published', true)
+        .limit(6);
+      if (error) { console.log('search glossario error:', error); }
+      else { res = data || []; }
     }
     if (res.length > 0) {
       const livelloBadge = { base:'badge-rm', avanzato:'badge-pres', premium:'badge-prem' };
