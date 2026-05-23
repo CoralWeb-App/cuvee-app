@@ -1955,10 +1955,15 @@ function renderMaison() {
   // Filter by search
   if (currentMaisonSearch) {
     const q = currentMaisonSearch.toLowerCase();
+    const tipoLabelM = {'NM':'négociant-manipulant','RM':'récoltant-manipulant','RC':'récoltant-coopérateur','CM':'coopérative-manipulant','SR':'société de récoltants','ND':'négociant-distributeur','MA':'marque acheteur'};
     filtered = filtered.filter(m =>
       (m.nome||'').toLowerCase().includes(q) ||
       (m.sede_comune||'').toLowerCase().includes(q) ||
-      (m.descrizione||'').toLowerCase().includes(q)
+      (m.descrizione||'').toLowerCase().includes(q) ||
+      (m.chef_de_cave||'').toLowerCase().includes(q) ||
+      (m.tipo||'').toLowerCase().includes(q) ||
+      (tipoLabelM[m.tipo]||'').toLowerCase().includes(q) ||
+      (m.zone?.nome||'').toLowerCase().includes(q)
     );
   }
 
@@ -2399,9 +2404,14 @@ function renderBottiglie() {
   if (currentBottFilter !== 'tutti') filtered = filtered.filter(b => b.tipo === currentBottFilter);
   if (currentBottSearch) {
     const q = currentBottSearch.toLowerCase();
+    const tipoLabelB = {'nv':'non vintage','millesimato':'millesimato','prestige':'prestige cuvée','blanc_de_blancs':'blanc de blancs','blanc_de_noirs':'blanc de noirs','rose':'rosé','nature':'brut nature'};
     filtered = filtered.filter(b =>
       (b.nome||'').toLowerCase().includes(q) ||
-      (b.maison?.nome||'').toLowerCase().includes(q)
+      (b.maison?.nome||'').toLowerCase().includes(q) ||
+      (b.descrizione||'').toLowerCase().includes(q) ||
+      (b.dosaggio_tipo||'').toLowerCase().includes(q) ||
+      (tipoLabelB[b.tipo]||'').toLowerCase().includes(q) ||
+      (b.annata ? String(b.annata) : '').includes(q)
     );
   }
   if (!filtered.length) {
