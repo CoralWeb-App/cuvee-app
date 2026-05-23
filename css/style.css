@@ -355,6 +355,10 @@ html,body{
 .cru-ac{background:#eef0f5;color:#48506a;border:0.5px solid #bfc8d8;}
 .zona-pill-detail{display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;padding:3px 10px;border-radius:14px;color:#fff;}
 .maison-meta{font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:7px;}
+.maison-cdc{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--ivory-2);border-top:1px solid var(--border);}
+.maison-cdc-icon{font-size:16px;color:var(--gold);flex-shrink:0;}
+.maison-cdc-label{font-family:var(--sans);font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--ink-5);font-weight:500;line-height:1;margin-bottom:3px;}
+.maison-cdc-name{font-family:var(--sans);font-size:13px;color:var(--ink-2);font-weight:600;line-height:1.2;}
 .fascia-tag{font-family:var(--sans);font-size:13px;color:var(--gold);font-weight:600;letter-spacing:.5px;flex-shrink:0;}
 .badges-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
 .bottles-prev{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;}

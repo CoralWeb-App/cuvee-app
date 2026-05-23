@@ -2025,7 +2025,7 @@ function renderMaison() {
     const label = m.tipo || '—';
     const fav = isFav(m.id);
     const zonaNome = m.zone?.nome || '';
-    const meta = [m.anno_fondazione ? 'dal ' + m.anno_fondazione : '', m.chef_de_cave || ''].filter(Boolean).join(' · ');
+    const meta = [m.anno_fondazione ? 'dal ' + m.anno_fondazione : ''].filter(Boolean).join(' · ');
 
     return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openMaisonDetail('" + m.id + "')") + '">' +
       '<div class="img-ph maison-card-ph" style="height:90px;">' +
@@ -2050,6 +2050,7 @@ function renderMaison() {
           (m.certificazioni && m.certificazioni.length ? m.certificazioni.map(c => '<span class="badge badge-bio">' + c + '</span>').join('') : '') +
         '</div>' +
       '</div>' +
+      (m.chef_de_cave ? '<div class="maison-cdc"><i class="ti ti-glass-full maison-cdc-icon"></i><div><div class="maison-cdc-label">Chef de Cave</div><div class="maison-cdc-name">' + m.chef_de_cave + '</div></div></div>' : '') +
     '</div>';
   }).join('');
 }
