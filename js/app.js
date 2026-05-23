@@ -2578,60 +2578,7 @@ async function openBottigliaDetail(bottId) {
     if (b.abbinamento) abbEl.textContent = b.abbinamento;
   }
 
-  // Annate
-  await loadAnnate(b.id);
   go('v-bottiglia-detail');
-
-  // Sticky bar — populate
-  const stickyImgEl = document.getElementById('bott-sticky-img');
-  if (stickyImgEl) {
-    stickyImgEl.innerHTML = b.foto_url
-      ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:4px;"/>'
-      : '<i class="ti ti-bottle" style="font-size:18px;color:var(--ink-5);"></i>';
-  }
-  const stickyMaisonEl = document.getElementById('bott-sticky-maison');
-  if (stickyMaisonEl) stickyMaisonEl.textContent = b.maison?.nome || '';
-  const stickyNomeEl = document.getElementById('bott-sticky-nome');
-  if (stickyNomeEl) stickyNomeEl.textContent = b.nome;
-  const stickyScoreEl = document.getElementById('bott-sticky-score');
-  if (stickyScoreEl) stickyScoreEl.innerHTML = b.score_medio ? scoreRingSm(b.score_medio) : '';
-
-  // Sticky bar — scroll listener (onscroll replaces itself each call, no listener stacking)
-  const stickyBar = document.getElementById('bott-sticky-bar');
-  const scrollEl = document.getElementById('bott-detail-scroll');
-  if (stickyBar) stickyBar.classList.remove('visible'); // reset on new bottle
-  if (stickyBar && scrollEl) {
-    scrollEl.onscroll = function() {
-      if (scrollEl.scrollTop > 100) {
-        stickyBar.classList.add('visible');
-      } else {
-        stickyBar.classList.remove('visible');
-      }
-    };
-  }
-}
-
-async function loadAnnate(bottId) {
-  const section = document.getElementById('bott-detail-annate-section');
-  const listEl = document.getElementById('bott-detail-annate');
-  if (!section || !listEl) return;
-  try {
-    const { data } = await supa.from('annate').select('*').eq('bottiglia_id', bottId).order('anno', { ascending: false });
-    if (!data || !data.length) { section.style.display = 'none'; return; }
-    section.style.display = 'block';
-    listEl.innerHTML = data.map(a =>
-      '<div class="annata-row">' +
-        '<div class="annata-anno">' + a.anno + '</div>' +
-        '<div class="annata-body">' +
-          (a.note_annata ? '<div class="annata-note">' + a.note_annata + '</div>' : '') +
-          '<div class="annata-meta">' +
-            [a.finestra_da && a.finestra_a ? 'Finestra: ' + a.finestra_da + '–' + a.finestra_a : null, !a.disponibile ? 'Esaurita' : null].filter(Boolean).join(' · ') +
-          '</div>' +
-        '</div>' +
-        (a.score_medio ? scoreRingSm(a.score_medio) : '') +
-      '</div>'
-    ).join('');
-  } catch(e) { section.style.display = 'none'; }
 }
 
 async function toggleWishlistDetail() {

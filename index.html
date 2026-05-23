@@ -860,7 +860,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <i class="ti ti-share" style="cursor:pointer;" onclick="shareBottiglia()"></i>
     </div>
   </div>
-  <div class="scroll">
+  <div class="scroll" id="bott-detail-scroll">
     <!-- HERO -->
     <div id="bott-detail-hero" class="img-ph detail-hero-ph">
       <i class="ti ti-bottle" style="font-size:36px;"></i>
@@ -896,11 +896,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div id="bott-detail-abbinamento-section" style="display:none;">
       <div class="detail-sec-title">Abbinamento</div>
       <div class="detail-desc" id="bott-detail-abbinamento" style="margin-bottom:20px;"></div>
-    </div>
-    <!-- ANNATE -->
-    <div id="bott-detail-annate-section" style="display:none;">
-      <div class="detail-sec-title">Le annate</div>
-      <div class="detail-section" style="margin-bottom:20px;"><div id="bott-detail-annate"></div></div>
     </div>
     <div style="height:30px;"></div>
   </div>
