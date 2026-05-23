@@ -50,6 +50,9 @@ html,body{
 .view{display:none;flex-direction:column;position:absolute;inset:0;overflow:hidden;animation:fadeIn .25s ease;}
 .view:not(.active) .bottom-nav{display:none !important;}
 .view.active{display:flex;}
+/* Mappa — override grid per fix iOS Safari: flex:1 non propaga altezza a figli position:absolute */
+#v-mappa.active{display:grid;grid-template-rows:auto 1fr auto;}
+#map-wrap{min-height:0;}
 /* iOS Safari safe area */
 @supports(padding-bottom: env(safe-area-inset-bottom)){
   .bottom-nav{
