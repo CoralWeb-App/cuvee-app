@@ -1256,6 +1256,156 @@ async function removeFromWishlist(wishId) {
 
 
 
+// ═══ RICERCA HOME ═══
+
+let homeSearchTimeout = null;
+let homeSearchCat = 'tutti';
+
+function showHomeSearchUI() {
+  document.getElementById('home-search-cat').style.display = 'flex';
+}
+
+function doHomeSearch() {
+  const q = document.getElementById('home-search-input').value.trim();
+  const clear = document.getElementById('home-search-clear');
+  const results = document.getElementById('home-search-results');
+  const mainContent = document.getElementById('home-main-content');
+
+  if (q.length === 0) { clearHomeSearch(); return; }
+
+  clear.style.display = 'block';
+  results.style.display = 'block';
+  mainContent.style.display = 'none';
+
+  if (q.length < 2) {
+    results.innerHTML = '<div class="home-search-empty">Digita almeno 2 caratteri…</div>';
+    return;
+  }
+
+  clearTimeout(homeSearchTimeout);
+  homeSearchTimeout = setTimeout(() => _execHomeSearch(q), 300);
+}
+
+async function _execHomeSearch(q) {
+  const results = document.getElementById('home-search-results');
+  results.innerHTML = '<div class="home-search-empty">Ricerca in corso…</div>';
+  const cat = homeSearchCat;
+  const ql = q.toLowerCase();
+  let html = '';
+
+  // — PRODUTTORI —
+  if (cat === 'tutti' || cat === 'produttori') {
+    let res = [];
+    if (allMaison.length > 0) {
+      res = allMaison.filter(m =>
+        (m.nome||'').toLowerCase().includes(ql) ||
+        (m.sede||'').toLowerCase().includes(ql) ||
+        (m.descrizione||'').toLowerCase().includes(ql)
+      ).slice(0, 6);
+    } else {
+      try {
+        const { data } = await supa.from('maison')
+          .select('id, nome, sede, anno_fondazione, zone(nome, colore)')
+          .or('nome.ilike.%' + q + '%,sede.ilike.%' + q + '%')
+          .limit(6);
+        res = data || [];
+      } catch(e) {}
+    }
+    if (res.length > 0) {
+      html += '<div class="home-search-section">Produttori</div>';
+      html += res.map(m => {
+        const zoneName = m.zone?.nome || '';
+        const anno = m.anno_fondazione ? ' · dal ' + m.anno_fondazione : '';
+        return '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedMaison(\'' + m.id + '\')">' +
+          '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + m.nome + '</div>' +
+          '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + [zoneName, m.sede, anno].filter(Boolean).join(' · ') + '</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // — CHAMPAGNE —
+  if (cat === 'tutti' || cat === 'champagne') {
+    let res = [];
+    if (allBottiglie.length > 0) {
+      res = allBottiglie.filter(b =>
+        (b.nome||'').toLowerCase().includes(ql) ||
+        (b.maison?.nome||'').toLowerCase().includes(ql)
+      ).slice(0, 6);
+    } else {
+      try {
+        const { data } = await supa.from('bottiglie')
+          .select('id, nome, dosaggio_tipo, maison(nome)')
+          .or('nome.ilike.%' + q + '%')
+          .limit(6);
+        res = data || [];
+      } catch(e) {}
+    }
+    if (res.length > 0) {
+      html += '<div class="home-search-section">Champagne</div>';
+      html += res.map(b =>
+        '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedBottiglia(\'' + b.id + '\')">' +
+          '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + b.nome + '</div>' +
+          '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + (b.maison?.nome||'') + (b.dosaggio_tipo ? ' · ' + b.dosaggio_tipo : '') + '</div>' +
+        '</div>'
+      ).join('');
+    }
+  }
+
+  // — GLOSSARIO —
+  if (cat === 'tutti' || cat === 'glossario') {
+    let res = [];
+    if (allGlossario.length > 0) {
+      res = allGlossario.filter(t =>
+        (t.termine||'').toLowerCase().includes(ql) ||
+        (t.definizione||'').toLowerCase().includes(ql)
+      ).slice(0, 6);
+    } else {
+      try {
+        const { data } = await supa.from('glossario')
+          .select('id, termine, definizione, livello')
+          .or('termine.ilike.%' + q + '%,definizione.ilike.%' + q + '%')
+          .eq('is_published', true)
+          .limit(6);
+        res = data || [];
+      } catch(e) {}
+    }
+    if (res.length > 0) {
+      const livelloBadge = { base:'badge-rm', avanzato:'badge-pres', premium:'badge-prem' };
+      html += '<div class="home-search-section">Glossario</div>';
+      html += res.map(t =>
+        '<div class="card" style="padding:12px 14px;margin-bottom:8px;">' +
+          '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:4px;">' + t.termine + '</div>' +
+          '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.55;">' + t.definizione + '</div>' +
+          '<span class="badge ' + (livelloBadge[t.livello]||'badge-rm') + '" style="margin-top:7px;">' + (t.livello||'base') + '</span>' +
+        '</div>'
+      ).join('');
+    }
+  }
+
+  results.innerHTML = html ||
+    '<div class="home-search-empty">Nessun risultato per "<strong>' + q + '</strong>"</div>';
+}
+
+function setSearchCat(btn, cat) {
+  document.querySelectorAll('#home-search-cat .f-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  homeSearchCat = cat;
+  const q = document.getElementById('home-search-input').value.trim();
+  if (q.length >= 2) _execHomeSearch(q);
+}
+
+function clearHomeSearch() {
+  const input = document.getElementById('home-search-input');
+  if (input) input.value = '';
+  document.getElementById('home-search-clear').style.display = 'none';
+  document.getElementById('home-search-cat').style.display = 'none';
+  document.getElementById('home-search-results').style.display = 'none';
+  document.getElementById('home-main-content').style.display = 'block';
+  homeSearchCat = 'tutti';
+  document.querySelectorAll('#home-search-cat .f-btn').forEach((b,i) => b.classList.toggle('on', i===0));
+}
+
 // ═══ MODIFICA E ELIMINA NOTE ═══
 
 function openEditNote(note) {

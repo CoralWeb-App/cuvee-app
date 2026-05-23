@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=10"/>
+<link rel="stylesheet" href="css/style.css?v=11"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -136,8 +136,22 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="home-hero">
       <div class="greet" id="home-greet">Benvenuto</div>
       <div class="hero-title">Cosa vuoi scoprire oggi?</div>
-      <div class="search-bar"><i class="ti ti-search"></i><span>Cerca maison, cuvée, termini...</span></div>
+      <div class="search-bar" onclick="document.getElementById('home-search-input').focus()">
+        <i class="ti ti-search" style="font-size:20px;color:var(--ink-4);flex-shrink:0;"></i>
+        <input id="home-search-input" type="text" placeholder="Cerca maison, cuvée, termini…"
+               onfocus="showHomeSearchUI()" oninput="doHomeSearch()" autocomplete="off" autocorrect="off" spellcheck="false"/>
+        <i class="ti ti-x" id="home-search-clear" onclick="clearHomeSearch();event.stopPropagation();"
+           style="display:none;font-size:18px;color:var(--ink-4);cursor:pointer;flex-shrink:0;"></i>
+      </div>
+      <div id="home-search-cat" class="gloss-filters-row" style="display:none;margin-top:10px;">
+        <button class="f-btn on" onclick="setSearchCat(this,'tutti')">Tutti</button>
+        <button class="f-btn" onclick="setSearchCat(this,'produttori')">Produttori</button>
+        <button class="f-btn" onclick="setSearchCat(this,'champagne')">Champagne</button>
+        <button class="f-btn" onclick="setSearchCat(this,'glossario')">Glossario</button>
+      </div>
     </div>
+    <div id="home-search-results" style="display:none;padding:8px 14px 20px;"></div>
+    <div id="home-main-content">
     <div class="section-label">Esplora</div>
 
     <!-- CARNET — card grande in evidenza -->
@@ -228,8 +242,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
     </div>
     <div style="height:20px;"></div>
-  </div>
-  
+    </div><!-- /home-main-content -->
+  </div><!-- /scroll -->
+
 
   <div class="bottom-nav">
     <div class="bn on"><i class="ti ti-home"></i><span>Home</span></div>
@@ -244,7 +259,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-guida">
   <div class="topbar">
     <div style="flex:1;"><div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;">Guida & Glossario</div><div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:1px;">De la méthode aux classifications</div></div>
-    <div class="topbar-icons"><i class="ti ti-search"></i></div>
+    <div class="topbar-icons"></div>
   </div>
   <div class="tabs">
     <div class="tab on" data-tab="metodo" onclick="swTab(this,'metodo')"><i class="ti ti-leaf"></i><span>Méthode</span></div>
@@ -1657,6 +1672,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=12"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>

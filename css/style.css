@@ -257,6 +257,10 @@ html,body{
 }
 .search-bar i{font-size:20px;color:var(--ink-4);}
 .search-bar span{font-family:var(--sans);font-size:15px;color:var(--ink-5);}
+.search-bar input{flex:1;border:none;outline:none;background:transparent;font-family:var(--sans);font-size:15px;color:var(--ink);}
+.search-bar input::placeholder{color:var(--ink-5);}
+.home-search-section{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--ink-4);text-transform:uppercase;margin:14px 0 8px;}
+.home-search-empty{padding:50px 20px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);}
 .quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 18px;}
 .q-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:15px 13px;cursor:pointer;}
 .q-card i{font-size:26px;color:var(--gold);margin-bottom:9px;display:block;}
