@@ -2514,8 +2514,8 @@ function renderAssemblaggio(b) {
   if (b.assemblaggio && Array.isArray(b.assemblaggio) && b.assemblaggio.length) {
     items = b.assemblaggio;
   }
-  // 2. Fallback automatico: millesimato → 100% dell'annata dichiarata
-  else if ((b.tipo === 'millesimato' || b.tipo === 'prestige') && b.annata) {
+  // 2. Fallback automatico: se l'annata è compilata → 100% di quell'anno
+  else if (b.annata) {
     items = [{ anno: b.annata, perc: 100 }];
   }
 
@@ -2639,7 +2639,7 @@ async function openBottigliaDetail(bottId) {
   if (schedaEl) {
     const uvaggi = [b.pct_pinot_noir ? b.pct_pinot_noir + '% Pinot Noir' : null, b.pct_chardonnay ? b.pct_chardonnay + '% Chardonnay' : null, b.pct_meunier ? b.pct_meunier + '% Meunier' : null].filter(Boolean).join(' · ');
     // Mostra vini_base come testo solo se non c'è assemblaggio strutturato
-    const hasAssembl = (b.assemblaggio && b.assemblaggio.length) || (b.tipo === 'millesimato' && b.annata);
+    const hasAssembl = (b.assemblaggio && b.assemblaggio.length) || !!b.annata;
     const rows = [
       { l:'Produttore', v: b.maison?.nome || null },
       { l:'Uvaggi', v: uvaggi || null },
