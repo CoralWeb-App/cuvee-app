@@ -964,20 +964,18 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function loadHomeCounts() {
+  const elP = document.getElementById('home-count-produttori');
+  const elC = document.getElementById('home-count-champagne');
   try {
-    const [{ count: cp }, { count: cc }] = await Promise.all([
-      supa.from('maison').select('*', { count: 'exact', head: true }),
-      supa.from('bottiglie').select('*', { count: 'exact', head: true })
+    const [{ data: dp }, { data: dc }] = await Promise.all([
+      supa.from('maison').select('id').eq('is_published', true),
+      supa.from('bottiglie').select('id').eq('is_published', true)
     ]);
-    const elP = document.getElementById('home-count-produttori');
-    const elC = document.getElementById('home-count-champagne');
-    if (elP && cp != null) elP.textContent = cp + ' produttori';
-    if (elC && cc != null) elC.textContent = cc + ' cuvée';
+    if (elP) elP.textContent = (dp?.length || 0) + ' produttori';
+    if (elC) elC.textContent = (dc?.length || 0) + ' cuvée';
   } catch(e) {
-    const elP = document.getElementById('home-count-produttori');
-    const elC = document.getElementById('home-count-champagne');
-    if (elP) elP.textContent = 'Produttori';
-    if (elC) elC.textContent = 'Cuvée';
+    if (elP) elP.textContent = 'Esplora';
+    if (elC) elC.textContent = 'Esplora';
   }
 }
 
