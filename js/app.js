@@ -1280,11 +1280,11 @@ function normalizeStr(s) {
 // Assicura che allMaison sia popolato — triplo fallback per massima compatibilità
 async function ensureMaisonLoaded() {
   if (allMaison.length > 0) return;
-  // Tentativo 1: query completa con is_published
+  // Tentativo 1: campi necessari per anteprima ricerca
   try {
     const { data, error } = await supa
       .from('maison')
-      .select('id, nome, sede, anno_fondazione')
+      .select('id, nome, sede, anno_fondazione, tipo, foto_url, certificazioni, zone(nome, colore)')
       .eq('is_published', true)
       .order('nome', { ascending: true });
     if (!error && data && data.length > 0) { allMaison = data; return; }
@@ -1294,7 +1294,7 @@ async function ensureMaisonLoaded() {
   try {
     const { data, error } = await supa
       .from('maison')
-      .select('id, nome, sede, anno_fondazione')
+      .select('id, nome, sede, anno_fondazione, tipo, zone(nome, colore)')
       .order('nome', { ascending: true });
     if (!error && data && data.length > 0) { allMaison = data; return; }
     if (error) console.log('ensureMaison t2 error:', error);
@@ -1303,7 +1303,7 @@ async function ensureMaisonLoaded() {
   try {
     const { data, error } = await supa
       .from('maison')
-      .select('id, nome');
+      .select('id, nome, sede, anno_fondazione');
     if (!error && data) allMaison = data;
     if (error) console.log('ensureMaison t3 error:', error);
   } catch(e) { console.log('ensureMaison t3 exc:', e); }
@@ -1315,7 +1315,7 @@ async function ensureBottiglieLoaded() {
   try {
     const { data, error } = await supa
       .from('bottiglie')
-      .select('id, nome, dosaggio_tipo, maison(nome)')
+      .select('id, nome, dosaggio_tipo, foto_url, maison(nome)')
       .eq('is_published', true)
       .order('nome', { ascending: true });
     if (!error) allBottiglie = data || [];
@@ -1368,22 +1368,29 @@ async function _execHomeSearch(q) {
       normalizeStr(m.nome).includes(ql) ||
       normalizeStr(m.sede).includes(ql)
     ).slice(0, 6);
-    // DEBUG temporaneo: mostra quanti produttori sono in cache
-    const dbgLabel = allMaison.length === 0
-      ? '<div style="font-family:var(--sans);font-size:12px;color:var(--gold);padding:6px 14px;">⚠ produttori DB: 0 — impossibile caricare</div>'
-      : '';
     if (res.length > 0) {
-      html += '<div class="home-search-section">Produttori</div>' + dbgLabel;
+      const tipoBadge = { 'NM':'badge-gm','RM':'badge-rm','RC':'badge-rm','CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres' };
+      html += '<div class="home-search-section">Produttori</div>';
       html += res.map(m => {
         const anno = m.anno_fondazione ? 'dal ' + m.anno_fondazione : '';
         const sub = [m.sede, anno].filter(Boolean).join(' · ');
-        return '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedMaison(\'' + m.id + '\')">' +
-          '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + m.nome + '</div>' +
-          (sub ? '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + sub + '</div>' : '') +
+        const zonaColor = m.zone?.colore || 'var(--gold)';
+        const zonaNome = m.zone?.nome || '';
+        const foto = m.foto_url
+          ? '<img src="' + m.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>'
+          : '<i class="ti ti-building" style="font-size:20px;color:var(--ink-5);"></i>';
+        return '<div class="card" style="padding:11px 12px;margin-bottom:8px;cursor:pointer;display:flex;gap:11px;align-items:center;" onclick="openSavedMaison(\'' + m.id + '\')">' +
+          '<div style="width:48px;height:48px;border-radius:10px;background:var(--ivory-2);border:1px solid var(--border);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + foto + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-family:var(--sans);font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + m.nome + '</div>' +
+            '<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:3px;">' +
+              (m.tipo ? '<span class="badge ' + (tipoBadge[m.tipo]||'badge-rm') + '">' + m.tipo + '</span>' : '') +
+              (zonaNome ? '<span style="font-family:var(--sans);font-size:11px;font-weight:600;color:#fff;background:' + zonaColor + ';border-radius:20px;padding:2px 8px;">' + zonaNome + '</span>' : '') +
+            '</div>' +
+            (sub ? '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">' + sub + '</div>' : '') +
+          '</div>' +
         '</div>';
       }).join('');
-    } else {
-      html += dbgLabel;
     }
   }
 
@@ -1395,12 +1402,19 @@ async function _execHomeSearch(q) {
     ).slice(0, 8);
     if (res.length > 0) {
       html += '<div class="home-search-section">Champagne</div>';
-      html += res.map(b =>
-        '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedBottiglia(\'' + b.id + '\')">' +
-          '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + b.nome + '</div>' +
-          '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + (b.maison?.nome||'') + (b.dosaggio_tipo ? ' · ' + b.dosaggio_tipo : '') + '</div>' +
-        '</div>'
-      ).join('');
+      html += res.map(b => {
+        const foto = b.foto_url
+          ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>'
+          : '<i class="ti ti-bottle" style="font-size:22px;color:var(--ink-5);"></i>';
+        return '<div class="card" style="padding:10px 12px;margin-bottom:8px;cursor:pointer;display:flex;gap:12px;align-items:center;" onclick="openSavedBottiglia(\'' + b.id + '\')">' +
+          '<div style="width:52px;height:52px;border-radius:10px;background:var(--ivory-2);border:1px solid var(--border);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + foto + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + b.nome + '</div>' +
+            '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);margin-bottom:5px;">' + (b.maison?.nome||'') + '</div>' +
+            (b.dosaggio_tipo ? dosagePill(b.dosaggio_tipo) : '') +
+          '</div>' +
+        '</div>';
+      }).join('');
     }
   }
 
