@@ -179,11 +179,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="q-title">Terroirs</div>
         <div class="q-sub">Zone e cru</div>
       </div>
-      <div class="q-card locked" onclick="go('v-paywall')">
-        <i class="ti ti-star"></i>
-        <div class="q-title">Millésimes</div>
-        <div class="q-sub">Guida annate</div>
-        <div class="lock-pill"><i class="ti ti-lock"></i><span>Premium</span></div>
+      <div class="q-card" onclick="go('v-bottiglie')">
+        <i class="ti ti-bottle"></i>
+        <div class="q-title">Bottiglie</div>
+        <div class="q-sub">Cuvée & annate</div>
       </div>
     </div>
     <div class="section-label" style="margin-top:8px;">Sfoglia per stile</div>
@@ -800,6 +799,115 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
     <div class="bn on" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
+    <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
+  </div>
+</div>
+
+<!-- ═══ BOTTIGLIE — LISTA ═══ -->
+<div class="view" id="v-bottiglie">
+  <div class="topbar">
+    <div style="flex:1;">
+      <div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;">Bottiglie</div>
+      <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:1px;" id="bott-count-label">Caricamento...</div>
+    </div>
+    <div class="topbar-icons">
+      <i class="ti ti-search" onclick="toggleBottSearch()" style="cursor:pointer;"></i>
+    </div>
+  </div>
+  <div id="bott-search-wrap" style="display:none;padding:8px 14px;border-bottom:1px solid var(--border);">
+    <div class="carnet-search-bar" style="margin:0;">
+      <i class="ti ti-search" style="font-size:18px;color:var(--ink-4);"></i>
+      <input id="bott-search-input" type="text" placeholder="Cerca cuvée o maison..." style="flex:1;border:none;outline:none;font-family:var(--sans);font-size:16px;color:var(--ink);background:transparent;" oninput="filterBottiglie()"/>
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-5);cursor:pointer;" onclick="clearBottSearch()"></i>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <div class="filter-row" id="bott-filters">
+      <div class="f-btn on" onclick="setBottFilter(this,'tutti')">Tutti</div>
+      <div class="f-btn" onclick="setBottFilter(this,'nv')">Non Vintage</div>
+      <div class="f-btn" onclick="setBottFilter(this,'blanc_de_blancs')">Blanc de Blancs</div>
+      <div class="f-btn" onclick="setBottFilter(this,'blanc_de_noirs')">Blanc de Noirs</div>
+      <div class="f-btn" onclick="setBottFilter(this,'prestige')">Prestige</div>
+      <div class="f-btn" onclick="setBottFilter(this,'millesimato')">Millesimato</div>
+      <div class="f-btn" onclick="setBottFilter(this,'rose')">Rosé</div>
+    </div>
+  </div>
+  <div class="scroll">
+    <div id="bott-loading" style="padding:20px 14px;">
+      <div style="height:88px;background:var(--ivory-3);border-radius:var(--radius-lg);margin-bottom:10px;"></div>
+      <div style="height:88px;background:var(--ivory-3);border-radius:var(--radius-lg);margin-bottom:10px;"></div>
+      <div style="height:88px;background:var(--ivory-3);border-radius:var(--radius-lg);"></div>
+    </div>
+    <div id="bott-list" style="display:none;padding-top:8px;"></div>
+    <div style="height:20px;"></div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
+    <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
+    <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
+  </div>
+</div>
+
+<!-- ═══ BOTTIGLIA — DETTAGLIO ═══ -->
+<div class="view" id="v-bottiglia-detail">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Bottiglie</button>
+    <div class="topbar-icons">
+      <i class="ti ti-heart" id="bott-detail-wish-icon" style="cursor:pointer;" onclick="toggleWishlistDetail()"></i>
+      <i class="ti ti-share" style="cursor:pointer;" onclick="shareBottiglia()"></i>
+    </div>
+  </div>
+  <div class="scroll">
+    <!-- HERO -->
+    <div id="bott-detail-hero" class="img-ph detail-hero-ph">
+      <i class="ti ti-bottle" style="font-size:36px;"></i>
+    </div>
+    <!-- NOME & INFO -->
+    <div class="detail-info">
+      <div style="font-family:var(--sans);font-size:12px;color:var(--gold);font-weight:500;letter-spacing:.3px;margin-bottom:4px;" id="bott-detail-maison-nome">—</div>
+      <div class="detail-name" id="bott-detail-nome">—</div>
+      <div class="detail-meta" id="bott-detail-tipo">—</div>
+      <div class="badges-row" id="bott-detail-badges" style="margin-top:6px;"></div>
+    </div>
+    <!-- SCORE -->
+    <div class="score-large-wrap" id="bott-detail-score-wrap">
+      <div id="bott-detail-score-ring"></div>
+      <div class="score-label-lg" id="bott-detail-score-label">—</div>
+      <div class="score-fonte" id="bott-detail-score-fonte">—</div>
+    </div>
+    <!-- FINESTRA DEGUSTAZIONE -->
+    <div id="bott-detail-finestra-section" style="display:none;padding:0 14px;margin-bottom:20px;margin-top:16px;">
+      <div class="finestra-wrap">
+        <div class="finestra-title">Finestra di degustazione</div>
+        <div class="finestra-bar-bg"><div class="finestra-bar-fill" id="bott-finestra-fill" style="width:100%"></div></div>
+        <div class="finestra-labels"><span id="bott-finestra-da">—</span><span id="bott-finestra-a">—</span></div>
+      </div>
+    </div>
+    <!-- NOTE DEGUSTAZIONE -->
+    <div class="detail-sec-title" style="margin-top:4px;">Note di degustazione</div>
+    <div class="detail-desc" id="bott-detail-note" style="margin-bottom:20px;">—</div>
+    <!-- SCHEDA TECNICA -->
+    <div class="detail-sec-title">Scheda tecnica</div>
+    <div class="detail-section" style="margin-bottom:20px;"><div id="bott-detail-scheda"></div></div>
+    <!-- ABBINAMENTO -->
+    <div id="bott-detail-abbinamento-section" style="display:none;">
+      <div class="detail-sec-title">Abbinamento</div>
+      <div class="detail-desc" id="bott-detail-abbinamento" style="margin-bottom:20px;"></div>
+    </div>
+    <!-- ANNATE -->
+    <div id="bott-detail-annate-section" style="display:none;">
+      <div class="detail-sec-title">Le annate</div>
+      <div class="detail-section" style="margin-bottom:20px;"><div id="bott-detail-annate"></div></div>
+    </div>
+    <div style="height:30px;"></div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
+    <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>

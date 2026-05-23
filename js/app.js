@@ -4,6 +4,7 @@ function go(id){
   // Viste protette: richiedono login
   const protectedViews = ['v-home','v-guida','v-maison','v-carnet','v-profile',
     'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
+    'v-bottiglie','v-bottiglia-detail',
     'v-subscription','v-paywall','v-mappa',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar'];
   if(protectedViews.includes(id) && !currentUser){
@@ -29,6 +30,7 @@ function go(id){
     updateCarnetUI();
   }
   if(id==='v-maison') loadAndRenderMaison();
+  if(id==='v-bottiglie') loadAndRenderBottiglie();
   if(id==='v-salvati') updateSalvatiUI();
   if(id==='v-subscription') loadSubscriptionScreen();
   if(id==='v-wishlist') updateWishlistUI();
@@ -2259,63 +2261,340 @@ async function loadDetailBottles(maisonId) {
   const listEl = document.getElementById('detail-bottles-list');
   const lockEl = document.getElementById('detail-bottles-lock');
   if (!listEl) return;
-
   try {
     const { data: bottles } = await supa
       .from('bottiglie')
-      .select('*, link_acquisto(*, partners(nome))')
+      .select('*')
       .eq('maison_id', maisonId)
-      .order('is_featured', { ascending: false });
+      .eq('is_published', true)
+      .order('is_featured', { ascending: false })
+      .order('nome', { ascending: true });
 
     if (!bottles || bottles.length === 0) {
-      listEl.innerHTML = '<div style="padding:12px 18px;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Catalogo bottiglie in aggiornamento.</div>';
+      listEl.innerHTML = '<div style="padding:0 18px 16px;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Catalogo in aggiornamento.</div>';
+      if (lockEl) lockEl.style.display = 'none';
       return;
     }
-
     const premium = isPremium();
     const visible = premium ? bottles : bottles.slice(0, 2);
     const locked = premium ? [] : bottles.slice(2);
-
+    const tipoLabel = {'nv':'Non Vintage','millesimato':'Millesimato','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
     listEl.innerHTML = visible.map(b => {
-      const prezzo = b.prezzo_min ? 'da ' + b.prezzo_min + '€' : '';
-      const tipo = { 'nv':'Non Vintage','millesime':'Millésimé','prestige':'Prestige','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature' }[b.tipo] || '';
-      return '<div class="bottle-row">' +
+      const tipo = tipoLabel[b.tipo] || b.tipo || '';
+      const meta = [tipo, b.dosaggio_tipo].filter(Boolean).join(' · ');
+      const prezzo = b.prezzo_min ? 'da ' + b.prezzo_min + '€' : (b.fascia_prezzo || '');
+      return '<div class="bottle-row" onclick="openBottigliaDetail(\'' + b.id + '\')" style="cursor:pointer;">' +
         '<div class="bottle-ph"><i class="ti ti-bottle"></i></div>' +
         '<div class="bottle-info">' +
           '<div class="bottle-name">' + b.nome + '</div>' +
-          '<div class="bottle-type">' + [tipo, b.annata, b.dosage].filter(Boolean).join(' · ') + '</div>' +
-          (prezzo ? '<div class="bottle-price">' + prezzo + '</div>' : '') +
+          '<div class="bottle-type">' + meta + '</div>' +
+          (prezzo ? '<div class="bottle-price" style="font-family:var(--sans);font-size:13px;color:var(--gold);margin-top:2px;">' + prezzo + '</div>' : '') +
         '</div>' +
-        (b.link_acquisto && b.link_acquisto.length ? '<button class="btn-sm" onclick="window.open(this.dataset.url,\'_blank\')" data-url="' + b.link_acquisto[0].url + '">Acquista</button>' : '') +
+        (b.score_medio ? '<div style="font-family:var(--serif);font-size:18px;color:var(--gold);font-weight:600;flex-shrink:0;">' + b.score_medio + '</div>' : '') +
       '</div>';
     }).join('');
-
-    if (locked.length > 0 && lockEl) {
-      lockEl.style.display = 'flex';
-      lockEl.querySelector('p').innerHTML = '<strong>' + locked.length + ' cuvées aggiuntive</strong> disponibili con Piano Premium.';
-    } else if (lockEl) {
-      lockEl.style.display = 'none';
+    if (lockEl) {
+      if (locked.length > 0) {
+        lockEl.style.display = 'flex';
+        lockEl.querySelector('p').innerHTML = '<strong>' + locked.length + ' cuvées</strong> disponibili con Piano Premium.';
+      } else {
+        lockEl.style.display = 'none';
+      }
     }
+  } catch(e) { console.log('loadDetailBottles error:', e); }
+}
 
-    // Partners
-    const partnersSection = document.getElementById('detail-partners-section');
-    const partnersList = document.getElementById('detail-partners-list');
-    if (partnersSection && partnersList && bottles.some(b => b.link_acquisto && b.link_acquisto.length)) {
-      partnersSection.style.display = 'block';
-      const partners = {};
-      bottles.forEach(b => (b.link_acquisto||[]).forEach(l => {
-        if (l.partners) partners[l.partners.nome] = l.url;
-      }));
-      partnersList.innerHTML = Object.entries(partners).map(([nome, url]) =>
-        '<div class="partner-row" data-url="' + url + '" onclick="window.open(this.dataset.url,\'_blank\')">'+
-          '<div><div class="partner-name">' + nome + '</div><div class="partner-sub">Spedizione in Italia</div></div>' +
-          '<i class="ti ti-external-link" style="font-size:20px;color:var(--gold);"></i>' +
-        '</div>'
-      ).join('');
+// ═══ BOTTIGLIE — Lista completa ═══
+let allBottiglie = [];
+let currentBottFilter = 'tutti';
+let currentBottSearch = '';
+let currentBottiglia = null;
+let wishlistIds = new Set();
+
+function scoreLabel(s) {
+  if (!s) return '';
+  if (s >= 100) return 'Perfetto';
+  if (s >= 98) return 'Leggendario';
+  if (s >= 96) return 'Eccezionale';
+  if (s >= 94) return 'Straordinario';
+  if (s >= 92) return 'Superiore';
+  if (s >= 90) return 'Eccellente';
+  if (s >= 88) return 'Molto Buono';
+  return 'Buono';
+}
+
+function scoreRingSm(score) {
+  if (!score) return '';
+  const deg = Math.round((score / 100) * 360);
+  return '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">' +
+    '<div class="score-ring-sm" style="background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);">' +
+      '<div class="score-ring-sm-inner"><span class="score-num-sm">' + score + '</span></div>' +
+    '</div>' +
+    '<div class="score-label-sm">' + scoreLabel(score) + '</div>' +
+  '</div>';
+}
+
+async function loadAndRenderBottiglie() {
+  const loadingEl = document.getElementById('bott-loading');
+  const listEl = document.getElementById('bott-list');
+  const countEl = document.getElementById('bott-count-label');
+  try {
+    const { data, error } = await supa
+      .from('bottiglie')
+      .select('*, maison(nome, slug)')
+      .eq('is_published', true)
+      .order('is_featured', { ascending: false })
+      .order('nome', { ascending: true });
+    if (error) throw error;
+    allBottiglie = data || [];
+    if (currentUser) {
+      const { data: wish } = await supa.from('wishlist').select('bottiglia_id').eq('user_id', currentUser.id);
+      wishlistIds = new Set((wish || []).map(w => w.bottiglia_id));
     }
-
+    if (countEl) countEl.textContent = allBottiglie.length + ' cuvée nel catalogo';
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (listEl) listEl.style.display = 'block';
+    renderBottiglie();
   } catch(e) {
-    console.log('loadBottles error:', e);
+    console.log('loadBottiglie error:', e);
+    if (loadingEl) loadingEl.innerHTML = '<div style="padding:20px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Errore caricamento. Riprova.</div>';
   }
+}
+
+function renderBottiglie() {
+  const listEl = document.getElementById('bott-list');
+  if (!listEl) return;
+  const tipoLabel = {'nv':'Non Vintage','millesimato':'Millesimato','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
+  let filtered = allBottiglie;
+  if (currentBottFilter !== 'tutti') filtered = filtered.filter(b => b.tipo === currentBottFilter);
+  if (currentBottSearch) {
+    const q = currentBottSearch.toLowerCase();
+    filtered = filtered.filter(b =>
+      (b.nome||'').toLowerCase().includes(q) ||
+      (b.maison?.nome||'').toLowerCase().includes(q)
+    );
+  }
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;font-family:var(--sans);font-size:16px;color:var(--ink-4);">Nessuna bottiglia trovata</div>';
+    return;
+  }
+  listEl.innerHTML = filtered.map(b => {
+    const tipo = tipoLabel[b.tipo] || b.tipo || '';
+    const inWish = wishlistIds.has(b.id);
+    const prezzoTxt = b.prezzo_min && b.prezzo_max ? b.prezzo_min + '–' + b.prezzo_max + '€' : (b.fascia_prezzo || '');
+    return '<div class="bott-card" onclick="openBottigliaDetail(\'' + b.id + '\')">' +
+      '<div class="bott-card-img" style="min-height:88px;">' +
+        (b.foto_url ? '<img src="' + b.foto_url + '"/>' : '<i class="ti ti-bottle"></i>') +
+      '</div>' +
+      '<div class="bott-card-body">' +
+        '<div class="bott-card-maison">' + (b.maison?.nome || '') + '</div>' +
+        '<div class="bott-card-nome">' + b.nome + '</div>' +
+        '<div class="bott-card-tipo">' + [tipo, b.dosaggio_tipo].filter(Boolean).join(' · ') + '</div>' +
+        '<div class="bott-card-footer">' +
+          '<span class="bott-card-prezzo">' + prezzoTxt + '</span>' +
+          '<div style="display:flex;align-items:center;gap:10px;">' +
+            (b.score_medio ? scoreRingSm(b.score_medio) : '') +
+            '<i class="ti ' + (inWish ? 'ti-heart-filled' : 'ti-heart') + ' bott-wish' + (inWish ? ' on' : '') + '" data-id="' + b.id + '" onclick="event.stopPropagation();toggleWishlist(this,this.dataset.id)"></i>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function setBottFilter(el, filter) {
+  document.querySelectorAll('#bott-filters .f-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  currentBottFilter = filter;
+  renderBottiglie();
+}
+
+function toggleBottSearch() {
+  const wrap = document.getElementById('bott-search-wrap');
+  if (!wrap) return;
+  const vis = wrap.style.display !== 'none';
+  wrap.style.display = vis ? 'none' : 'block';
+  if (!vis) document.getElementById('bott-search-input')?.focus();
+}
+
+function filterBottiglie() {
+  currentBottSearch = document.getElementById('bott-search-input')?.value.trim() || '';
+  renderBottiglie();
+}
+
+function clearBottSearch() {
+  const input = document.getElementById('bott-search-input');
+  if (input) input.value = '';
+  currentBottSearch = '';
+  renderBottiglie();
+}
+
+async function toggleWishlist(iconEl, bottId) {
+  if (!currentUser) { go('v-login'); return; }
+  const inWish = wishlistIds.has(bottId);
+  if (inWish) {
+    await supa.from('wishlist').delete().eq('user_id', currentUser.id).eq('bottiglia_id', bottId);
+    wishlistIds.delete(bottId);
+  } else {
+    await supa.from('wishlist').insert({ user_id: currentUser.id, bottiglia_id: bottId });
+    wishlistIds.add(bottId);
+  }
+  iconEl.className = 'ti ' + (wishlistIds.has(bottId) ? 'ti-heart-filled' : 'ti-heart') + ' bott-wish' + (wishlistIds.has(bottId) ? ' on' : '');
+}
+
+async function openBottigliaDetail(bottId) {
+  const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
+  if (!b) return;
+  currentBottiglia = b;
+  const tipoLabel = {'nv':'Non Vintage','millesimato':'Millesimato','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
+
+  // Hero
+  const hero = document.getElementById('bott-detail-hero');
+  if (hero) {
+    if (b.foto_url) { hero.innerHTML = '<img src="' + b.foto_url + '" style="width:100%;height:200px;object-fit:cover;"/>'; hero.className = ''; }
+    else { hero.className = 'img-ph detail-hero-ph'; hero.innerHTML = '<i class="ti ti-bottle" style="font-size:40px;"></i>'; }
+  }
+
+  // Wishlist icon
+  const wishIcon = document.getElementById('bott-detail-wish-icon');
+  if (wishIcon) {
+    const inWish = wishlistIds.has(b.id);
+    wishIcon.className = 'ti ' + (inWish ? 'ti-heart-filled' : 'ti-heart');
+    wishIcon.style.color = inWish ? 'var(--gold)' : '';
+  }
+
+  // Nome & info
+  const maisonNomeEl = document.getElementById('bott-detail-maison-nome');
+  if (maisonNomeEl) maisonNomeEl.textContent = b.maison?.nome || '';
+  const nomeEl = document.getElementById('bott-detail-nome');
+  if (nomeEl) nomeEl.textContent = b.nome;
+  const tipoEl = document.getElementById('bott-detail-tipo');
+  if (tipoEl) tipoEl.textContent = [tipoLabel[b.tipo]||b.tipo, b.dosaggio_tipo].filter(Boolean).join(' · ');
+
+  // Badges
+  const badgesEl = document.getElementById('bott-detail-badges');
+  if (badgesEl) {
+    let bdg = '';
+    if (b.fascia_prezzo) bdg += '<span class="fascia-tag" style="font-size:14px;">' + b.fascia_prezzo + '</span> ';
+    const prezzo = b.prezzo_min && b.prezzo_max ? '<span style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">da ' + b.prezzo_min + '€</span>' : '';
+    bdg += prezzo;
+    badgesEl.innerHTML = bdg;
+  }
+
+  // Score
+  const scoreWrap = document.getElementById('bott-detail-score-wrap');
+  const scoreRingEl = document.getElementById('bott-detail-score-ring');
+  if (scoreWrap && scoreRingEl && b.score_medio) {
+    const deg = Math.round((b.score_medio / 100) * 360);
+    scoreRingEl.innerHTML = '<div class="score-ring-lg" style="background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);">' +
+      '<div class="score-ring-lg-inner"><span class="score-num-lg">' + b.score_medio + '</span></div>' +
+    '</div>';
+    const lblEl = document.getElementById('bott-detail-score-label');
+    if (lblEl) lblEl.textContent = scoreLabel(b.score_medio);
+    const fonteEl = document.getElementById('bott-detail-score-fonte');
+    if (fonteEl) fonteEl.textContent = b.score_note || 'Stima editoriale — consenso critico internazionale';
+    scoreWrap.style.display = 'flex';
+  } else if (scoreWrap) { scoreWrap.style.display = 'none'; }
+
+  // Finestra degustazione
+  const finSection = document.getElementById('bott-detail-finestra-section');
+  if (finSection) {
+    if (b.finestra_da || b.finestra_a) {
+      finSection.style.display = 'block';
+      const now = new Date().getFullYear();
+      const from = b.finestra_da || now;
+      const to = b.finestra_a || (now + 10);
+      const total = Math.max(to - now + 5, 1);
+      const start = Math.max(0, from - now);
+      const width = Math.min(100, Math.round(((to - from) / total) * 100));
+      const left = Math.min(80, Math.round((start / total) * 100));
+      const fillEl = document.getElementById('bott-finestra-fill');
+      if (fillEl) { fillEl.style.width = width + '%'; fillEl.style.marginLeft = left + '%'; }
+      const daEl = document.getElementById('bott-finestra-da');
+      const aEl = document.getElementById('bott-finestra-a');
+      if (daEl) daEl.textContent = from <= now ? 'Pronta ora' : 'Da ' + from;
+      if (aEl) aEl.textContent = 'Fino al ' + to;
+    } else { finSection.style.display = 'none'; }
+  }
+
+  // Note degustazione
+  const noteEl = document.getElementById('bott-detail-note');
+  if (noteEl) noteEl.textContent = b.note_degustazione || '';
+
+  // Scheda tecnica
+  const schedaEl = document.getElementById('bott-detail-scheda');
+  if (schedaEl) {
+    const uvaggi = [b.pct_pinot_noir ? b.pct_pinot_noir + '% Pinot Noir' : null, b.pct_chardonnay ? b.pct_chardonnay + '% Chardonnay' : null, b.pct_meunier ? b.pct_meunier + '% Meunier' : null].filter(Boolean).join(' · ');
+    const rows = [
+      { l:'Maison', v: b.maison?.nome || null },
+      { l:'Uvaggi', v: uvaggi || null },
+      { l:'Dosaggio', v: b.dosaggio_gl != null ? b.dosaggio_gl + ' g/l — ' + (b.dosaggio_tipo||'') : (b.dosaggio_tipo||null) },
+      { l:'Provenienza uve', v: b.provenienza_uve || null },
+      { l:'Vini base', v: b.vini_base || null },
+      { l:'Vinificazione', v: b.vinificazione || null },
+      { l:'Malolattica', v: b.malolattica || null },
+      { l:'Maturazione sui lieviti', v: b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null },
+      { l:'Produzione', v: b.produzione_bottiglie ? b.produzione_bottiglie.toLocaleString('it') + ' bott.' : null },
+    ].filter(r => r.v);
+    schedaEl.innerHTML = rows.map(r =>
+      '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span><span class="detail-row-value">' + r.v + '</span></div>'
+    ).join('');
+  }
+
+  // Abbinamento
+  const abbSection = document.getElementById('bott-detail-abbinamento-section');
+  const abbEl = document.getElementById('bott-detail-abbinamento');
+  if (abbSection && abbEl) {
+    abbSection.style.display = b.abbinamento ? 'block' : 'none';
+    if (b.abbinamento) abbEl.textContent = b.abbinamento;
+  }
+
+  // Annate
+  await loadAnnate(b.id);
+  go('v-bottiglia-detail');
+}
+
+async function loadAnnate(bottId) {
+  const section = document.getElementById('bott-detail-annate-section');
+  const listEl = document.getElementById('bott-detail-annate');
+  if (!section || !listEl) return;
+  try {
+    const { data } = await supa.from('annate').select('*').eq('bottiglia_id', bottId).order('anno', { ascending: false });
+    if (!data || !data.length) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    listEl.innerHTML = data.map(a =>
+      '<div class="annata-row">' +
+        '<div class="annata-anno">' + a.anno + '</div>' +
+        '<div class="annata-body">' +
+          (a.note_annata ? '<div class="annata-note">' + a.note_annata + '</div>' : '') +
+          '<div class="annata-meta">' +
+            [a.finestra_da && a.finestra_a ? 'Finestra: ' + a.finestra_da + '–' + a.finestra_a : null, !a.disponibile ? 'Esaurita' : null].filter(Boolean).join(' · ') +
+          '</div>' +
+        '</div>' +
+        (a.score_medio ? '<div class="annata-score">' + a.score_medio + '</div>' : '') +
+      '</div>'
+    ).join('');
+  } catch(e) { section.style.display = 'none'; }
+}
+
+async function toggleWishlistDetail() {
+  if (!currentBottiglia || !currentUser) return;
+  const icon = document.getElementById('bott-detail-wish-icon');
+  const inWish = wishlistIds.has(currentBottiglia.id);
+  if (inWish) {
+    await supa.from('wishlist').delete().eq('user_id', currentUser.id).eq('bottiglia_id', currentBottiglia.id);
+    wishlistIds.delete(currentBottiglia.id);
+  } else {
+    await supa.from('wishlist').insert({ user_id: currentUser.id, bottiglia_id: currentBottiglia.id });
+    wishlistIds.add(currentBottiglia.id);
+  }
+  if (icon) { icon.className = 'ti ' + (wishlistIds.has(currentBottiglia.id) ? 'ti-heart-filled' : 'ti-heart'); icon.style.color = wishlistIds.has(currentBottiglia.id) ? 'var(--gold)' : ''; }
+}
+
+function shareBottiglia() {
+  if (!currentBottiglia) return;
+  const text = '🍾 ' + currentBottiglia.nome + (currentBottiglia.maison?.nome ? '\n' + currentBottiglia.maison.nome : '') + '\n\n' + (currentBottiglia.note_degustazione || '').substring(0, 150) + '...\n\nScopri su Cuvée app';
+  if (navigator.share) { navigator.share({ title: currentBottiglia.nome, text }); }
+  else if (navigator.clipboard) { navigator.clipboard.writeText(text); }
 }
 
