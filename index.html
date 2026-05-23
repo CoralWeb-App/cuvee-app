@@ -580,45 +580,50 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Montagne de Reims</span></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-dot" style="background:#8B2635;"></div><div class="zone-list-name">Montagne de Reims</div></div>
-          <div class="zone-list-sub">Marne · ~9.600 ha · Pinot Noir dominante</div>
+          <div class="zone-list-sub">Marne · ~9.600 ha</div>
+          <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~65% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~25%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;"></span>Meunier ~10%</span></div>
           <div class="zone-list-desc">Altopiano boscoso tra Reims ed Épernay. Suoli gessosi e marnosi. Pinot Noir di grande struttura. La zona con il maggior numero di Grand Cru in Champagne.</div>
-          <div class="zone-chips"><span class="zone-chip">9 Grand Cru</span><span class="zone-chip">11 Premier Cru</span><span class="zone-chip">Pinot Noir</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-gc">9 Grand Cru</span><span class="zone-chip zone-chip-pc">11 Premier Cru</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-marne')">
         <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Vallée de la Marne</span></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-dot" style="background:#1E6E45;"></div><div class="zone-list-name">Vallée de la Marne</div></div>
-          <div class="zone-list-sub">Marne · ~5.200 ha · Pinot Meunier dominante</div>
+          <div class="zone-list-sub">Marne · ~5.200 ha</div>
+          <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#A0522D;"></span>Pinot Meunier ~55% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~25%</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~20%</span></div>
           <div class="zone-list-desc">Fondovalle del fiume Marna. Suoli argillosi, Meunier fruttato e rotondo. Aÿ (Grand Cru) e Hautvillers, dove Dom Pérignon lavorò nel XVII secolo.</div>
-          <div class="zone-chips"><span class="zone-chip">2 Grand Cru</span><span class="zone-chip">7 Premier Cru</span><span class="zone-chip">Pinot Meunier</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-gc">2 Grand Cru</span><span class="zone-chip zone-chip-pc">7 Premier Cru</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-blancs')">
         <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte des Blancs</span></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-dot" style="background:#B8922A;"></div><div class="zone-list-name">Côte des Blancs</div></div>
-          <div class="zone-list-sub">Marne · ~3.500 ha · Chardonnay esclusivo</div>
+          <div class="zone-list-sub">Marne · ~3.500 ha</div>
+          <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~95% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~5%</span></div>
           <div class="zone-list-desc">La patria assoluta dello Chardonnay. Gesso puro, mineralità cristallina. I più grandi Blanc de Blancs del mondo: Le Mesnil-sur-Oger, Avize, Cramant.</div>
-          <div class="zone-chips"><span class="zone-chip">6 Grand Cru</span><span class="zone-chip">5 Premier Cru</span><span class="zone-chip">Chardonnay</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-gc">6 Grand Cru</span><span class="zone-chip zone-chip-pc">5 Premier Cru</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-bar')">
         <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte des Bar</span></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-dot" style="background:#C05228;"></div><div class="zone-list-name">Côte des Bar</div></div>
-          <div class="zone-list-sub">Aube · ~7.000 ha · Pinot Noir emergente</div>
+          <div class="zone-list-sub">Aube · ~7.000 ha</div>
+          <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~85% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~10%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;"></span>Meunier ~5%</span></div>
           <div class="zone-list-desc">Suoli kimmeridgiani come Chablis. La zona in più forte crescita, con molti vigneron RM biologici di livello internazionale. Nessun Grand o Premier Cru, ma grandi vini.</div>
-          <div class="zone-chips"><span class="zone-chip">Pinot Noir</span><span class="zone-chip">Vigneron RM</span><span class="zone-chip">Kimmeridgiano</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-ac">Autres Crus</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-sezanne')" style="margin-bottom:20px;">
         <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte de Sézanne</span></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-dot" style="background:#4A5D8F;"></div><div class="zone-list-name">Côte de Sézanne</div></div>
-          <div class="zone-list-sub">Marne · ~700 ha · Chardonnay</div>
+          <div class="zone-list-sub">Marne · ~700 ha</div>
+          <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~80% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~15%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;"></span>Meunier ~5%</span></div>
           <div class="zone-list-desc">Zona emergente a ovest della Côte des Blancs. Suoli simili ma clima più caldo. Chardonnay morbido e fruttato, terra di scoperta per appassionati.</div>
-          <div class="zone-chips"><span class="zone-chip">Chardonnay</span><span class="zone-chip">Autres Crus</span><span class="zone-chip">Emergente</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-ac">Autres Crus</span></div>
         </div>
       </div>
     </div><!-- /zone -->

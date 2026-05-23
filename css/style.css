@@ -435,8 +435,15 @@ html,body{
 .zone-list-name{font-family:var(--serif);font-size:24px;color:var(--ink);font-weight:500;}
 .zone-list-sub{font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:9px;}
 .zone-list-desc{font-family:var(--sans);font-size:var(--fs-sm);color:var(--ink-3);line-height:1.65;margin-bottom:11px;}
+.zone-uvaggi-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.zone-uva{font-family:var(--sans);font-size:12px;color:var(--ink-4);display:flex;align-items:center;gap:4px;}
+.zone-uva.dom{color:var(--ink-2);font-weight:600;}
+.uva-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .zone-chips{display:flex;gap:6px;flex-wrap:wrap;}
 .zone-chip{font-family:var(--sans);font-size:15px;background:var(--ivory-2);border:0.5px solid var(--border);border-radius:10px;padding:4px 10px;color:var(--ink-3);}
+.zone-chip-gc{background:#faeeda;color:#633806;border-color:#EF9F27;}
+.zone-chip-pc{background:#e1f5ee;color:#085041;border-color:#5DCAA5;}
+.zone-chip-ac{background:#eef0f5;color:#48506a;border-color:#bfc8d8;}
 /* ZONE DETAIL */
 .zone-detail-hero{height:190px;position:relative;flex-shrink:0;}
 .zone-detail-color-bar{height:5px;flex-shrink:0;}
