@@ -583,7 +583,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="zone-list-sub">Marne · ~9.600 ha</div>
           <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~65% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~25%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;"></span>Meunier ~10%</span></div>
           <div class="zone-list-desc">Altopiano boscoso tra Reims ed Épernay. Suoli gessosi e marnosi. Pinot Noir di grande struttura. La zona con il maggior numero di Grand Cru in Champagne.</div>
-          <div class="zone-chips"><span class="zone-chip zone-chip-gc">9 Grand Cru</span><span class="zone-chip zone-chip-pc">11 Premier Cru</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-gc">9 Grand Cru</span><span class="zone-chip zone-chip-pc">23 Premier Cru</span><span class="zone-chip zone-chip-ac">7 Autres Crus</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-marne')">
@@ -593,7 +593,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="zone-list-sub">Marne · ~5.200 ha</div>
           <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#A0522D;"></span>Pinot Meunier ~55% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~25%</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~20%</span></div>
           <div class="zone-list-desc">Fondovalle del fiume Marna. Suoli argillosi, Meunier fruttato e rotondo. Aÿ (Grand Cru) e Hautvillers, dove Dom Pérignon lavorò nel XVII secolo.</div>
-          <div class="zone-chips"><span class="zone-chip zone-chip-gc">2 Grand Cru</span><span class="zone-chip zone-chip-pc">7 Premier Cru</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-gc">2 Grand Cru</span><span class="zone-chip zone-chip-pc">8 Premier Cru</span><span class="zone-chip zone-chip-ac">11 Autres Crus</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-blancs')">
@@ -603,7 +603,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="zone-list-sub">Marne · ~3.500 ha</div>
           <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~95% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~5%</span></div>
           <div class="zone-list-desc">La patria assoluta dello Chardonnay. Gesso puro, mineralità cristallina. I più grandi Blanc de Blancs del mondo: Le Mesnil-sur-Oger, Avize, Cramant.</div>
-          <div class="zone-chips"><span class="zone-chip zone-chip-gc">6 Grand Cru</span><span class="zone-chip zone-chip-pc">5 Premier Cru</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-gc">6 Grand Cru</span><span class="zone-chip zone-chip-pc">11 Premier Cru</span><span class="zone-chip zone-chip-ac">4 Autres Crus</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-bar')">
@@ -613,7 +613,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="zone-list-sub">Aube · ~7.000 ha</div>
           <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~85% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~10%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;"></span>Meunier ~5%</span></div>
           <div class="zone-list-desc">Suoli kimmeridgiani come Chablis. La zona in più forte crescita, con molti vigneron RM biologici di livello internazionale. Nessun Grand o Premier Cru, ma grandi vini.</div>
-          <div class="zone-chips"><span class="zone-chip zone-chip-ac">Autres Crus</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-ac">19 Autres Crus</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-sezanne')" style="margin-bottom:20px;">
@@ -623,7 +623,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="zone-list-sub">Marne · ~700 ha</div>
           <div class="zone-uvaggi-row"><span class="zone-uva dom"><span class="uva-dot" style="background:#D4A843;"></span>Chardonnay ~80% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;"></span>Pinot Noir ~15%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;"></span>Meunier ~5%</span></div>
           <div class="zone-list-desc">Zona emergente a ovest della Côte des Blancs. Suoli simili ma clima più caldo. Chardonnay morbido e fruttato, terra di scoperta per appassionati.</div>
-          <div class="zone-chips"><span class="zone-chip zone-chip-ac">Autres Crus</span></div>
+          <div class="zone-chips"><span class="zone-chip zone-chip-ac">7 Autres Crus</span></div>
         </div>
       </div>
     </div><!-- /zone -->
@@ -1022,7 +1022,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div style="padding:17px 18px 0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#8B2635;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Montagne de Reims</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Nord-est della Champagne · ~9.600 ettari</div>
-      <div class="badges-row"><span class="badge badge-gc">9 Grand Cru</span><span class="badge badge-pc">11 Premier Cru</span><span class="badge badge-rm">Pinot Noir</span></div>
+      <div class="badges-row"><span class="badge badge-gc">9 Grand Cru</span><span class="badge badge-pc">23 Premier Cru</span><span class="badge badge-rm">Pinot Noir</span></div>
+      <div class="zone-uvaggi-row" style="margin-top:13px;"><span class="zone-uva dom"><span class="uva-dot" style="background:#5C2D52;width:9px;height:9px;"></span>Pinot Noir ~65% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;width:9px;height:9px;"></span>Chardonnay ~25%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;width:9px;height:9px;"></span>Meunier ~10%</span></div>
     </div>
     <div class="zone-stat-grid" style="margin-top:16px;">
       <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~9.600 ha</div></div>
@@ -1038,12 +1039,12 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="cru-grid"><span class="cru-pill cru-gc">Ambonnay</span><span class="cru-pill cru-gc">Beaumont-sur-Vesle</span><span class="cru-pill cru-gc">Bouzy</span><span class="cru-pill cru-gc">Louvois</span><span class="cru-pill cru-gc">Mailly-Champagne</span><span class="cru-pill cru-gc">Puisieulx</span><span class="cru-pill cru-gc">Sillery</span><span class="cru-pill cru-gc">Verzenay</span><span class="cru-pill cru-gc">Verzy</span></div>
       </div>
       <div class="cru-group">
-        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 11 comuni</div>
-        <div class="cru-grid"><span class="cru-pill cru-pc">Chigny-les-Roses</span><span class="cru-pill cru-pc">Écueil</span><span class="cru-pill cru-pc">Ludes</span><span class="cru-pill cru-pc">Montbre</span><span class="cru-pill cru-pc">Pargny-lès-Reims</span><span class="cru-pill cru-pc">Rilly-la-Montagne</span><span class="cru-pill cru-pc">Taissy</span><span class="cru-pill cru-pc">Trépail</span><span class="cru-pill cru-pc">Trois-Puits</span><span class="cru-pill cru-pc">Villiers-Allerand</span><span class="cru-pill cru-pc">Villiers-Marmery</span></div>
+        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 23 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-pc">Bezannes</span><span class="cru-pill cru-pc">Chamery</span><span class="cru-pill cru-pc">Chigny-les-Roses</span><span class="cru-pill cru-pc">Cormontreuil</span><span class="cru-pill cru-pc">Coulommes-la-Montagne</span><span class="cru-pill cru-pc">Écueil</span><span class="cru-pill cru-pc">Jouy-les-Reims</span><span class="cru-pill cru-pc">Les Mesneux</span><span class="cru-pill cru-pc">Ludes</span><span class="cru-pill cru-pc">Montbré</span><span class="cru-pill cru-pc">Pargny-lès-Reims</span><span class="cru-pill cru-pc">Rilly-la-Montagne</span><span class="cru-pill cru-pc">Sacy</span><span class="cru-pill cru-pc">Sermiers</span><span class="cru-pill cru-pc">Taissy</span><span class="cru-pill cru-pc">Tauxières</span><span class="cru-pill cru-pc">Trépail</span><span class="cru-pill cru-pc">Trois-Puits</span><span class="cru-pill cru-pc">Ville-Dommange</span><span class="cru-pill cru-pc">Villers-Allerand</span><span class="cru-pill cru-pc">Villers-aux-Nœuds</span><span class="cru-pill cru-pc">Villers-Marmery</span><span class="cru-pill cru-pc">Vrigny</span></div>
       </div>
       <div class="cru-group">
-        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · principali</div>
-        <div class="cru-grid"><span class="cru-pill cru-ac">Chamery</span><span class="cru-pill cru-ac">Coulommes-la-Montagne</span><span class="cru-pill cru-ac">Jouy-lès-Reims</span><span class="cru-pill cru-ac">Sermiers</span><span class="cru-pill cru-ac">Ville-Dommange</span><span class="cru-pill cru-ac">Vrigny</span></div>
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · 7 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Cernay-lès-Reims</span><span class="cru-pill cru-ac">Champfleury</span><span class="cru-pill cru-ac">Gueux</span><span class="cru-pill cru-ac">Hermonville</span><span class="cru-pill cru-ac">Ormes</span><span class="cru-pill cru-ac">Saint-Thierry</span><span class="cru-pill cru-ac">Thil</span></div>
       </div>
     </div>
     <div style="height:30px;"></div>
@@ -1066,7 +1067,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div style="padding:17px 18px 0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#B8922A;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte des Blancs</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Sud di Épernay · ~3.500 ettari</div>
-      <div class="badges-row"><span class="badge badge-gc">6 Grand Cru</span><span class="badge badge-pc">5 Premier Cru</span><span class="badge badge-rm">Chardonnay</span></div>
+      <div class="badges-row"><span class="badge badge-gc">6 Grand Cru</span><span class="badge badge-pc">11 Premier Cru</span><span class="badge badge-rm">Chardonnay</span></div>
+      <div class="zone-uvaggi-row" style="margin-top:13px;"><span class="zone-uva dom"><span class="uva-dot" style="background:#D4A843;width:9px;height:9px;"></span>Chardonnay ~95% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;width:9px;height:9px;"></span>Pinot Noir ~5%</span></div>
     </div>
     <div class="zone-stat-grid" style="margin-top:16px;">
       <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~3.500 ha</div></div>
@@ -1082,12 +1084,12 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="cru-grid"><span class="cru-pill cru-gc">Avize</span><span class="cru-pill cru-gc">Chouilly <small style="opacity:.7">(solo CH)</small></span><span class="cru-pill cru-gc">Cramant</span><span class="cru-pill cru-gc">Le Mesnil-sur-Oger</span><span class="cru-pill cru-gc">Oger</span><span class="cru-pill cru-gc">Oiry</span></div>
       </div>
       <div class="cru-group">
-        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 5 comuni</div>
-        <div class="cru-grid"><span class="cru-pill cru-pc">Bergères-lès-Vertus</span><span class="cru-pill cru-pc">Cuis</span><span class="cru-pill cru-pc">Étoges</span><span class="cru-pill cru-pc">Grauves</span><span class="cru-pill cru-pc">Vertus</span></div>
+        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 11 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-pc">Bergères-lès-Vertus</span><span class="cru-pill cru-pc">Billy-le-Grand</span><span class="cru-pill cru-pc">Coligny</span><span class="cru-pill cru-pc">Cuis</span><span class="cru-pill cru-pc">Étréchy</span><span class="cru-pill cru-pc">Grauves</span><span class="cru-pill cru-pc">Pierry</span><span class="cru-pill cru-pc">Vaudemange</span><span class="cru-pill cru-pc">Vertus</span><span class="cru-pill cru-pc">Villeneuve-Renneville</span><span class="cru-pill cru-pc">Voipreux</span></div>
       </div>
       <div class="cru-group">
-        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · principali</div>
-        <div class="cru-grid"><span class="cru-pill cru-ac">Billy-le-Grand</span><span class="cru-pill cru-ac">Broussy-le-Grand</span><span class="cru-pill cru-ac">Montgenost</span><span class="cru-pill cru-ac">Villeneuve-Renneville</span></div>
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · 4 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Broussy-le-Grand</span><span class="cru-pill cru-ac">Montgenost</span><span class="cru-pill cru-ac">Talus-Saint-Prix</span><span class="cru-pill cru-ac">Vert-Toulon</span></div>
       </div>
     </div>
     <div style="height:30px;"></div>
@@ -1110,7 +1112,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div style="padding:17px 18px 0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#1E6E45;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Vallée de la Marne</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Da Épernay verso ovest · ~5.200 ettari</div>
-      <div class="badges-row"><span class="badge badge-gc">2 Grand Cru</span><span class="badge badge-pc">7 Premier Cru</span><span class="badge badge-rm">Pinot Meunier</span></div>
+      <div class="badges-row"><span class="badge badge-gc">2 Grand Cru</span><span class="badge badge-pc">8 Premier Cru</span><span class="badge badge-rm">Pinot Meunier</span></div>
+      <div class="zone-uvaggi-row" style="margin-top:13px;"><span class="zone-uva dom"><span class="uva-dot" style="background:#A0522D;width:9px;height:9px;"></span>Pinot Meunier ~55% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;width:9px;height:9px;"></span>Pinot Noir ~25%</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;width:9px;height:9px;"></span>Chardonnay ~20%</span></div>
     </div>
     <div class="zone-stat-grid" style="margin-top:16px;">
       <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~5.200 ha</div></div>
@@ -1126,12 +1129,12 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="cru-grid"><span class="cru-pill cru-gc">Aÿ</span><span class="cru-pill cru-gc">Tours-sur-Marne <small style="opacity:.7">(solo CH)</small></span></div>
       </div>
       <div class="cru-group">
-        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 7 comuni</div>
-        <div class="cru-grid"><span class="cru-pill cru-pc">Bisseuil</span><span class="cru-pill cru-pc">Champillon</span><span class="cru-pill cru-pc">Cumières</span><span class="cru-pill cru-pc">Dizy</span><span class="cru-pill cru-pc">Hautvillers</span><span class="cru-pill cru-pc">Mareuil-sur-Aÿ</span><span class="cru-pill cru-pc">Mutigny</span></div>
+        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 8 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-pc">Avenay-Val-d'Or</span><span class="cru-pill cru-pc">Bisseuil</span><span class="cru-pill cru-pc">Champillon</span><span class="cru-pill cru-pc">Cumières</span><span class="cru-pill cru-pc">Dizy</span><span class="cru-pill cru-pc">Hautvillers</span><span class="cru-pill cru-pc">Mareuil-sur-Aÿ</span><span class="cru-pill cru-pc">Mutigny</span></div>
       </div>
       <div class="cru-group">
-        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · principali</div>
-        <div class="cru-grid"><span class="cru-pill cru-ac">Boursault</span><span class="cru-pill cru-ac">Damery</span><span class="cru-pill cru-ac">Épernay</span><span class="cru-pill cru-ac">Festigny</span><span class="cru-pill cru-ac">Fleury-la-Rivière</span><span class="cru-pill cru-ac">Leuvrigny</span><span class="cru-pill cru-ac">Romery</span><span class="cru-pill cru-ac">Venteuil</span></div>
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · 11 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Boursault</span><span class="cru-pill cru-ac">Châtillon-sur-Marne</span><span class="cru-pill cru-ac">Damery</span><span class="cru-pill cru-ac">Dormans</span><span class="cru-pill cru-ac">Épernay</span><span class="cru-pill cru-ac">Festigny</span><span class="cru-pill cru-ac">Fleury-la-Rivière</span><span class="cru-pill cru-ac">Leuvrigny</span><span class="cru-pill cru-ac">Port-à-Binson</span><span class="cru-pill cru-ac">Romery</span><span class="cru-pill cru-ac">Venteuil</span></div>
       </div>
     </div>
     <div style="height:30px;"></div>
@@ -1155,6 +1158,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#C05228;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte des Bar</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Aube · Sud-est della Champagne · ~7.000 ettari</div>
       <div class="badges-row"><span class="badge badge-rm">Pinot Noir</span><span class="badge badge-bio">Vigneron RM</span><span class="badge badge-bio">Bio emergente</span></div>
+      <div class="zone-uvaggi-row" style="margin-top:13px;"><span class="zone-uva dom"><span class="uva-dot" style="background:#5C2D52;width:9px;height:9px;"></span>Pinot Noir ~85% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#D4A843;width:9px;height:9px;"></span>Chardonnay ~10%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;width:9px;height:9px;"></span>Meunier ~5%</span></div>
     </div>
     <div class="zone-stat-grid" style="margin-top:16px;">
       <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~7.000 ha</div></div>
@@ -1195,6 +1199,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#4A5D8F;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte de Sézanne</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · A ovest della Côte des Blancs · ~700 ettari</div>
       <div class="badges-row"><span class="badge badge-rm">Chardonnay</span><span class="badge badge-bio">Emergente</span></div>
+      <div class="zone-uvaggi-row" style="margin-top:13px;"><span class="zone-uva dom"><span class="uva-dot" style="background:#D4A843;width:9px;height:9px;"></span>Chardonnay ~80% ★</span><span class="zone-uva"><span class="uva-dot" style="background:#5C2D52;width:9px;height:9px;"></span>Pinot Noir ~15%</span><span class="zone-uva"><span class="uva-dot" style="background:#A0522D;width:9px;height:9px;"></span>Meunier ~5%</span></div>
     </div>
     <div class="zone-stat-grid" style="margin-top:16px;">
       <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~700 ha</div></div>
