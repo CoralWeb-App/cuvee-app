@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=9"/>
+<link rel="stylesheet" href="css/style.css?v=10"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -488,87 +488,11 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="tab-content" id="tc-glossario">
       <div class="section-label">Termini chiave</div>
       <div style="padding:0 14px 20px;">
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-          <button class="f-btn on" onclick="filterGloss(this,'tutti')">Tutti</button>
-          <button class="f-btn" onclick="filterGloss(this,'A')">A</button>
-          <button class="f-btn" onclick="filterGloss(this,'B')">B</button>
-          <button class="f-btn" onclick="filterGloss(this,'C')">C</button>
-          <button class="f-btn" onclick="filterGloss(this,'D')">D</button>
-          <button class="f-btn" onclick="filterGloss(this,'R')">R</button>
-          <button class="f-btn" onclick="filterGloss(this,'T')">T</button>
+        <div id="gloss-filters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          <div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Caricamento…</div>
         </div>
-        <div data-g="A">
-          <div style="font-family:var(--serif);font-size:24px;color:var(--gold);margin-bottom:8px;font-weight:500;">A</div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Assemblaggio</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Miscelazione di vini di diverse uve, zone e annate per creare la cuvée definitiva.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Autolisi</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Degradazione dei lieviti morti che cedono aromi complessi di brioche e pane tostato.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-        </div>
-        <div data-g="B">
-          <div style="font-family:var(--serif);font-size:24px;color:var(--gold);margin-bottom:8px;margin-top:8px;font-weight:500;">B</div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Blanc de Blancs</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Champagne prodotto esclusivamente da uve a bacca bianca, tipicamente Chardonnay. Elegante, minerale.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Blanc de Noirs</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Champagne bianco da uve a bacca nera (Pinot Noir e/o Meunier), vinificate in bianco.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-        </div>
-        <div data-g="C">
-          <div style="font-family:var(--serif);font-size:24px;color:var(--gold);margin-bottom:8px;margin-top:8px;font-weight:500;">C</div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Chef de cave</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Responsabile della cantina e delle scelte enologiche. Figura chiave e spesso iconica della maison.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Cuvée</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Il primo e più pregiato mosto dalla pressatura. Anche nome generico di una bottiglia specifica.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-        </div>
-        <div data-g="D">
-          <div style="font-family:var(--serif);font-size:24px;color:var(--gold);margin-bottom:8px;margin-top:8px;font-weight:500;">D</div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Dégorgement</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Sboccatura: espulsione del tappo con le fecce accumulate dopo il remuage.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;opacity:.5;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;display:flex;justify-content:space-between;">Dosage <i class="ti ti-lock" style="font-size:15px;color:var(--gold);"></i></div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Contenuto Premium...</div>
-            <span class="badge badge-prem" style="margin-top:6px;display:inline-block;">Premium</span>
-          </div>
-        </div>
-        <div data-g="R">
-          <div style="font-family:var(--serif);font-size:24px;color:var(--gold);margin-bottom:8px;margin-top:8px;font-weight:500;">R</div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Récoltant-Manipulant (RM)</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Vigneron che coltiva le proprie uve e produce il proprio Champagne in autonomia.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-        </div>
-        <div data-g="T">
-          <div style="font-family:var(--serif);font-size:24px;color:var(--gold);margin-bottom:8px;margin-top:8px;font-weight:500;">T</div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Tirage</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">Imbottigliamento con aggiunta di zucchero e lieviti per innescare la seconda fermentazione.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
-          <div class="card" style="padding:13px 14px;margin-bottom:8px;cursor:pointer;">
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:3px;">Terroir</div>
-            <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.6;">L'insieme di suolo, clima, esposizione e fattori umani che caratterizzano un vigneto.</div>
-            <span class="badge badge-rm" style="margin-top:6px;display:inline-block;">Base</span>
-          </div>
+        <div id="gloss-list">
+          <div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Caricamento…</div>
         </div>
       </div>
     </div><!-- /glossario -->
@@ -1733,6 +1657,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=11"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>

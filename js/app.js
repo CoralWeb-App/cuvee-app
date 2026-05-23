@@ -77,6 +77,94 @@ function swTab(el,tab){
   el.classList.add('on');
   document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('on'));
   document.getElementById('tc-'+tab).classList.add('on');
+  if(tab==='glossario') loadGlossario();
+}
+
+// ═══ GLOSSARIO — dinamico da DB ═══
+let allGlossario = [];
+let currentGlossLetter = 'tutti';
+
+async function loadGlossario() {
+  if (allGlossario.length > 0) { renderGlossario(); return; }
+  const listEl = document.getElementById('gloss-list');
+  try {
+    const { data, error } = await supa
+      .from('glossario')
+      .select('termine, definizione, lettera, livello, categoria')
+      .eq('is_published', true)
+      .order('lettera', { ascending: true })
+      .order('termine', { ascending: true });
+    if (error) throw error;
+    allGlossario = data || [];
+    buildGlossFilters();
+    renderGlossario();
+  } catch(e) {
+    console.log('loadGlossario error:', e);
+    if (listEl) listEl.innerHTML = '<div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Errore caricamento. Riprova.</div>';
+  }
+}
+
+function buildGlossFilters() {
+  const row = document.getElementById('gloss-filters');
+  if (!row) return;
+  const letters = [...new Set(allGlossario.map(t => t.lettera))].sort();
+  let html = '<button class="f-btn on" onclick="filterGloss(this,\'tutti\')">Tutti</button>';
+  letters.forEach(l => {
+    html += '<button class="f-btn" onclick="filterGloss(this,\'' + l + '\')">' + l + '</button>';
+  });
+  row.innerHTML = html;
+}
+
+function filterGloss(btn, letter) {
+  document.querySelectorAll('#gloss-filters .f-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  currentGlossLetter = letter;
+  renderGlossario();
+}
+
+function renderGlossario() {
+  const el = document.getElementById('gloss-list');
+  if (!el) return;
+  const premium = isPremium();
+  const filtered = currentGlossLetter === 'tutti'
+    ? allGlossario
+    : allGlossario.filter(t => t.lettera === currentGlossLetter);
+
+  // Raggruppa per lettera
+  const groups = {};
+  filtered.forEach(t => {
+    if (!groups[t.lettera]) groups[t.lettera] = [];
+    groups[t.lettera].push(t);
+  });
+
+  const livelloBadge = {
+    'base':     'badge-rm',
+    'avanzato': 'badge-pres',
+    'premium':  'badge-prem'
+  };
+  const livelloLabel = { 'base':'Base', 'avanzato':'Avanzato', 'premium':'Premium' };
+
+  el.innerHTML = Object.keys(groups).sort().map((letter, gi) => {
+    return '<div data-g="' + letter + '">' +
+      '<div style="font-family:var(--serif);font-size:24px;color:var(--gold);font-weight:500;margin-bottom:8px;' + (gi > 0 ? 'margin-top:8px;' : '') + '">' + letter + '</div>' +
+      groups[letter].map(t => {
+        const locked = t.livello === 'premium' && !premium;
+        return '<div class="card" style="padding:13px 14px;margin-bottom:8px;' + (locked ? 'opacity:.5;' : '') + '">' +
+          '<div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">' +
+            '<span>' + t.termine + '</span>' +
+            (locked ? '<i class="ti ti-lock" style="font-size:15px;color:var(--gold);flex-shrink:0;margin-left:8px;"></i>' : '') +
+          '</div>' +
+          '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">' +
+            (locked ? 'Contenuto disponibile con Piano Premium.' : t.definizione) +
+          '</div>' +
+          '<div style="margin-top:7px;display:flex;align-items:center;gap:6px;">' +
+            '<span class="badge ' + (livelloBadge[t.livello] || 'badge-rm') + '">' + (livelloLabel[t.livello] || 'Base') + '</span>' +
+            (t.categoria ? '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-5);">' + t.categoria + '</span>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }).join('') || '<div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Nessun termine trovato.</div>';
 }
 function togStep(el){
   const body=el.nextElementSibling;
@@ -84,13 +172,6 @@ function togStep(el){
   const open=body.style.display==='block';
   body.style.display=open?'none':'block';
   chev.classList.toggle('open',!open);
-}
-function filterGloss(btn,letter){
-  document.querySelectorAll('#tc-glossario .f-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  document.querySelectorAll('#tc-glossario [data-g]').forEach(g=>{
-    g.style.display=(letter==='tutti'||g.dataset.g===letter)?'block':'none';
-  });
 }
 document.querySelectorAll('.filter-row .f-btn').forEach(b=>{
   b.addEventListener('click',function(){
