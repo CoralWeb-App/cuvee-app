@@ -1913,7 +1913,7 @@ async function loadAndRenderMaison() {
     // Load maison from DB
     const { data, error } = await supa
       .from('maison')
-      .select('*, zone(nome)')
+      .select('*, zone(nome, colore)')
       .eq('is_published', true)
       .order('nome', { ascending: true });
 
@@ -2001,7 +2001,10 @@ function renderMaison() {
             (!isLocked ? '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>' : '') +
           '</div>' +
         '</div>' +
-        (zonaNome ? '<div class="maison-card-zona">' + zonaNome + (m.sede_comune ? ' · ' + m.sede_comune : '') + '</div>' : '') +
+        (m.zone ? '<div class="maison-card-zona">' +
+          '<span class="zona-dot" style="background:' + (m.zone.colore || 'var(--gold)') + ';"></span>' +
+          m.zone.nome + (m.sede_comune ? ' · ' + m.sede_comune : '') +
+        '</div>' : '') +
         (meta ? '<div class="maison-meta">' + meta + '</div>' : '') +
         '<div class="badges-row">' +
           '<span class="badge ' + badge + '">' + label + '</span>' +
@@ -2128,12 +2131,13 @@ function openMaisonDetail(maisonId) {
   const nameEl = document.getElementById('detail-name');
   if (nameEl) nameEl.textContent = m.nome;
   const metaEl = document.getElementById('detail-meta');
-  if (metaEl) metaEl.textContent = [zonaNome, m.sede_comune, m.anno_fondazione ? 'dal ' + m.anno_fondazione : ''].filter(Boolean).join(' · ');
+  if (metaEl) metaEl.textContent = [m.sede_comune, m.anno_fondazione ? 'dal ' + m.anno_fondazione : ''].filter(Boolean).join(' · ');
 
   // Badges
   const badgesEl = document.getElementById('detail-badges');
   if (badgesEl) {
     let b = '';
+    if (m.zone?.nome) b += '<span class="zona-pill-detail" style="background:' + (m.zone.colore || 'var(--gold)') + ';">' + m.zone.nome + '</span> ';
     if (m.tipo) b += '<span class="badge ' + (tipoBadge[m.tipo]||'badge-rm') + '">' + m.tipo + ' — ' + (tipoLabel[m.tipo]||m.tipo) + '</span>';
     if (m.fascia_prezzo) b += ' <span class="fascia-tag" style="font-size:15px;margin-left:4px;">' + m.fascia_prezzo + '</span>';
     if (m.certificazioni && m.certificazioni.length) m.certificazioni.forEach(c => { b += ' <span class="badge badge-bio">' + c + '</span>'; });
