@@ -699,6 +699,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="f-btn" onclick="setMaisonFilter(this,'vigneron')"><span style="font-weight:700;">RM · RC · SR</span> · Vigneron</div>
       <div class="f-btn" onclick="setMaisonFilter(this,'cooperativa')"><span style="font-weight:700;">CM</span> · Cooperativa</div>
     </div>
+    <div class="filter-row" id="cert-filters" style="display:none;border-top:1px solid var(--border);padding-top:6px;margin-top:2px;"></div>
   </div>
   <div class="scroll" id="maison-scroll">
     <!-- Skeleton loading -->
@@ -1945,6 +1946,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=2"></script>
+<script src="js/app.js?v=3"></script>
 </body>
 </html>

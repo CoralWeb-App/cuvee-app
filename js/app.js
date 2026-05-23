@@ -693,6 +693,7 @@ async function signOut() {
   activeCaliceFilter = 0;
   activeSearchQuery = '';
   currentMaisonFilter = 'tutti';
+  currentMaisonCert = 'tutti';
   currentMaisonSearch = '';
   // Svuota stack navigazione
   stack.length = 0;
@@ -1917,6 +1918,7 @@ function showNoteError(msg) {
 
 let allMaison = [];
 let currentMaisonFilter = 'tutti';
+let currentMaisonCert = 'tutti';
 let currentMaisonSearch = '';
 let currentMaisonDetail = null;
 let maisonFavorites = new Set();
@@ -1950,6 +1952,7 @@ async function loadAndRenderMaison() {
     if (loadingEl) loadingEl.style.display = 'none';
     if (listEl) listEl.style.display = 'block';
 
+    buildCertFilters();
     renderMaison();
 
   } catch(e) {
@@ -1970,6 +1973,11 @@ function renderMaison() {
     else if (currentMaisonFilter === 'vigneron') filtered = filtered.filter(m => ['RM','RC','SR'].includes(m.tipo));
     else if (currentMaisonFilter === 'cooperativa') filtered = filtered.filter(m => m.tipo === 'CM');
     else filtered = filtered.filter(m => m.tipo === currentMaisonFilter);
+  }
+
+  // Filter by certification
+  if (currentMaisonCert !== 'tutti') {
+    filtered = filtered.filter(m => Array.isArray(m.certificazioni) && m.certificazioni.includes(currentMaisonCert));
   }
 
   // Filter by search
@@ -2050,6 +2058,51 @@ function setMaisonFilter(el, filter) {
   document.querySelectorAll('#maison-filters .f-btn').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
   currentMaisonFilter = filter;
+  renderMaison();
+}
+
+function buildCertFilters() {
+  const row = document.getElementById('cert-filters');
+  if (!row) return;
+
+  // Raccogli tutte le certificazioni uniche
+  const certSet = new Set();
+  allMaison.forEach(m => {
+    if (Array.isArray(m.certificazioni)) {
+      m.certificazioni.forEach(c => { if (c) certSet.add(c); });
+    }
+  });
+
+  const certs = Array.from(certSet).sort();
+  if (certs.length === 0) {
+    row.style.display = 'none';
+    return;
+  }
+
+  // Render bottoni
+  let html = '<div class="f-btn on" onclick="setCertFilter(this,\'tutti\')">Tutte</div>';
+  certs.forEach(c => {
+    html += '<div class="f-btn" onclick="setCertFilter(this,' + JSON.stringify(c) + ')">' + c + '</div>';
+  });
+  row.innerHTML = html;
+  row.style.display = 'flex';
+
+  // Ripristina selezione corrente se è ancora valida
+  if (currentMaisonCert !== 'tutti') {
+    const active = Array.from(row.querySelectorAll('.f-btn')).find(b => b.textContent === currentMaisonCert);
+    if (active) {
+      row.querySelectorAll('.f-btn').forEach(b => b.classList.remove('on'));
+      active.classList.add('on');
+    } else {
+      currentMaisonCert = 'tutti';
+    }
+  }
+}
+
+function setCertFilter(el, cert) {
+  document.querySelectorAll('#cert-filters .f-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  currentMaisonCert = cert;
   renderMaison();
 }
 
