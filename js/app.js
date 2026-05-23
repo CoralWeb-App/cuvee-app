@@ -1223,22 +1223,32 @@ async function removeFavorite(favId) {
 }
 
 async function openSavedMaison(maisonId) {
-  // Cerca prima in cache, altrimenti carica dal DB
-  if (!allMaison.find(x => x.id === maisonId)) {
+  const cached = allMaison.find(x => x.id === maisonId);
+  // Carica dati completi se assenti o parziali (es. caricati solo per la ricerca)
+  if (!cached || !('descrizione' in cached)) {
     try {
       const { data } = await supa.from('maison').select('*, zone(nome, colore)').eq('id', maisonId).maybeSingle();
-      if (data) allMaison = [...allMaison, data];
+      if (data) {
+        const idx = allMaison.findIndex(x => x.id === maisonId);
+        if (idx >= 0) allMaison[idx] = data; // sostituisce dati parziali
+        else allMaison = [...allMaison, data];
+      }
     } catch(e) { console.log('openSavedMaison error:', e); }
   }
   openMaisonDetail(maisonId);
 }
 
 async function openSavedBottiglia(bottId) {
-  // Cerca prima in cache, altrimenti carica dal DB
-  if (!allBottiglie.find(x => x.id === bottId)) {
+  const cached = allBottiglie.find(x => x.id === bottId);
+  // Carica dati completi se assenti o parziali
+  if (!cached || !('score' in cached)) {
     try {
       const { data } = await supa.from('bottiglie').select('*, maison(nome, slug)').eq('id', bottId).maybeSingle();
-      if (data) allBottiglie = [...allBottiglie, data];
+      if (data) {
+        const idx = allBottiglie.findIndex(x => x.id === bottId);
+        if (idx >= 0) allBottiglie[idx] = data; // sostituisce dati parziali
+        else allBottiglie = [...allBottiglie, data];
+      }
     } catch(e) { console.log('openSavedBottiglia error:', e); }
   }
   openBottigliaDetail(bottId);
