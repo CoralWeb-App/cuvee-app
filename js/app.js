@@ -6,7 +6,7 @@ function go(id){
     'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
     'v-bottiglie','v-bottiglia-detail',
     'v-subscription','v-paywall','v-mappa',
-    'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar'];
+    'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
   }

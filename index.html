@@ -575,41 +575,50 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- ZONE LIST -->
     <div class="tab-content" id="tc-zone">
-      <div class="section-label">Le 4 grandi zone · tocca per approfondire</div>
+      <div class="section-label">Le 5 grandi zone · tocca per approfondire</div>
       <div class="zone-list-card" onclick="go('v-zone-montagne')">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Foto Montagne de Reims</span></div>
+        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Montagne de Reims</span></div>
         <div class="zone-list-body">
-          <div class="zone-list-header"><div class="zone-dot" style="background:#b8922a;"></div><div class="zone-list-name">Montagne de Reims</div></div>
-          <div class="zone-list-sub">Nord · 9.600 ha · Pinot Noir dominante</div>
-          <div class="zone-list-desc">Suoli gessosi profondi tra Reims ed Épernay. Pinot Noir di grande struttura, vini potenti e longevi. 9 Grand Cru, 6 Premier Cru tra i più celebri della Champagne.</div>
-          <div class="zone-chips"><span class="zone-chip">9 Grand Cru</span><span class="zone-chip">6 Premier Cru</span><span class="zone-chip">Pinot Noir</span><span class="zone-chip">Chardonnay</span></div>
+          <div class="zone-list-header"><div class="zone-dot" style="background:#8B2635;"></div><div class="zone-list-name">Montagne de Reims</div></div>
+          <div class="zone-list-sub">Marne · ~9.600 ha · Pinot Noir dominante</div>
+          <div class="zone-list-desc">Altopiano boscoso tra Reims ed Épernay. Suoli gessosi e marnosi. Pinot Noir di grande struttura. La zona con il maggior numero di Grand Cru in Champagne.</div>
+          <div class="zone-chips"><span class="zone-chip">9 Grand Cru</span><span class="zone-chip">11 Premier Cru</span><span class="zone-chip">Pinot Noir</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-marne')">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Foto Vallée de la Marne</span></div>
+        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Vallée de la Marne</span></div>
         <div class="zone-list-body">
-          <div class="zone-list-header"><div class="zone-dot" style="background:#5DCAA5;"></div><div class="zone-list-name">Vallée de la Marne</div></div>
-          <div class="zone-list-sub">Centro · 5.200 ha · Pinot Meunier</div>
-          <div class="zone-list-desc">Fondovalle della Marna con suoli più argillosi. Pinot Meunier fruttato e rotondo. 5 Premier Cru tra cui Aÿ e Hautvillers, il villaggio di Dom Pérignon.</div>
-          <div class="zone-chips"><span class="zone-chip">5 Premier Cru</span><span class="zone-chip">Pinot Meunier</span><span class="zone-chip">Dom Pérignon</span></div>
+          <div class="zone-list-header"><div class="zone-dot" style="background:#1E6E45;"></div><div class="zone-list-name">Vallée de la Marne</div></div>
+          <div class="zone-list-sub">Marne · ~5.200 ha · Pinot Meunier dominante</div>
+          <div class="zone-list-desc">Fondovalle del fiume Marna. Suoli argillosi, Meunier fruttato e rotondo. Aÿ (Grand Cru) e Hautvillers, dove Dom Pérignon lavorò nel XVII secolo.</div>
+          <div class="zone-chips"><span class="zone-chip">2 Grand Cru</span><span class="zone-chip">7 Premier Cru</span><span class="zone-chip">Pinot Meunier</span></div>
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-blancs')">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Foto Côte des Blancs</span></div>
+        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte des Blancs</span></div>
         <div class="zone-list-body">
-          <div class="zone-list-header"><div class="zone-dot" style="background:#AFA9EC;"></div><div class="zone-list-name">Côte des Blancs</div></div>
-          <div class="zone-list-sub">Sud di Épernay · 3.500 ha · Solo Chardonnay</div>
-          <div class="zone-list-desc">La patria assoluta dello Chardonnay. Gesso puro, mineralità cristallina. I più grandi Blanc de Blancs del mondo nascono qui. 6 Grand Cru tra cui Le Mesnil, Avize e Cramant.</div>
-          <div class="zone-chips"><span class="zone-chip">6 Grand Cru</span><span class="zone-chip">Solo Chardonnay</span><span class="zone-chip">Le Mesnil</span></div>
+          <div class="zone-list-header"><div class="zone-dot" style="background:#B8922A;"></div><div class="zone-list-name">Côte des Blancs</div></div>
+          <div class="zone-list-sub">Marne · ~3.500 ha · Chardonnay esclusivo</div>
+          <div class="zone-list-desc">La patria assoluta dello Chardonnay. Gesso puro, mineralità cristallina. I più grandi Blanc de Blancs del mondo: Le Mesnil-sur-Oger, Avize, Cramant.</div>
+          <div class="zone-chips"><span class="zone-chip">6 Grand Cru</span><span class="zone-chip">5 Premier Cru</span><span class="zone-chip">Chardonnay</span></div>
         </div>
       </div>
-      <div class="zone-list-card" onclick="go('v-zone-bar')" style="margin-bottom:20px;">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Foto Côte des Bar</span></div>
+      <div class="zone-list-card" onclick="go('v-zone-bar')">
+        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte des Bar</span></div>
         <div class="zone-list-body">
-          <div class="zone-list-header"><div class="zone-dot" style="background:#F0997B;"></div><div class="zone-list-name">Côte des Bar</div></div>
-          <div class="zone-list-sub">Aube · 7.000 ha · Pinot Noir emergente</div>
-          <div class="zone-list-desc">Zona in forte crescita con suoli kimmeridgiani simili a Chablis. Molti vigneron RM emergenti di grande qualità. Stile unico sempre più apprezzato dagli intenditori.</div>
-          <div class="zone-chips"><span class="zone-chip">Pinot Noir</span><span class="zone-chip">Vigneron RM</span><span class="zone-chip">Bio emergente</span></div>
+          <div class="zone-list-header"><div class="zone-dot" style="background:#C05228;"></div><div class="zone-list-name">Côte des Bar</div></div>
+          <div class="zone-list-sub">Aube · ~7.000 ha · Pinot Noir emergente</div>
+          <div class="zone-list-desc">Suoli kimmeridgiani come Chablis. La zona in più forte crescita, con molti vigneron RM biologici di livello internazionale. Nessun Grand o Premier Cru, ma grandi vini.</div>
+          <div class="zone-chips"><span class="zone-chip">Pinot Noir</span><span class="zone-chip">Vigneron RM</span><span class="zone-chip">Kimmeridgiano</span></div>
+        </div>
+      </div>
+      <div class="zone-list-card" onclick="go('v-zone-sezanne')" style="margin-bottom:20px;">
+        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte de Sézanne</span></div>
+        <div class="zone-list-body">
+          <div class="zone-list-header"><div class="zone-dot" style="background:#4A5D8F;"></div><div class="zone-list-name">Côte de Sézanne</div></div>
+          <div class="zone-list-sub">Marne · ~700 ha · Chardonnay</div>
+          <div class="zone-list-desc">Zona emergente a ovest della Côte des Blancs. Suoli simili ma clima più caldo. Chardonnay morbido e fruttato, terra di scoperta per appassionati.</div>
+          <div class="zone-chips"><span class="zone-chip">Chardonnay</span><span class="zone-chip">Autres Crus</span><span class="zone-chip">Emergente</span></div>
         </div>
       </div>
     </div><!-- /zone -->
@@ -1001,29 +1010,39 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 <!-- ZONE: MONTAGNE DE REIMS -->
 <div class="view" id="v-zone-montagne">
-  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><i class="ti ti-heart"></i></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Foto Montagne de Reims</span></div>
-    <div class="zone-detail-color-bar" style="background:#b8922a;"></div>
-    <div style="padding:17px 18px 0;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#b8922a;width:14px;height:14px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Montagne de Reims</div></div><div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Nord-est della Champagne · 9.600 ettari</div><div class="badges-row"><span class="badge badge-gc">9 Grand Cru</span><span class="badge badge-pc">6 Premier Cru</span><span class="badge badge-rm">Pinot Noir</span></div></div>
-    <div class="zone-stat-grid" style="margin-top:16px;"><div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">9.600 ha</div></div><div class="zone-stat"><div class="zone-stat-label">Uva principale</div><div class="zone-stat-value">Pinot Noir</div></div><div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">80–280 m</div></div><div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Gesso, marna</div></div></div>
-    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Montagne de Reims è un altopiano boscoso a sud di Reims delimitato dalla Vesle a nord e dalla Marna a sud. Il suolo è prevalentemente gessoso con strati di marna e argilla che trattengono l'umidità. L'esposizione varia notevolmente creando microclimi diversi che si riflettono direttamente nei vini.</div></div>
-    <div class="zone-section"><div class="zone-section-title">Caratteristiche dei vini</div><div class="zone-section-text">Grande struttura, potenza e longevità. Il Pinot Noir domina con note di frutti rossi, spezie e un finale lungo e persistente. I cru di Bouzy, Ambonnay e Verzenay producono alcuni degli Champagne più complessi e longevi della regione, capaci di invecchiare per decenni.</div></div>
-    <div class="zone-section"><div class="zone-section-title">Grand Cru e Premier Cru</div>
-      <div class="cru-group"><div class="cru-group-title"><i class="ti ti-award"></i>Grand Cru (100%) · 9 comuni</div><div class="cru-grid"><span class="cru-pill cru-gc">Ambonnay</span><span class="cru-pill cru-gc">Bouzy</span><span class="cru-pill cru-gc">Verzenay</span><span class="cru-pill cru-gc">Verzy</span><span class="cru-pill cru-gc">Louvois</span></div></div>
-      <div class="cru-group"><div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · principali</div><div class="cru-grid"><span class="cru-pill cru-pc">Rilly-la-Montagne</span><span class="cru-pill cru-pc">Villers-Marmery</span><span class="cru-pill cru-pc">Mailly-Champagne</span><span class="cru-pill cru-pc">Tauxières</span></div></div>
-      <div class="cru-group"><div class="cru-group-title" style="color:var(--ink-4);"><i class="ti ti-lock" style="color:var(--gold);"></i>Cru aggiuntivi — Premium</div><div class="cru-grid"><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Beaumont-sur-Vesle GC</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Sillery GC</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Puisieulx GC</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Tours-sur-Marne GC</span></div></div>
+    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Montagne de Reims</span></div>
+    <div class="zone-detail-color-bar" style="background:#8B2635;"></div>
+    <div style="padding:17px 18px 0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#8B2635;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Montagne de Reims</div></div>
+      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Nord-est della Champagne · ~9.600 ettari</div>
+      <div class="badges-row"><span class="badge badge-gc">9 Grand Cru</span><span class="badge badge-pc">11 Premier Cru</span><span class="badge badge-rm">Pinot Noir</span></div>
     </div>
-    <div class="zone-prem-block"><i class="ti ti-lock"></i><div class="zone-prem-text"><strong>4 Grand Cru aggiuntivi</strong> con schede complete, storia, mappe dettagliate e tutti i produttori presenti sono disponibili con Premium.</div></div>
-    <div class="zone-section"><div class="zone-section-title">Maison e vigneron principali</div></div>
-    <div class="maison-in-zone" onclick="go('v-detail')"><div><div class="miz-name">Egly-Ouriet</div><div class="miz-sub">Ambonnay · Grand Cru · Vigneron RM Bio</div></div><i class="ti ti-chevron-right" style="font-size:22px;color:var(--ink-5);"></i></div>
-    <div class="maison-in-zone" onclick="go('v-detail')"><div><div class="miz-name">Georges Laval</div><div class="miz-sub">Cumières · Premier Cru · RM Bio</div></div><i class="ti ti-chevron-right" style="font-size:22px;color:var(--ink-5);"></i></div>
-    <div class="maison-in-zone" onclick="go('v-detail')"><div><div class="miz-name">Veuve Clicquot</div><div class="miz-sub">Reims · Grande Maison storica</div></div><i class="ti ti-chevron-right" style="font-size:22px;color:var(--ink-5);"></i></div>
-    <div class="maison-in-zone" style="opacity:.5;pointer-events:none;"><div><div class="miz-name">+ 14 produttori</div><div class="miz-sub">Disponibili con Premium</div></div><i class="ti ti-lock" style="font-size:22px;color:var(--gold);"></i></div>
-    <div style="height:20px;"></div>
+    <div class="zone-stat-grid" style="margin-top:16px;">
+      <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~9.600 ha</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Uva principale</div><div class="zone-stat-value">Pinot Noir</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">80–280 m</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Gesso, marna</div></div>
+    </div>
+    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Montagne de Reims è un massiccio boscoso a sud di Reims, delimitato dalla Vesle a nord e dalla Marna a sud. I suoli sono prevalentemente gessosi con strati di marna e argilla. La particolarità di questa zona è che molti vigneti hanno esposizione nord — insolita per la viticoltura — che crea uno stress termico benefico e una maturazione lenta, capace di concentrare aromi e acidità.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Caratteristiche dei vini</div><div class="zone-section-text">Grande struttura, potenza e longevità. Il Pinot Noir domina con note di frutti rossi maturi, spezie, funghi e sottobosco autunnale. I cru di Bouzy, Ambonnay e Verzenay producono alcuni degli Champagne più complessi e longevi della regione, capaci di evolvere splendidamente per decenni in bottiglia.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Classificazione dei cru</div>
+      <div class="cru-group">
+        <div class="cru-group-title"><i class="ti ti-award"></i>Grand Cru (100%) · 9 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-gc">Ambonnay</span><span class="cru-pill cru-gc">Beaumont-sur-Vesle</span><span class="cru-pill cru-gc">Bouzy</span><span class="cru-pill cru-gc">Louvois</span><span class="cru-pill cru-gc">Mailly-Champagne</span><span class="cru-pill cru-gc">Puisieulx</span><span class="cru-pill cru-gc">Sillery</span><span class="cru-pill cru-gc">Verzenay</span><span class="cru-pill cru-gc">Verzy</span></div>
+      </div>
+      <div class="cru-group">
+        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 11 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-pc">Chigny-les-Roses</span><span class="cru-pill cru-pc">Écueil</span><span class="cru-pill cru-pc">Ludes</span><span class="cru-pill cru-pc">Montbre</span><span class="cru-pill cru-pc">Pargny-lès-Reims</span><span class="cru-pill cru-pc">Rilly-la-Montagne</span><span class="cru-pill cru-pc">Taissy</span><span class="cru-pill cru-pc">Trépail</span><span class="cru-pill cru-pc">Trois-Puits</span><span class="cru-pill cru-pc">Villiers-Allerand</span><span class="cru-pill cru-pc">Villiers-Marmery</span></div>
+      </div>
+      <div class="cru-group">
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · principali</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Chamery</span><span class="cru-pill cru-ac">Coulommes-la-Montagne</span><span class="cru-pill cru-ac">Jouy-lès-Reims</span><span class="cru-pill cru-ac">Sermiers</span><span class="cru-pill cru-ac">Ville-Dommange</span><span class="cru-pill cru-ac">Vrigny</span></div>
+      </div>
+    </div>
+    <div style="height:30px;"></div>
   </div>
-  
-
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
@@ -1033,31 +1052,41 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
-<!-- ZONE: COTE DES BLANCS -->
+<!-- ZONE: CÔTE DES BLANCS -->
 <div class="view" id="v-zone-blancs">
-  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><i class="ti ti-heart"></i></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Foto Cote des Blancs</span></div>
-    <div class="zone-detail-color-bar" style="background:#AFA9EC;"></div>
-    <div style="padding:17px 18px 0;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#AFA9EC;width:14px;height:14px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Cote des Blancs</div></div><div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Sud di Epernay · 3.500 ettari</div><div class="badges-row"><span class="badge badge-gc">6 Grand Cru</span><span class="badge badge-pc">4 Premier Cru</span><span class="badge badge-rm">Solo Chardonnay</span></div></div>
-    <div class="zone-stat-grid" style="margin-top:16px;"><div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">3.500 ha</div></div><div class="zone-stat"><div class="zone-stat-label">Uva esclusiva</div><div class="zone-stat-value">Chardonnay</div></div><div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">120–240 m</div></div><div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Gesso puro</div></div></div>
-    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Cote des Blancs e una fascia collinare a est di Epernay. Il suolo e di gesso quasi puro — il piu bianco e friabile della Champagne. Questa composizione drena perfettamente l'acqua pur mantenendo l'umidita in profondita, permettendo allo Chardonnay di esprimere una mineralita cristallina unica al mondo.</div></div>
-    <div class="zone-section"><div class="zone-section-title">Caratteristiche dei vini</div><div class="zone-section-text">I Blanc de Blancs della Cote des Blancs sono il punto di riferimento assoluto per l'eleganza: bollicine finissime, acidita vibrante, note di agrumi, fiori bianchi e mineralita gessosa inconfondibile. Le Mesnil-sur-Oger produce i Blanc de Blancs piu longevi al mondo.</div></div>
-    <div class="zone-section"><div class="zone-section-title">Grand Cru e Premier Cru</div>
-      <div class="cru-group"><div class="cru-group-title"><i class="ti ti-award"></i>Grand Cru (100%) · 6 comuni</div><div class="cru-grid"><span class="cru-pill cru-gc">Avize</span><span class="cru-pill cru-gc">Cramant</span><span class="cru-pill cru-gc">Le Mesnil-sur-Oger</span><span class="cru-pill cru-gc">Oger</span><span class="cru-pill cru-gc">Oiry</span></div></div>
-      <div class="cru-group"><div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%)</div><div class="cru-grid"><span class="cru-pill cru-pc">Vertus</span><span class="cru-pill cru-pc">Cuis</span><span class="cru-pill cru-pc">Grauves</span></div></div>
-      <div class="cru-group"><div class="cru-group-title" style="color:var(--ink-4);"><i class="ti ti-lock" style="color:var(--gold);"></i>Cru minori e schede complete — Premium</div><div class="cru-grid"><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Bergeres-les-Vertus PC</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Villeneuve-Renneville</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Mondement</span></div></div>
+    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Côte des Blancs</span></div>
+    <div class="zone-detail-color-bar" style="background:#B8922A;"></div>
+    <div style="padding:17px 18px 0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#B8922A;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte des Blancs</div></div>
+      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Sud di Épernay · ~3.500 ettari</div>
+      <div class="badges-row"><span class="badge badge-gc">6 Grand Cru</span><span class="badge badge-pc">5 Premier Cru</span><span class="badge badge-rm">Chardonnay</span></div>
     </div>
-    <div class="zone-prem-block"><i class="ti ti-lock"></i><div class="zone-prem-text"><strong>Schede complete di ogni cru</strong> con mappa del vigneto, composizione geologica, storia e tutti i vigneron RM disponibili con Premium.</div></div>
-    <div class="zone-section"><div class="zone-section-title">Maison e vigneron principali</div></div>
-    <div class="maison-in-zone" onclick="go('v-detail')"><div><div class="miz-name">Salon</div><div class="miz-sub">Le Mesnil-sur-Oger · Grand Cru · Blanc de Blancs</div></div><i class="ti ti-chevron-right" style="font-size:22px;color:var(--ink-5);"></i></div>
-    <div class="maison-in-zone" onclick="go('v-detail')"><div><div class="miz-name">Jacques Selosse</div><div class="miz-sub">Avize · Grand Cru · Vigneron RM iconico</div></div><i class="ti ti-chevron-right" style="font-size:22px;color:var(--ink-5);"></i></div>
-    <div class="maison-in-zone" onclick="go('v-detail')"><div><div class="miz-name">Pierre Peters</div><div class="miz-sub">Le Mesnil-sur-Oger · Grand Cru · RM</div></div><i class="ti ti-chevron-right" style="font-size:22px;color:var(--ink-5);"></i></div>
-    <div class="maison-in-zone" style="opacity:.5;pointer-events:none;"><div><div class="miz-name">+ 18 produttori</div><div class="miz-sub">Disponibili con Premium</div></div><i class="ti ti-lock" style="font-size:22px;color:var(--gold);"></i></div>
-    <div style="height:20px;"></div>
+    <div class="zone-stat-grid" style="margin-top:16px;">
+      <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~3.500 ha</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Uva esclusiva</div><div class="zone-stat-value">Chardonnay</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">100–250 m</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Gesso puro</div></div>
+    </div>
+    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Côte des Blancs è una fascia collinare a est di Épernay, orientata a est e sud-est. Il suolo è gesso quasi puro — il più bianco e friabile della Champagne — con uno strato superficiale di terra bruna sottilissimo. Questo terreno drena perfettamente l'acqua ma la trattiene in profondità grazie alla porosità del gesso, permettendo allo Chardonnay di esprimere una mineralità cristallina unica al mondo.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Caratteristiche dei vini</div><div class="zone-section-text">Eleganza assoluta, freschezza vibrante, tensione minerale. Note di agrumi, fiori bianchi, gesso bagnato, iodio. I grandi Blanc de Blancs di Le Mesnil-sur-Oger, Avize e Cramant sono tra i più longevi e raffinati champagne al mondo. Salon, Krug Clos du Mesnil, Selosse — le icone nascono qui.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Classificazione dei cru</div>
+      <div class="cru-group">
+        <div class="cru-group-title"><i class="ti ti-award"></i>Grand Cru (100%) · 6 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-gc">Avize</span><span class="cru-pill cru-gc">Chouilly <small style="opacity:.7">(solo CH)</small></span><span class="cru-pill cru-gc">Cramant</span><span class="cru-pill cru-gc">Le Mesnil-sur-Oger</span><span class="cru-pill cru-gc">Oger</span><span class="cru-pill cru-gc">Oiry</span></div>
+      </div>
+      <div class="cru-group">
+        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 5 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-pc">Bergères-lès-Vertus</span><span class="cru-pill cru-pc">Cuis</span><span class="cru-pill cru-pc">Étoges</span><span class="cru-pill cru-pc">Grauves</span><span class="cru-pill cru-pc">Vertus</span></div>
+      </div>
+      <div class="cru-group">
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · principali</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Billy-le-Grand</span><span class="cru-pill cru-ac">Broussy-le-Grand</span><span class="cru-pill cru-ac">Montgenost</span><span class="cru-pill cru-ac">Villeneuve-Renneville</span></div>
+      </div>
+    </div>
+    <div style="height:30px;"></div>
   </div>
-  
-
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
@@ -1067,24 +1096,41 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
-<!-- ZONE: VALLEE DE LA MARNE -->
+<!-- ZONE: VALLÉE DE LA MARNE -->
 <div class="view" id="v-zone-marne">
-  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><i class="ti ti-heart"></i></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Foto Vallee de la Marne</span></div>
-    <div class="zone-detail-color-bar" style="background:#5DCAA5;"></div>
-    <div style="padding:17px 18px 0;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#5DCAA5;width:14px;height:14px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Vallee de la Marne</div></div><div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Fondovalle · 5.200 ettari</div><div class="badges-row"><span class="badge badge-pc">5 Premier Cru</span><span class="badge badge-rm">Pinot Meunier</span><span class="badge badge-rm">Pinot Noir</span></div></div>
-    <div class="zone-stat-grid" style="margin-top:16px;"><div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">5.200 ha</div></div><div class="zone-stat"><div class="zone-stat-label">Uva principale</div><div class="zone-stat-value">P. Meunier</div></div><div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">60–200 m</div></div><div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Argilla, marna</div></div></div>
-    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Vallee de la Marne segue il fiume Marna da Epernay verso ovest. Il suolo e piu argilloso con presenza di marna e calcare. Questo terreno favorisce il Pinot Meunier. La zona include Ay, storica citta del vino, e Hautvillers, dove Dom Perignon lavoro come cantiniere nel XVII secolo.</div></div>
-    <div class="zone-section"><div class="zone-section-title">Premier Cru principali</div>
-      <div class="cru-group"><div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%)</div><div class="cru-grid"><span class="cru-pill cru-pc">Ay</span><span class="cru-pill cru-pc">Mareuil-sur-Ay</span><span class="cru-pill cru-pc">Hautvillers</span><span class="cru-pill cru-pc">Dizy</span><span class="cru-pill cru-pc">Cumieres</span></div></div>
-      <div class="cru-group"><div class="cru-group-title" style="color:var(--ink-4);"><i class="ti ti-lock" style="color:var(--gold);"></i>Comuni minori — Premium</div><div class="cru-grid"><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Damery</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Venteuil</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Epernay</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Festigny</span></div></div>
+    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Vallée de la Marne</span></div>
+    <div class="zone-detail-color-bar" style="background:#1E6E45;"></div>
+    <div style="padding:17px 18px 0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#1E6E45;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Vallée de la Marne</div></div>
+      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Da Épernay verso ovest · ~5.200 ettari</div>
+      <div class="badges-row"><span class="badge badge-gc">2 Grand Cru</span><span class="badge badge-pc">7 Premier Cru</span><span class="badge badge-rm">Pinot Meunier</span></div>
     </div>
-    <div class="zone-prem-block"><i class="ti ti-lock"></i><div class="zone-prem-text"><strong>Storia completa di Hautvillers</strong> e Dom Perignon, tutti i cru minori e i produttori disponibili con Premium.</div></div>
-    <div style="height:20px;"></div>
+    <div class="zone-stat-grid" style="margin-top:16px;">
+      <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~5.200 ha</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Uva principale</div><div class="zone-stat-value">P. Meunier</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">60–200 m</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Argilla, marna</div></div>
+    </div>
+    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Vallée de la Marne segue il fiume Marna da Épernay verso ovest per oltre 80 km. I suoli sono più argillosi con presenza di marna, sabbia e calcare, meno porosi del gesso delle zone settentrionali. Questa composizione favorisce il Pinot Meunier. Aÿ, unico Grand Cru per Pinot Noir della vallée, produce vini di straordinaria profondità. Hautvillers, dove Dom Pérignon lavorò come celleraio nel XVII secolo, è il simbolo storico della zona.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Caratteristiche dei vini</div><div class="zone-section-text">Stile rotondo, fruttato e di grande immediatezza. Note di frutti bianchi, mela cotogna, brioche calda. Il Meunier apporta piacevolezza e accessibilità. Il Pinot Noir di Aÿ è tra i più potenti e strutturati della Champagne, con profilo quasi borgognone nelle grandi annate.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Classificazione dei cru</div>
+      <div class="cru-group">
+        <div class="cru-group-title"><i class="ti ti-award"></i>Grand Cru (100%) · 2 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-gc">Aÿ</span><span class="cru-pill cru-gc">Tours-sur-Marne <small style="opacity:.7">(solo CH)</small></span></div>
+      </div>
+      <div class="cru-group">
+        <div class="cru-group-title"><i class="ti ti-star"></i>Premier Cru (90–99%) · 7 comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-pc">Bisseuil</span><span class="cru-pill cru-pc">Champillon</span><span class="cru-pill cru-pc">Cumières</span><span class="cru-pill cru-pc">Dizy</span><span class="cru-pill cru-pc">Hautvillers</span><span class="cru-pill cru-pc">Mareuil-sur-Aÿ</span><span class="cru-pill cru-pc">Mutigny</span></div>
+      </div>
+      <div class="cru-group">
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · principali</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Boursault</span><span class="cru-pill cru-ac">Damery</span><span class="cru-pill cru-ac">Épernay</span><span class="cru-pill cru-ac">Festigny</span><span class="cru-pill cru-ac">Fleury-la-Rivière</span><span class="cru-pill cru-ac">Leuvrigny</span><span class="cru-pill cru-ac">Romery</span><span class="cru-pill cru-ac">Venteuil</span></div>
+      </div>
+    </div>
+    <div style="height:30px;"></div>
   </div>
-  
-
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
@@ -1094,24 +1140,73 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
-<!-- ZONE: COTE DES BAR -->
+<!-- ZONE: CÔTE DES BAR -->
 <div class="view" id="v-zone-bar">
-  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><i class="ti ti-heart"></i></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Foto Cote des Bar</span></div>
-    <div class="zone-detail-color-bar" style="background:#F0997B;"></div>
-    <div style="padding:17px 18px 0;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#F0997B;width:14px;height:14px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Cote des Bar</div></div><div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Aube · Sud-est della Champagne · 7.000 ettari</div><div class="badges-row"><span class="badge badge-rm">Pinot Noir</span><span class="badge badge-bio">Vigneron RM</span><span class="badge badge-bio">Bio emergente</span></div></div>
-    <div class="zone-stat-grid" style="margin-top:16px;"><div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">7.000 ha</div></div><div class="zone-stat"><div class="zone-stat-label">Uva principale</div><div class="zone-stat-value">Pinot Noir</div></div><div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">150–300 m</div></div><div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Kimmeridgiano</div></div></div>
-    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Cote des Bar si trova nell'Aube, a 100 km a sud-est della Marne. Il suolo kimmeridgiano — lo stesso di Chablis e Sancerre — e ricco di calcari e fossili marini. Questo terreno conferisce ai vini una freschezza e mineralita molto diverse rispetto alle zone settentrionali. La zona sta vivendo una rinascita grazie a una nuova generazione di vigneron RM.</div></div>
-    <div class="zone-section"><div class="zone-section-title">Comuni principali</div>
-      <div class="cru-group"><div class="cru-group-title"><i class="ti ti-map-pin"></i>Comuni principali (nessun GC o PC)</div><div class="cru-grid"><span class="cru-pill cru-base">Les Riceys</span><span class="cru-pill cru-base">Bar-sur-Aube</span><span class="cru-pill cru-base">Gye-sur-Seine</span><span class="cru-pill cru-base">Buxeuil</span><span class="cru-pill cru-base">Urville</span></div></div>
-      <div class="cru-group"><div class="cru-group-title" style="color:var(--ink-4);"><i class="ti ti-lock" style="color:var(--gold);"></i>Vigneron RM — schede Premium</div><div class="cru-grid"><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Drappier</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Marie-Courtin</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Cedric Bouchard</span><span class="cru-pill cru-locked"><i class="ti ti-lock"></i>Vouette et Sorbee</span></div></div>
+    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Côte des Bar · Aube</span></div>
+    <div class="zone-detail-color-bar" style="background:#C05228;"></div>
+    <div style="padding:17px 18px 0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#C05228;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte des Bar</div></div>
+      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Aube · Sud-est della Champagne · ~7.000 ettari</div>
+      <div class="badges-row"><span class="badge badge-rm">Pinot Noir</span><span class="badge badge-bio">Vigneron RM</span><span class="badge badge-bio">Bio emergente</span></div>
     </div>
-    <div class="zone-prem-block"><i class="ti ti-lock"></i><div class="zone-prem-text"><strong>La Cote des Bar</strong> ha il maggior numero di vigneron RM emergenti e biologici. Guida completa con profili dettagliati disponibile con Premium.</div></div>
-    <div style="height:20px;"></div>
+    <div class="zone-stat-grid" style="margin-top:16px;">
+      <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~7.000 ha</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Uva principale</div><div class="zone-stat-value">Pinot Noir</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">150–300 m</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Kimmeridgiano</div></div>
+    </div>
+    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Côte des Bar si trova nell'Aube, circa 100 km a sud-est della Marne. Il suolo kimmeridgiano — lo stesso che caratterizza Chablis e una parte della Borgogna — è ricco di calcari e fossili marini del periodo giurassico. Questo terreno conferisce ai vini una freschezza, mineralità e un profilo aromatico molto diversi dalle zone settentrionali. La zona non ha Grand Cru né Premier Cru nella classificazione ufficiale, ma sta vivendo una straordinaria rinascita grazie ai vigneron RM.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Caratteristiche dei vini</div><div class="zone-section-text">Stile immediato, fruttato e vivace. Pinot Noir con note di ciliegia, lampone, leggero speziato. La nuova generazione di vigneron RM ha trasformato questa zona in un riferimento internazionale, con molte produzioni biologiche e biodinamiche. Drappier, Marie-Courtin, Cédric Bouchard e Vouette et Sorbée sono i nomi più celebrati.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Comuni principali · nessun Grand o Premier Cru</div>
+      <div class="cru-group">
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Sub-zona Bar-sur-Aube</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Bar-sur-Aube</span><span class="cru-pill cru-ac">Bayel</span><span class="cru-pill cru-ac">Colombé-le-Sec</span><span class="cru-pill cru-ac">Fontette</span><span class="cru-pill cru-ac">Meurville</span><span class="cru-pill cru-ac">Rizaucourt-Buchey</span><span class="cru-pill cru-ac">Urville</span><span class="cru-pill cru-ac">Ville-sur-Arce</span></div>
+      </div>
+      <div class="cru-group">
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Sub-zona Bar-sur-Seine</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Balnot-sur-Laignes</span><span class="cru-pill cru-ac">Bar-sur-Seine</span><span class="cru-pill cru-ac">Celles-sur-Ource</span><span class="cru-pill cru-ac">Cunfin</span><span class="cru-pill cru-ac">Gyé-sur-Seine</span><span class="cru-pill cru-ac">Les Riceys</span><span class="cru-pill cru-ac">Merrey-sur-Arce</span><span class="cru-pill cru-ac">Neuville-sur-Seine</span><span class="cru-pill cru-ac">Noé-les-Mallets</span><span class="cru-pill cru-ac">Polisot</span><span class="cru-pill cru-ac">Polisy</span></div>
+      </div>
+    </div>
+    <div style="height:30px;"></div>
   </div>
-  
+  <div class="bottom-nav">
+    <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
+    <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
+    <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
+  </div>
+</div>
 
+<!-- ZONE: CÔTE DE SÉZANNE -->
+<div class="view" id="v-zone-sezanne">
+  <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"></div></div>
+  <div class="scroll">
+    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Côte de Sézanne</span></div>
+    <div class="zone-detail-color-bar" style="background:#4A5D8F;"></div>
+    <div style="padding:17px 18px 0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#4A5D8F;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte de Sézanne</div></div>
+      <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · A ovest della Côte des Blancs · ~700 ettari</div>
+      <div class="badges-row"><span class="badge badge-rm">Chardonnay</span><span class="badge badge-bio">Emergente</span></div>
+    </div>
+    <div class="zone-stat-grid" style="margin-top:16px;">
+      <div class="zone-stat"><div class="zone-stat-label">Superficie</div><div class="zone-stat-value">~700 ha</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Uva principale</div><div class="zone-stat-value">Chardonnay</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Altitudine</div><div class="zone-stat-value">120–220 m</div></div>
+      <div class="zone-stat"><div class="zone-stat-label">Suolo</div><div class="zone-stat-value">Gesso, marna</div></div>
+    </div>
+    <div class="zone-section"><div class="zone-section-title">Profilo e terroir</div><div class="zone-section-text">La Côte de Sézanne è una zona meno conosciuta ma in forte ascesa, situata a sud-ovest della Côte des Blancs. I suoli sono simili — gesso e marna — ma con un clima leggermente più caldo e continentale, meno influenzato dalla Marna. Questa zona non ha Grand Cru né Premier Cru nella classificazione ufficiale, ma la qualità dei vigneron locali è in costante crescita.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Caratteristiche dei vini</div><div class="zone-section-text">Chardonnay più morbido, fruttato e immediatamente accessibile rispetto alla Côte des Blancs. Note di pesca bianca, melone, fiori di campo, agrumi maturi. Meno tensione minerale, maggiore morbidezza. Zona perfetta per chi vuole scoprire Champagne originali a prezzi ancora accessibili, lontano dai nomi più blasonati.</div></div>
+    <div class="zone-section"><div class="zone-section-title">Comuni principali · nessun Grand o Premier Cru</div>
+      <div class="cru-group">
+        <div class="cru-group-title" style="color:var(--ink-3);"><i class="ti ti-map-pin"></i>Autres Crus · tutti i comuni</div>
+        <div class="cru-grid"><span class="cru-pill cru-ac">Bethon</span><span class="cru-pill cru-ac">Broyes</span><span class="cru-pill cru-ac">Chantemerle</span><span class="cru-pill cru-ac">Mondement-Montgivroux</span><span class="cru-pill cru-ac">Sézanne</span><span class="cru-pill cru-ac">Vindey</span><span class="cru-pill cru-ac">Villenauxe-la-Grande</span></div>
+      </div>
+    </div>
+    <div style="height:30px;"></div>
+  </div>
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
