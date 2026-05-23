@@ -1069,7 +1069,7 @@ async function updateSalvatiUI() {
       'negociant': 'Négociant'
     }[m.tipo] || m.tipo;
 
-    return '<div class="maison-card" onclick="go(\'v-detail\')" style="margin:0 14px 12px;">' +
+    return '<div class="maison-card" onclick="openSavedMaison(\'' + m.id + '\')" style="margin:0 14px 12px;">' +
       '<div class="img-ph maison-card-ph" style="height:80px;">' +
       (m.foto_url
         ? '<img src="' + m.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>'
@@ -1119,14 +1119,14 @@ async function updateWishlistUI() {
       'nature': 'Brut Nature'
     }[b.tipo] || b.tipo || '';
 
-    return '<div class="bottle-row" style="margin:0 14px 9px;cursor:pointer;">' +
+    return '<div class="bottle-row" onclick="openSavedBottiglia(\'' + b.id + '\')" style="margin:0 14px 9px;cursor:pointer;">' +
       '<div class="bottle-ph"><i class="ti ti-bottle"></i></div>' +
       '<div class="bottle-info">' +
       '<div class="bottle-name">' + b.nome + '</div>' +
       '<div class="bottle-type">' + [b.maison?.nome, tipoLabel, b.annata].filter(Boolean).join(' · ') + '</div>' +
       (prezzo ? '<div class="bottle-price">' + prezzo + '</div>' : '') +
       '</div>' +
-      '<i class="ti ti-star-filled" style="font-size:20px;color:var(--gold);cursor:pointer;" data-id="' + item.id + '" onclick="removeFromWishlist(this.dataset.id)"></i>' +
+      '<i class="ti ti-heart-filled" style="font-size:20px;color:var(--gold);cursor:pointer;flex-shrink:0;" data-id="' + item.id + '" onclick="event.stopPropagation();removeFromWishlist(this.dataset.id)"></i>' +
       '</div>';
   }).join('');
 }
@@ -1139,6 +1139,28 @@ async function removeFavorite(favId) {
   } catch(e) {
     console.log('removeFavorite error:', e);
   }
+}
+
+async function openSavedMaison(maisonId) {
+  // Cerca prima in cache, altrimenti carica dal DB
+  if (!allMaison.find(x => x.id === maisonId)) {
+    try {
+      const { data } = await supa.from('maison').select('*, zone(nome, colore)').eq('id', maisonId).maybeSingle();
+      if (data) allMaison = [...allMaison, data];
+    } catch(e) { console.log('openSavedMaison error:', e); }
+  }
+  openMaisonDetail(maisonId);
+}
+
+async function openSavedBottiglia(bottId) {
+  // Cerca prima in cache, altrimenti carica dal DB
+  if (!allBottiglie.find(x => x.id === bottId)) {
+    try {
+      const { data } = await supa.from('bottiglie').select('*, maison(nome, slug)').eq('id', bottId).maybeSingle();
+      if (data) allBottiglie = [...allBottiglie, data];
+    } catch(e) { console.log('openSavedBottiglia error:', e); }
+  }
+  openBottigliaDetail(bottId);
 }
 
 async function removeFromWishlist(wishId) {
