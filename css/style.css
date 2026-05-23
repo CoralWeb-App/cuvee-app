@@ -343,11 +343,14 @@ html,body{
 .maison-card-ph .img-badge{position:absolute;top:9px;right:10px;background:rgba(255,255,255,.92);border-radius:20px;padding:3px 9px;font-family:var(--sans);font-size:13px;color:#8a6a1e;border:0.5px solid var(--gold-border);}
 .maison-card-ph .lock-over{position:absolute;top:9px;left:10px;background:rgba(245,239,228,.95);border-radius:20px;padding:3px 9px;font-family:var(--sans);font-size:13px;color:#8a6a1e;display:flex;align-items:center;gap:3px;}
 .maison-card-ph .lock-over i{font-size:13px;}
+.maison-card.locked{opacity:.55;}
 .maison-body{padding:12px 14px 14px;}
-.maison-header-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;}
+.maison-header-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
 .maison-name{font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;}
 .maison-heart{font-size:22px;color:var(--ink-5);cursor:pointer;}
-.maison-meta{font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:8px;}
+.maison-card-zona{font-family:var(--sans);font-size:12px;color:var(--gold);margin-bottom:2px;font-weight:500;letter-spacing:.3px;}
+.maison-meta{font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:7px;}
+.fascia-tag{font-family:var(--sans);font-size:13px;color:var(--gold);font-weight:600;letter-spacing:.5px;flex-shrink:0;}
 .badges-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
 .bottles-prev{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;}
 .bottles-prev::-webkit-scrollbar{display:none;}
@@ -358,14 +361,26 @@ html,body{
 /* ═══════════════════════════════
    DETAIL MAISON
 ═══════════════════════════════ */
-.detail-hero-ph{width:100%;height:170px;position:relative;flex-shrink:0;}
+.detail-hero-ph{width:100%;height:200px;position:relative;flex-shrink:0;}
 .detail-fav{position:absolute;top:14px;left:14px;font-size:26px;color:var(--ink-5);cursor:pointer;}
 .detail-type-badge{position:absolute;top:14px;right:14px;}
 .detail-info{padding:16px 18px 0;}
 .detail-name{font-family:var(--serif);font-size:26px;color:var(--ink);font-weight:500;margin-bottom:3px;}
-.detail-meta{font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:10px;}
-.detail-sec-title{font-family:var(--sans);font-size:13px;letter-spacing:1.5px;color:var(--ink-4);text-transform:uppercase;margin-bottom:8px;padding:0 18px;}
-.detail-desc{font-family:var(--sans);font-size:15px;color:var(--ink-2);line-height:1.65;padding:0 18px;}
+.detail-meta{font-family:var(--sans);font-size:14px;color:var(--ink-4);margin-bottom:10px;}
+.detail-sec-title{font-family:var(--sans);font-size:11px;letter-spacing:1.8px;color:var(--gold);text-transform:uppercase;font-weight:500;margin-bottom:10px;padding:0 18px;}
+.detail-desc{font-family:var(--sans);font-size:15px;color:var(--ink-2);line-height:1.7;padding:0 18px;}
+.detail-section{padding:0 18px;margin-bottom:22px;}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--ivory-3);gap:16px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-row-label{font-family:var(--sans);font-size:13px;color:var(--ink-4);flex-shrink:0;min-width:110px;}
+.detail-row-value{font-family:var(--sans);font-size:14px;color:var(--ink-2);text-align:right;line-height:1.5;}
+.detail-link{color:var(--gold);text-decoration:none;}
+.uvaggio-item{margin-bottom:11px;}
+.uvaggio-head{display:flex;justify-content:space-between;font-family:var(--sans);font-size:13px;color:var(--ink-3);margin-bottom:5px;}
+.uvaggio-track{background:var(--border);border-radius:4px;height:5px;overflow:hidden;}
+.uvaggio-fill{background:var(--gold);border-radius:4px;height:5px;}
+.visit-pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);font-size:13px;color:var(--ink-4);background:var(--ivory-2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;margin-right:7px;margin-top:8px;}
+.visit-pill.on{color:#27500A;border-color:#97C459;background:#eaf3de;}
 .stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 18px;}
 .stat-box{background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 13px;}
 .stat-label{font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:3px;}

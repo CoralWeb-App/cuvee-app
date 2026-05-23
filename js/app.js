@@ -1911,9 +1911,9 @@ async function loadAndRenderMaison() {
     // Load maison from DB
     const { data, error } = await supa
       .from('maison')
-      .select('*')
-      .order('is_featured', { ascending: false })
-      .order('ordine', { ascending: true });
+      .select('*, zone(nome)')
+      .eq('is_published', true)
+      .order('nome', { ascending: true });
 
     if (error) throw error;
     allMaison = data || [];
@@ -1966,40 +1966,45 @@ function renderMaison() {
   }
 
   const tipoLabel = {
-    'grande_maison': 'Grande Maison',
-    'vigneron_rm': 'Vigneron RM',
-    'cooperativa': 'Cooperativa',
-    'negociant': 'Négociant'
+    'NM':'Négociant-Manipulant','RM':'Récoltant-Manipulant',
+    'RC':'Récoltant-Coopérateur','CM':'Coopérative-Manipulant',
+    'SR':'Société de Récoltants','ND':'Négociant-Distributeur','MA':'Marque d\'Acheteur'
   };
-
   const tipoBadge = {
-    'grande_maison': 'badge-gm',
-    'vigneron_rm': 'badge-rm',
-    'cooperativa': 'badge-bio',
-    'negociant': 'badge-pres'
+    'NM':'badge-gm','RM':'badge-rm','RC':'badge-rm',
+    'CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres'
   };
 
+  const premium = isPremium();
   const isFav = (id) => maisonFavorites.has(id);
 
   listEl.innerHTML = filtered.map(m => {
+    const isLocked = !m.is_free && !premium;
     const badge = tipoBadge[m.tipo] || 'badge-rm';
-    const label = tipoLabel[m.tipo] || m.tipo;
+    const label = m.tipo || '—';
     const fav = isFav(m.id);
-    const meta = [m.sede_comune, m.anno_fondazione ? 'dal ' + m.anno_fondazione : ''].filter(Boolean).join(' · ');
+    const zonaNome = m.zone?.nome || '';
+    const meta = [m.anno_fondazione ? 'dal ' + m.anno_fondazione : '', m.chef_de_cave || ''].filter(Boolean).join(' · ');
 
-    return '<div class="maison-card" data-id="' + m.id + '" onclick="openMaisonDetail(this.dataset.id)">' +
+    return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openMaisonDetail('" + m.id + "')") + '">' +
       '<div class="img-ph maison-card-ph" style="height:90px;">' +
         (m.foto_url ? '<img src="' + m.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>' : '<i class="ti ti-photo" style="font-size:22px;"></i>') +
-        (m.is_featured ? '<div class="img-badge">In evidenza</div>' : '') +
+        (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
       '</div>' +
       '<div class="maison-body">' +
         '<div class="maison-header-row">' +
           '<div class="maison-name">' + m.nome + '</div>' +
-          '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            (m.fascia_prezzo ? '<span class="fascia-tag">' + m.fascia_prezzo + '</span>' : '') +
+            (!isLocked ? '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>' : '') +
+          '</div>' +
         '</div>' +
-        '<div class="maison-meta">' + meta + '</div>' +
-        '<div class="badges-row"><span class="badge ' + badge + '">' + label + '</span></div>' +
-        (m.gruppo ? '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);margin-top:4px;">' + m.gruppo + '</div>' : '') +
+        (zonaNome ? '<div class="maison-card-zona">' + zonaNome + (m.sede_comune ? ' · ' + m.sede_comune : '') + '</div>' : '') +
+        (meta ? '<div class="maison-meta">' + meta + '</div>' : '') +
+        '<div class="badges-row">' +
+          '<span class="badge ' + badge + '">' + label + '</span>' +
+          (m.certificazioni && m.certificazioni.length ? m.certificazioni.map(c => '<span class="badge badge-bio">' + c + '</span>').join('') : '') +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -2086,14 +2091,23 @@ function openMaisonDetail(maisonId) {
   if (!m) return;
   currentMaisonDetail = m;
 
-  const tipoLabel = { 'grande_maison':'Grande Maison','vigneron_rm':'Vigneron RM','cooperativa':'Cooperativa','negociant':'Négociant' };
-  const tipoBadge = { 'grande_maison':'badge-gm','vigneron_rm':'badge-rm','cooperativa':'badge-bio' };
+  const tipoLabel = {
+    'NM':'Négociant-Manipulant','RM':'Récoltant-Manipulant',
+    'RC':'Récoltant-Coopérateur','CM':'Coopérative-Manipulant',
+    'SR':'Société de Récoltants','ND':'Négociant-Distributeur','MA':'Marque d\'Acheteur'
+  };
+  const tipoBadge = {
+    'NM':'badge-gm','RM':'badge-rm','RC':'badge-rm',
+    'CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres'
+  };
+
+  const zonaNome = m.zone?.nome || '';
 
   // Hero
   const hero = document.getElementById('detail-hero');
   if (hero) {
     if (m.foto_url) {
-      hero.innerHTML = '<img src="' + m.foto_url + '" style="width:100%;height:180px;object-fit:cover;"/>';
+      hero.innerHTML = '<img src="' + m.foto_url + '" style="width:100%;height:200px;object-fit:cover;"/>';
       hero.className = '';
     } else {
       hero.className = 'img-ph detail-hero-ph';
@@ -2108,45 +2122,136 @@ function openMaisonDetail(maisonId) {
     favIcon.style.color = maisonFavorites.has(m.id) ? 'var(--gold)' : '';
   }
 
-  // Name & meta
+  // Nome & meta
   const nameEl = document.getElementById('detail-name');
   if (nameEl) nameEl.textContent = m.nome;
   const metaEl = document.getElementById('detail-meta');
-  if (metaEl) metaEl.textContent = [m.sede_comune, m.sede_regione, tipoLabel[m.tipo]||m.tipo, m.anno_fondazione ? 'fondata nel '+m.anno_fondazione : ''].filter(Boolean).join(' · ');
+  if (metaEl) metaEl.textContent = [zonaNome, m.sede_comune, m.anno_fondazione ? 'dal ' + m.anno_fondazione : ''].filter(Boolean).join(' · ');
 
   // Badges
   const badgesEl = document.getElementById('detail-badges');
   if (badgesEl) {
-    let badges = '<span class="badge ' + (tipoBadge[m.tipo]||'badge-rm') + '">' + (tipoLabel[m.tipo]||m.tipo) + '</span>';
-    if (m.certificazioni && m.certificazioni.length) {
-      m.certificazioni.forEach(c => { badges += ' <span class="badge badge-bio">' + c + '</span>'; });
-    }
-    badgesEl.innerHTML = badges;
+    let b = '';
+    if (m.tipo) b += '<span class="badge ' + (tipoBadge[m.tipo]||'badge-rm') + '">' + m.tipo + ' — ' + (tipoLabel[m.tipo]||m.tipo) + '</span>';
+    if (m.fascia_prezzo) b += ' <span class="fascia-tag" style="font-size:15px;margin-left:4px;">' + m.fascia_prezzo + '</span>';
+    if (m.certificazioni && m.certificazioni.length) m.certificazioni.forEach(c => { b += ' <span class="badge badge-bio">' + c + '</span>'; });
+    badgesEl.innerHTML = b;
   }
 
-  // Descrizione
+  // Profilo
   const descEl = document.getElementById('detail-desc');
   if (descEl) descEl.textContent = m.descrizione || '';
 
-  // Stats
-  const statsEl = document.getElementById('detail-stats');
-  if (statsEl) {
-    const stats = [
-      { label: 'Fondata', value: m.anno_fondazione || '—' },
-      { label: 'Sede', value: m.sede_comune || '—' },
-      { label: 'Chef de cave', value: m.chef_de_cave || '—' },
-      { label: 'Gruppo', value: m.gruppo || 'Indipendente' },
-    ];
-    if (m.superficie_ha) stats.push({ label: 'Superficie', value: m.superficie_ha + ' ha' });
-    if (m.produzione_bottiglie) stats.push({ label: 'Produzione', value: m.produzione_bottiglie.toLocaleString('it') });
-    statsEl.innerHTML = stats.map(s =>
-      '<div class="stat-box"><div class="stat-label">' + s.label + '</div><div class="stat-value">' + s.value + '</div></div>'
+  // Filosofia
+  const filosSection = document.getElementById('detail-filosofia-section');
+  const filosEl = document.getElementById('detail-filosofia');
+  if (filosSection && filosEl) {
+    filosSection.style.display = m.filosofia ? 'block' : 'none';
+    if (m.filosofia) filosEl.textContent = m.filosofia;
+  }
+
+  // Scheda tecnica
+  const schedaEl = document.getElementById('detail-scheda');
+  if (schedaEl) {
+    const rows = [
+      { l:'Fondazione', v: m.anno_fondazione },
+      { l:'Tipo', v: m.tipo ? m.tipo + ' — ' + (tipoLabel[m.tipo]||'') : null },
+      { l:'Zona', v: zonaNome || null },
+      { l:'Sede', v: [m.sede_comune, m.sede_regione].filter(Boolean).join(', ') || null },
+      { l:'Indirizzo', v: m.sede_indirizzo || null },
+      { l:'Chef de cave', v: m.chef_de_cave || null },
+      { l:'Direzione', v: m.direzione || null },
+      { l:'Proprietà', v: m.proprieta || null },
+      { l:'Gruppo', v: m.gruppo || null },
+    ].filter(r => r.v);
+    schedaEl.innerHTML = rows.map(r =>
+      '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span><span class="detail-row-value">' + r.v + '</span></div>'
     ).join('');
+  }
+
+  // Vigneti & uvaggi
+  const vigSection = document.getElementById('detail-vigneti-section');
+  const vigEl = document.getElementById('detail-vigneti');
+  if (vigSection && vigEl) {
+    const hasData = m.ettari_totali || m.pct_pinot_noir || m.pct_chardonnay || m.pct_meunier || (m.certificazioni && m.certificazioni.length);
+    vigSection.style.display = hasData ? 'block' : 'none';
+    if (hasData) {
+      let html = '';
+      if (m.ettari_totali || m.ettari_proprieta) {
+        let ettariVal = '';
+        if (m.ettari_totali) ettariVal += m.ettari_totali + ' ha totali';
+        if (m.ettari_proprieta && m.ettari_proprieta !== m.ettari_totali) ettariVal += (ettariVal ? '<br>' : '') + m.ettari_proprieta + ' ha di proprietà';
+        if (m.ettari_gestione) ettariVal += '<br>' + m.ettari_gestione + ' ha in gestione';
+        html += '<div class="detail-row"><span class="detail-row-label">Ettari</span><span class="detail-row-value">' + ettariVal + '</span></div>';
+      }
+      if (m.comuni_vigneti && m.comuni_vigneti.length) {
+        html += '<div class="detail-row"><span class="detail-row-label">Comuni</span><span class="detail-row-value">' + m.comuni_vigneti.join(', ') + '</span></div>';
+      }
+      const uvaggi = [
+        { name:'Pinot Noir', pct: m.pct_pinot_noir },
+        { name:'Chardonnay', pct: m.pct_chardonnay },
+        { name:'Pinot Meunier', pct: m.pct_meunier }
+      ].filter(u => u.pct > 0);
+      if (uvaggi.length) {
+        html += '<div style="margin-top:14px;">';
+        uvaggi.forEach(u => {
+          html += '<div class="uvaggio-item">' +
+            '<div class="uvaggio-head"><span>' + u.name + '</span><span>' + u.pct + '%</span></div>' +
+            '<div class="uvaggio-track"><div class="uvaggio-fill" style="width:' + u.pct + '%"></div></div>' +
+          '</div>';
+        });
+        html += '</div>';
+      }
+      if (m.certificazioni && m.certificazioni.length) {
+        html += '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">';
+        m.certificazioni.forEach(c => { html += '<span class="badge badge-bio">' + c + '</span>'; });
+        html += '</div>';
+      }
+      vigEl.innerHTML = html;
+    }
+  }
+
+  // Produzione
+  const prodSection = document.getElementById('detail-produzione-section');
+  const prodEl = document.getElementById('detail-produzione');
+  if (prodSection && prodEl) {
+    const rows = [
+      { l:'Vinificazione', v: m.vinificazione || null },
+      { l:'Malolattica', v: m.malolattica || null },
+      { l:'Tipo di pressa', v: m.tipo_pressa || null },
+      { l:'Vins de réserve', v: m.vins_de_reserve || null },
+      { l:'Liqueur d\'expédition', v: m.liqueur_expedition || null },
+      { l:'Produzione annua', v: m.produzione_bottiglie ? m.produzione_bottiglie.toLocaleString('it') + ' bott.' : null },
+      { l:'Stock in cantina', v: m.stock_cantina ? m.stock_cantina.toLocaleString('it') + ' bott.' : null },
+    ].filter(r => r.v);
+    prodSection.style.display = rows.length ? 'block' : 'none';
+    prodEl.innerHTML = rows.map(r =>
+      '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span><span class="detail-row-value">' + r.v + '</span></div>'
+    ).join('');
+  }
+
+  // Distribuzione & contatti
+  const distribSection = document.getElementById('detail-distribuzione-section');
+  const distribEl = document.getElementById('detail-distribuzione');
+  if (distribSection && distribEl) {
+    let html = '';
+    if (m.importatore_italia) html += '<div class="detail-row"><span class="detail-row-label">In Italia</span><span class="detail-row-value">' + m.importatore_italia + '</span></div>';
+    if (m.telefono) html += '<div class="detail-row"><span class="detail-row-label">Telefono</span><span class="detail-row-value"><a class="detail-link" href="tel:' + m.telefono + '">' + m.telefono + '</a></span></div>';
+    if (m.sito_web) {
+      const url = m.sito_web.startsWith('http') ? m.sito_web : 'https://' + m.sito_web;
+      html += '<div class="detail-row"><span class="detail-row-label">Sito web</span><span class="detail-row-value"><a class="detail-link" href="' + url + '" target="_blank" onclick="event.stopPropagation()">' + m.sito_web + '</a></span></div>';
+    }
+    html += '<div style="margin-top:4px;">' +
+      '<span class="visit-pill' + (m.visita_possibile ? ' on' : '') + '"><i class="ti ' + (m.visita_possibile ? 'ti-check' : 'ti-x') + '"></i>Visita</span>' +
+      '<span class="visit-pill' + (m.degustazione_possibile ? ' on' : '') + '"><i class="ti ' + (m.degustazione_possibile ? 'ti-check' : 'ti-x') + '"></i>Degustazione</span>' +
+    '</div>';
+    if (m.visita_info) html += '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:8px;line-height:1.6;">' + m.visita_info + '</div>';
+    distribSection.style.display = html ? 'block' : 'none';
+    distribEl.innerHTML = html;
   }
 
   // Load bottles
   loadDetailBottles(maisonId);
-
   go('v-detail');
 }
 

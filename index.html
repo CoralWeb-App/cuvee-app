@@ -682,9 +682,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="filter-bar">
     <div class="filter-row" id="maison-filters">
       <div class="f-btn on" onclick="setMaisonFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'grande_maison')">Grande Maison</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'vigneron_rm')">Vigneron RM</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'cooperativa')">Cooperativa</div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'NM')">NM</div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'RM')">RM</div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'RC')">RC</div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'CM')">CM</div>
     </div>
   </div>
   <div class="scroll" id="maison-scroll">
@@ -728,28 +729,60 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="detail-info">
       <div class="detail-name" id="detail-name">—</div>
       <div class="detail-meta" id="detail-meta">—</div>
-      <div class="badges-row" id="detail-badges"></div>
+      <div class="badges-row" id="detail-badges" style="margin-top:8px;"></div>
     </div>
 
-    <!-- DESCRIZIONE -->
-    <div class="detail-sec-title" style="margin-top:16px;">Profilo</div>
-    <div class="detail-desc" id="detail-desc" style="margin-bottom:17px;">—</div>
+    <!-- PROFILO -->
+    <div class="detail-sec-title" style="margin-top:18px;">Profilo</div>
+    <div class="detail-desc" id="detail-desc" style="margin-bottom:20px;">—</div>
 
-    <!-- STATS -->
-    <div class="stat-grid" id="detail-stats" style="margin-bottom:17px;"></div>
+    <!-- FILOSOFIA -->
+    <div id="detail-filosofia-section" style="display:none;">
+      <div class="detail-sec-title">Filosofia</div>
+      <div class="detail-desc" id="detail-filosofia" style="margin-bottom:20px;font-style:italic;color:var(--ink-3);"></div>
+    </div>
+
+    <!-- SCHEDA TECNICA -->
+    <div class="detail-sec-title">Scheda</div>
+    <div class="detail-section" style="margin-bottom:20px;">
+      <div id="detail-scheda"></div>
+    </div>
+
+    <!-- VIGNETI -->
+    <div id="detail-vigneti-section" style="display:none;">
+      <div class="detail-sec-title">Vigneti & Uvaggi</div>
+      <div class="detail-section" style="margin-bottom:20px;">
+        <div id="detail-vigneti"></div>
+      </div>
+    </div>
+
+    <!-- PRODUZIONE -->
+    <div id="detail-produzione-section" style="display:none;">
+      <div class="detail-sec-title">Produzione</div>
+      <div class="detail-section" style="margin-bottom:20px;">
+        <div id="detail-produzione"></div>
+      </div>
+    </div>
+
+    <!-- DISTRIBUZIONE -->
+    <div id="detail-distribuzione-section" style="display:none;">
+      <div class="detail-sec-title">Distribuzione & Contatti</div>
+      <div class="detail-section" style="margin-bottom:20px;">
+        <div id="detail-distribuzione"></div>
+      </div>
+    </div>
 
     <!-- BOTTIGLIE -->
     <div id="detail-bottles-section">
-      <div class="detail-sec-title">Catalogo bottiglie</div>
+      <div class="detail-sec-title">Catalogo cuvées</div>
       <div id="detail-bottles-list">
-        <div style="padding:16px 18px;font-family:var(--sans);font-size:15px;color:var(--ink-4);">
-          Catalogo bottiglie in arrivo — aggiornamento in corso.
+        <div style="padding:0 18px 16px;font-family:var(--sans);font-size:15px;color:var(--ink-4);">
+          Catalogo in aggiornamento.
         </div>
       </div>
-      <!-- Premium lock -->
       <div id="detail-bottles-lock" class="locked-row" style="display:none;">
         <i class="ti ti-lock"></i>
-        <p>Catalogo completo delle cuvées disponibile con <strong>Piano Premium</strong>.</p>
+        <p>Catalogo completo disponibile con <strong>Piano Premium</strong>.</p>
       </div>
     </div>
 
@@ -759,7 +792,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div id="detail-partners-list"></div>
     </div>
 
-    <div style="height:24px;"></div>
+    <div style="height:30px;"></div>
   </div>
   
 
