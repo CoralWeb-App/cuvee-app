@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=7"/>
+<link rel="stylesheet" href="css/style.css?v=8"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -169,7 +169,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="q-title">Guida</div>
         <div class="q-sub">Méthode, terroir, dosages</div>
       </div>
-      <div class="q-card" onclick="go('v-mappa')">
+      <div class="q-card" onclick="goGuida('zone')">
         <i class="ti ti-map-2"></i>
         <div class="q-title">Terroirs</div>
         <div class="q-sub">Zone e cru</div>
@@ -1488,227 +1488,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 
 <!-- ═══ MAPPA INTERATTIVA ═══ -->
-<div class="view" id="v-mappa">
-  <div class="topbar" style="z-index:20;position:relative;">
-    <div style="flex:1;">
-      <div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;">Mappa dei Terroirs</div>
-      <div style="font-family:var(--sans);font-size:14px;color:var(--ink-4);">Pinch per zoom · trascina per muovere</div>
-    </div>
-    <div class="topbar-icons"><i class="ti ti-maximize" id="map-reset-btn" onclick="mapReset()" style="cursor:pointer;"></i></div>
-  </div>
-
-  <div style="flex:1;position:relative;overflow:hidden;background:#dce8f0;min-height:0;" id="map-wrap">
-
-    <!-- CANVAS MAPPA -->
-    <div id="map-stage" style="position:absolute;top:0;left:0;width:100%;height:100%;touch-action:none;cursor:grab;">
-      <svg id="champ-svg" viewBox="0 0 600 780" style="position:absolute;top:0;left:0;width:100%;height:100%;"
-           xmlns="http://www.w3.org/2000/svg">
-
-        <!-- SFONDO TERRENO -->
-        <rect width="600" height="780" fill="#dce8f0"/>
-        <!-- Foresta Ardenne / zone esterne -->
-        <ellipse cx="300" cy="390" rx="290" ry="380" fill="#c8ddc8" opacity=".4"/>
-
-        <!-- ══════════════════════════════════
-             ZONE — forme geografiche reali
-        ══════════════════════════════════ -->
-
-        <!-- MONTAGNE DE REIMS — forma a ferro di cavallo intorno alla foresta -->
-        <path id="z-montagne" class="zona-path"
-          d="M140,95 L175,75 L215,68 L255,72 L288,85 L310,105 L318,130
-             L308,158 L288,175 L265,185 L242,188 L222,182 L235,168
-             L248,150 L250,132 L240,115 L218,104 L195,100 L170,104
-             L152,115 L145,130 L148,148 L158,162 L148,170 L132,158
-             L122,138 L118,115 Z"
-          fill="#f5ede0" stroke="#b8922a" stroke-width="2"
-          onclick="selectZona('montagne')" style="cursor:pointer;"/>
-
-        <!-- VALLÉE DE LA MARNE — striscia lungo il fiume da ovest a est -->
-        <path id="z-marne" class="zona-path"
-          d="M55,205 L80,188 L112,178 L145,172 L168,170 L185,175
-             L205,183 L222,190 L238,195 L252,198 L265,195 L278,185
-             L292,180 L305,183 L312,195 L308,212 L295,225 L275,232
-             L255,238 L232,240 L208,238 L185,232 L162,228 L138,225
-             L112,220 L88,215 L65,218 Z"
-          fill="#e0f5ee" stroke="#5DCAA5" stroke-width="2"
-          onclick="selectZona('marne')" style="cursor:pointer;"/>
-
-        <!-- CÔTE DES BLANCS — striscia verticale a sud di Épernay -->
-        <path id="z-blancs" class="zona-path"
-          d="M245,245 L265,240 L282,242 L295,250 L300,265 L298,285
-             L294,308 L288,332 L280,355 L270,375 L258,388 L244,392
-             L230,388 L220,375 L218,358 L222,338 L226,315 L228,290
-             L232,268 Z"
-          fill="#eeedf9" stroke="#AFA9EC" stroke-width="2"
-          onclick="selectZona('blancs')" style="cursor:pointer;"/>
-
-        <!-- CÔTE DE SÉZANNE — piccola estensione -->
-        <path id="z-sezanne" class="zona-path"
-          d="M220,395 L240,395 L252,402 L255,418 L248,432 L232,438
-             L218,432 L212,418 L215,405 Z"
-          fill="#f3f0fb" stroke="#AFA9EC" stroke-width="1.5" opacity=".7"
-          onclick="selectZona('blancs')" style="cursor:pointer;"/>
-
-        <!-- CÔTE DES BAR — zona a sud separata -->
-        <path id="z-bar" class="zona-path"
-          d="M188,555 L215,542 L245,538 L272,542 L292,555 L305,572
-             L308,592 L302,612 L288,628 L268,638 L245,642 L222,638
-             L202,625 L190,608 L185,588 L186,568 Z"
-          fill="#fdeee8" stroke="#F0997B" stroke-width="2"
-          onclick="selectZona('bar')" style="cursor:pointer;"/>
-
-        <!-- MONTAGNE DES REIMS OVEST (estensione) -->
-        <path class="zona-path" style="pointer-events:none;"
-          d="M55,145 L80,132 L105,125 L122,128 L135,138 L140,155
-             L132,168 L118,175 L98,178 L78,172 L62,162 L55,150 Z"
-          fill="#f5ede0" stroke="#b8922a" stroke-width="1.5" opacity=".7"/>
-
-        <!-- ══ FIUMI ══ -->
-        <!-- Marne principale -->
-        <path fill="none" stroke="#7ab8d4" stroke-width="3" stroke-linecap="round" opacity=".8"
-          d="M30,215 Q55,205 80,208 Q110,212 140,208 Q165,205 185,210
-             Q205,215 225,212 Q248,208 268,200 Q292,190 315,192
-             Q340,194 365,188 Q390,182 420,185"/>
-        <!-- Vesle -->
-        <path fill="none" stroke="#7ab8d4" stroke-width="2" opacity=".6"
-          d="M155,88 Q175,105 185,125 Q192,145 188,165 Q185,178 180,188"/>
-        <!-- Aube -->
-        <path fill="none" stroke="#7ab8d4" stroke-width="2.5" opacity=".6" stroke-dasharray="6,3"
-          d="M185,520 Q210,505 240,498 Q268,492 295,498
-             Q325,505 355,525 Q385,545 410,580"/>
-        <!-- Seine -->
-        <path fill="none" stroke="#7ab8d4" stroke-width="2" opacity=".5" stroke-dasharray="5,4"
-          d="M80,680 Q120,660 160,645 Q195,632 225,640
-             Q255,648 285,640 Q315,632 345,620"/>
-
-        <!-- ══════════════════════════════════
-             TUTTI I GRAND CRU
-        ══════════════════════════════════ -->
-        <!-- MONTAGNE DE REIMS — 17 Grand Cru -->
-        <g class="gc-marker" id="gc-ambonnay" onclick="showCru('ambonnay')"><circle cx="282" cy="170" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="292" y="174" class="cru-lbl">Ambonnay</text></g>
-        <g class="gc-marker" id="gc-bouzy" onclick="showCru('bouzy')"><circle cx="265" cy="182" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="275" y="186" class="cru-lbl">Bouzy</text></g>
-        <g class="gc-marker" id="gc-verzenay" onclick="showCru('verzenay')"><circle cx="218" cy="78" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="228" y="82" class="cru-lbl">Verzenay</text></g>
-        <g class="gc-marker" id="gc-verzy" onclick="showCru('verzy')"><circle cx="240" cy="88" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="250" y="92" class="cru-lbl">Verzy</text></g>
-        <g class="gc-marker" id="gc-louvois" onclick="showCru('louvois')"><circle cx="268" cy="155" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="278" y="159" class="cru-lbl">Louvois</text></g>
-        <g class="gc-marker" id="gc-beaumont" onclick="showCru('beaumont')"><circle cx="295" cy="138" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="305" y="142" class="cru-lbl">Beaumont</text></g>
-        <g class="gc-marker" id="gc-sillery" onclick="showCru('sillery')"><circle cx="275" cy="110" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="285" y="114" class="cru-lbl">Sillery</text></g>
-        <g class="gc-marker" id="gc-puisieulx" onclick="showCru('puisieulx')"><circle cx="260" cy="100" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="270" y="104" class="cru-lbl">Puisieulx</text></g>
-        <g class="gc-marker" id="gc-tours" onclick="showCru('tours')"><circle cx="245" cy="200" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="255" y="204" class="cru-lbl">Tours-s-Marne</text></g>
-
-        <!-- CÔTE DES BLANCS — 6 Grand Cru -->
-        <g class="gc-marker" id="gc-avize" onclick="showCru('avize')"><circle cx="260" cy="262" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="270" y="266" class="cru-lbl">Avize</text></g>
-        <g class="gc-marker" id="gc-cramant" onclick="showCru('cramant')"><circle cx="255" cy="280" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="265" y="284" class="cru-lbl">Cramant</text></g>
-        <g class="gc-marker" id="gc-mesnil" onclick="showCru('mesnil')"><circle cx="248" cy="308" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="258" y="312" class="cru-lbl">Le Mesnil</text></g>
-        <g class="gc-marker" id="gc-oger" onclick="showCru('oger')"><circle cx="258" cy="295" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="268" y="299" class="cru-lbl">Oger</text></g>
-        <g class="gc-marker" id="gc-oiry" onclick="showCru('oiry')"><circle cx="250" cy="252" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="260" y="256" class="cru-lbl">Oiry</text></g>
-        <g class="gc-marker" id="gc-chouilly" onclick="showCru('chouilly')"><circle cx="242" cy="242" r="7" fill="#b8922a" stroke="#fff" stroke-width="2"/><text x="252" y="246" class="cru-lbl">Chouilly</text></g>
-
-        <!-- ══════════════════════════════════
-             TUTTI I PREMIER CRU principali
-        ══════════════════════════════════ -->
-        <!-- Montagne PC -->
-        <g class="pc-marker" onclick="showCru('rilly')"><circle cx="175" cy="82" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="183" y="86" class="cru-lbl" fill="#085041">Rilly</text></g>
-        <g class="pc-marker" onclick="showCru('mailly')"><circle cx="192" cy="75" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="200" y="79" class="cru-lbl" fill="#085041">Mailly</text></g>
-        <g class="pc-marker" onclick="showCru('villersmarmery')"><circle cx="268" cy="88" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="276" y="92" class="cru-lbl" fill="#085041">Villers-M.</text></g>
-        <g class="pc-marker" onclick="showCru('tauxieres')"><circle cx="285" cy="148" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="293" y="152" class="cru-lbl" fill="#085041">Tauxières</text></g>
-        <g class="pc-marker" onclick="showCru('trépail')"><circle cx="298" cy="118" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="306" y="122" class="cru-lbl" fill="#085041">Trépail</text></g>
-        <g class="pc-marker" onclick="showCru('ludes')"><circle cx="158" cy="95" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="166" y="99" class="cru-lbl" fill="#085041">Ludes</text></g>
-        <g class="pc-marker" onclick="showCru('chigny')"><circle cx="145" cy="110" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="153" y="114" class="cru-lbl" fill="#085041">Chigny</text></g>
-        <g class="pc-marker" onclick="showCru('montbré')"><circle cx="148" cy="130" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="156" y="134" class="cru-lbl" fill="#085041">Montbré</text></g>
-
-        <!-- Vallée de la Marne PC -->
-        <g class="pc-marker" onclick="showCru('ay')"><circle cx="238" cy="208" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="246" y="212" class="cru-lbl" fill="#085041">Aÿ</text></g>
-        <g class="pc-marker" onclick="showCru('mareuil')"><circle cx="252" cy="215" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="260" y="219" class="cru-lbl" fill="#085041">Mareuil</text></g>
-        <g class="pc-marker" onclick="showCru('hautvillers')"><circle cx="205" cy="195" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="213" y="199" class="cru-lbl" fill="#085041">Hautvillers</text></g>
-        <g class="pc-marker" onclick="showCru('dizy')"><circle cx="225" cy="205" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="233" y="209" class="cru-lbl" fill="#085041">Dizy</text></g>
-        <g class="pc-marker" onclick="showCru('cumieres')"><circle cx="215" cy="215" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="223" y="219" class="cru-lbl" fill="#085041">Cumières</text></g>
-
-        <!-- Côte des Blancs PC -->
-        <g class="pc-marker" onclick="showCru('vertus')"><circle cx="242" cy="355" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="250" y="359" class="cru-lbl" fill="#085041">Vertus</text></g>
-        <g class="pc-marker" onclick="showCru('cuis')"><circle cx="248" cy="248" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="256" y="252" class="cru-lbl" fill="#085041">Cuis</text></g>
-        <g class="pc-marker" onclick="showCru('grauves')"><circle cx="238" cy="332" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="246" y="336" class="cru-lbl" fill="#085041">Grauves</text></g>
-        <g class="pc-marker" onclick="showCru('bergeres')"><circle cx="235" cy="375" r="5.5" fill="#5DCAA5" stroke="#fff" stroke-width="1.8"/><text x="243" y="379" class="cru-lbl" fill="#085041">Bergères</text></g>
-
-        <!-- ══ CITTÀ ══ -->
-        <g><circle cx="195" cy="115" r="6" fill="#1a1208" stroke="#fff" stroke-width="2"/>
-          <text x="185" y="105" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#1a1208" font-weight="600">Reims</text></g>
-        <g><circle cx="232" cy="225" r="5" fill="#1a1208" stroke="#fff" stroke-width="1.8"/>
-          <text x="222" y="215" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="13" fill="#1a1208" font-weight="600">Épernay</text></g>
-        <g><circle cx="248" cy="620" r="5" fill="#4a3a28" stroke="#fff" stroke-width="1.5"/>
-          <text x="270" y="624" font-family="Cormorant Garamond,serif" font-size="12" fill="#4a3a28">Troyes</text></g>
-        <g><circle cx="248" cy="578" r="4" fill="#4a3a28" stroke="#fff" stroke-width="1.5"/>
-          <text x="268" y="582" font-family="Cormorant Garamond,serif" font-size="11" fill="#4a3a28">Bar-sur-Aube</text></g>
-
-        <!-- Etichette zone -->
-        <text x="178" y="130" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" fill="#8a6a1e" font-weight="700" pointer-events="none">MONTAGNE DE REIMS</text>
-        <text x="175" y="210" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" fill="#085041" font-weight="700" pointer-events="none">VALLÉE DE LA MARNE</text>
-        <text x="228" y="320" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" fill="#3C3489" font-weight="700" pointer-events="none">CÔTE DES BLANCS</text>
-        <text x="245" y="595" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" fill="#993C1D" font-weight="700" pointer-events="none">CÔTE DES BAR</text>
-
-        <!-- Nord indicator -->
-        <g transform="translate(560,30)">
-          <circle r="14" fill="rgba(250,248,245,.9)" stroke="#ede8e0" stroke-width="1"/>
-          <text x="0" y="5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="13" fill="#1a1208" font-weight="600">N</text>
-          <line x1="0" y1="-8" x2="0" y2="-12" stroke="#b8922a" stroke-width="2"/>
-        </g>
-
-      </svg>
-    </div>
-
-    <!-- LEGENDA -->
-    <div style="position:absolute;bottom:12px;right:12px;background:rgba(250,248,245,.96);border:1px solid #ede8e0;border-radius:12px;padding:11px 13px;backdrop-filter:blur(8px);">
-      <div style="font-family:DM Sans,sans-serif;font-size:11px;letter-spacing:1px;color:#9a8a72;text-transform:uppercase;margin-bottom:8px;font-weight:500;">Classificazione</div>
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><div style="width:11px;height:11px;border-radius:50%;background:#b8922a;border:1.5px solid #fff;box-shadow:0 0 0 1px #b8922a;"></div><span style="font-family:DM Sans,sans-serif;font-size:12px;color:#4a3a28;">Grand Cru</span></div>
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><div style="width:10px;height:10px;border-radius:50%;background:#5DCAA5;border:1.5px solid #fff;box-shadow:0 0 0 1px #5DCAA5;"></div><span style="font-family:DM Sans,sans-serif;font-size:12px;color:#4a3a28;">Premier Cru</span></div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #ede8e0;">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><div style="width:12px;height:3px;background:#b8922a;border-radius:1px;"></div><span style="font-family:DM Sans,sans-serif;font-size:11px;color:#9a8a72;">Montagne</span></div>
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><div style="width:12px;height:3px;background:#5DCAA5;border-radius:1px;"></div><span style="font-family:DM Sans,sans-serif;font-size:11px;color:#9a8a72;">Marne</span></div>
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><div style="width:12px;height:3px;background:#AFA9EC;border-radius:1px;"></div><span style="font-family:DM Sans,sans-serif;font-size:11px;color:#9a8a72;">Blancs</span></div>
-        <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:3px;background:#F0997B;border-radius:1px;"></div><span style="font-family:DM Sans,sans-serif;font-size:11px;color:#9a8a72;">Bar</span></div>
-      </div>
-    </div>
-
-    <!-- ZONA FILTER PILLS -->
-    <div style="position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:5px;" id="zona-pills">
-      <div class="zpill on" id="zp-all" onclick="selectZona('all')" style="border-color:#1a1208;">
-        <span class="zpill-dot" style="background:#1a1208;"></span>Tutte le zone
-      </div>
-      <div class="zpill" id="zp-montagne" onclick="selectZona('montagne')" style="border-color:#b8922a;">
-        <span class="zpill-dot" style="background:#b8922a;"></span>Montagne
-      </div>
-      <div class="zpill" id="zp-marne" onclick="selectZona('marne')" style="border-color:#5DCAA5;">
-        <span class="zpill-dot" style="background:#5DCAA5;"></span>Marne
-      </div>
-      <div class="zpill" id="zp-blancs" onclick="selectZona('blancs')" style="border-color:#AFA9EC;">
-        <span class="zpill-dot" style="background:#AFA9EC;"></span>Blancs
-      </div>
-      <div class="zpill" id="zp-bar" onclick="selectZona('bar')" style="border-color:#F0997B;">
-        <span class="zpill-dot" style="background:#F0997B;"></span>Bar
-      </div>
-    </div>
-
-    <!-- PANNELLO CRU DAL BASSO -->
-    <div id="cru-panel" style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;border-top:1px solid #ede8e0;transform:translateY(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);z-index:30;max-height:72%;overflow-y:auto;">
-      <div style="width:38px;height:4px;background:#e0d8cc;border-radius:2px;margin:13px auto 0;cursor:pointer;" onclick="closeCruPanel()"></div>
-      <div id="cru-panel-body" style="padding:14px 18px 32px;"></div>
-    </div>
-
-  </div><!-- /map-wrap -->
-
-  
-
-  <div class="bottom-nav">
-    <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
-    <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
-    <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
-    <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
-  </div>
-</div>
-
-
-
-<!-- ═══ LOGIN ═══ -->
 <div class="view" id="v-login">
   <div style="height:155px;position:relative;flex-shrink:0;">
     <div class="img-ph" style="height:100%;"><i class="ti ti-photo" style="font-size:32px;"></i><span>Vigneti Champagne</span></div>
@@ -1946,6 +1725,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=7"></script>
+<script src="js/app.js?v=8"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ function go(id){
   const protectedViews = ['v-home','v-guida','v-maison','v-carnet','v-profile',
     'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
     'v-bottiglie','v-bottiglia-detail',
-    'v-subscription','v-paywall','v-mappa',
+    'v-subscription','v-paywall',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
@@ -34,7 +34,6 @@ function go(id){
   if(id==='v-salvati') updateSalvatiUI();
   if(id==='v-subscription') loadSubscriptionScreen();
   if(id==='v-wishlist') updateWishlistUI();
-  if(id==='v-mappa') setTimeout(initMapTouch,100);
 }
 function goBack(){
   if(stack.length>0){
@@ -330,198 +329,6 @@ if('serviceWorker' in navigator){
 }
 
 
-// ═══ MAPPA ═══
-// ═══ MAPPA — ZOOM/PAN + INTERAZIONE ═══
-(function(){
-const CRU = {
-  // GRAND CRU Montagne de Reims
-  ambonnay:   {name:'Ambonnay',cl:'gc',zona:'montagne',uva:'Pinot Noir',pct:'100%',desc:'Uno dei Grand Cru più pregiati della Champagne. Pinot Noir di struttura eccezionale, longevo e complesso. Riferimento per Egly-Ouriet e per i vins de réserve di Krug.',maison:['Egly-Ouriet','Krug (réserve)','Marie-Noëlle Ledru']},
-  bouzy:      {name:'Bouzy',cl:'gc',zona:'montagne',uva:'Pinot Noir',pct:'100%',desc:'Celebre anche per il Bouzy Rouge — raro vino rosso fermo della Champagne. Pinot Noir potente e fruttato, ideale per assemblages importanti.',maison:['Georges Vesselle','Paul Bara','Herbert Beaufort']},
-  verzenay:   {name:'Verzenay',cl:'gc',zona:'montagne',uva:'Pinot Noir',pct:'100%',desc:'Esposizione nord unica in Champagne — le uve maturano lentamente producendo acidità vibrante e longevità straordinaria. Sede del Musée de la Vigne.',maison:['Mumm','Louis Roederer','Vilmart & Cie']},
-  verzy:      {name:'Verzy',cl:'gc',zona:'montagne',uva:'Pinot Noir',pct:'100%',desc:'Noto per i Faux de Verzy, faggi contorti millenari. Vini austeri e minerali che richiedono anni per esprimersi pienamente.',maison:['Louis Roederer','Cattier','Diebolt-Vallois']},
-  louvois:    {name:'Louvois',cl:'gc',zona:'montagne',uva:'Pinot Noir',pct:'100%',desc:'Piccolo Grand Cru spesso sottovalutato con note floreali inusuali. Il Château de Louvois fu residenza di Luigi XIV.',maison:['Deutz','Bollinger (réserve)']},
-  beaumont:   {name:'Beaumont-sur-Vesle',cl:'gc',zona:'montagne',uva:'Pinot Noir',pct:'100%',desc:'Grand Cru sul versante est della Montagne. Pinot Noir di grande struttura, utilizzato principalmente per i Non Vintage delle grandi maison.',maison:['Veuve Clicquot','Pommery']},
-  sillery:    {name:'Sillery',cl:'gc',zona:'montagne',uva:'Pinot Noir',pct:'100%',desc:'Storico Grand Cru, uno dei più antichi citati nei documenti storici della Champagne. Oggi produzione molto limitata.',maison:['Tattinger','Pommery']},
-  puisieulx:  {name:'Puisieulx',cl:'gc',zona:'montagne',uva:'Pinot Noir',pct:'100%',desc:'Il più piccolo Grand Cru della Champagne per superficie. Quasi tutta la produzione va alle grandi maison di Reims.',maison:['Mumm','Lanson']},
-  tours:      {name:'Tours-sur-Marne',cl:'gc',zona:'montagne',uva:'Pinot Noir / Chardonnay',pct:'100%',desc:'Grand Cru di confine tra Montagne e Vallée. Unico Grand Cru classificato 100% sia per Pinot Noir che per Chardonnay.',maison:['Laurent-Perrier','Bollinger']},
-  // GRAND CRU Côte des Blancs
-  avize:      {name:'Avize',cl:'gc',zona:'blancs',uva:'Chardonnay',pct:'100%',desc:'Cuore della Côte des Blancs. Mineralità gessosa intensa e longevità eccezionale. Jacques Selosse ha trasformato Avize in un nome di culto mondiale.',maison:['Jacques Selosse','Deutz','Taittinger']},
-  cramant:    {name:'Cramant',cl:'gc',zona:'blancs',uva:'Chardonnay',pct:'100%',desc:'Chardonnay floreale e agrumato, con bollicine finissime. Il Comtes de Champagne di Taittinger proviene in parte da Cramant.',maison:['Taittinger','Mumm de Cramant','Bonnaire']},
-  mesnil:     {name:'Le Mesnil-sur-Oger',cl:'gc',zona:'blancs',uva:'Chardonnay',pct:'100%',desc:'Il Grand Cru più famoso della Côte des Blancs. I Blanc de Blancs più longevi al mondo. Qui nasce il Clos du Mesnil di Krug e il leggendario Salon.',maison:['Salon','Krug (Clos du Mesnil)','Pierre Péters']},
-  oger:       {name:'Oger',cl:'gc',zona:'blancs',uva:'Chardonnay',pct:'100%',desc:'Chardonnay più morbido e fruttato rispetto al Mesnil, con note di pesca bianca e fiori. Bellissima chiesa romanica nel villaggio.',maison:['Billecart-Salmon','Charles Heidsieck']},
-  oiry:       {name:'Oiry',cl:'gc',zona:'blancs',uva:'Chardonnay',pct:'100%',desc:'Il più piccolo Grand Cru della Côte des Blancs. Chardonnay di grande freschezza e tensione minerale.',maison:['Pol Roger','Duval-Leroy']},
-  chouilly:   {name:'Chouilly',cl:'gc',zona:'blancs',uva:'Chardonnay',pct:'100%',desc:'Grand Cru al confine tra Côte des Blancs e Vallée de la Marne. Chardonnay elegante con buona struttura.',maison:['Nicolas Feuillatte','Moët & Chandon']},
-  // PREMIER CRU Montagne
-  rilly:      {name:'Rilly-la-Montagne',cl:'pc',zona:'montagne',uva:'Pinot Noir',pct:'94%',desc:'Premier Cru sul versante nord della Montagne. Pinot Noir elegante con buona acidità.',maison:['Duval-Leroy','Forget-Brimont']},
-  mailly:     {name:'Mailly-Champagne',cl:'pc',zona:'montagne',uva:'Pinot Noir',pct:'99%',desc:'Quasi Grand Cru (99%). La cooperativa locale Mailly Grand Cru è un riferimento per i Blanc de Noirs.',maison:['Mailly Grand Cru','Pommery']},
-  villersmarmery:{name:'Villers-Marmery',cl:'pc',zona:'montagne',uva:'Chardonnay',pct:'95%',desc:'Raro Premier Cru della Montagne con Chardonnay dominante. Vini freschi e minerali.',maison:['Veuve Clicquot','Moët & Chandon']},
-  tauxieres:  {name:'Tauxières',cl:'pc',zona:'montagne',uva:'Pinot Noir',pct:'99%',desc:'Premier Cru molto vicino ai Grand Cru di Ambonnay e Bouzy. Pinot Noir di grande struttura.',maison:['Gosset','Paul Bara']},
-  trépail:    {name:'Trépail',cl:'pc',zona:'montagne',uva:'Chardonnay',pct:'95%',desc:'Secondo Premier Cru della Montagne con prevalenza Chardonnay. Note di fiori bianchi e frutta gialla.',maison:['Roederer','Taittinger']},
-  ludes:      {name:'Ludes',cl:'pc',zona:'montagne',uva:'Pinot Noir',pct:'94%',desc:'Premier Cru sul versante ovest della Montagne. Base importante per i Non Vintage.',maison:['Canard-Duchêne','Forget-Brimont']},
-  chigny:     {name:'Chigny-les-Roses',cl:'pc',zona:'montagne',uva:'Pinot Noir',pct:'94%',desc:'Premier Cru noto per la sua Rosé de saignée. Pinot Noir fruttato e aromatico.',maison:['Cattier','Vollereaux']},
-  montbré:    {name:'Montbré',cl:'pc',zona:'montagne',uva:'Pinot Noir',pct:'94%',desc:'Piccolo Premier Cru sul versante ovest. Produzione limitata, quasi tutta assorbita dalle grandi maison.',maison:['Piper-Heidsieck','Charles Heidsieck']},
-  // PREMIER CRU Vallée de la Marne
-  ay:         {name:'Aÿ',cl:'pc',zona:'marne',uva:'Pinot Noir',pct:'100%',desc:'Storica città del vino. Il Clos des Goisses di Philipponnat — uno dei vigneti più straordinari della Champagne — si trova qui. Sede di Bollinger e Deutz.',maison:['Bollinger','Deutz','Philipponnat','Gosset']},
-  mareuil:    {name:'Mareuil-sur-Aÿ',cl:'pc',zona:'marne',uva:'Pinot Noir',pct:'99%',desc:'Sede storica di Billecart-Salmon. Pinot Noir setoso ed elegante. Il Clos Saint-Hilaire di Billecart è qui.',maison:['Billecart-Salmon','Philipponnat']},
-  hautvillers:{name:'Hautvillers',cl:'pc',zona:'marne',uva:'Pinot Meunier',pct:'90%',desc:'Il villaggio più famoso della Champagne — Dom Pérignon lavorò come cellerier dell\'abbazia nel XVII secolo. Vista spettacolare sulla Vallée.',maison:['Moët & Chandon (abbazia)','Leclerc Briant']},
-  dizy:       {name:'Dizy',cl:'pc',zona:'marne',uva:'Pinot Noir',pct:'95%',desc:'Premier Cru adiacente ad Aÿ. Pinot Noir strutturato, usato da Jacquesson per la loro cuvée di punta.',maison:['Jacquesson','Pol Roger']},
-  cumieres:   {name:'Cumières',cl:'pc',zona:'marne',uva:'Pinot Meunier',pct:'90%',desc:'Premier Cru noto per il Coteaux Champenois Rouge di Cumières — vino rosso fermo di grande qualità. Sede di Georges Laval.',maison:['Georges Laval','Moët & Chandon']},
-  // PREMIER CRU Côte des Blancs
-  vertus:     {name:'Vertus',cl:'pc',zona:'blancs',uva:'Chardonnay',pct:'95%',desc:'Premier Cru più a sud della Côte des Blancs. Chardonnay più strutturato. Sede di Larmandier-Bernier, riferimento del vino naturale.',maison:['Larmandier-Bernier','Louis Casters']},
-  cuis:       {name:'Cuis',cl:'pc',zona:'blancs',uva:'Chardonnay',pct:'95%',desc:'Premier Cru al confine nord della Côte des Blancs. Chardonnay fresco e agrumato, ottima tensione minerale.',maison:['Pierre Gimonnet','Duval-Leroy']},
-  grauves:    {name:'Grauves',cl:'pc',zona:'blancs',uva:'Chardonnay',pct:'95%',desc:'Premier Cru sul versante ovest della Côte des Blancs. Chardonnay elegante con note di fiori bianchi.',maison:['Taittinger','Moët & Chandon']},
-  bergeres:   {name:'Bergères-lès-Vertus',cl:'pc',zona:'blancs',uva:'Chardonnay',pct:'95%',desc:'Premier Cru all\'estremità sud della Côte des Blancs. Chardonnay corposo con buona longevità.',maison:['Larmandier-Bernier','Union Champagne']},
-};
-
-const ZONA_COLORS = {
-  montagne:{c:'#b8922a',bg:'#f5ede0',name:'Montagne de Reims'},
-  marne:   {c:'#5DCAA5',bg:'#e0f5ee',name:'Vallée de la Marne'},
-  blancs:  {c:'#AFA9EC',bg:'#eeedf9',name:'Côte des Blancs'},
-  bar:     {c:'#F0997B',bg:'#fdeee8',name:'Côte des Bar'},
-};
-
-// ── ZOOM / PAN ──
-let scale=1, tx=0, ty=0;
-let isPinch=false, lastDist=0;
-let isDrag=false, lastX=0, lastY=0, startX=0, startY=0;
-const MIN=0.6, MAX=4;
-
-function applyTransform(s,x,y){
-  scale=Math.min(MAX,Math.max(MIN,s));
-  tx=x; ty=y;
-  document.getElementById('map-stage').style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
-  document.getElementById('map-stage').style.transformOrigin='0 0';
-}
-
-function mapReset(){applyTransform(1,0,0);closeCruPanel();}
-
-function initMapTouch(){
-  const stage=document.getElementById('map-stage');
-  if(!stage)return;
-
-  // Touch pinch zoom + drag
-  stage.addEventListener('touchstart',function(e){
-    if(e.touches.length===2){
-      isPinch=true;
-      const dx=e.touches[0].clientX-e.touches[1].clientX;
-      const dy=e.touches[0].clientY-e.touches[1].clientY;
-      lastDist=Math.hypot(dx,dy);
-    } else if(e.touches.length===1){
-      isDrag=true;
-      lastX=e.touches[0].clientX;
-      lastY=e.touches[0].clientY;
-      startX=lastX; startY=lastY;
-    }
-  },{passive:true});
-
-  stage.addEventListener('touchmove',function(e){
-    if(e.touches.length===2&&isPinch){
-      e.preventDefault();
-      const dx=e.touches[0].clientX-e.touches[1].clientX;
-      const dy=e.touches[0].clientY-e.touches[1].clientY;
-      const dist=Math.hypot(dx,dy);
-      const ds=dist/lastDist;
-      applyTransform(scale*ds, tx, ty);
-      lastDist=dist;
-    } else if(e.touches.length===1&&isDrag){
-      const dx=e.touches[0].clientX-lastX;
-      const dy=e.touches[0].clientY-lastY;
-      applyTransform(scale, tx+dx, ty+dy);
-      lastX=e.touches[0].clientX;
-      lastY=e.touches[0].clientY;
-    }
-  },{passive:false});
-
-  stage.addEventListener('touchend',function(e){
-    if(e.touches.length<2) isPinch=false;
-    if(e.touches.length===0){
-      // if barely moved, treat as tap (handled by onclick)
-      isDrag=false;
-    }
-  },{passive:true});
-
-  // Mouse wheel zoom (desktop)
-  stage.addEventListener('wheel',function(e){
-    e.preventDefault();
-    const ds=e.deltaY<0?1.15:0.87;
-    applyTransform(scale*ds,tx,ty);
-  },{passive:false});
-}
-
-// ── CRU PANEL ──
-function showCru(id){
-  const c=CRU[id]; if(!c)return;
-  const z=ZONA_COLORS[c.zona]||{c:'#b8922a',bg:'#f5ede0',name:''};
-  const badgeStyle=c.cl==='gc'
-    ?'background:#faeeda;color:#633806;border:0.5px solid #EF9F27;'
-    :'background:#e1f5ee;color:#085041;border:0.5px solid #5DCAA5;';
-  const clLabel=c.cl==='gc'?'Grand Cru':'Premier Cru';
-
-  const maisonHTML=c.maison.map(m=>`
-    <div style="background:#f5f0e8;border:1px solid #ede8e0;border-radius:10px;padding:9px 13px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="go('v-maison')">
-      <div style="font-family:DM Sans,sans-serif;font-size:15px;color:#1a1208;font-weight:500;">${m}</div>
-      <i class="ti ti-chevron-right" style="font-size:16px;color:#c4b49a;"></i>
-    </div>`).join('');
-
-  document.getElementById('cru-panel-body').innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-      <div style="width:10px;height:10px;border-radius:50%;background:${z.c};"></div>
-      <span style="font-family:DM Sans,sans-serif;font-size:13px;color:#9a8a72;">${z.name}</span>
-    </div>
-    <div style="font-family:Cormorant Garamond,serif;font-size:28px;color:#1a1208;font-weight:500;margin-bottom:8px;line-height:1.2;">${c.name}</div>
-    <div style="margin-bottom:13px;display:flex;align-items:center;gap:10px;">
-      <span style="font-family:DM Sans,sans-serif;font-size:13px;border-radius:20px;padding:5px 12px;font-weight:500;${badgeStyle}">${clLabel} · ${c.pct}</span>
-      <span style="font-family:DM Sans,sans-serif;font-size:13px;color:#9a8a72;">· ${c.uva}</span>
-    </div>
-    <div style="font-family:DM Sans,sans-serif;font-size:16px;color:#4a3a28;line-height:1.7;margin-bottom:16px;">${c.desc}</div>
-    <div style="font-family:DM Sans,sans-serif;font-size:11px;letter-spacing:1.2px;color:#b8922a;text-transform:uppercase;font-weight:600;margin-bottom:10px;">Maison e vigneron principali</div>
-    ${maisonHTML}
-    <div style="margin-top:14px;">
-      <button onclick="go('v-zone-${c.zona}')" style="width:100%;background:#b8922a;color:#fff;border:none;border-radius:12px;padding:15px;font-family:DM Sans,sans-serif;font-size:16px;font-weight:500;cursor:pointer;">Scopri la zona completa →</button>
-    </div>
-  `;
-  document.getElementById('cru-panel').style.transform='translateY(0)';
-}
-
-function closeCruPanel(){
-  document.getElementById('cru-panel').style.transform='translateY(100%)';
-}
-
-// ── ZONA FILTER ──
-function selectZona(z){
-  document.querySelectorAll('.zpill').forEach(p=>p.classList.remove('on'));
-  const pill=document.getElementById('zp-'+z);
-  if(pill)pill.classList.add('on');
-
-  const zones=['montagne','marne','blancs','bar'];
-  zones.forEach(id=>{
-    const el=document.getElementById('z-'+id);
-    if(!el)return;
-    el.style.opacity=(z==='all'||z===id)?'1':'0.2';
-    el.style.pointerEvents=(z==='all'||z===id)?'auto':'none';
-  });
-  // Also dim markers of other zones
-  document.querySelectorAll('.gc-marker,.pc-marker').forEach(m=>{
-    const gruId=m.id?m.id.replace('gc-',''):'';
-    const cru=CRU[gruId];
-    if(z==='all'){m.style.opacity='1';}
-    else if(cru&&cru.zona!==z){m.style.opacity='0.15';}
-    else{m.style.opacity='1';}
-  });
-  closeCruPanel();
-}
-
-// Init on DOM ready
-document.addEventListener('DOMContentLoaded',function(){
-  initMapTouch();
-});
-// Also init when view becomes active
-const origGo=window.go;
-window.go=function(id){
-  origGo(id);
-  if(id==='v-mappa'){setTimeout(initMapTouch,100);}
-};
-})();
 
 
 

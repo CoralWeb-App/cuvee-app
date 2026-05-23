@@ -50,9 +50,6 @@ html,body{
 .view{display:none;flex-direction:column;position:absolute;inset:0;overflow:hidden;animation:fadeIn .25s ease;}
 .view:not(.active) .bottom-nav{display:none !important;}
 .view.active{display:flex;}
-/* Mappa — override grid per fix iOS Safari: flex:1 non propaga altezza a figli position:absolute */
-#v-mappa.active{display:grid;grid-template-rows:auto 1fr auto;}
-#map-wrap{min-height:0;}
 /* iOS Safari safe area */
 @supports(padding-bottom: env(safe-area-inset-bottom)){
   .bottom-nav{
@@ -536,7 +533,6 @@ input[type=range]{width:100%;accent-color:var(--gold);}
 
 
 /* ═══ MAPPA INTERATTIVA ═══ */
-#v-mappa{background:var(--ivory);position:relative;}
 .mappa-container{flex:1;position:relative;overflow:hidden;background:#e8f2ec;min-height:0;}
 .mappa-svg-wrap{width:100%;height:100%;position:relative;display:flex;}
 #champagne-map{width:100%;height:100%;cursor:grab;touch-action:none;}
@@ -585,49 +581,10 @@ input[type=range]{width:100%;accent-color:var(--gold);}
 .zona-tab:active{opacity:.7;}
 
 /* Pannello cru dal basso */
-.cru-panel{position:absolute;bottom:0;left:0;right:0;background:var(--white);border-radius:20px 20px 0 0;border-top:1px solid var(--border);transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:10;max-height:70%;overflow-y:auto;}
-.cru-panel.open{transform:translateY(0);}
-.cru-panel-handle{width:36px;height:4px;background:var(--border-2);border-radius:2px;margin:12px auto 16px;}
-.cru-panel-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;margin-bottom:10px;}
-.cru-panel-gc{background:#faeeda;color:#633806;border:0.5px solid #EF9F27;}
-.cru-panel-pc{background:#e1f5ee;color:#085041;border:0.5px solid #5DCAA5;}
-.cru-panel-base{background:var(--ivory-2);color:var(--ink-3);border:0.5px solid var(--border);}
-
-/* Overlay zona info */
-.zona-info-bar{position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(250,248,245,.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.zona-info-bar.hidden{display:none;}
 
 
 /* ═══ MAPPA ═══ */
 /* ═══ MAPPA INTERATTIVA ═══ */
-.zona-path{transition:opacity .25s,filter .25s;cursor:pointer;}
-.zona-path:hover{filter:brightness(.92);}
-.gc-marker{cursor:pointer;}
-.gc-marker circle{transition:r .2s,filter .2s;}
-.gc-marker:hover circle{r:9;filter:drop-shadow(0 2px 4px rgba(184,146,42,.5));}
-.pc-marker{cursor:pointer;}
-.pc-marker circle{transition:r .2s;}
-.pc-marker:hover circle{r:7;}
-.cru-lbl{font-family:'DM Sans',sans-serif;font-size:8.5px;fill:#1a1208;pointer-events:none;font-weight:600;}
-.zpill{display:flex;align-items:center;gap:6px;background:rgba(250,248,245,.95);border:1.5px solid #ede8e0;border-radius:20px;padding:6px 11px;font-family:'DM Sans',sans-serif;font-size:12px;color:#4a3a28;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap;transition:all .2s;}
-.zpill.on{background:rgba(250,248,245,1);font-weight:600;}
-.zpill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-
-
-/* ═══ MAPPA ═══ */
-/* ═══ MAPPA INTERATTIVA ═══ */
-.zona-path{transition:opacity .25s,filter .25s;cursor:pointer;}
-.zona-path:hover{filter:brightness(.92);}
-.gc-marker{cursor:pointer;}
-.gc-marker circle{transition:r .2s,filter .2s;}
-.gc-marker:hover circle{r:9;filter:drop-shadow(0 2px 4px rgba(184,146,42,.5));}
-.pc-marker{cursor:pointer;}
-.pc-marker circle{transition:r .2s;}
-.pc-marker:hover circle{r:7;}
-.cru-lbl{font-family:'DM Sans',sans-serif;font-size:8.5px;fill:#1a1208;pointer-events:none;font-weight:600;}
-.zpill{display:flex;align-items:center;gap:6px;background:rgba(250,248,245,.95);border:1.5px solid #ede8e0;border-radius:20px;padding:6px 11px;font-family:'DM Sans',sans-serif;font-size:12px;color:#4a3a28;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap;transition:all .2s;}
-.zpill.on{background:rgba(250,248,245,1);font-weight:600;}
-.zpill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 
 
 /* ═══ EMAIL VERIFICATION ═══ */
