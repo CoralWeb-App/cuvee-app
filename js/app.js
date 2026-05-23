@@ -1299,12 +1299,13 @@ async function _execHomeSearch(q) {
   if (cat === 'tutti' || cat === 'produttori') {
     searches.push(
       supa.from('maison')
-        .select('id, nome, sede, anno_fondazione, zone(nome)')
+        .select('id, nome, sede, anno_fondazione')
         .ilike('nome', '%' + q + '%')
-        .eq('is_published', true)
-        .order('nome', { ascending: true })
-        .limit(6)
-        .then(({ data, error }) => ({ tipo: 'produttori', data: data || [], error }))
+        .limit(10)
+        .then(({ data, error }) => {
+          console.log('[search maison] q=' + q, 'data:', data, 'error:', error);
+          return { tipo: 'produttori', data: data || [], error };
+        })
     );
   }
 
@@ -1349,9 +1350,8 @@ async function _execHomeSearch(q) {
     if (tipo === 'produttori') {
       html += '<div class="home-search-section">Produttori</div>';
       html += data.map(m => {
-        const zona = m.zone?.nome || '';
         const anno = m.anno_fondazione ? 'dal ' + m.anno_fondazione : '';
-        const sub = [zona, m.sede, anno].filter(Boolean).join(' · ');
+        const sub = [m.sede, anno].filter(Boolean).join(' · ');
         return '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedMaison(\'' + m.id + '\')">' +
           '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + m.nome + '</div>' +
           (sub ? '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + sub + '</div>' : '') +
