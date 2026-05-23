@@ -1261,21 +1261,45 @@ async function removeFromWishlist(wishId) {
 let homeSearchTimeout = null;
 let homeSearchCat = 'tutti';
 
-// Assicura che allMaison sia popolato (stessa query di loadAndRenderMaison)
+// Normalizza stringa: rimuove accenti e porta in lowercase
+// "Moët" → "moet", "Bâtonnage" → "batonnage", "Rosé" → "rose"
+function normalizeStr(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+// Assicura che allMaison sia popolato — triplo fallback per massima compatibilità
 async function ensureMaisonLoaded() {
   if (allMaison.length > 0) return;
+  // Tentativo 1: query completa con is_published
   try {
     const { data, error } = await supa
       .from('maison')
-      .select('id, nome, sede, anno_fondazione, zone(nome, colore)')
+      .select('id, nome, sede, anno_fondazione')
       .eq('is_published', true)
       .order('nome', { ascending: true });
-    if (!error) allMaison = data || [];
-    else console.log('ensureMaisonLoaded error:', error);
-  } catch(e) { console.log('ensureMaisonLoaded exception:', e); }
+    if (!error && data && data.length > 0) { allMaison = data; return; }
+    if (error) console.log('ensureMaison t1 error:', error);
+  } catch(e) { console.log('ensureMaison t1 exc:', e); }
+  // Tentativo 2: senza filtro is_published
+  try {
+    const { data, error } = await supa
+      .from('maison')
+      .select('id, nome, sede, anno_fondazione')
+      .order('nome', { ascending: true });
+    if (!error && data && data.length > 0) { allMaison = data; return; }
+    if (error) console.log('ensureMaison t2 error:', error);
+  } catch(e) { console.log('ensureMaison t2 exc:', e); }
+  // Tentativo 3: select minimo assoluto
+  try {
+    const { data, error } = await supa
+      .from('maison')
+      .select('id, nome');
+    if (!error && data) allMaison = data;
+    if (error) console.log('ensureMaison t3 error:', error);
+  } catch(e) { console.log('ensureMaison t3 exc:', e); }
 }
 
-// Assicura che allBottiglie sia popolato (stessa query di loadAndRenderBottiglie)
+// Assicura che allBottiglie sia popolato
 async function ensureBottiglieLoaded() {
   if (allBottiglie.length > 0) return;
   try {
@@ -1286,7 +1310,7 @@ async function ensureBottiglieLoaded() {
       .order('nome', { ascending: true });
     if (!error) allBottiglie = data || [];
     else console.log('ensureBottiglieLoaded error:', error);
-  } catch(e) { console.log('ensureBottiglieLoaded exception:', e); }
+  } catch(e) { console.log('ensureBottiglieLoaded exc:', e); }
 }
 
 function showHomeSearchUI() {
@@ -1318,9 +1342,9 @@ async function _execHomeSearch(q) {
   const results = document.getElementById('home-search-results');
   results.innerHTML = '<div class="home-search-empty">Ricerca in corso…</div>';
   const cat = homeSearchCat;
-  const ql = q.toLowerCase();
+  const ql = normalizeStr(q); // normalizzato: senza accenti, lowercase
 
-  // Carica dati in parallelo se non ancora in cache (stesse query delle pagine dedicate)
+  // Carica dati in parallelo se non ancora in cache
   const loads = [];
   if (cat === 'tutti' || cat === 'produttori') loads.push(ensureMaisonLoaded());
   if (cat === 'tutti' || cat === 'champagne') loads.push(ensureBottiglieLoaded());
@@ -1328,30 +1352,36 @@ async function _execHomeSearch(q) {
 
   let html = '';
 
-  // — PRODUTTORI: cerca per nome produttore e sede —
+  // — PRODUTTORI: cerca per nome e sede (accent-insensitive) —
   if (cat === 'tutti' || cat === 'produttori') {
     const res = allMaison.filter(m =>
-      (m.nome||'').toLowerCase().includes(ql) ||
-      (m.sede||'').toLowerCase().includes(ql)
+      normalizeStr(m.nome).includes(ql) ||
+      normalizeStr(m.sede).includes(ql)
     ).slice(0, 6);
+    // DEBUG temporaneo: mostra quanti produttori sono in cache
+    const dbgLabel = allMaison.length === 0
+      ? '<div style="font-family:var(--sans);font-size:12px;color:var(--gold);padding:6px 14px;">⚠ produttori DB: 0 — impossibile caricare</div>'
+      : '';
     if (res.length > 0) {
-      html += '<div class="home-search-section">Produttori</div>';
+      html += '<div class="home-search-section">Produttori</div>' + dbgLabel;
       html += res.map(m => {
         const anno = m.anno_fondazione ? 'dal ' + m.anno_fondazione : '';
-        const sub = [m.zone?.nome, m.sede, anno].filter(Boolean).join(' · ');
+        const sub = [m.sede, anno].filter(Boolean).join(' · ');
         return '<div class="card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="openSavedMaison(\'' + m.id + '\')">' +
           '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;">' + m.nome + '</div>' +
           (sub ? '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">' + sub + '</div>' : '') +
         '</div>';
       }).join('');
+    } else {
+      html += dbgLabel;
     }
   }
 
-  // — CHAMPAGNE: cerca per nome bottiglia E nome produttore —
+  // — CHAMPAGNE: cerca per nome bottiglia E nome produttore (accent-insensitive) —
   if (cat === 'tutti' || cat === 'champagne') {
     const res = allBottiglie.filter(b =>
-      (b.nome||'').toLowerCase().includes(ql) ||
-      (b.maison?.nome||'').toLowerCase().includes(ql)
+      normalizeStr(b.nome).includes(ql) ||
+      normalizeStr(b.maison?.nome).includes(ql)
     ).slice(0, 8);
     if (res.length > 0) {
       html += '<div class="home-search-section">Champagne</div>';
@@ -1364,11 +1394,11 @@ async function _execHomeSearch(q) {
     }
   }
 
-  // — GLOSSARIO: cerca per termine e definizione —
+  // — GLOSSARIO: cerca per termine e definizione (accent-insensitive) —
   if (cat === 'tutti' || cat === 'glossario') {
     const res = allGlossario.filter(t =>
-      (t.termine||'').toLowerCase().includes(ql) ||
-      (t.definizione||'').toLowerCase().includes(ql)
+      normalizeStr(t.termine).includes(ql) ||
+      normalizeStr(t.definizione).includes(ql)
     ).slice(0, 6);
     if (res.length > 0) {
       const livelloBadge = { base:'badge-rm', avanzato:'badge-pres', premium:'badge-prem' };
