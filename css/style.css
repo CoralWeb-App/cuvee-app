@@ -659,13 +659,25 @@ input[type=range]{width:100%;accent-color:var(--gold);}
 .bott-card-img i{font-size:26px;color:var(--ink-5);}
 .bott-card-img img{width:100%;height:100%;object-fit:cover;}
 .bott-card-body{flex:1;padding:12px 13px 12px;}
-.bott-card-maison{font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:500;letter-spacing:.3px;margin-bottom:2px;}
-.bott-card-nome{font-family:var(--serif);font-size:16px;color:var(--ink);font-weight:500;line-height:1.3;margin-bottom:4px;}
-.bott-card-tipo{font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-bottom:8px;}
-.bott-card-footer{display:flex;align-items:center;justify-content:space-between;}
-.bott-card-prezzo{font-family:var(--sans);font-size:12px;color:var(--ink-3);}
+.bott-card-maison{font-family:var(--sans);font-size:13px;color:var(--gold);font-weight:500;letter-spacing:.3px;margin-bottom:3px;}
+.bott-card-nome{font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:500;line-height:1.3;margin-bottom:5px;}
+.bott-card-tipo{font-family:var(--sans);font-size:14px;color:var(--ink-4);margin-bottom:8px;}
+.bott-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.bott-card-prezzo{font-family:var(--sans);font-size:13px;color:var(--ink-3);}
 .bott-wish{font-size:20px;color:var(--ink-5);cursor:pointer;padding:2px;}
 .bott-wish.on{color:var(--gold);}
+/* Dosage pills */
+.dosage-pill{display:inline-block;font-family:var(--sans);font-size:12px;font-weight:500;border-radius:20px;padding:3px 10px;letter-spacing:.3px;margin-bottom:6px;}
+/* Price scale */
+.price-scale{display:flex;gap:2px;align-items:center;}
+.price-scale span{font-family:var(--sans);font-size:13px;line-height:1;}
+/* Sticky bar */
+.bott-sticky-bar{position:absolute;top:0;left:0;right:0;background:rgba(250,248,245,.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:11px;z-index:8;transform:translateY(-110%);transition:transform .3s cubic-bezier(.4,0,.2,1);pointer-events:none;}
+.bott-sticky-bar.visible{transform:translateY(0);pointer-events:auto;}
+.bott-sticky-img{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--ivory-3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.bott-sticky-img img{width:100%;height:100%;object-fit:cover;}
+.bott-sticky-maison{font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:500;}
+.bott-sticky-nome{font-family:var(--serif);font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Score ring — small */
 .score-ring-sm{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:3px;}
 .score-ring-sm-inner{width:34px;height:34px;border-radius:50%;background:var(--ivory);display:flex;align-items:center;justify-content:center;}
@@ -685,11 +697,12 @@ input[type=range]{width:100%;accent-color:var(--gold);}
 .finestra-bar-fill{height:6px;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:4px;}
 .finestra-labels{display:flex;justify-content:space-between;font-family:var(--sans);font-size:12px;color:var(--ink-4);}
 /* Annate */
-.annata-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--ivory-3);cursor:pointer;}
+.annate-section-title{font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;padding:0 18px;margin-bottom:14px;}
+.annata-row{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--ivory-3);}
 .annata-row:last-child{border-bottom:none;}
-.annata-anno{font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;min-width:52px;}
+.annata-anno{font-family:var(--serif);font-size:24px;color:var(--ink);font-weight:500;min-width:56px;}
 .annata-body{flex:1;}
 .annata-note{font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.5;margin-bottom:4px;}
 .annata-meta{font-family:var(--sans);font-size:12px;color:var(--ink-5);}
-.annata-score{font-family:var(--serif);font-size:18px;color:var(--gold);font-weight:600;flex-shrink:0;}
+.annata-score-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
 

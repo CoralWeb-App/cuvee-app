@@ -2334,6 +2334,32 @@ function scoreRingSm(score) {
   '</div>';
 }
 
+function dosagePill(tipo) {
+  if (!tipo) return '';
+  const cfg = {
+    'Brut Nature': {bg:'#E3F2F8',c:'#1A5C78'},
+    'Zero Dosage': {bg:'#E3F2F8',c:'#1A5C78'},
+    'Extra Brut':  {bg:'#E8F4F5',c:'#1E7A8A'},
+    'Brut':        {bg:'#F5EDD8',c:'#8A6A1E'},
+    'Extra Sec':   {bg:'#F5E8D0',c:'#9A5810'},
+    'Sec':         {bg:'#F5E0D0',c:'#A04020'},
+    'Demi-Sec':    {bg:'#F5D8EC',c:'#8A2860'},
+    'Doux':        {bg:'#F0D0E8',c:'#6A1848'},
+  };
+  const s = cfg[tipo] || {bg:'var(--ivory-2)',c:'var(--ink-4)'};
+  return '<span class="dosage-pill" style="background:' + s.bg + ';color:' + s.c + ';">' + tipo + '</span>';
+}
+
+function priceScale(fascia) {
+  if (!fascia) return '';
+  const levels = {'€':1,'€€':2,'€€€':3,'€€€€':4};
+  const n = levels[fascia] || 0;
+  const symbols = Array.from({length:5}, (_,i) =>
+    '<span style="font-size:14px;font-weight:' + (i<n?'700':'400') + ';color:' + (i<n?'var(--gold)':'var(--border-2)') + ';line-height:1;">€</span>'
+  ).join('');
+  return '<div class="price-scale">' + symbols + '</div>';
+}
+
 async function loadAndRenderBottiglie() {
   const loadingEl = document.getElementById('bott-loading');
   const listEl = document.getElementById('bott-list');
@@ -2381,7 +2407,7 @@ function renderBottiglie() {
   listEl.innerHTML = filtered.map(b => {
     const tipo = tipoLabel[b.tipo] || b.tipo || '';
     const inWish = wishlistIds.has(b.id);
-    const prezzoTxt = b.prezzo_min && b.prezzo_max ? b.prezzo_min + '–' + b.prezzo_max + '€' : (b.fascia_prezzo || '');
+    const prezzoRange = b.prezzo_min && b.prezzo_max ? '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-bottom:2px;">' + b.prezzo_min + '–' + b.prezzo_max + '€</div>' : '';
     return '<div class="bott-card" onclick="openBottigliaDetail(\'' + b.id + '\')">' +
       '<div class="bott-card-img" style="min-height:88px;">' +
         (b.foto_url ? '<img src="' + b.foto_url + '"/>' : '<i class="ti ti-bottle"></i>') +
@@ -2389,9 +2415,12 @@ function renderBottiglie() {
       '<div class="bott-card-body">' +
         '<div class="bott-card-maison">' + (b.maison?.nome || '') + '</div>' +
         '<div class="bott-card-nome">' + b.nome + '</div>' +
-        '<div class="bott-card-tipo">' + [tipo, b.dosaggio_tipo].filter(Boolean).join(' · ') + '</div>' +
+        '<div class="bott-card-tipo" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+          (tipo ? '<span>' + tipo + '</span>' : '') +
+          dosagePill(b.dosaggio_tipo) +
+        '</div>' +
         '<div class="bott-card-footer">' +
-          '<span class="bott-card-prezzo">' + prezzoTxt + '</span>' +
+          '<div>' + prezzoRange + priceScale(b.fascia_prezzo) + '</div>' +
           '<div style="display:flex;align-items:center;gap:10px;">' +
             (b.score_medio ? scoreRingSm(b.score_medio) : '') +
             '<i class="ti ' + (inWish ? 'ti-heart-filled' : 'ti-heart') + ' bott-wish' + (inWish ? ' on' : '') + '" data-id="' + b.id + '" onclick="event.stopPropagation();toggleWishlist(this,this.dataset.id)"></i>' +
@@ -2475,9 +2504,9 @@ async function openBottigliaDetail(bottId) {
   const badgesEl = document.getElementById('bott-detail-badges');
   if (badgesEl) {
     let bdg = '';
-    if (b.fascia_prezzo) bdg += '<span class="fascia-tag" style="font-size:14px;">' + b.fascia_prezzo + '</span> ';
-    const prezzo = b.prezzo_min && b.prezzo_max ? '<span style="font-family:var(--sans);font-size:13px;color:var(--ink-4);">da ' + b.prezzo_min + '€</span>' : '';
-    bdg += prezzo;
+    if (b.dosaggio_tipo) bdg += dosagePill(b.dosaggio_tipo) + ' ';
+    if (b.fascia_prezzo) bdg += priceScale(b.fascia_prezzo);
+    if (b.prezzo_min && b.prezzo_max) bdg += '<span style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-left:6px;">da ' + b.prezzo_min + '€</span>';
     badgesEl.innerHTML = bdg;
   }
 
@@ -2552,6 +2581,34 @@ async function openBottigliaDetail(bottId) {
   // Annate
   await loadAnnate(b.id);
   go('v-bottiglia-detail');
+
+  // Sticky bar — populate
+  const stickyImgEl = document.getElementById('bott-sticky-img');
+  if (stickyImgEl) {
+    stickyImgEl.innerHTML = b.foto_url
+      ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:4px;"/>'
+      : '<i class="ti ti-bottle" style="font-size:18px;color:var(--ink-5);"></i>';
+  }
+  const stickyMaisonEl = document.getElementById('bott-sticky-maison');
+  if (stickyMaisonEl) stickyMaisonEl.textContent = b.maison?.nome || '';
+  const stickyNomeEl = document.getElementById('bott-sticky-nome');
+  if (stickyNomeEl) stickyNomeEl.textContent = b.nome;
+  const stickyScoreEl = document.getElementById('bott-sticky-score');
+  if (stickyScoreEl) stickyScoreEl.innerHTML = b.score_medio ? scoreRingSm(b.score_medio) : '';
+
+  // Sticky bar — scroll listener (onscroll replaces itself each call, no listener stacking)
+  const stickyBar = document.getElementById('bott-sticky-bar');
+  const scrollEl = document.getElementById('bott-detail-scroll');
+  if (stickyBar) stickyBar.classList.remove('visible'); // reset on new bottle
+  if (stickyBar && scrollEl) {
+    scrollEl.onscroll = function() {
+      if (scrollEl.scrollTop > 100) {
+        stickyBar.classList.add('visible');
+      } else {
+        stickyBar.classList.remove('visible');
+      }
+    };
+  }
 }
 
 async function loadAnnate(bottId) {
@@ -2571,7 +2628,7 @@ async function loadAnnate(bottId) {
             [a.finestra_da && a.finestra_a ? 'Finestra: ' + a.finestra_da + '–' + a.finestra_a : null, !a.disponibile ? 'Esaurita' : null].filter(Boolean).join(' · ') +
           '</div>' +
         '</div>' +
-        (a.score_medio ? '<div class="annata-score">' + a.score_medio + '</div>' : '') +
+        (a.score_medio ? scoreRingSm(a.score_medio) : '') +
       '</div>'
     ).join('');
   } catch(e) { section.style.display = 'none'; }
