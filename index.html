@@ -695,9 +695,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="filter-bar">
     <div class="filter-row" id="maison-filters">
       <div class="f-btn on" onclick="setMaisonFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'grande-maison')">Grande Maison</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'vigneron')">Vigneron</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'cooperativa')">Cooperativa</div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'grande-maison')">Grande Maison <span style="opacity:.55;font-size:10px;">NM</span></div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'vigneron')">Vigneron <span style="opacity:.55;font-size:10px;">RM</span></div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'cooperativa')">Cooperativa <span style="opacity:.55;font-size:10px;">CM</span></div>
     </div>
   </div>
   <div class="scroll" id="maison-scroll">

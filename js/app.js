@@ -1997,6 +1997,11 @@ function renderMaison() {
     'RC':'Récoltant-Coopérateur','CM':'Coopérative-Manipulant',
     'SR':'Société de Récoltants','ND':'Négociant-Distributeur','MA':'Marque d\'Acheteur'
   };
+  const tipoCategoria = {
+    'NM':'Grande Maison','ND':'Grande Maison','MA':'Grande Maison',
+    'RM':'Vigneron','RC':'Vigneron','SR':'Vigneron',
+    'CM':'Cooperativa'
+  };
   const tipoBadge = {
     'NM':'badge-gm','RM':'badge-rm','RC':'badge-rm',
     'CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres'
@@ -2008,7 +2013,7 @@ function renderMaison() {
   listEl.innerHTML = filtered.map(m => {
     const isLocked = !m.is_free && !premium;
     const badge = tipoBadge[m.tipo] || 'badge-rm';
-    const label = m.tipo || '—';
+    const label = m.tipo ? (tipoCategoria[m.tipo] ? tipoCategoria[m.tipo] + ' · ' + m.tipo : m.tipo) : '—';
     const fav = isFav(m.id);
     const zonaNome = m.zone?.nome || '';
     const meta = [m.anno_fondazione ? 'dal ' + m.anno_fondazione : '', m.chef_de_cave || ''].filter(Boolean).join(' · ');
