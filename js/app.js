@@ -1966,7 +1966,10 @@ function renderMaison() {
 
   // Filter by type
   if (currentMaisonFilter !== 'tutti') {
-    filtered = filtered.filter(m => m.tipo === currentMaisonFilter);
+    if (currentMaisonFilter === 'grande-maison') filtered = filtered.filter(m => ['NM','ND','MA'].includes(m.tipo));
+    else if (currentMaisonFilter === 'vigneron') filtered = filtered.filter(m => ['RM','RC','SR'].includes(m.tipo));
+    else if (currentMaisonFilter === 'cooperativa') filtered = filtered.filter(m => m.tipo === 'CM');
+    else filtered = filtered.filter(m => m.tipo === currentMaisonFilter);
   }
 
   // Filter by search
@@ -2019,13 +2022,12 @@ function renderMaison() {
         '<div class="maison-header-row">' +
           '<div class="maison-name">' + m.nome + '</div>' +
           '<div style="display:flex;align-items:center;gap:8px;">' +
-            (m.fascia_prezzo ? '<span class="fascia-tag">' + m.fascia_prezzo + '</span>' : '') +
             (!isLocked ? '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>' : '') +
           '</div>' +
         '</div>' +
         (m.zone ? '<div class="maison-card-zona">' +
-          '<span class="zona-dot" style="background:' + (m.zone.colore || 'var(--gold)') + ';"></span>' +
-          m.zone.nome + (m.sede_comune ? ' · ' + m.sede_comune : '') +
+          '<span class="zona-badge-sm" style="background:' + (m.zone.colore||'#b8922a') + '18;color:' + (m.zone.colore||'#b8922a') + ';border:0.5px solid ' + (m.zone.colore||'#b8922a') + '55;">' + (m.zone.nome||'').toLowerCase() + '</span>' +
+          (m.sede_comune ? '<span class="maison-sede">· ' + m.sede_comune + '</span>' : '') +
         '</div>' : '') +
         (meta ? '<div class="maison-meta">' + meta + '</div>' : '') +
         '<div class="badges-row">' +
@@ -2161,7 +2163,6 @@ function openMaisonDetail(maisonId) {
     let b = '';
     if (m.zone?.nome) b += '<span class="zona-pill-detail" style="background:' + (m.zone.colore || 'var(--gold)') + ';">' + m.zone.nome + '</span> ';
     if (m.tipo) b += '<span class="badge ' + (tipoBadge[m.tipo]||'badge-rm') + '">' + m.tipo + ' — ' + (tipoLabel[m.tipo]||m.tipo) + '</span>';
-    if (m.fascia_prezzo) b += ' <span class="fascia-tag" style="font-size:15px;margin-left:4px;">' + m.fascia_prezzo + '</span>';
     if (m.certificazioni && m.certificazioni.length) m.certificazioni.forEach(c => { b += ' <span class="badge badge-bio">' + c + '</span>'; });
     badgesEl.innerHTML = b;
   }
