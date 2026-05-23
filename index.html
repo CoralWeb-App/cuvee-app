@@ -171,8 +171,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
       <div class="q-card" onclick="go('v-maison')">
         <i class="ti ti-building"></i>
-        <div class="q-title">Maison</div>
-        <div class="q-sub">400+ produttori</div>
+        <div class="q-title">Produttori</div>
+        <div class="q-sub" id="home-count-produttori">Caricamento…</div>
       </div>
       <div class="q-card" onclick="go('v-mappa')">
         <i class="ti ti-map-2"></i>
@@ -181,15 +181,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
       <div class="q-card" onclick="go('v-bottiglie')">
         <i class="ti ti-bottle"></i>
-        <div class="q-title">Bottiglie</div>
-        <div class="q-sub">Cuvée & annate</div>
+        <div class="q-title">Champagne</div>
+        <div class="q-sub" id="home-count-champagne">Caricamento…</div>
       </div>
     </div>
     <div class="section-label" style="margin-top:8px;">Sfoglia per stile</div>
     <div class="chips-row">
       <div class="chip on">Tutti</div><div class="chip">Blanc de Blancs</div><div class="chip">Rosé</div><div class="chip">Millesimato</div><div class="chip">Brut Nature</div><div class="chip">Prestige</div>
     </div>
-    <div class="sec-hdr"><span class="section-label">Maison in evidenza</span><a href="#">Vedi tutte</a></div>
+    <div class="sec-hdr"><span class="section-label">Produttori in evidenza</span><a href="#" onclick="go('v-maison');return false;">Vedi tutti</a></div>
     <div class="maison-scroll">
       <div class="m-card" onclick="go('v-detail')">
         <div class="img-ph m-card-ph"><i class="ti ti-photo" style="font-size:22px;"></i></div>
@@ -223,7 +223,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="prem-icon"><i class="ti ti-crown"></i></div>
       <div>
         <div class="prem-title">Sblocca tutto con Premium</div>
-        <div class="prem-sub">400+ maison, catalogo completo, annate.</div>
+        <div class="prem-sub">400+ produttori, catalogo completo, annate.</div>
         <span class="prem-cta">Abbonati da 3,99€/mese →</span>
       </div>
     </div>
@@ -234,7 +234,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn on"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -665,7 +665,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -675,7 +675,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-maison">
   <div class="topbar">
     <div style="flex:1;">
-      <div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;">Maison & Vigneron</div>
+      <div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;">Produttori</div>
       <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:1px;" id="maison-count-label">Caricamento...</div>
     </div>
     <div class="topbar-icons">
@@ -687,7 +687,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div id="maison-search-wrap" style="display:none;padding:8px 14px;border-bottom:1px solid var(--border);">
     <div class="carnet-search-bar" style="margin:0;">
       <i class="ti ti-search" style="font-size:18px;color:var(--ink-4);"></i>
-      <input id="maison-search-input" type="text" placeholder="Cerca maison o vigneron..." style="flex:1;border:none;outline:none;font-family:var(--sans);font-size:16px;color:var(--ink);background:transparent;" oninput="filterMaison()"/>
+      <input id="maison-search-input" type="text" placeholder="Cerca produttore, comune, zona…" style="flex:1;border:none;outline:none;font-family:var(--sans);font-size:16px;color:var(--ink);background:transparent;" oninput="filterMaison()"/>
       <i class="ti ti-x" style="font-size:16px;color:var(--ink-5);cursor:pointer;" onclick="clearMaisonSearch()"></i>
     </div>
   </div>
@@ -717,7 +717,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn on"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn on"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -726,7 +726,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ DETAIL MAISON ═══ -->
 <div class="view" id="v-detail">
   <div class="topbar">
-    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Maison</button>
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Produttori</button>
     <div class="topbar-icons">
       <i class="ti ti-heart" id="detail-fav-icon" style="cursor:pointer;" onclick="toggleDetailFavorite()"></i>
       <i class="ti ti-share" style="cursor:pointer;" onclick="shareMaison()"></i>
@@ -812,7 +812,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn on" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn on" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -822,7 +822,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-bottiglie">
   <div class="topbar">
     <div style="flex:1;">
-      <div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;">Bottiglie</div>
+      <div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;">Champagne</div>
       <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:1px;" id="bott-count-label">Caricamento...</div>
     </div>
     <div class="topbar-icons">
@@ -859,7 +859,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -868,7 +868,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ BOTTIGLIA — DETTAGLIO ═══ -->
 <div class="view" id="v-bottiglia-detail">
   <div class="topbar">
-    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Bottiglie</button>
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Champagne</button>
     <div class="topbar-icons">
       <i class="ti ti-heart" id="bott-detail-wish-icon" style="cursor:pointer;" onclick="toggleWishlistDetail()"></i>
       <i class="ti ti-share" style="cursor:pointer;" onclick="shareBottiglia()"></i>
@@ -916,7 +916,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -948,7 +948,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
     </div>
     <div class="feature-list">
-      <div class="feature-item"><i class="ti ti-building"></i><span>400+ maison e vigneron completi</span></div>
+      <div class="feature-item"><i class="ti ti-building"></i><span>400+ produttori completi</span></div>
       <div class="feature-item"><i class="ti ti-bottle"></i><span>Catalogo completo di tutte le cuvées</span></div>
       <div class="feature-item"><i class="ti ti-a-b"></i><span>Glossario completo 200+ termini</span></div>
       <div class="feature-item"><i class="ti ti-calendar"></i><span>Guide des millésimes — dal 2000 ad oggi</span></div>
@@ -1006,7 +1006,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn on"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1052,7 +1052,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1097,7 +1097,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1142,7 +1142,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1183,7 +1183,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1220,7 +1220,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1311,7 +1311,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn on"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1473,7 +1473,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn on" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1692,7 +1692,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn on" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1785,7 +1785,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn on" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>
@@ -1883,7 +1883,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <!-- Feature list -->
         <div style="font-family:var(--sans);font-size:12px;letter-spacing:1px;color:var(--ink-4);text-transform:uppercase;margin-bottom:10px;">Cosa include</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
-          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-check" style="color:#5DCAA5;font-size:18px;"></i>400+ maison e vigneron completi</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-check" style="color:#5DCAA5;font-size:18px;"></i>400+ produttori completi</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-check" style="color:#5DCAA5;font-size:18px;"></i>Catalogo completo cuvées e prezzi</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-check" style="color:#5DCAA5;font-size:18px;"></i>Note carnet illimitate</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-check" style="color:#5DCAA5;font-size:18px;"></i>Tutti i cru con schede complete</div>
@@ -1929,7 +1929,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="bottom-nav">
     <div class="bn" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
     <div class="bn" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
-    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Maison</span></div>
+    <div class="bn" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
     <div class="bn" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
     <div class="bn on" onclick="go('v-profile')"><i class="ti ti-user"></i><span>Profilo</span></div>
   </div>

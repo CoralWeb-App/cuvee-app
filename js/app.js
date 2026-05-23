@@ -960,7 +960,26 @@ document.addEventListener('DOMContentLoaded', function() {
   const logoutBtn = document.querySelector('#v-profile .btn-outline');
   if (logoutBtn) logoutBtn.onclick = signOut;
   initAuth();
+  loadHomeCounts();
 });
+
+async function loadHomeCounts() {
+  try {
+    const [{ count: cp }, { count: cc }] = await Promise.all([
+      supa.from('maison').select('*', { count: 'exact', head: true }),
+      supa.from('bottiglie').select('*', { count: 'exact', head: true })
+    ]);
+    const elP = document.getElementById('home-count-produttori');
+    const elC = document.getElementById('home-count-champagne');
+    if (elP && cp != null) elP.textContent = cp + ' produttori';
+    if (elC && cc != null) elC.textContent = cc + ' cuvée';
+  } catch(e) {
+    const elP = document.getElementById('home-count-produttori');
+    const elC = document.getElementById('home-count-champagne');
+    if (elP) elP.textContent = 'Produttori';
+    if (elC) elC.textContent = 'Cuvée';
+  }
+}
 
 
 
