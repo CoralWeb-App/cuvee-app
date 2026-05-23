@@ -1277,50 +1277,46 @@ function normalizeStr(s) {
   return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
-// Assicura che allMaison sia popolato — triplo fallback per massima compatibilità
+// Usa esattamente la stessa query di loadAndRenderMaison (provata e funzionante)
 async function ensureMaisonLoaded() {
   if (allMaison.length > 0) return;
-  // Tentativo 1: campi necessari per anteprima ricerca
   try {
     const { data, error } = await supa
       .from('maison')
-      .select('id, nome, sede, anno_fondazione, tipo, foto_url, certificazioni, zone(nome, colore)')
+      .select('*, zone(nome, colore)')
       .eq('is_published', true)
       .order('nome', { ascending: true });
-    if (!error && data && data.length > 0) { allMaison = data; return; }
-    if (error) console.log('ensureMaison t1 error:', error);
-  } catch(e) { console.log('ensureMaison t1 exc:', e); }
-  // Tentativo 2: senza filtro is_published
-  try {
-    const { data, error } = await supa
-      .from('maison')
-      .select('id, nome, sede, anno_fondazione, tipo, zone(nome, colore)')
-      .order('nome', { ascending: true });
-    if (!error && data && data.length > 0) { allMaison = data; return; }
-    if (error) console.log('ensureMaison t2 error:', error);
-  } catch(e) { console.log('ensureMaison t2 exc:', e); }
-  // Tentativo 3: select minimo assoluto
-  try {
-    const { data, error } = await supa
-      .from('maison')
-      .select('id, nome, sede, anno_fondazione');
-    if (!error && data) allMaison = data;
-    if (error) console.log('ensureMaison t3 error:', error);
-  } catch(e) { console.log('ensureMaison t3 exc:', e); }
+    if (!error) allMaison = data || [];
+    else console.log('ensureMaisonLoaded error:', error);
+  } catch(e) { console.log('ensureMaisonLoaded exc:', e); }
 }
 
-// Assicura che allBottiglie sia popolato
+// Usa esattamente la stessa query di loadAndRenderBottiglie (provata e funzionante)
 async function ensureBottiglieLoaded() {
   if (allBottiglie.length > 0) return;
   try {
     const { data, error } = await supa
       .from('bottiglie')
-      .select('id, nome, dosaggio_tipo, foto_url, maison(nome)')
+      .select('*, maison(nome, slug)')
       .eq('is_published', true)
       .order('nome', { ascending: true });
     if (!error) allBottiglie = data || [];
     else console.log('ensureBottiglieLoaded error:', error);
   } catch(e) { console.log('ensureBottiglieLoaded exc:', e); }
+}
+
+// Carica glossario se non ancora in cache
+async function ensureGlossarioLoaded() {
+  if (allGlossario.length > 0) return;
+  try {
+    const { data, error } = await supa
+      .from('glossario')
+      .select('termine, definizione, lettera, livello, categoria')
+      .eq('is_published', true)
+      .order('termine', { ascending: true });
+    if (!error) allGlossario = data || [];
+    else console.log('ensureGlossarioLoaded error:', error);
+  } catch(e) { console.log('ensureGlossarioLoaded exc:', e); }
 }
 
 function showHomeSearchUI() {
@@ -1358,6 +1354,7 @@ async function _execHomeSearch(q) {
   const loads = [];
   if (cat === 'tutti' || cat === 'produttori') loads.push(ensureMaisonLoaded());
   if (cat === 'tutti' || cat === 'champagne') loads.push(ensureBottiglieLoaded());
+  if (cat === 'tutti' || cat === 'glossario') loads.push(ensureGlossarioLoaded());
   await Promise.all(loads);
 
   let html = '';
