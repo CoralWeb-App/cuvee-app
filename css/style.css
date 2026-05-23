@@ -334,8 +334,8 @@ html,body{
    MAISON
 ═══════════════════════════════ */
 .filter-bar{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.filter-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;}
-.filter-row::-webkit-scrollbar{display:none;}
+.filter-row,.gloss-filters-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;}
+.filter-row::-webkit-scrollbar,.gloss-filters-row::-webkit-scrollbar{display:none;}
 .f-btn{flex-shrink:0;background:var(--white);border:1px solid var(--border-2);border-radius:20px;padding:6px 13px;font-family:var(--sans);font-size:13px;color:var(--ink-3);cursor:pointer;white-space:nowrap;}
 .f-btn.on{background:var(--gold);color:var(--white);border-color:var(--gold);}
 .maison-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin:0 14px 16px;overflow:hidden;cursor:pointer;}
