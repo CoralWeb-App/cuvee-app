@@ -301,7 +301,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
 
       <!-- FASE 1: VENDEMMIA -->
-      <div class="step-card">
+      <div class="step-card" style="margin-top:14px;">
         <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Vendange manuelle</span></div>
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#D8EEC4;border-color:#5A9A20;color:#27500A;">1</div>
@@ -353,7 +353,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
 
       <!-- FASE 3: FERMENTATION ALCOOLIQUE -->
-      <div class="step-card">
+      <div class="step-card" style="margin-top:14px;">
         <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Cuves de fermentation</span></div>
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#F5E8C8;border-color:#C09020;color:#7A5A0A;">3</div>
@@ -426,7 +426,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
 
       <!-- FASE 6: DEUXIEME FERMENTATION -->
-      <div class="step-card">
+      <div class="step-card" style="margin-top:14px;">
         <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Prise de mousse en bouteille</span></div>
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#CCE0F0;border-color:#4A6A8A;color:#1A3A5A;">6</div>
@@ -500,7 +500,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
 
       <!-- FASE 9: DEGORGEMENT -->
-      <div class="step-card">
+      <div class="step-card" style="margin-top:14px;">
         <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Dégorgement à la glace</span></div>
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#E0DCFF;border-color:#8A7AD4;color:#3C3489;">9</div>
@@ -544,6 +544,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           </div>
         </div>
       </div>
+
+      <!-- Spacer to allow last phase header to reach sticky position -->
+      <div style="height:55vh;" aria-hidden="true"></div>
 
     </div><!-- /metodo -->
 
