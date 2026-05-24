@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=15"/>
+<link rel="stylesheet" href="css/style.css?v=16"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1787,7 +1787,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 
 <!-- SINGLE SHARED BOTTOM NAV -->
-<div class="bottom-nav" id="shared-bottom-nav">
+<div class="bottom-nav" id="shared-bottom-nav" style="display:none">
   <div class="bn" id="bn-home" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
   <div class="bn" id="bn-guida" onclick="go('v-guida')"><i class="ti ti-books"></i><span>Guida</span></div>
   <div class="bn bn-carnet" id="bn-carnet" onclick="go('v-carnet')" style="position:relative;"><div class="bn-carnet-badge">+</div><i class="ti ti-notebook"></i><span>Carnet</span></div>
@@ -1796,6 +1796,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=29"></script>
+<script src="js/app.js?v=30"></script>
 </body>
 </html>

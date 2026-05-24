@@ -38,12 +38,17 @@ function go(id){
   updateBottomNav(id);
 }
 function updateBottomNav(id){
+  // View senza bottom nav (login, paywall, ecc.)
+  const noNav = ['v-splash','v-paywall'];
+  const nav = document.getElementById('shared-bottom-nav');
+  if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
+
   const map = {
-    'bn-home':     ['v-home'],
-    'bn-guida':    ['v-guida','v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'],
-    'bn-carnet':   ['v-carnet','v-carnet-new','v-carnet-detail'],
+    'bn-home':      ['v-home'],
+    'bn-guida':     ['v-guida','v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'],
+    'bn-carnet':    ['v-carnet','v-carnet-new','v-carnet-detail'],
     'bn-produttori':['v-maison','v-detail'],
-    'bn-champagne':['v-bottiglie','v-bottiglia-detail']
+    'bn-champagne': ['v-bottiglie','v-bottiglia-detail']
   };
   Object.entries(map).forEach(([btnId, views])=>{
     const el = document.getElementById(btnId);
@@ -615,11 +620,11 @@ async function signOut() {
   // Svuota stack navigazione
   stack.length = 0;
   // Nascondi bottom nav
-  const nav = document.getElementById('shared-bottom-nav');
   // Vai alla splash
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const splash = document.getElementById('v-splash');
   if (splash) splash.classList.add('active');
+  updateBottomNav('v-splash');
 }
 
 // LOAD USER PROFILE
