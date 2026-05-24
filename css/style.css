@@ -93,6 +93,12 @@ html,body{
 .bn i{font-size:24px;color:var(--ink-5);}
 .bn span{font-family:var(--sans);font-size:13px;color:var(--ink-5);font-weight:400;}
 .bn.on i,.bn.on span{color:var(--gold);}
+.bn-carnet{background:#1E1208;border-radius:12px;padding:5px 14px;margin:2px 0;}
+.bn-carnet i{color:#C8A03A !important;}
+.bn-carnet span{color:#D0A870 !important;font-size:12px !important;}
+.bn-carnet.on i{color:#D4A83C !important;}
+.bn-carnet.on span{color:#D4A83C !important;}
+.bn-carnet-badge{position:absolute;top:1px;right:calc(50% - 20px);background:#C8A03A;color:#1E1208;border-radius:50%;width:13px;height:13px;font-family:var(--sans);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;}
 
 /* ── BUTTONS ── */
 .btn-gold{
