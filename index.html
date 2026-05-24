@@ -154,55 +154,68 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div id="home-main-content">
     <div class="section-label">Esplora</div>
 
-    <!-- CARNET — card grande in evidenza -->
-    <div onclick="go('v-carnet')" style="margin:0 18px 12px;background:var(--ivory-2);border:1.5px solid var(--gold-border);border-radius:var(--radius-lg);padding:18px 18px 15px;cursor:pointer;">
-      <div style="display:flex;align-items:flex-start;gap:14px;">
-        <div style="width:54px;height:54px;border-radius:14px;background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="ti ti-notebook" style="font-size:27px;color:#fff;"></i>
+    <!-- CARNET — dark premium -->
+    <div onclick="go('v-carnet')" style="margin:0 18px 12px;background:#1E1208;border:1px solid #3A2814;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
+      <div style="display:flex;align-items:flex-start;gap:15px;">
+        <div style="width:52px;height:52px;border-radius:13px;background:rgba(184,146,42,.16);border:1px solid rgba(184,146,42,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="ti ti-notebook" style="font-size:26px;color:#C8A03A;"></i>
         </div>
         <div style="flex:1;">
-          <div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:4px;">Carnet de dégustation</div>
-          <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.55;margin-bottom:11px;">Tieni traccia di ogni Champagne assaggiato — foto, aromi, punteggi, note personali.</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <span style="font-family:var(--sans);font-size:13px;background:var(--white);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:4px 11px;">Foto bottiglia</span>
-            <span style="font-family:var(--sans);font-size:13px;background:var(--white);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:4px 11px;">Punteggio</span>
-            <span style="font-family:var(--sans);font-size:13px;background:var(--white);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:4px 11px;">Aromi</span>
-          </div>
+          <div style="font-family:var(--serif);font-size:22px;color:#F0E4CC;font-weight:500;margin-bottom:5px;">Carnet de dégustation</div>
+          <div style="font-family:var(--sans);font-size:14px;color:#8A6840;line-height:1.55;">Tieni traccia di ogni Champagne assaggiato — note, aromi, punteggi.</div>
         </div>
       </div>
-      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--gold-border);display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-4);">3 note gratuite · illimitate con Premium</div>
-        <div style="font-family:var(--sans);font-size:14px;color:var(--gold);font-weight:500;">Apri →</div>
+      <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.07);border:0.5px solid rgba(184,146,42,.22);color:#B89848;border-radius:20px;padding:4px 11px;">Foto bottiglia</span>
+        <span style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.07);border:0.5px solid rgba(184,146,42,.22);color:#B89848;border-radius:20px;padding:4px 11px;">Punteggio</span>
+        <span style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.07);border:0.5px solid rgba(184,146,42,.22);color:#B89848;border-radius:20px;padding:4px 11px;">Aromi</span>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(184,146,42,.14);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-family:var(--sans);font-size:13px;color:#5A3C20;" id="home-carnet-stat">3 note gratuite · illimitate con Premium</div>
+        <div style="font-family:var(--sans);font-size:14px;color:#C8A03A;font-weight:500;">Apri →</div>
       </div>
     </div>
 
-    <!-- GRID 2x2 sezioni principali -->
-    <div class="quick-grid">
-      <div class="q-card" onclick="go('v-guida')">
-        <i class="ti ti-books"></i>
-        <div class="q-title">Guida</div>
-        <div class="q-sub">Méthode, terroir, dosages</div>
+    <!-- BENTO: Guida wide + Produttori + Champagne -->
+    <div style="padding:0 18px;display:flex;flex-direction:column;gap:10px;">
+
+      <!-- Guida — full width -->
+      <div onclick="go('v-guida')" style="background:#FBF4E4;border:1px solid #E8D8A8;border-radius:var(--radius-lg);padding:18px 16px 17px;cursor:pointer;display:flex;align-items:center;gap:15px;">
+        <div style="width:50px;height:50px;border-radius:12px;background:#F0E2C0;border:1px solid #DCC888;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="ti ti-books" style="font-size:25px;color:#8A6A1E;"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;margin-bottom:7px;">Guida</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <span style="font-family:var(--sans);font-size:11px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Méthode</span>
+            <span style="font-family:var(--sans);font-size:11px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Terroirs</span>
+            <span style="font-family:var(--sans);font-size:11px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Dosages</span>
+            <span style="font-family:var(--sans);font-size:11px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Glossario</span>
+          </div>
+        </div>
+        <i class="ti ti-chevron-right" style="font-size:20px;color:var(--gold-light);flex-shrink:0;"></i>
       </div>
-      <div class="q-card" onclick="goGuida('zone')">
-        <i class="ti ti-map-2"></i>
-        <div class="q-title">Terroirs</div>
-        <div class="q-sub">Zone e cru</div>
+
+      <!-- Produttori + Champagne -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div onclick="go('v-maison')" style="background:#F8EEEF;border:1px solid #DEC8CC;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;">
+          <div style="width:40px;height:40px;border-radius:10px;background:#EDD0D4;display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
+            <i class="ti ti-building" style="font-size:21px;color:#8B2635;"></i>
+          </div>
+          <div style="font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:500;margin-bottom:3px;">Produttori</div>
+          <div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);" id="home-count-produttori">Caricamento…</div>
+        </div>
+        <div onclick="go('v-bottiglie')" style="background:#F0F7EE;border:1px solid #C4D8B8;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;">
+          <div style="width:40px;height:40px;border-radius:10px;background:#D8EED0;display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
+            <i class="ti ti-bottle" style="font-size:21px;color:#1E5E28;"></i>
+          </div>
+          <div style="font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:500;margin-bottom:3px;">Champagne</div>
+          <div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);" id="home-count-champagne">Caricamento…</div>
+        </div>
       </div>
-      <div class="q-card" onclick="go('v-maison')">
-        <i class="ti ti-building"></i>
-        <div class="q-title">Produttori</div>
-        <div class="q-sub" id="home-count-produttori">Caricamento…</div>
-      </div>
-      <div class="q-card" onclick="go('v-bottiglie')">
-        <i class="ti ti-bottle"></i>
-        <div class="q-title">Champagne</div>
-        <div class="q-sub" id="home-count-champagne">Caricamento…</div>
-      </div>
+
     </div>
-    <div class="section-label" style="margin-top:8px;">Sfoglia per stile</div>
-    <div class="chips-row">
-      <div class="chip on">Tutti</div><div class="chip">Blanc de Blancs</div><div class="chip">Rosé</div><div class="chip">Millesimato</div><div class="chip">Brut Nature</div><div class="chip">Prestige</div>
-    </div>
+    <div style="height:14px;"></div>
     <div class="sec-hdr"><span class="section-label">Produttori in evidenza</span><a href="#" onclick="go('v-maison');return false;">Vedi tutti</a></div>
     <div class="maison-scroll">
       <div class="m-card" onclick="go('v-detail')">
