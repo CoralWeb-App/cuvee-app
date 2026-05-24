@@ -1944,6 +1944,10 @@ function updatePremiumUI() {
     document.querySelectorAll('.zone-prem-block').forEach(el => el.style.display = '');
   }
 
+  // Nascondi stat "3 note gratuite" nella card Carnet in home se già premium
+  const carnetStat = document.getElementById('home-carnet-stat');
+  if (carnetStat) carnetStat.style.display = premium ? 'none' : '';
+
   // Aggiorna badge premium nel profilo
   const premBadge = document.getElementById('profile-premium-badge');
   if (premBadge) {
