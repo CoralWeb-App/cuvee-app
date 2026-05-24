@@ -34,6 +34,22 @@ function go(id){
   if(id==='v-salvati') updateSalvatiUI();
   if(id==='v-subscription') loadSubscriptionScreen();
   if(id==='v-wishlist') updateWishlistUI();
+  // Aggiorna tab attivo nella bottom nav condivisa
+  updateBottomNav(id);
+}
+function updateBottomNav(id){
+  const map = {
+    'bn-home':     ['v-home'],
+    'bn-guida':    ['v-guida','v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'],
+    'bn-carnet':   ['v-carnet','v-carnet-new','v-carnet-detail'],
+    'bn-produttori':['v-maison','v-detail'],
+    'bn-champagne':['v-bottiglie','v-bottiglia-detail']
+  };
+  Object.entries(map).forEach(([btnId, views])=>{
+    const el = document.getElementById(btnId);
+    if(!el) return;
+    el.classList.toggle('on', views.includes(id));
+  });
 }
 function goBack(){
   if(stack.length>0){
@@ -41,6 +57,7 @@ function goBack(){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     const t=document.getElementById(p);
     if(t)t.classList.add('active');
+    updateBottomNav(p);
   }
 }
 function goGuida(tab){
