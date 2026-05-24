@@ -569,32 +569,191 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- DOSAGGI -->
     <div class="tab-content" id="tc-dosaggi">
-      <div style="padding:14px 14px 20px;">
-        <div class="section-label" style="padding:0 0 12px;">Scala dei dosaggi — dal più secco al più dolce</div>
-        <div class="card" style="padding:13px 14px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;">Brut Nature</span><span style="font-family:var(--sans);font-size:15px;color:#085041;font-weight:500;">0–3 g/l</span></div>
-          <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.5;margin-bottom:8px;">Nessun zucchero aggiunto. Il più puro. Anche detto Dosage Zéro o Pas Dosé.</div>
-          <div style="height:4px;background:var(--ivory-3);border-radius:2px;"><div style="width:5%;height:100%;background:#5DCAA5;border-radius:2px;"></div></div>
+      <div style="padding:14px 14px 28px;">
+
+        <div class="section-label" style="padding:0 0 10px;">Scala dei dosaggi · dal più secco al più dolce</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:16px;">Dopo il dégorgement si aggiunge la <em>liqueur d'expédition</em> — una miscela di vino e zucchero di canna che definisce il livello di dolcezza finale e il carattere stilistico del Champagne.</div>
+
+        <!-- Barra spettro cromatico -->
+        <div style="margin-bottom:22px;">
+          <div style="height:7px;border-radius:4px;background:linear-gradient(to right,#2678A4,#1A8A6A,#B8922A,#C07800,#B84820,#B82058,#801888);margin-bottom:6px;"></div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-family:var(--sans);font-size:11px;color:var(--ink-4);letter-spacing:.5px;">← SECCO</span>
+            <span style="font-family:var(--sans);font-size:11px;color:var(--ink-4);letter-spacing:.5px;">DOLCE →</span>
+          </div>
         </div>
-        <div class="card" style="padding:13px 14px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;">Extra Brut</span><span style="font-family:var(--sans);font-size:15px;color:#085041;font-weight:500;">0–6 g/l</span></div>
-          <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.5;margin-bottom:8px;">Secchissimo, minerale. Preferito dagli intenditori, ideale con ostriche e crostacei.</div>
-          <div style="height:4px;background:var(--ivory-3);border-radius:2px;"><div style="width:15%;height:100%;background:#5DCAA5;border-radius:2px;"></div></div>
+
+        <!-- BRUT NATURE -->
+        <div class="card" style="margin-bottom:10px;overflow:hidden;border-color:#2678A430;">
+          <div style="background:#DFF0FA;padding:11px 14px 9px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <div style="width:9px;height:9px;border-radius:50%;background:#2678A4;flex-shrink:0;"></div>
+                  <span style="font-family:var(--sans);font-size:15px;color:#184F6A;font-weight:600;">Brut Nature</span>
+                </div>
+                <div style="font-family:var(--sans);font-size:12px;color:#184F6A;opacity:.7;margin-top:2px;padding-left:16px;">Dosage Zéro · Pas Dosé · Nature</div>
+              </div>
+              <span style="font-family:var(--sans);font-size:14px;color:#184F6A;font-weight:600;flex-shrink:0;">0–3 g/l</span>
+            </div>
+          </div>
+          <div style="padding:12px 14px 13px;">
+            <div style="height:4px;background:var(--ivory-3);border-radius:2px;margin-bottom:11px;"><div style="width:7%;height:100%;background:#2678A4;border-radius:2px;"></div></div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Nessun zucchero aggiunto dopo il dégorgement. Il vino più puro e diretto — esprime solo il terroir e la materia prima. Non perdona: richiede uve eccellenti e una vendemmia impeccabile.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <span style="font-family:var(--sans);font-size:12px;background:#DFF0FA;color:#184F6A;border:0.5px solid #2678A440;border-radius:20px;padding:3px 9px;">Ostriche</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#DFF0FA;color:#184F6A;border:0.5px solid #2678A440;border-radius:20px;padding:3px 9px;">Caviale</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#DFF0FA;color:#184F6A;border:0.5px solid #2678A440;border-radius:20px;padding:3px 9px;">Frutti di mare</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#DFF0FA;color:#184F6A;border:0.5px solid #2678A440;border-radius:20px;padding:3px 9px;">Aperitivo puro</span>
+            </div>
+          </div>
         </div>
-        <div class="card" style="padding:13px 14px;margin-bottom:8px;border-color:var(--gold-border);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;">Brut <span style="font-size:13px;background:var(--gold);color:#fff;border-radius:10px;padding:1px 7px;margin-left:5px;">Più venduto</span></span><span style="font-family:var(--sans);font-size:15px;color:var(--gold);font-weight:500;">0–12 g/l</span></div>
-          <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.5;margin-bottom:8px;">Il più venduto al mondo. Versatile, equilibrato. Ogni grande maison ha il proprio Brut NV.</div>
-          <div style="height:4px;background:var(--ivory-3);border-radius:2px;"><div style="width:40%;height:100%;background:var(--gold);border-radius:2px;"></div></div>
+
+        <!-- EXTRA BRUT -->
+        <div class="card" style="margin-bottom:10px;overflow:hidden;border-color:#1A8A6A30;">
+          <div style="background:#D8F2EC;padding:11px 14px 9px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <div style="width:9px;height:9px;border-radius:50%;background:#1A8A6A;flex-shrink:0;"></div>
+                <span style="font-family:var(--sans);font-size:15px;color:#0C5444;font-weight:600;">Extra Brut</span>
+              </div>
+              <span style="font-family:var(--sans);font-size:14px;color:#0C5444;font-weight:600;">0–6 g/l</span>
+            </div>
+          </div>
+          <div style="padding:12px 14px 13px;">
+            <div style="height:4px;background:var(--ivory-3);border-radius:2px;margin-bottom:11px;"><div style="width:14%;height:100%;background:#1A8A6A;border-radius:2px;"></div></div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Secchissimo, verticale, minerale. Preferito dagli intenditori che cercano tensione e precisione. L'acidità deve essere perfettamente bilanciata — difficile da fare bene quanto da apprezzare.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <span style="font-family:var(--sans);font-size:12px;background:#D8F2EC;color:#0C5444;border:0.5px solid #1A8A6A40;border-radius:20px;padding:3px 9px;">Sushi</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#D8F2EC;color:#0C5444;border:0.5px solid #1A8A6A40;border-radius:20px;padding:3px 9px;">Carpaccio di pesce</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#D8F2EC;color:#0C5444;border:0.5px solid #1A8A6A40;border-radius:20px;padding:3px 9px;">Crostacei</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#D8F2EC;color:#0C5444;border:0.5px solid #1A8A6A40;border-radius:20px;padding:3px 9px;">Formaggi freschi</span>
+            </div>
+          </div>
         </div>
-        <div class="card" style="padding:13px 14px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;">Extra Sec</span><span style="font-family:var(--sans);font-size:15px;color:var(--ink-4);">12–17 g/l</span></div>
-          <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.5;margin-bottom:8px;">Leggermente più morbido del Brut. Ideale con dessert leggeri e frutta.</div>
-          <div style="height:4px;background:var(--ivory-3);border-radius:2px;"><div style="width:58%;height:100%;background:#b8922a;border-radius:2px;opacity:.6;"></div></div>
+
+        <!-- BRUT -->
+        <div class="card" style="margin-bottom:10px;overflow:hidden;border-color:var(--gold-border);">
+          <div style="background:#F5EDD8;padding:11px 14px 9px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <div style="width:9px;height:9px;border-radius:50%;background:var(--gold);flex-shrink:0;"></div>
+                <span style="font-family:var(--sans);font-size:15px;color:#8A6A1E;font-weight:600;">Brut</span>
+                <span style="font-family:var(--sans);font-size:12px;background:var(--gold);color:#fff;border-radius:20px;padding:2px 8px;font-weight:500;">Più venduto</span>
+              </div>
+              <span style="font-family:var(--sans);font-size:14px;color:#8A6A1E;font-weight:600;">0–12 g/l</span>
+            </div>
+          </div>
+          <div style="padding:12px 14px 13px;">
+            <div style="height:4px;background:var(--ivory-3);border-radius:2px;margin-bottom:11px;"><div style="width:28%;height:100%;background:var(--gold);border-radius:2px;"></div></div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Il più versatile e popolare al mondo. Ogni grande maison lo usa come carta d'identità stilistica — il Brut NV è il vino "firma" che deve essere costante anno dopo anno. Equilibrio perfetto tra freschezza e morbidezza.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <span style="font-family:var(--sans);font-size:12px;background:#F5EDD8;color:#8A6A1E;border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 9px;">Aperitivo</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#F5EDD8;color:#8A6A1E;border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 9px;">Antipasti</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#F5EDD8;color:#8A6A1E;border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 9px;">Pesce</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#F5EDD8;color:#8A6A1E;border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 9px;">Risotto</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#F5EDD8;color:#8A6A1E;border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 9px;">Tutto pasto</span>
+            </div>
+          </div>
         </div>
-        <div class="card" style="padding:13px 14px;opacity:.45;cursor:pointer;" onclick="go('v-paywall')">
-          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;">Sec · Demi-Sec · Doux</span><i class="ti ti-lock" style="font-size:17px;color:var(--gold);"></i></div>
-          <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:4px;">Sblocca con Premium →</div>
+
+        <!-- EXTRA SEC -->
+        <div class="card" style="margin-bottom:10px;overflow:hidden;border-color:#C0780030;">
+          <div style="background:#FEF0CC;padding:11px 14px 9px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <div style="width:9px;height:9px;border-radius:50%;background:#C07800;flex-shrink:0;"></div>
+                  <span style="font-family:var(--sans);font-size:15px;color:#7A5000;font-weight:600;">Extra Sec</span>
+                </div>
+                <div style="font-family:var(--sans);font-size:12px;color:#7A5000;opacity:.7;margin-top:2px;padding-left:16px;">Extra Dry</div>
+              </div>
+              <span style="font-family:var(--sans);font-size:14px;color:#7A5000;font-weight:600;flex-shrink:0;">12–17 g/l</span>
+            </div>
+          </div>
+          <div style="padding:12px 14px 13px;">
+            <div style="height:4px;background:var(--ivory-3);border-radius:2px;margin-bottom:11px;"><div style="width:42%;height:100%;background:#C07800;border-radius:2px;"></div></div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Più morbido del Brut, ma ancora ben secco al palato. Il nome può ingannare: "Extra Dry" è paradossalmente più dolce dell'Extra Brut. Meno diffuso in Champagne rispetto al Prosecco, dove domina.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <span style="font-family:var(--sans);font-size:12px;background:#FEF0CC;color:#7A5000;border:0.5px solid #C0780040;border-radius:20px;padding:3px 9px;">Pesce fritto</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FEF0CC;color:#7A5000;border:0.5px solid #C0780040;border-radius:20px;padding:3px 9px;">Canapè</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FEF0CC;color:#7A5000;border:0.5px solid #C0780040;border-radius:20px;padding:3px 9px;">Formaggi morbidi</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FEF0CC;color:#7A5000;border:0.5px solid #C0780040;border-radius:20px;padding:3px 9px;">Dessert leggeri</span>
+            </div>
+          </div>
         </div>
+
+        <!-- SEC -->
+        <div class="card" style="margin-bottom:10px;overflow:hidden;border-color:#B8482030;">
+          <div style="background:#FDE4D0;padding:11px 14px 9px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <div style="width:9px;height:9px;border-radius:50%;background:#B84820;flex-shrink:0;"></div>
+                  <span style="font-family:var(--sans);font-size:15px;color:#7A3010;font-weight:600;">Sec</span>
+                </div>
+                <div style="font-family:var(--sans);font-size:12px;color:#7A3010;opacity:.7;margin-top:2px;padding-left:16px;">Dry</div>
+              </div>
+              <span style="font-family:var(--sans);font-size:14px;color:#7A3010;font-weight:600;flex-shrink:0;">17–32 g/l</span>
+            </div>
+          </div>
+          <div style="padding:12px 14px 13px;">
+            <div style="height:4px;background:var(--ivory-3);border-radius:2px;margin-bottom:11px;"><div style="width:58%;height:100%;background:#B84820;border-radius:2px;"></div></div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Semi-dolce, percepibilmente rotondo. Raro in Champagne moderno ma tradizionalmente molto diffuso nel XIX secolo. Tornato di moda in abbinamento alla cucina asiatica e ai piatti piccanti.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <span style="font-family:var(--sans);font-size:12px;background:#FDE4D0;color:#7A3010;border:0.5px solid #B8482040;border-radius:20px;padding:3px 9px;">Cucina asiatica</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FDE4D0;color:#7A3010;border:0.5px solid #B8482040;border-radius:20px;padding:3px 9px;">Formaggi erborinati</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FDE4D0;color:#7A3010;border:0.5px solid #B8482040;border-radius:20px;padding:3px 9px;">Torte alla frutta</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FDE4D0;color:#7A3010;border:0.5px solid #B8482040;border-radius:20px;padding:3px 9px;">Speziato</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEMI-SEC -->
+        <div class="card" style="margin-bottom:10px;overflow:hidden;border-color:#B8205830;">
+          <div style="background:#FDE0EE;padding:11px 14px 9px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <div style="width:9px;height:9px;border-radius:50%;background:#B82058;flex-shrink:0;"></div>
+                <span style="font-family:var(--sans);font-size:15px;color:#7A1840;font-weight:600;">Demi-Sec</span>
+              </div>
+              <span style="font-family:var(--sans);font-size:14px;color:#7A1840;font-weight:600;">32–50 g/l</span>
+            </div>
+          </div>
+          <div style="padding:12px 14px 13px;">
+            <div style="height:4px;background:var(--ivory-3);border-radius:2px;margin-bottom:11px;"><div style="width:76%;height:100%;background:#B82058;border-radius:2px;"></div></div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Dolce e morbido, ideale a fine pasto. L'acidità naturale del Champagne bilancia la dolcezza senza risultare stucchevole. Tradizionale abbinamento con la grande pasticceria francese.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <span style="font-family:var(--sans);font-size:12px;background:#FDE0EE;color:#7A1840;border:0.5px solid #B8205840;border-radius:20px;padding:3px 9px;">Mousse al cioccolato</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FDE0EE;color:#7A1840;border:0.5px solid #B8205840;border-radius:20px;padding:3px 9px;">Foie gras</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FDE0EE;color:#7A1840;border:0.5px solid #B8205840;border-radius:20px;padding:3px 9px;">Crostate</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#FDE0EE;color:#7A1840;border:0.5px solid #B8205840;border-radius:20px;padding:3px 9px;">Macarons</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DOUX -->
+        <div class="card" style="margin-bottom:4px;overflow:hidden;border-color:#80188830;">
+          <div style="background:#EDD0E8;padding:11px 14px 9px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <div style="width:9px;height:9px;border-radius:50%;background:#801888;flex-shrink:0;"></div>
+                <span style="font-family:var(--sans);font-size:15px;color:#5A1060;font-weight:600;">Doux</span>
+              </div>
+              <span style="font-family:var(--sans);font-size:14px;color:#5A1060;font-weight:600;">50+ g/l</span>
+            </div>
+          </div>
+          <div style="padding:12px 14px 13px;">
+            <div style="height:4px;background:var(--ivory-3);border-radius:2px;margin-bottom:11px;"><div style="width:95%;height:100%;background:#801888;border-radius:2px;"></div></div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Rarissimo oggi, praticamente scomparso dal mercato moderno. Era lo stile preferito dalla corte degli Zar nell'Ottocento. Qualche produttore lo propone ancora come omaggio storico o curiosità da collezione.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <span style="font-family:var(--sans);font-size:12px;background:#EDD0E8;color:#5A1060;border:0.5px solid #80188840;border-radius:20px;padding:3px 9px;">Pasticceria ricca</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#EDD0E8;color:#5A1060;border:0.5px solid #80188840;border-radius:20px;padding:3px 9px;">Panettone</span>
+              <span style="font-family:var(--sans);font-size:12px;background:#EDD0E8;color:#5A1060;border:0.5px solid #80188840;border-radius:20px;padding:3px 9px;">Dessert al caramello</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div><!-- /dosaggi -->
 
