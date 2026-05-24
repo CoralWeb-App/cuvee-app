@@ -383,16 +383,16 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <i class="ti ti-chevron-down step-chev"></i>
         </div>
         <div class="step-body">
-          <div class="step-summary">Il chef de cave mescola decine o centinaia di vins de base per creare la cuvée definitiva. Per i Non Vintage si aggiungono vins de réserve di annate precedenti per garantire continuità stilistica anno dopo anno.
-            <div class="step-tags"><span class="step-tag">Fino a 400 vins de base</span><span class="step-tag">Vins de réserve</span><span class="step-tag">NV vs Millésimé</span></div>
+          <div class="step-summary">Il chef de cave mescola decine o centinaia di vins de base per creare la cuvée definitiva. Per i Sans Année si aggiungono vins de réserve di annate precedenti per garantire continuità stilistica anno dopo anno.
+            <div class="step-tags"><span class="step-tag">Fino a 400 vins de base</span><span class="step-tag">Vins de réserve</span><span class="step-tag">SA vs Millésimé</span></div>
           </div>
           <div class="appro">
             <div class="appro-lbl"><i class="ti ti-microscope"></i>Approfondimento</div>
             <div class="appro-block-title">Il caso estremo: Krug Grande Cuvée</div>
             <div class="appro-block-text">Oltre 120 vins de base da più di 10 crus e fino a 15 annate diverse. Ogni édition numerotée è unica. L'obiettivo non è replicare la precedente, ma esprimere la visione Krug di quell'anno specifico.</div>
             <div class="appro-fact"><i class="ti ti-bulb"></i><span>Il millésimé si produce solo nelle grandi annate, quando le uve di un singolo anno sono abbastanza straordinarie da non aver bisogno di vins de réserve.</span></div>
-            <div class="appro-block-title">NV vs Millésimé vs Prestige Cuvée</div>
-            <div class="appro-block-text">Il Non Vintage (NV) è il vino "firma" di ogni maison, pensato per essere costante nel tempo. Il Millésimé esprime un'annata eccezionale. La Prestige Cuvée — come Dom Pérignon, Cristal, Belle Époque — è il vertice assoluto della maison, prodotta in quantità limitate.</div>
+            <div class="appro-block-title">SA vs Millésimé vs Prestige Cuvée</div>
+            <div class="appro-block-text">Il Sans Année (SA) è il vino "firma" di ogni maison, pensato per essere costante nel tempo. Il Millésimé esprime un'annata eccezionale. La Prestige Cuvée — come Dom Pérignon, Cristal, Belle Époque — è il vertice assoluto della maison, prodotta in quantità limitate.</div>
           </div>
         </div>
       </div>
@@ -453,7 +453,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Crayères di Reims</span></div>
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#CCE0F0;border-color:#4A6A8A;color:#1A3A5A;">7</div>
-          <div class="step-texts"><div class="step-title">Affinamento sui lieviti</div><div class="step-sub">Vieillissement sur lies · min. 15 mesi NV · 36 mesi millésimé</div></div>
+          <div class="step-texts"><div class="step-title">Affinamento sui lieviti</div><div class="step-sub">Vieillissement sur lies · min. 15 mesi SA · 36 mesi millésimé</div></div>
           <i class="ti ti-chevron-down step-chev"></i>
         </div>
         <div class="step-body">
@@ -697,7 +697,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           </div>
           <div style="padding:12px 14px 13px;">
             <div style="height:4px;background:var(--ivory-3);border-radius:2px;margin-bottom:11px;"><div style="width:28%;height:100%;background:var(--gold);border-radius:2px;"></div></div>
-            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Il più versatile e popolare al mondo. Ogni grande maison lo usa come carta d'identità stilistica — il Brut NV è il vino "firma" che deve essere costante anno dopo anno. Equilibrio perfetto tra freschezza e morbidezza.</div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:10px;">Il più versatile e popolare al mondo. Ogni grande maison lo usa come carta d'identità stilistica — il Brut SA è il vino "firma" che deve essere costante anno dopo anno. Equilibrio perfetto tra freschezza e morbidezza.</div>
             <div style="display:flex;gap:5px;flex-wrap:wrap;">
               <span style="font-family:var(--sans);font-size:12px;background:#F5EDD8;color:#8A6A1E;border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 9px;">Aperitivo</span>
               <span style="font-family:var(--sans);font-size:12px;background:#F5EDD8;color:#8A6A1E;border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 9px;">Antipasti</span>
@@ -988,7 +988,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="filter-bar">
     <div class="filter-row" id="bott-filters">
       <div class="f-btn on" onclick="setBottFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn" onclick="setBottFilter(this,'nv')">Non Vintage</div>
+      <div class="f-btn" onclick="setBottFilter(this,'nv')">Sans Année</div>
       <div class="f-btn" onclick="setBottFilter(this,'blanc_de_blancs')">Blanc de Blancs</div>
       <div class="f-btn" onclick="setBottFilter(this,'blanc_de_noirs')">Blanc de Noirs</div>
       <div class="f-btn" onclick="setBottFilter(this,'prestige')">Prestige</div>
@@ -1511,7 +1511,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="input-wrap">
           <label class="input-label">Millesime / Annata</label>
-          <input class="input-field" id="note-annata" type="text" placeholder="es. 2018, NV"/>
+          <input class="input-field" id="note-annata" type="text" placeholder="es. 2018, SA"/>
         </div>
         <div class="input-wrap">
           <label class="input-label">Dosage</label>
@@ -1882,6 +1882,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=27"></script>
+<script src="js/app.js?v=28"></script>
 </body>
 </html>
