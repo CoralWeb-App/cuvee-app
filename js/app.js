@@ -2536,14 +2536,16 @@ function scoreRingSm(score) {
 function dosagePill(tipo) {
   if (!tipo) return '';
   const cfg = {
-    'Brut Nature': {bg:'#E3F2F8',c:'#1A5C78'},
-    'Zero Dosage': {bg:'#E3F2F8',c:'#1A5C78'},
-    'Extra Brut':  {bg:'#E8F4F5',c:'#1E7A8A'},
+    'Brut Nature': {bg:'#DFF0FA',c:'#184F6A'},
+    'Zero Dosage': {bg:'#DFF0FA',c:'#184F6A'},
+    'Pas Dosé':    {bg:'#DFF0FA',c:'#184F6A'},
+    'Extra Brut':  {bg:'#D8F2EC',c:'#0C5444'},
     'Brut':        {bg:'#F5EDD8',c:'#8A6A1E'},
-    'Extra Sec':   {bg:'#F5E8D0',c:'#9A5810'},
-    'Sec':         {bg:'#F5E0D0',c:'#A04020'},
-    'Demi-Sec':    {bg:'#F5D8EC',c:'#8A2860'},
-    'Doux':        {bg:'#F0D0E8',c:'#6A1848'},
+    'Extra Sec':   {bg:'#FEF0CC',c:'#7A5000'},
+    'Extra Dry':   {bg:'#FEF0CC',c:'#7A5000'},
+    'Sec':         {bg:'#FDE4D0',c:'#7A3010'},
+    'Demi-Sec':    {bg:'#FDE0EE',c:'#7A1840'},
+    'Doux':        {bg:'#EDD0E8',c:'#5A1060'},
   };
   const s = cfg[tipo] || {bg:'var(--ivory-2)',c:'var(--ink-4)'};
   return '<span class="dosage-pill" style="background:' + s.bg + ';color:' + s.c + ';">' + tipo + '</span>';
