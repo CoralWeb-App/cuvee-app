@@ -95,13 +95,13 @@ html,body{
 .bn i{font-size:24px;color:var(--ink-5);}
 .bn span{font-family:var(--sans);font-size:13px;color:var(--ink-5);font-weight:400;}
 .bn.on i,.bn.on span{color:var(--gold);}
-.bn-carnet{position:relative;top:-16px;flex:0 0 auto !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:flex-start !important;gap:5px !important;padding:0 !important;background:transparent !important;border-radius:0 !important;margin:0 6px;}
-.bn-carnet-circle{position:relative;width:56px;height:56px;border-radius:50%;background:#1E1208;border:3px solid var(--ivory);box-shadow:0 -4px 16px rgba(30,18,8,.18),0 3px 10px rgba(30,18,8,.20);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.bn-carnet-circle i{font-size:25px !important;color:#C8A03A !important;}
+.bn-carnet{position:relative;flex:1 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:flex-end !important;padding:4px 0 !important;gap:3px !important;background:transparent !important;border-radius:0 !important;margin:0 !important;top:auto !important;}
+.bn-carnet-circle{position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;background:#1E1208;border:3px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;}
+.bn-carnet-circle i{font-size:24px !important;color:#C8A03A !important;}
 .bn-carnet > span{color:#B8943A !important;font-size:11px !important;font-family:var(--sans) !important;font-weight:500 !important;}
-.bn-carnet.on .bn-carnet-circle{background:#2A1A08;box-shadow:0 -4px 18px rgba(212,168,60,.22),0 3px 10px rgba(30,18,8,.20);}
+.bn-carnet.on .bn-carnet-circle{background:#2A1A08;box-shadow:0 -4px 16px rgba(212,168,60,.22),0 3px 10px rgba(30,18,8,.20);}
 .bn-carnet.on > span{color:var(--gold) !important;font-weight:600 !important;}
-.bn-carnet-badge{position:absolute;top:-2px;right:-2px;background:#C8A03A;color:#1E1208;border-radius:50%;width:16px;height:16px;border:2px solid var(--ivory);font-family:var(--sans);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;}
+.bn-carnet-badge{position:absolute;top:-1px;right:-1px;background:#C8A03A;color:#1E1208;border-radius:50%;width:15px;height:15px;border:2px solid var(--ivory);font-family:var(--sans);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;}
 
 /* ── BUTTONS ── */
 .btn-gold{
