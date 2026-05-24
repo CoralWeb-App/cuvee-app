@@ -85,7 +85,7 @@ html,body{
 .bottom-nav{
   position:fixed;bottom:0;left:50%;transform:translateX(-50%);
   width:100%;max-width:430px;
-  display:flex;align-items:flex-end;background:var(--white);
+  display:flex;align-items:stretch;background:var(--white);
   border-top:1px solid var(--border);
   padding:6px 0 calc(env(safe-area-inset-bottom,0px) + 6px);
   z-index:200;
