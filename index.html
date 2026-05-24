@@ -502,10 +502,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <!-- GLOSSARIO -->
     <div class="tab-content" id="tc-glossario">
       <div class="section-label">Termini chiave</div>
-      <div style="padding:0 14px 20px;">
-        <div id="gloss-filters" class="gloss-filters-row" style="margin-bottom:14px;">
-          <div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Caricamento…</div>
-        </div>
+      <div id="gloss-filters" class="gloss-filters-row" style="position:sticky;top:0;z-index:10;background:var(--ivory);padding:8px 14px;border-bottom:1px solid var(--border);">
+        <div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Caricamento…</div>
+      </div>
+      <div style="padding:8px 14px 20px;">
         <div id="gloss-list">
           <div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Caricamento…</div>
         </div>
@@ -1672,6 +1672,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=23"></script>
+<script src="js/app.js?v=24"></script>
 </body>
 </html>

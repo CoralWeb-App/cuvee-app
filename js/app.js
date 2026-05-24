@@ -2091,18 +2091,18 @@ function renderMaison() {
     filtered = filtered.filter(m => Array.isArray(m.certificazioni) && m.certificazioni.includes(currentMaisonCert));
   }
 
-  // Filter by search
+  // Filter by search (accent-insensitive via normalizeStr)
   if (currentMaisonSearch) {
-    const q = currentMaisonSearch.toLowerCase();
+    const q = normalizeStr(currentMaisonSearch);
     const tipoLabelM = {'NM':'négociant-manipulant','RM':'récoltant-manipulant','RC':'récoltant-coopérateur','CM':'coopérative-manipulant','SR':'société de récoltants','ND':'négociant-distributeur','MA':'marque acheteur'};
     filtered = filtered.filter(m =>
-      (m.nome||'').toLowerCase().includes(q) ||
-      (m.sede_comune||'').toLowerCase().includes(q) ||
-      (m.descrizione||'').toLowerCase().includes(q) ||
-      (m.chef_de_cave||'').toLowerCase().includes(q) ||
-      (m.tipo||'').toLowerCase().includes(q) ||
-      (tipoLabelM[m.tipo]||'').toLowerCase().includes(q) ||
-      (m.zone?.nome||'').toLowerCase().includes(q)
+      normalizeStr(m.nome).includes(q) ||
+      normalizeStr(m.sede_comune).includes(q) ||
+      normalizeStr(m.descrizione).includes(q) ||
+      normalizeStr(m.chef_de_cave).includes(q) ||
+      normalizeStr(m.tipo).includes(q) ||
+      normalizeStr(tipoLabelM[m.tipo]).includes(q) ||
+      normalizeStr(m.zone?.nome).includes(q)
     );
   }
 
@@ -2593,14 +2593,14 @@ function renderBottiglie() {
   let filtered = allBottiglie;
   if (currentBottFilter !== 'tutti') filtered = filtered.filter(b => b.tipo === currentBottFilter);
   if (currentBottSearch) {
-    const q = currentBottSearch.toLowerCase();
+    const q = normalizeStr(currentBottSearch);
     const tipoLabelB = {'nv':'non vintage','millesimato':'millesimato','prestige':'prestige cuvée','blanc_de_blancs':'blanc de blancs','blanc_de_noirs':'blanc de noirs','rose':'rosé','nature':'brut nature'};
     filtered = filtered.filter(b =>
-      (b.nome||'').toLowerCase().includes(q) ||
-      (b.maison?.nome||'').toLowerCase().includes(q) ||
-      (b.descrizione||'').toLowerCase().includes(q) ||
-      (b.dosaggio_tipo||'').toLowerCase().includes(q) ||
-      (tipoLabelB[b.tipo]||'').toLowerCase().includes(q) ||
+      normalizeStr(b.nome).includes(q) ||
+      normalizeStr(b.maison?.nome).includes(q) ||
+      normalizeStr(b.descrizione).includes(q) ||
+      normalizeStr(b.dosaggio_tipo).includes(q) ||
+      normalizeStr(tipoLabelB[b.tipo]).includes(q) ||
       (b.annata ? String(b.annata) : '').includes(q)
     );
   }
