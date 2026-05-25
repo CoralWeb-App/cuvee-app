@@ -938,11 +938,7 @@ function resizeImage(file, maxSize = 512) {
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       // WebP se supportato (iOS 16+), altrimenti JPEG come fallback
-      // Prova WebP; se il browser restituisce PNG come fallback silenzioso, forza JPEG
-      canvas.toBlob(blob => {
-        if (blob && blob.type === 'image/webp') { resolve(blob); return; }
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.75);
-      }, 'image/webp', 0.75);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.75);
     };
     img.onerror = reject;
     img.src = url;
@@ -967,12 +963,11 @@ async function uploadAvatar(input) {
     if (homeAvatar) homeAvatar.innerHTML = imgTag;
 
     // Upload in background
-    const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
-    const path = currentUser.id + '/avatar.' + ext;
+    const path = currentUser.id + '/avatar.jpg';
 
     const { error: uploadError } = await supa.storage
       .from('avatars')
-      .upload(path, blob, { upsert: true, contentType: blob.type });
+      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
     if (uploadError) throw uploadError;
 
     const { data: urlData } = supa.storage.from('avatars').getPublicUrl(path);
