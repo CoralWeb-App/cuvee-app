@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=23"/>
+<link rel="stylesheet" href="css/style.css?v=24"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -989,11 +989,12 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="filter-row" id="bott-filters">
       <div class="f-btn on" onclick="setBottFilter(this,'tutti')">Tutti</div>
       <div class="f-btn" onclick="setBottFilter(this,'nv')">Sans Année</div>
+      <div class="f-btn" onclick="setBottFilter(this,'millesimato')">Millésimé</div>
+      <div class="f-btn" onclick="setBottFilter(this,'rose')">Rosé</div>
       <div class="f-btn" onclick="setBottFilter(this,'blanc_de_blancs')">Blanc de Blancs</div>
       <div class="f-btn" onclick="setBottFilter(this,'blanc_de_noirs')">Blanc de Noirs</div>
-      <div class="f-btn" onclick="setBottFilter(this,'prestige')">Prestige</div>
-      <div class="f-btn" onclick="setBottFilter(this,'millesimato')">Millesimato</div>
-      <div class="f-btn" onclick="setBottFilter(this,'rose')">Rosé</div>
+      <div class="f-btn" onclick="setBottFilter(this,'prestige')">Prestige Cuvée</div>
+      <div class="f-btn" onclick="setBottFilter(this,'nature')">Brut Nature</div>
     </div>
   </div>
   <div class="scroll">
@@ -1800,6 +1801,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=35"></script>
+<script src="js/app.js?v=36"></script>
 </body>
 </html>

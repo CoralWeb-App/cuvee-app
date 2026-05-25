@@ -2556,7 +2556,7 @@ async function loadDetailBottles(maisonId) {
     const premium = isPremium();
     const visible = premium ? bottles : bottles.slice(0, 2);
     const locked = premium ? [] : bottles.slice(2);
-    const tipoLabel = {'nv':'Sans Année','millesimato':'Millesimato','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
+    const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
     listEl.innerHTML = visible.map(b => {
       const tipo = tipoLabel[b.tipo] || b.tipo || '';
       const meta = [tipo, b.dosaggio_tipo].filter(Boolean).join(' · ');
@@ -2670,12 +2670,12 @@ async function loadAndRenderBottiglie() {
 function renderBottiglie() {
   const listEl = document.getElementById('bott-list');
   if (!listEl) return;
-  const tipoLabel = {'nv':'Sans Année','millesimato':'Millesimato','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
+  const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
   let filtered = allBottiglie;
   if (currentBottFilter !== 'tutti') filtered = filtered.filter(b => b.tipo === currentBottFilter);
   if (currentBottSearch) {
     const q = normalizeStr(currentBottSearch);
-    const tipoLabelB = {'nv':'sans année','millesimato':'millesimato','prestige':'prestige cuvée','blanc_de_blancs':'blanc de blancs','blanc_de_noirs':'blanc de noirs','rose':'rosé','nature':'brut nature'};
+    const tipoLabelB = {'nv':'sans année','millesimato':'millésimé','prestige':'prestige cuvée','blanc_de_blancs':'blanc de blancs','blanc_de_noirs':'blanc de noirs','rose':'rosé','nature':'brut nature'};
     filtered = filtered.filter(b =>
       normalizeStr(b.nome).includes(q) ||
       normalizeStr(b.maison?.nome).includes(q) ||
@@ -2810,7 +2810,7 @@ async function openBottigliaDetail(bottId) {
   const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
   if (!b) return;
   currentBottiglia = b;
-  const tipoLabel = {'nv':'Sans Année','millesimato':'Millesimato','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
+  const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
 
   // Hero
   const hero = document.getElementById('bott-detail-hero');
