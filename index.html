@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=39"/>
+<link rel="stylesheet" href="css/style.css?v=40"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -129,7 +129,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div class="topbar-icons">
       <i class="ti ti-bell"></i>
-      <div onclick="go('v-profile')" style="width:32px;height:32px;border-radius:50%;background:var(--gold-pale);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-user" style="font-size:19px;color:var(--gold);"></i></div>
+      <div id="home-topbar-avatar" onclick="go('v-profile')" style="width:32px;height:32px;border-radius:50%;background:var(--gold-pale);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;"><i class="ti ti-user" style="font-size:19px;color:var(--gold);"></i></div>
     </div>
   </div>
   <div class="scroll">
@@ -1116,7 +1116,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="scroll">
     <div style="padding:20px 18px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);">
-      <div style="width:60px;height:60px;border-radius:50%;background:var(--gold-pale);border:2px solid var(--gold-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--serif);font-size:24px;color:#8a6a1e;font-weight:500;" id="profile-avatar">?</div>
+      <div style="position:relative;width:72px;height:72px;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('avatar-input').click()">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--gold-pale);border:2px solid var(--gold-border);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:var(--serif);font-size:26px;color:#8a6a1e;font-weight:500;" id="profile-avatar">?</div>
+        <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;background:var(--gold);border-radius:50%;border:2px solid var(--white);display:flex;align-items:center;justify-content:center;pointer-events:none;">
+          <i class="ti ti-camera" style="font-size:12px;color:#fff;"></i>
+        </div>
+      </div>
+      <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
       <div><div style="font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:500;" id="profile-name">—</div><div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-top:2px;" id="profile-email">—</div><div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 10px;"><i class="ti ti-crown" style="font-size:15px;color:var(--gold);"></i><span style="font-family:var(--sans);font-size:13px;color:#8a6a1e;font-weight:500;">Premium attivo</span></div></div>
     </div>
     <div class="section-label">I miei preferiti</div>
@@ -1856,6 +1862,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=53"></script>
+<script src="js/app.js?v=54"></script>
 </body>
 </html>

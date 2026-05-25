@@ -884,9 +884,25 @@ function updateProfileUI(profile) {
   const emailEl = document.getElementById('profile-email');
   if (emailEl) emailEl.textContent = email;
 
-  // Avatar iniziale
+  // Avatar profilo
   const avatarEl = document.getElementById('profile-avatar');
-  if (avatarEl) avatarEl.textContent = initial;
+  if (avatarEl) {
+    if (profile.avatar_url) {
+      avatarEl.innerHTML = '<img src="' + profile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      avatarEl.textContent = initial;
+    }
+  }
+
+  // Avatar topbar home
+  const homeAvatar = document.getElementById('home-topbar-avatar');
+  if (homeAvatar) {
+    if (profile.avatar_url) {
+      homeAvatar.innerHTML = '<img src="' + profile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      homeAvatar.innerHTML = '<i class="ti ti-user" style="font-size:19px;color:var(--gold);"></i>';
+    }
+  }
 
   // Saluto in home
   const greetEl = document.getElementById('home-greet');
@@ -905,6 +921,39 @@ function updateProfileUI(profile) {
       premBadge.style.display = 'none';
     }
   }
+}
+
+async function uploadAvatar(input) {
+  if (!input.files || !input.files[0] || !currentUser) return;
+  const file = input.files[0];
+  const ext = file.name.split('.').pop() || 'jpg';
+  const path = currentUser.id + '/avatar.' + ext;
+  const avatarEl = document.getElementById('profile-avatar');
+
+  // Feedback visivo durante upload
+  if (avatarEl) avatarEl.style.opacity = '0.4';
+
+  try {
+    const { error } = await supa.storage
+      .from('carnet-photos')
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (error) throw error;
+
+    const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
+    const avatarUrl = urlData.publicUrl;
+
+    // Salva nel DB
+    await supa.from('users').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
+
+    // Aggiorna profilo locale e UI
+    if (currentUser.profile) currentUser.profile.avatar_url = avatarUrl;
+    updateProfileUI(currentUser.profile);
+  } catch(e) {
+    console.log('Avatar upload error:', e);
+  }
+
+  if (avatarEl) avatarEl.style.opacity = '1';
+  input.value = '';
 }
 
 async function updateCarnetUI() {
