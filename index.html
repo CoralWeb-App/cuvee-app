@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=34"/>
+<link rel="stylesheet" href="css/style.css?v=35"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -312,7 +312,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 1: VENDEMMIA -->
       <div class="step-card" style="margin-top:14px;">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Vendange manuelle</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-02-vendemmia.webp" alt="Vendemmia manuale in Champagne" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#D8EEC4;border-color:#5A9A20;color:#27500A;">1</div>
           <div class="step-texts"><div class="step-title">Vendemmia</div><div class="step-sub">Vendange · Settembre · raccolta manuale obbligatoria</div></div>
@@ -335,7 +335,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 2: PRESSURAGE -->
       <div class="step-card">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Pressoir Coquard</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-03-pressatura.webp" alt="Pressatura delle uve — Pressoir Coquard" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#D8EEC4;border-color:#5A9A20;color:#27500A;">2</div>
           <div class="step-texts"><div class="step-title">Pressatura</div><div class="step-sub">Pressurage · pressatura soffice · cuvée e taille</div></div>
@@ -364,7 +364,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 3: FERMENTATION ALCOOLIQUE -->
       <div class="step-card" style="margin-top:14px;">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Cuves de fermentation</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-04-fermentazione.webp" alt="Cuves de fermentation" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#F5E8C8;border-color:#C09020;color:#7A5A0A;">3</div>
           <div class="step-texts"><div class="step-title">Prima fermentazione</div><div class="step-sub">Fermentation alcoolique · il moût diventa vin de base</div></div>
@@ -386,7 +386,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 4: ASSEMBLAGE -->
       <div class="step-card">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Assemblage en cave</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-05-assemblaggio.webp" alt="Assemblaggio — chef de cave" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#F5E8C8;border-color:#C09020;color:#7A5A0A;">4</div>
           <div class="step-texts"><div class="step-title">Assemblaggio</div><div class="step-sub">Assemblage · l'arte del chef de cave</div></div>
@@ -409,7 +409,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 5: TIRAGE -->
       <div class="step-card">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Tirage en bouteille</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-06-tirage.webp" alt="Tirage en bouteille" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#F5E8C8;border-color:#C09020;color:#7A5A0A;">5</div>
           <div class="step-texts"><div class="step-title">Tirage</div><div class="step-sub">Imbottigliamento · presa di spuma</div></div>
@@ -437,7 +437,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 6: DEUXIEME FERMENTATION -->
       <div class="step-card" style="margin-top:14px;">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Prise de mousse en bouteille</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-07-presa-di-spuma.webp" alt="Prise de mousse en bouteille" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#CCE0F0;border-color:#4A6A8A;color:#1A3A5A;">6</div>
           <div class="step-texts"><div class="step-title">Seconda fermentazione</div><div class="step-sub">Deuxième fermentation · prise de mousse · nascita delle bollicine</div></div>
@@ -460,7 +460,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 7: VIEILLISSEMENT SUR LIES -->
       <div class="step-card">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Crayères di Reims</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-01-vigna.webp" alt="Vigneti in Champagne — affinamento in cave" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#CCE0F0;border-color:#4A6A8A;color:#1A3A5A;">7</div>
           <div class="step-texts"><div class="step-title">Affinamento sui lieviti</div><div class="step-sub">Vieillissement sur lies · min. 15 mesi SA · 36 mesi millésimé</div></div>
@@ -483,7 +483,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 8: REMUAGE -->
       <div class="step-card">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Remuage sur pupitre</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-08-remuage.webp" alt="Remuage sur pupitre" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#CCE0F0;border-color:#4A6A8A;color:#1A3A5A;">8</div>
           <div class="step-texts"><div class="step-title">Remuage</div><div class="step-sub">Rotazione progressiva · lies verso il bouchon · tête en bas</div></div>
@@ -511,7 +511,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 9: DEGORGEMENT -->
       <div class="step-card" style="margin-top:14px;">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Dégorgement à la glace</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-09-degorgement.webp" alt="Dégorgement à la glace" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#E0DCFF;border-color:#8A7AD4;color:#3C3489;">9</div>
           <div class="step-texts"><div class="step-title">Dégorgement</div><div class="step-sub">Sboccatura · espulsione delle lies</div></div>
@@ -534,7 +534,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- FASE 10: DOSAGE ET BOUCHAGE -->
       <div class="step-card" style="margin-bottom:20px;">
-        <div class="img-ph step-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Illustrazione — Dosage et bouchage</span></div>
+        <img src="https://wlfxgbmffvhuqmqjiuqo.supabase.co/storage/v1/object/public/guide-images/fase-10-dosaggio.webp" alt="Dosage et bouchage" class="step-ph" style="object-fit:cover;display:block;">
         <div class="step-head" onclick="togStep(this)">
           <div class="step-num" style="background:#E0DCFF;border-color:#8A7AD4;color:#3C3489;">10</div>
           <div class="step-texts"><div class="step-title">Dosaggio e tappatura</div><div class="step-sub">Dosage et bouchage · liqueur d'expédition · bouchon de liège</div></div>
