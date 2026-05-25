@@ -225,6 +225,21 @@ function selectPlan(el){
 }
 // CARNET
 let currentRating=0;
+
+// Chiamata dal pulsante Carnet nella bottom nav:
+// apre direttamente il form nuova nota; se utente free ha già 3 note → paywall
+function quickNewNote(){
+  if(!isPremium()){
+    // Pre-check locale (window._carnetNotes popolato da updateCarnetUI)
+    const localCount = window._carnetNotes ? window._carnetNotes.length : null;
+    if(localCount !== null && localCount >= 3){
+      go('v-paywall');
+      return;
+    }
+  }
+  checkAndNewNote();
+}
+
 function checkAndNewNote(){
   currentEditId = null;
   const hiddenId = document.getElementById('edit-note-id');
