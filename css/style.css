@@ -326,7 +326,7 @@ html,body{
 .tab-content{display:none;}
 .tab-content.on{display:block;}
 .step-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin:0 14px 16px;overflow:hidden;}
-.step-ph{width:100%;height:120px;object-fit:cover;display:block;}
+.step-ph{width:100%;height:200px;object-fit:cover;display:block;}
 .step-head{padding:13px 14px 11px;display:flex;align-items:center;gap:11px;cursor:pointer;}
 .step-num{width:36px;height:36px;border-radius:50%;background:var(--gold-pale);border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:17px;color:#8a6a1e;font-weight:700;flex-shrink:0;}
 .step-texts{flex:1;}
