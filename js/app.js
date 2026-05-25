@@ -2416,7 +2416,7 @@ function renderMaison() {
 
   // Filter by type / category
   if (currentMaisonFilter !== 'tutti') {
-    if (currentMaisonFilter === 'grande-maison') filtered = filtered.filter(m => ['NM','ND','MA'].includes(m.tipo));
+    if (currentMaisonFilter === 'grande-maison') filtered = filtered.filter(m => m.tipo === 'NM');
     else if (currentMaisonFilter === 'vigneron') filtered = filtered.filter(m => ['RM','RC','SR'].includes(m.tipo));
     else if (currentMaisonFilter === 'cooperativa') filtered = filtered.filter(m => m.tipo === 'CM');
     else if (currentMaisonFilter === 'bio') filtered = filtered.filter(m =>
