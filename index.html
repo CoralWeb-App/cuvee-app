@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=30"/>
+<link rel="stylesheet" href="css/style.css?v=31"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1441,12 +1441,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <!-- FOTO -->
     <div class="form-section">
       <div class="form-section-title"><i class="ti ti-camera"></i> Foto della bottiglia <span class="sec-opt">opzionale</span></div>
-      <div class="photo-upload-box" id="photo-box" onclick="document.getElementById('photo-input').click()">
+      <!-- empty state -->
+      <div id="photo-empty" class="photo-upload-box" onclick="document.getElementById('photo-input').click()">
         <i class="ti ti-bottle"></i>
         <span>Tocca per aggiungere una foto</span>
-        <span style="font-family:var(--sans);font-size:12px;color:var(--ink-5);">Dalla galleria o dalla fotocamera</span>
+        <span style="font-family:var(--sans);font-size:12px;color:var(--ink-5);">Dalla galleria o dalla fotocamera · max 5</span>
       </div>
-      <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="previewPhoto(this)"/>
+      <!-- thumbnail strip (shown when ≥1 photo) -->
+      <div id="photo-strip" class="photo-strip-wrap" style="display:none;"></div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="addPhoto(this)"/>
     </div>
 
     <!-- BOTTIGLIA -->
@@ -1830,6 +1833,19 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 
 
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.95);flex-direction:column;align-items:center;justify-content:center;">
+  <button onclick="event.stopPropagation();closeLightbox()" style="position:absolute;top:16px;right:16px;width:38px;height:38px;background:rgba(255,255,255,.14);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1;">
+    <i class="ti ti-x" style="font-size:18px;color:#fff;"></i>
+  </button>
+  <img id="lightbox-img" onclick="event.stopPropagation()" style="max-width:96%;max-height:82vh;object-fit:contain;border-radius:6px;"/>
+  <div id="lightbox-nav" style="display:none;position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:18px;align-items:center;">
+    <button onclick="event.stopPropagation();lightboxPrev()" style="width:40px;height:40px;background:rgba(255,255,255,.14);border:none;border-radius:50%;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+    <span id="lightbox-counter" style="font-family:var(--sans);font-size:14px;color:rgba(255,255,255,.7);min-width:36px;text-align:center;"></span>
+    <button onclick="event.stopPropagation();lightboxNext()" style="width:40px;height:40px;background:rgba(255,255,255,.14);border:none;border-radius:50%;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+  </div>
+</div>
+
 <!-- SINGLE SHARED BOTTOM NAV -->
 <div class="bottom-nav" id="shared-bottom-nav" style="display:none">
   <div class="bn" id="bn-home" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
@@ -1840,6 +1856,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=44"></script>
+<script src="js/app.js?v=45"></script>
 </body>
 </html>

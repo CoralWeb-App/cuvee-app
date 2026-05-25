@@ -230,6 +230,10 @@ function selectPlan(el){
 // CARNET
 let currentRating=0;
 let currentNoteType=null;
+let _pendingPhotos=[];      // {id,dataUrl,blob,ext} – new photos to upload
+let _existingPhotoUrls=[];  // URLs already saved (edit mode)
+let _lightboxPhotos=[];
+let _lightboxIdx=0;
 
 function setNoteTipo(el, tipo){
   if(currentNoteType === tipo){
@@ -290,8 +294,7 @@ function checkAndNewNote(){
   });
   const lbl = document.getElementById('rating-label');
   if (lbl) lbl.textContent = 'Tocca per valutare *';
-  const photoBox = document.getElementById('photo-box');
-  if (photoBox) photoBox.innerHTML = '<i class="ti ti-camera"></i><span>Tocca per aggiungere una foto</span><span style="font-family:var(--sans);font-size:13px;color:var(--ink-5);">Dalla galleria o dalla fotocamera</span>';
+  resetPhotoStrip();
   const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
   if (title) title.textContent = 'Nuova nota';
   const btn = document.getElementById('save-note-btn');
@@ -407,8 +410,127 @@ function previewPhoto(input){
   reader.readAsDataURL(file);
 }
 
-function waitForCompression(input){
-  return Promise.resolve();
+function waitForCompression(input){ return Promise.resolve(); }
+
+/* ── Multi-photo strip ─────────────────────────────────────── */
+function addPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const allCount = _existingPhotoUrls.length + _pendingPhotos.length;
+  if (allCount >= 5) { input.value=''; return; }
+  const file = input.files[0];
+  input.value = ''; // reset so same file can be re-selected
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const MAX = 900;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = Math.round(h*MAX/w); w = MAX; } }
+      else       { if (h > MAX) { w = Math.round(w*MAX/h); h = MAX; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      let dataUrl = canvas.toDataURL('image/webp', 0.78);
+      let mimeType = 'image/webp', ext = 'webp';
+      if (!dataUrl.startsWith('data:image/webp')) {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+        mimeType = 'image/jpeg'; ext = 'jpg';
+      }
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+      const blob = new Blob([bytes],{type:mimeType});
+      _pendingPhotos.push({id:Date.now()+Math.random(), dataUrl, blob, ext});
+      renderPhotoStrip();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function renderPhotoStrip() {
+  const emptyEl = document.getElementById('photo-empty');
+  const stripEl = document.getElementById('photo-strip');
+  if (!stripEl) return;
+  const allCount = _existingPhotoUrls.length + _pendingPhotos.length;
+  if (allCount === 0) {
+    if (emptyEl) emptyEl.style.display = '';
+    stripEl.style.display = 'none';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  stripEl.style.display = 'flex';
+  let html = '';
+  _existingPhotoUrls.forEach((url, i) => {
+    html += '<div class="photo-thumb" onclick="openLightbox(_existingPhotoUrls,'+i+')">' +
+      '<img src="'+url+'"/>' +
+      '<button class="photo-thumb-del" onclick="event.stopPropagation();removeExistingPhoto('+i+')">×</button>' +
+    '</div>';
+  });
+  _pendingPhotos.forEach(p => {
+    html += '<div class="photo-thumb" onclick="openLightbox([\''+p.dataUrl+'\'],0)">' +
+      '<img src="'+p.dataUrl+'"/>' +
+      '<button class="photo-thumb-del" onclick="event.stopPropagation();removePhoto(\''+p.id+'\')">×</button>' +
+    '</div>';
+  });
+  if (allCount < 5) {
+    html += '<div class="photo-add-btn" onclick="document.getElementById(\'photo-input\').click()">' +
+      '<i class="ti ti-camera-plus"></i><span>Aggiungi</span></div>';
+  }
+  stripEl.innerHTML = html;
+}
+function removePhoto(id) {
+  _pendingPhotos = _pendingPhotos.filter(p => String(p.id) !== String(id));
+  renderPhotoStrip();
+}
+function removeExistingPhoto(idx) {
+  _existingPhotoUrls.splice(idx, 1);
+  renderPhotoStrip();
+}
+function resetPhotoStrip() {
+  _pendingPhotos = [];
+  _existingPhotoUrls = [];
+  const emptyEl = document.getElementById('photo-empty');
+  const stripEl = document.getElementById('photo-strip');
+  if (emptyEl) emptyEl.style.display = '';
+  if (stripEl) { stripEl.innerHTML=''; stripEl.style.display='none'; }
+}
+
+/* ── Lightbox ──────────────────────────────────────────────── */
+function openLightbox(photos, idx) {
+  _lightboxPhotos = Array.isArray(photos) ? photos : [photos];
+  _lightboxIdx = idx || 0;
+  const lb  = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  if (!lb || !img) return;
+  img.src = _lightboxPhotos[_lightboxIdx];
+  lb.style.display = 'flex';
+  const nav     = document.getElementById('lightbox-nav');
+  const counter = document.getElementById('lightbox-counter');
+  if (_lightboxPhotos.length > 1) {
+    if (nav) nav.style.display = 'flex';
+    if (counter) counter.textContent = (_lightboxIdx+1)+'/'+_lightboxPhotos.length;
+  } else {
+    if (nav) nav.style.display = 'none';
+  }
+}
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (lb) lb.style.display = 'none';
+}
+function lightboxPrev() {
+  if (_lightboxPhotos.length <= 1) return;
+  _lightboxIdx = (_lightboxIdx-1+_lightboxPhotos.length) % _lightboxPhotos.length;
+  document.getElementById('lightbox-img').src = _lightboxPhotos[_lightboxIdx];
+  const c = document.getElementById('lightbox-counter');
+  if (c) c.textContent = (_lightboxIdx+1)+'/'+_lightboxPhotos.length;
+}
+function lightboxNext() {
+  if (_lightboxPhotos.length <= 1) return;
+  _lightboxIdx = (_lightboxIdx+1) % _lightboxPhotos.length;
+  document.getElementById('lightbox-img').src = _lightboxPhotos[_lightboxIdx];
+  const c = document.getElementById('lightbox-counter');
+  if (c) c.textContent = (_lightboxIdx+1)+'/'+_lightboxPhotos.length;
 }
 async function saveNote(editId = null){
   // Read from hidden input as reliable fallback
@@ -453,34 +575,22 @@ async function saveNote(editId = null){
     return;
   }
 
-  // Upload foto if present (WebP compresso)
-  const photoInput = document.getElementById('photo-input');
-  if (photoInput && photoInput.files && photoInput.files[0]) {
+  // Upload all pending photos + keep existing URLs
+  const allPhotoUrls = [..._existingPhotoUrls];
+  for (const photo of _pendingPhotos) {
     try {
-      // Usa il blob WebP compresso se disponibile, altrimenti il file originale
-      const fileToUpload = photoInput._compressedBlob || photoInput.files[0];
-      const ext = photoInput._compressedExt || photoInput.files[0].name.split('.').pop();
-      const path = currentUser.id + '/' + Date.now() + '.' + ext;
-      console.log('Uploading:', ext.toUpperCase(), Math.round(fileToUpload.size/1024) + 'KB');
-      const { data: uploadData, error: uploadError } = await supa.storage
+      const path = currentUser.id+'/'+Date.now()+'_'+Math.random().toString(36).substr(2,5)+'.'+photo.ext;
+      const { error: uploadError } = await supa.storage
         .from('carnet-photos')
-        .upload(path, fileToUpload, {
-          upsert: true,
-          contentType: photoInput._compressedBlob ? 'image/webp' : fileToUpload.type
-        });
+        .upload(path, photo.blob, { upsert: true, contentType: photo.blob.type });
       if (!uploadError) {
-        const { data: urlData } = supa.storage
-          .from('carnet-photos')
-          .getPublicUrl(path);
-        nota.foto_url = urlData?.publicUrl || null;
-        console.log('Foto salvata:', path);
-      } else {
-        console.log('Upload error:', uploadError);
-      }
-    } catch(e) {
-      console.log('Photo upload error:', e);
-    }
+        const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
+        if (urlData?.publicUrl) allPhotoUrls.push(urlData.publicUrl);
+      } else { console.log('Upload error:', uploadError); }
+    } catch(e) { console.log('Photo upload error:', e); }
   }
+  nota.foto_url  = allPhotoUrls[0] || null;
+  nota.foto_urls = allPhotoUrls.length > 0 ? allPhotoUrls : null;
 
   // Update or insert
   let result;
@@ -511,10 +621,7 @@ async function saveNote(editId = null){
     currentRating = 0;
     const hiddenIdReset = document.getElementById('edit-note-id');
     if (hiddenIdReset) hiddenIdReset.value = '';
-    currentRating = 0;
-    photoInput && (photoInput.value = '');
-    const photoBox = document.getElementById('photo-box');
-    if (photoBox) photoBox.innerHTML = '<i class="ti ti-camera"></i><span>Tocca per aggiungere una foto</span><span style="font-family:var(--sans);font-size:13px;color:var(--ink-5);">Dalla galleria o dalla fotocamera</span>';
+    resetPhotoStrip();
     go('v-carnet');
   }
 }
@@ -1127,33 +1234,51 @@ function openNoteDetail(note) {
     '<div class="form-section-title"><i class="ti '+icon+'"></i>'+title+'</div>' +
     body+'</div>';
 
+  // ── Collect all photos ─────────────────────────────────────
+  window._currentNotePhotos = note.foto_urls && note.foto_urls.length > 0
+    ? note.foto_urls
+    : (note.foto_url ? [note.foto_url] : []);
+  const allPhotos = window._currentNotePhotos;
+
   // ── HERO: foto sinistra + info destra ───────────────────────
-  const photoEl = note.foto_url
-    ? '<img src="'+note.foto_url+'" style="width:100%;height:100%;object-fit:cover;display:block;"/>'
+  const photoEl = allPhotos.length > 0
+    ? '<img src="'+allPhotos[0]+'" style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;" onclick="openLightbox(window._currentNotePhotos,0)"/>'
     : '<i class="ti ti-bottle" style="font-size:40px;color:rgba(184,146,42,.28);"></i>';
 
   let badges = '';
-  if (note.annata)      badges += '<span style="background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:#8a6a1e;font-weight:500;">'+note.annata+'</span>';
-  if (tipoLabel)        badges += '<span style="background:var(--ivory-2);border:0.5px solid var(--border-2);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:var(--ink-3);">'+tipoLabel+'</span>';
+  if (note.annata)       badges += '<span style="background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:#8a6a1e;font-weight:500;">'+note.annata+'</span>';
+  if (tipoLabel)         badges += '<span style="background:var(--ivory-2);border:0.5px solid var(--border-2);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:var(--ink-3);">'+tipoLabel+'</span>';
   if (note.dosage_testo) badges += '<span style="background:var(--ivory-2);border:0.5px solid var(--border-2);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:var(--ink-3);">'+note.dosage_testo+'</span>';
 
   let html =
-    '<div style="margin:12px 14px 0;background:var(--white);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;min-height:155px;">'+
-      '<div style="width:115px;flex-shrink:0;background:linear-gradient(150deg,#F8F2E6,#EBD9B8);overflow:hidden;display:flex;align-items:center;justify-content:center;">'+
+    '<div style="margin:12px 14px 0;background:var(--white);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;min-height:170px;">'+
+      '<div style="width:125px;flex-shrink:0;background:linear-gradient(150deg,#F8F2E6,#EBD9B8);overflow:hidden;display:flex;align-items:center;justify-content:center;">'+
         photoEl+
       '</div>'+
-      '<div style="flex:1;padding:15px 14px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;">'+
+      '<div style="flex:1;padding:16px 15px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;">'+
         '<div>'+
-          '<div style="font-family:var(--sans);font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(note.maison_nome||'')+'</div>'+
-          '<div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">'+(note.cuvee_nome||'')+'</div>'+
+          '<div style="font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(note.maison_nome||'')+'</div>'+
+          '<div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:9px;">'+(note.cuvee_nome||'')+'</div>'+
           (badges ? '<div style="display:flex;flex-wrap:wrap;gap:5px;">'+badges+'</div>' : '')+
         '</div>'+
         '<div>'+
-          '<div style="display:flex;gap:2px;margin-bottom:4px;">'+glasses+'</div>'+
+          '<div style="display:flex;gap:2px;margin-bottom:5px;">'+glasses+'</div>'+
           (date ? '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+date+'</div>' : '')+
         '</div>'+
       '</div>'+
     '</div>';
+
+  // ── GALLERIA (se 2+ foto) ───────────────────────────────────
+  if (allPhotos.length > 1) {
+    let gBody = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">';
+    allPhotos.forEach((url, i) => {
+      gBody += '<div style="aspect-ratio:1/1;overflow:hidden;border-radius:9px;cursor:pointer;" onclick="openLightbox(window._currentNotePhotos,'+i+')">'+
+        '<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;"/>'+
+      '</div>';
+    });
+    gBody += '</div>';
+    html += sec('ti-photo', 'Galleria · '+allPhotos.length+' foto', gBody);
+  }
 
   // ── PARAMETRI SENSORIALI ────────────────────────────────────
   if (paramDefs.length > 0) {
@@ -1653,11 +1778,11 @@ function openEditNote(note) {
     pill.classList.toggle('on', (note.aromi || []).includes(pill.textContent));
   });
 
-  // Show existing photo
-  if (note.foto_url) {
-    const box = document.getElementById('photo-box');
-    if (box) box.innerHTML = '<img src="' + note.foto_url + '" style="width:100%;height:160px;object-fit:cover;border-radius:12px;"/>';
-  }
+  // Load existing photos into strip
+  _pendingPhotos = [];
+  _existingPhotoUrls = note.foto_urls && note.foto_urls.length > 0
+    ? [...note.foto_urls]
+    : (note.foto_url ? [note.foto_url] : []);
 
   // Store edit ID in hidden input (more reliable than global)
   const hiddenId = document.getElementById('edit-note-id');
@@ -1671,7 +1796,7 @@ function openEditNote(note) {
   if (btn) btn.textContent = 'Salva modifiche';
 
   go('v-carnet-new');
-  requestAnimationFrame(() => initAllSliders(null)); // null = keep existing values
+  requestAnimationFrame(() => { initAllSliders(null); renderPhotoStrip(); });
 }
 
 async function deleteNote(noteId) {
