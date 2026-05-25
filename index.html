@@ -220,6 +220,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     </div>
     <div style="height:14px;"></div>
+    <div class="prem-banner" onclick="go('v-paywall')" style="cursor:pointer;">
+      <div class="prem-icon"><i class="ti ti-crown"></i></div>
+      <div>
+        <div class="prem-title">Sblocca tutto con Premium</div>
+        <div class="prem-sub">400+ produttori, catalogo completo, annate.</div>
+        <span class="prem-cta">Abbonati da 3,99€/mese →</span>
+      </div>
+    </div>
+    <div style="height:14px;"></div>
     <div class="sec-hdr"><span class="section-label">Produttori in evidenza</span><a href="#" onclick="go('v-maison');return false;">Vedi tutti</a></div>
     <div class="maison-scroll">
       <div class="m-card" onclick="go('v-detail')">
@@ -247,15 +256,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="feat-title">I migliori Blanc de Blancs sotto gli 80€</div>
         <div class="feat-sub">8 cuvée eccezionali dalla Côte des Blancs, con note di degustazione e abbinamenti.</div>
         <button class="btn-sm">Leggi l'articolo</button>
-      </div>
-    </div>
-    <div style="height:14px;"></div>
-    <div class="prem-banner" onclick="go('v-paywall')" style="cursor:pointer;">
-      <div class="prem-icon"><i class="ti ti-crown"></i></div>
-      <div>
-        <div class="prem-title">Sblocca tutto con Premium</div>
-        <div class="prem-sub">400+ produttori, catalogo completo, annate.</div>
-        <span class="prem-cta">Abbonati da 3,99€/mese →</span>
       </div>
     </div>
     <div style="height:20px;"></div>
@@ -1856,6 +1856,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=51"></script>
+<script src="js/app.js?v=52"></script>
 </body>
 </html>
