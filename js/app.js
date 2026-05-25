@@ -937,7 +937,11 @@ function resizeImage(file, maxSize = 512) {
       canvas.width = w;
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob failed')), 'image/webp', 0.82);
+      // WebP se supportato (iOS 16+), altrimenti JPEG come fallback
+      canvas.toBlob(blob => {
+        if (blob) { resolve(blob); return; }
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.85);
+      }, 'image/webp', 0.82);
     };
     img.onerror = reject;
     img.src = url;
@@ -950,13 +954,14 @@ async function uploadAvatar(input) {
   if (avatarEl) avatarEl.style.opacity = '0.4';
 
   try {
-    // Ridimensiona a 512x512 WebP prima dell'upload
+    // Ridimensiona a 512x512 (WebP se supportato, altrimenti JPEG)
     const blob = await resizeImage(input.files[0], 512);
-    const path = currentUser.id + '/avatar.webp';
+    const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
+    const path = currentUser.id + '/avatar.' + ext;
 
     const { error } = await supa.storage
       .from('carnet-photos')
-      .upload(path, blob, { upsert: true, contentType: 'image/webp' });
+      .upload(path, blob, { upsert: true, contentType: blob.type });
     if (error) throw error;
 
     const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
