@@ -330,9 +330,9 @@ html,body{
 .step-head{padding:13px 14px 11px;display:flex;align-items:center;gap:11px;cursor:pointer;}
 .step-num{width:36px;height:36px;border-radius:50%;background:var(--gold-pale);border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:17px;color:#8a6a1e;font-weight:700;flex-shrink:0;}
 .step-texts{flex:1;}
-.step-title{font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:1px;}
-.step-sub{font-family:var(--sans);font-size:13px;color:var(--ink-4);}
-.step-chev{font-size:19px;color:var(--gold-light);transition:transform .2s;}
+.step-title{font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:600;margin-bottom:3px;}
+.step-sub{font-family:var(--sans);font-size:12px;color:var(--ink-4);}
+.step-chev{font-size:17px;color:var(--gold);transition:transform .2s;width:32px;height:32px;background:var(--gold-pale);border:1.5px solid var(--gold-border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .step-chev.open{transform:rotate(180deg);}
 .step-body{display:none;border-top:1px solid var(--ivory-3);}
 .step-summary{padding:13px 14px;font-family:var(--sans);font-size:15px;color:var(--ink-2);line-height:1.65;}
