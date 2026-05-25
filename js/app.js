@@ -2425,9 +2425,9 @@ function renderMaison() {
     else filtered = filtered.filter(m => m.tipo === currentMaisonFilter);
   }
 
-  // Filter by letter
+  // Filter by letter (ignora parentesi e simboli iniziali)
   if (currentMaisonLetter !== 'tutti') {
-    filtered = filtered.filter(m => m.nome && m.nome[0].toUpperCase() === currentMaisonLetter);
+    filtered = filtered.filter(m => maisonInitial(m.nome) === currentMaisonLetter);
   }
 
   // Filter by search (accent-insensitive via normalizeStr)
@@ -2512,13 +2512,20 @@ function setMaisonFilter(el, filter) {
   renderMaison();
 }
 
+// Prima lettera alfabetica del nome, ignorando parentesi e simboli iniziali
+function maisonInitial(nome) {
+  if (!nome) return '';
+  const m = nome.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
+  return m ? m[0].toUpperCase() : '';
+}
+
 function buildLetterFilters() {
   const row = document.getElementById('maison-letter-filters');
   if (!row) return;
 
-  // Raccogli le iniziali disponibili
+  // Raccogli le iniziali disponibili (ignora parentesi e simboli)
   const letters = [...new Set(
-    allMaison.map(m => m.nome?.[0]?.toUpperCase()).filter(Boolean)
+    allMaison.map(m => maisonInitial(m.nome)).filter(Boolean)
   )].sort();
 
   let html = '<div class="f-btn on" onclick="setMaisonLetter(this,\'tutti\')">Tutte</div>';

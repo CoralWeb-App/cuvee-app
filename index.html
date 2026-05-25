@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=38"/>
+<link rel="stylesheet" href="css/style.css?v=39"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -857,9 +857,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="filter-bar">
     <div class="filter-row" id="maison-filters">
       <div class="f-btn on" onclick="setMaisonFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'grande-maison')">Maison</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'vigneron')">Vigneron</div>
-      <div class="f-btn" onclick="setMaisonFilter(this,'cooperativa')">Cooperativa</div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'grande-maison')">Maison <span class="f-sigla">NM</span></div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'vigneron')">Vigneron <span class="f-sigla">RM</span></div>
+      <div class="f-btn" onclick="setMaisonFilter(this,'cooperativa')">Cooperativa <span class="f-sigla">CM</span></div>
       <div class="f-btn" onclick="setMaisonFilter(this,'bio')">Bio</div>
     </div>
     <div class="filter-row" id="maison-letter-filters" style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px;"></div>
@@ -1856,6 +1856,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=47"></script>
+<script src="js/app.js?v=48"></script>
 </body>
 </html>
