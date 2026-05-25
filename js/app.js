@@ -923,22 +923,22 @@ function updateProfileUI(profile) {
   }
 }
 
-// Ridimensiona un file immagine a maxSize x maxSize via Canvas, restituisce un Blob WebP
-function resizeImage(file, maxSize = 512) {
+// Ritaglia al centro in quadrato poi ridimensiona — ideale per avatar circolari
+function resizeImage(file, maxSize = 250) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-      const w = Math.round(img.width * scale);
-      const h = Math.round(img.height * scale);
+      // Crop centrato: usa il lato più corto come lato del quadrato
+      const cropSize = Math.min(img.width, img.height);
+      const sx = (img.width - cropSize) / 2;
+      const sy = (img.height - cropSize) / 2;
       const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      // WebP se supportato (iOS 16+), altrimenti JPEG come fallback
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.90);
+      canvas.width = maxSize;
+      canvas.height = maxSize;
+      canvas.getContext('2d').drawImage(img, sx, sy, cropSize, cropSize, 0, 0, maxSize, maxSize);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.88);
     };
     img.onerror = reject;
     img.src = url;
