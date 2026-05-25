@@ -807,7 +807,7 @@ async function signOut() {
   activeCaliceFilter = 0;
   activeSearchQuery = '';
   currentMaisonFilter = 'tutti';
-  currentMaisonCert = 'tutti';
+  currentMaisonLetter = 'tutti';
   currentMaisonSearch = '';
   // Svuota stack navigazione
   stack.length = 0;
@@ -2365,7 +2365,7 @@ function showNoteError(msg) {
 
 let allMaison = [];
 let currentMaisonFilter = 'tutti';
-let currentMaisonCert = 'tutti';
+let currentMaisonLetter = 'tutti';
 let currentMaisonSearch = '';
 let currentMaisonDetail = null;
 let maisonFavorites = new Set();
@@ -2399,7 +2399,7 @@ async function loadAndRenderMaison() {
     if (loadingEl) loadingEl.style.display = 'none';
     if (listEl) listEl.style.display = 'block';
 
-    buildCertFilters();
+    buildLetterFilters();
     renderMaison();
 
   } catch(e) {
@@ -2414,17 +2414,20 @@ function renderMaison() {
 
   let filtered = allMaison;
 
-  // Filter by type
+  // Filter by type / category
   if (currentMaisonFilter !== 'tutti') {
     if (currentMaisonFilter === 'grande-maison') filtered = filtered.filter(m => ['NM','ND','MA'].includes(m.tipo));
     else if (currentMaisonFilter === 'vigneron') filtered = filtered.filter(m => ['RM','RC','SR'].includes(m.tipo));
     else if (currentMaisonFilter === 'cooperativa') filtered = filtered.filter(m => m.tipo === 'CM');
+    else if (currentMaisonFilter === 'bio') filtered = filtered.filter(m =>
+      Array.isArray(m.certificazioni) && m.certificazioni.some(c => /bio/i.test(c) || c === 'Demeter')
+    );
     else filtered = filtered.filter(m => m.tipo === currentMaisonFilter);
   }
 
-  // Filter by certification
-  if (currentMaisonCert !== 'tutti') {
-    filtered = filtered.filter(m => Array.isArray(m.certificazioni) && m.certificazioni.includes(currentMaisonCert));
+  // Filter by letter
+  if (currentMaisonLetter !== 'tutti') {
+    filtered = filtered.filter(m => m.nome && m.nome[0].toUpperCase() === currentMaisonLetter);
   }
 
   // Filter by search (accent-insensitive via normalizeStr)
@@ -2509,48 +2512,26 @@ function setMaisonFilter(el, filter) {
   renderMaison();
 }
 
-function buildCertFilters() {
-  const row = document.getElementById('cert-filters');
+function buildLetterFilters() {
+  const row = document.getElementById('maison-letter-filters');
   if (!row) return;
 
-  // Raccogli tutte le certificazioni uniche
-  const certSet = new Set();
-  allMaison.forEach(m => {
-    if (Array.isArray(m.certificazioni)) {
-      m.certificazioni.forEach(c => { if (c) certSet.add(c); });
-    }
-  });
+  // Raccogli le iniziali disponibili
+  const letters = [...new Set(
+    allMaison.map(m => m.nome?.[0]?.toUpperCase()).filter(Boolean)
+  )].sort();
 
-  const certs = Array.from(certSet).sort();
-  if (certs.length === 0) {
-    row.style.display = 'none';
-    return;
-  }
-
-  // Render bottoni
-  let html = '<div class="f-btn on" onclick="setCertFilter(this,\'tutti\')">Tutte</div>';
-  certs.forEach(c => {
-    html += '<div class="f-btn" onclick="setCertFilter(this,\'' + c.replace(/'/g,"\\'") + '\')">' + c + '</div>';
+  let html = '<div class="f-btn on" onclick="setMaisonLetter(this,\'tutti\')">Tutte</div>';
+  letters.forEach(l => {
+    html += '<div class="f-btn" onclick="setMaisonLetter(this,\'' + l + '\')">' + l + '</div>';
   });
   row.innerHTML = html;
-  row.style.display = 'flex';
-
-  // Ripristina selezione corrente se è ancora valida
-  if (currentMaisonCert !== 'tutti') {
-    const active = Array.from(row.querySelectorAll('.f-btn')).find(b => b.textContent === currentMaisonCert);
-    if (active) {
-      row.querySelectorAll('.f-btn').forEach(b => b.classList.remove('on'));
-      active.classList.add('on');
-    } else {
-      currentMaisonCert = 'tutti';
-    }
-  }
 }
 
-function setCertFilter(el, cert) {
-  document.querySelectorAll('#cert-filters .f-btn').forEach(b => b.classList.remove('on'));
+function setMaisonLetter(el, letter) {
+  document.querySelectorAll('#maison-letter-filters .f-btn').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
-  currentMaisonCert = cert;
+  currentMaisonLetter = letter;
   renderMaison();
 }
 
