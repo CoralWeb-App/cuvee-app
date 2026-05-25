@@ -960,11 +960,11 @@ async function uploadAvatar(input) {
     const path = currentUser.id + '/avatar.' + ext;
 
     const { error } = await supa.storage
-      .from('carnet-photos')
+      .from('avatars')
       .upload(path, blob, { upsert: true, contentType: blob.type });
     if (error) throw error;
 
-    const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
+    const { data: urlData } = supa.storage.from('avatars').getPublicUrl(path);
     const avatarUrl = urlData.publicUrl;
 
     // Salva nel DB
