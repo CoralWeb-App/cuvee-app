@@ -22,11 +22,15 @@ function go(id){
   if(id==='v-carnet'){
     activeCaliceFilter = 0;
     activeSearchQuery = '';
+    activeTypeFilter = 'tutti';
     const si = document.getElementById('carnet-search');
     if(si) si.value = '';
     document.querySelectorAll('.calice-btn').forEach(b => b.classList.remove('on'));
     const allBtn = document.getElementById('cf-all');
     if(allBtn) allBtn.classList.add('on');
+    document.querySelectorAll('#carnet-type-filters .f-btn').forEach(b => b.classList.remove('on'));
+    const allTypeBtn = document.querySelector('#carnet-type-filters .f-btn');
+    if(allTypeBtn) allTypeBtn.classList.add('on');
     updateCarnetUI();
   }
   if(id==='v-maison') loadAndRenderMaison();
@@ -1657,6 +1661,27 @@ async function deleteNote(noteId) {
 let allCarnetNotes = [];
 let activeCaliceFilter = 0;
 let activeSearchQuery = '';
+let activeTypeFilter = 'tutti';
+
+// Inferenza tipo da campi esistenti (nessuna modifica DB)
+function inferTipoNota(n) {
+  const cuvee = (n.cuvee_nome || '').toLowerCase();
+  const dosage = (n.dosage_testo || '').toLowerCase();
+  const annata = (n.annata || '').trim();
+  if (/ros[eé]/.test(cuvee)) return 'rose';
+  if (/blanc\s+de\s+blancs/.test(cuvee)) return 'blanc_de_blancs';
+  if (/blanc\s+de\s+noirs/.test(cuvee)) return 'blanc_de_noirs';
+  if (/brut\s+nature|zero\s+dosage|pas\s+dos[eé]|non\s+dos[eé]/.test(dosage) || dosage === 'nature') return 'nature';
+  if (/^\d{4}$/.test(annata)) return 'millesimato';
+  return 'nv'; // SA se non ha anno o anno non riconoscibile
+}
+
+function setCarnetTypeFilter(el, tipo) {
+  document.querySelectorAll('#carnet-type-filters .f-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  activeTypeFilter = tipo;
+  renderCarnetNotes(allCarnetNotes);
+}
 
 // Override updateCarnetUI to also cache notes for filtering
 const _origUpdateCarnetUI = updateCarnetUI;
@@ -1693,6 +1718,9 @@ function renderCarnetNotes(notes) {
   let filtered = notes;
   if (activeCaliceFilter > 0) {
     filtered = filtered.filter(n => (n.rating || 0) === activeCaliceFilter);
+  }
+  if (activeTypeFilter && activeTypeFilter !== 'tutti') {
+    filtered = filtered.filter(n => inferTipoNota(n) === activeTypeFilter);
   }
   if (activeSearchQuery) {
     const q = activeSearchQuery.toLowerCase();
