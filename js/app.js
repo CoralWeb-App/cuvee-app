@@ -962,14 +962,14 @@ async function uploadAvatar(input) {
     const { error: uploadError } = await supa.storage
       .from('avatars')
       .upload(path, blob, { upsert: true, contentType: blob.type });
-    if (uploadError) throw uploadError;
+    if (uploadError) { alert('STORAGE: ' + uploadError.message); throw uploadError; }
 
     const { data: urlData } = supa.storage.from('avatars').getPublicUrl(path);
     const avatarUrl = urlData.publicUrl;
 
     // Salva nel DB
     const { error: dbError } = await supa.from('users').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
-    if (dbError) throw dbError;
+    if (dbError) { alert('DB: ' + dbError.message); throw dbError; }
 
     // Aggiorna profilo locale e UI
     if (currentUser.profile) currentUser.profile.avatar_url = avatarUrl;
