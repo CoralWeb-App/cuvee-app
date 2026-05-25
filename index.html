@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=25"/>
+<link rel="stylesheet" href="css/style.css?v=26"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1467,6 +1467,19 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <input class="input-field" id="note-dosage" type="text" placeholder="es. Brut, Extra Brut"/>
         </div>
       </div>
+      <div class="input-wrap" style="margin-top:4px;">
+        <label class="input-label">Tipologia <span style="font-size:11px;color:var(--ink-5);font-weight:400;">· opzionale</span></label>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;" id="tipo-chips">
+          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'nv')">Sans Année</button>
+          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'millesimato')">Millésimé</button>
+          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'rose')">Rosé</button>
+          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'blanc_de_blancs')">Blanc de Blancs</button>
+          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'blanc_de_noirs')">Blanc de Noirs</button>
+          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'prestige')">Prestige Cuvée</button>
+          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'nature')">Brut Nature</button>
+          <button type="button" class="tipo-chip non-so" onclick="setNoteTipo(this,'non_so')">Non so</button>
+        </div>
+      </div>
       <div class="input-wrap">
         <label class="input-label">Occasione / Luogo</label>
         <input class="input-field" id="note-luogo" type="text" placeholder="es. Cena con amici, Roma · gennaio 2026"/>
@@ -1812,6 +1825,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=37"></script>
+<script src="js/app.js?v=38"></script>
 </body>
 </html>

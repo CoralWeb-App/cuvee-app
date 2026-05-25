@@ -229,6 +229,19 @@ function selectPlan(el){
 }
 // CARNET
 let currentRating=0;
+let currentNoteType=null;
+
+function setNoteTipo(el, tipo){
+  if(currentNoteType === tipo){
+    // Tap sullo stesso chip → deseleziona
+    currentNoteType = null;
+    document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
+    return;
+  }
+  currentNoteType = tipo;
+  document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
 
 // Chiamata dal pulsante Carnet nella bottom nav:
 // controlla SEMPRE il limite prima di aprire il form — locale se disponibile, DB altrimenti
@@ -263,6 +276,8 @@ function checkAndNewNote(){
   const hiddenId = document.getElementById('edit-note-id');
   if (hiddenId) hiddenId.value = '';
   currentRating = 0;
+  currentNoteType = null;
+  document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
   // Reset form
   ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo'].forEach(id => {
     const el = document.getElementById(id);
@@ -381,7 +396,8 @@ async function saveNote(editId = null){
     complexite: parseInt(document.getElementById('val-comp')?.textContent) || null,
     longueur: parseInt(document.getElementById('val-lung')?.textContent) || null,
     aromi: Array.from(document.querySelectorAll('.aromi-pill.on')).map(el => el.textContent),
-    data_degustazione: new Date().toISOString().split('T')[0]
+    data_degustazione: new Date().toISOString().split('T')[0],
+    tipo: currentNoteType || null
   };
 
   if (!nota.maison_nome || !nota.cuvee_nome) {
@@ -1584,6 +1600,12 @@ function openEditNote(note) {
   const labels = ['', 'Deludente', 'Nella media', 'Buono', 'Ottimo', 'Eccellente — da ricordare!'];
   if (lbl) lbl.textContent = labels[currentRating] || '';
 
+  // Set tipo chip
+  currentNoteType = note.tipo || null;
+  document.querySelectorAll('.tipo-chip').forEach(c => {
+    c.classList.toggle('on', c.getAttribute('onclick')?.includes("'"+currentNoteType+"'"));
+  });
+
   // Set aromi
   document.querySelectorAll('.aromi-pill').forEach(pill => {
     pill.classList.toggle('on', (note.aromi || []).includes(pill.textContent));
@@ -1663,8 +1685,11 @@ let activeCaliceFilter = 0;
 let activeSearchQuery = '';
 let activeTypeFilter = 'tutti';
 
-// Inferenza tipo da campi esistenti (nessuna modifica DB)
+// Tipo nota: usa campo DB se presente, altrimenti inferenza dai testi
 function inferTipoNota(n) {
+  // Priorità: tipo salvato esplicitamente (escluso 'non_so' che non filtra)
+  if (n.tipo && n.tipo !== 'non_so') return n.tipo;
+  // Fallback inferenza per note vecchie senza campo tipo
   const cuvee = (n.cuvee_nome || '').toLowerCase();
   const dosage = (n.dosage_testo || '').toLowerCase();
   const annata = (n.annata || '').trim();
@@ -1673,7 +1698,7 @@ function inferTipoNota(n) {
   if (/blanc\s+de\s+noirs/.test(cuvee)) return 'blanc_de_noirs';
   if (/brut\s+nature|zero\s+dosage|pas\s+dos[eé]|non\s+dos[eé]/.test(dosage) || dosage === 'nature') return 'nature';
   if (/^\d{4}$/.test(annata)) return 'millesimato';
-  return 'nv'; // SA se non ha anno o anno non riconoscibile
+  return 'nv';
 }
 
 function setCarnetTypeFilter(el, tipo) {
