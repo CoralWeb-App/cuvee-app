@@ -416,7 +416,7 @@ function waitForCompression(input){ return Promise.resolve(); }
 function addPhoto(input) {
   if (!input.files || !input.files[0]) return;
   const allCount = _existingPhotoUrls.length + _pendingPhotos.length;
-  if (allCount >= 5) { input.value=''; return; }
+  if (allCount >= 3) { input.value=''; return; }
   const file = input.files[0];
   input.value = ''; // reset so same file can be re-selected
   const reader = new FileReader();
@@ -473,7 +473,7 @@ function renderPhotoStrip() {
       '<button class="photo-thumb-del" onclick="event.stopPropagation();removePhoto(\''+p.id+'\')">×</button>' +
     '</div>';
   });
-  if (allCount < 5) {
+  if (allCount < 3) {
     html += '<div class="photo-add-btn" onclick="document.getElementById(\'photo-input\').click()">' +
       '<i class="ti ti-camera-plus"></i><span>Aggiungi</span></div>';
   }
