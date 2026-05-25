@@ -227,12 +227,26 @@ function selectPlan(el){
 let currentRating=0;
 
 // Chiamata dal pulsante Carnet nella bottom nav:
-// apre direttamente il form nuova nota; se utente free ha già 3 note → paywall
-function quickNewNote(){
+// controlla SEMPRE il limite prima di aprire il form — locale se disponibile, DB altrimenti
+async function quickNewNote(){
   if(!isPremium()){
-    // Pre-check locale (window._carnetNotes popolato da updateCarnetUI)
-    const localCount = window._carnetNotes ? window._carnetNotes.length : null;
-    if(localCount !== null && localCount >= 3){
+    let count;
+    if(window._carnetNotes != null){
+      // Cache locale già disponibile (carnet già visitato in sessione)
+      count = window._carnetNotes.length;
+    } else {
+      // Prima visita al carnet: query veloce solo per il conteggio
+      try {
+        const { count: dbCount } = await supa
+          .from('carnet_notes')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', currentUser.id);
+        count = dbCount || 0;
+      } catch(e) {
+        count = 0; // in caso di errore di rete, lascia aprire il form
+      }
+    }
+    if(count >= 3){
       go('v-paywall');
       return;
     }
