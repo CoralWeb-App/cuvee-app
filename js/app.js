@@ -956,27 +956,39 @@ async function uploadAvatar(input) {
   try {
     // Ridimensiona a 512x512 (WebP se supportato, altrimenti JPEG)
     const blob = await resizeImage(input.files[0], 512);
+
+    // Mostra subito l'immagine localmente — nessuna attesa
+    const localUrl = URL.createObjectURL(blob);
+    const imgTag = '<img src="' + localUrl + '" style="width:100%;height:100%;object-fit:cover;">';
+    const avatarEl = document.getElementById('profile-avatar');
+    const homeAvatar = document.getElementById('home-topbar-avatar');
+    if (avatarEl) avatarEl.innerHTML = imgTag;
+    if (homeAvatar) homeAvatar.innerHTML = imgTag;
+
+    // Upload in background
     const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
     const path = currentUser.id + '/avatar.' + ext;
 
     const { error: uploadError } = await supa.storage
       .from('avatars')
       .upload(path, blob, { upsert: true, contentType: blob.type });
-    if (uploadError) { alert('STORAGE: ' + uploadError.message); throw uploadError; }
+    if (uploadError) throw uploadError;
 
     const { data: urlData } = supa.storage.from('avatars').getPublicUrl(path);
     const avatarUrl = urlData.publicUrl + '?t=' + Date.now();
 
-    // Salva nel DB
-    const { error: dbError } = await supa.from('users').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
-    if (dbError) { alert('DB: ' + dbError.message); throw dbError; }
-
-    // Aggiorna profilo locale e UI
+    // Salva URL definitivo nel DB e nel profilo locale
+    await supa.from('users').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
     if (currentUser.profile) currentUser.profile.avatar_url = avatarUrl;
-    updateProfileUI(currentUser.profile);
+
+    // Sostituisce l'objectURL con quello definitivo (libera memoria)
+    URL.revokeObjectURL(localUrl);
+    const finalTag = '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;">';
+    if (avatarEl) avatarEl.innerHTML = finalTag;
+    if (homeAvatar) homeAvatar.innerHTML = finalTag;
+
   } catch(e) {
     console.log('Avatar upload error:', e);
-    alert('Errore caricamento foto: ' + (e.message || e));
   }
 
   if (avatarEl) avatarEl.style.opacity = '1';
