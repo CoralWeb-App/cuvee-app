@@ -1796,42 +1796,49 @@ function renderCarnetNotes(notes) {
 
   window._carnetNotes = notes; // keep full array for index access
 
+  // Update topbar count label
+  const countLbl = document.getElementById('carnet-count-label');
+  if (countLbl) {
+    const n = notes.length;
+    countLbl.textContent = n === 0 ? 'Nessuna nota' : n === 1 ? '1 nota' : n + ' note';
+  }
+
   if (filtered.length === 0) {
     listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;font-family:var(--sans);font-size:16px;color:var(--ink-4);">Nessuna nota trovata</div>';
     return;
   }
 
-  listEl.innerHTML = '<div class="carnet-grid">' + filtered.map((note, idx) => {
-    const glasses = Array.from({length: 5}, (_, i) =>
-      '<i class="ti ti-glass-full" style="font-size:13px;color:var(--gold);opacity:' + (i < (note.rating||0) ? '1' : '0.2') + ';"></i>'
+  const _tipoShort = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',nature:'Brut Nature',prestige:'Prestige'};
+
+  listEl.innerHTML = '<div class="carnet-grid">' + filtered.map((note) => {
+    const tipo = inferTipoNota(note);
+    const tipoLabel = _tipoShort[tipo] || '';
+    const glasses = Array.from({length:5}, (_,i) =>
+      '<i class="ti ti-glass-full" style="opacity:'+(i<(note.rating||0)?'1':'0.18')+'"></i>'
     ).join('');
     const date = note.data_degustazione
-      ? new Date(note.data_degustazione).toLocaleDateString('it-IT', {day:'numeric', month:'short'})
+      ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short'})
       : '';
-    // Find original index in allCarnetNotes for correct detail open
     const origIdx = allCarnetNotes.findIndex(n => n.id === note.id);
-    return '<div class="carnet-note-card" data-idx="' + origIdx + '" onclick="openNoteDetail(window._carnetNotes[this.dataset.idx])">' +
-      '<div style="width:100%;aspect-ratio:1/1;overflow:hidden;background:var(--ivory-3);display:flex;align-items:center;justify-content:center;">' +
+
+    return '<div class="carnet-note-card" data-idx="'+origIdx+'" onclick="openNoteDetail(window._carnetNotes[this.dataset.idx])">'+
+      '<div class="cnc-img">'+
         (note.foto_url
-          ? '<img src="' + note.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>'
-          : '<i class="ti ti-camera" style="font-size:28px;color:var(--ink-5);"></i>') +
-      '</div>' +
-      '<div style="padding:11px 12px 13px;">' +
-        '<div style="font-family:var(--sans);font-size:13px;color:var(--gold);font-weight:500;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (note.maison_nome||'') + '</div>' +
-        '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + (note.cuvee_nome||'') + '</div>' +
-        '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);margin-bottom:6px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">' +
-          (note.annata ? '<span>' + note.annata + '</span>' : '') +
-          ((note.tipo && note.tipo !== 'non_so' && {nv:'SA',millesimato:'MIL',rose:'Rosé',blanc_de_blancs:'BdB',blanc_de_noirs:'BdN',prestige:'Prest.',nature:'Nature'}[note.tipo])
-            ? '<span style="background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:4px;padding:1px 5px;font-size:10px;color:var(--gold-dark);font-weight:500;">' + {nv:'SA',millesimato:'MIL',rose:'Rosé',blanc_de_blancs:'BdB',blanc_de_noirs:'BdN',prestige:'Prest.',nature:'Nature'}[note.tipo] + '</span>'
-            : '') +
-        '</div>' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
-          '<div>' + glasses + '</div>' +
-          '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);">' + date + '</div>' +
-        '</div>' +
-      '</div>' +
+          ? '<img src="'+note.foto_url+'" style="width:100%;height:100%;object-fit:cover;"/>'
+          : '<div class="cnc-img-ph"><i class="ti ti-bottle"></i></div>')+
+        (tipoLabel ? '<span class="cnc-tipo">'+tipoLabel+'</span>' : '')+
+        (note.annata ? '<span class="cnc-annata">'+note.annata+'</span>' : '')+
+      '</div>'+
+      '<div class="cnc-body">'+
+        '<div class="cnc-maison">'+(note.maison_nome||'&nbsp;')+'</div>'+
+        '<div class="cnc-cuvee">'+(note.cuvee_nome||'')+'</div>'+
+        '<div class="cnc-footer">'+
+          '<div class="cnc-glasses">'+glasses+'</div>'+
+          '<div class="cnc-date">'+date+'</div>'+
+        '</div>'+
+      '</div>'+
     '</div>';
-  }).join('') + '</div>';
+  }).join('')+'</div>';
 }
 
 // Filtro calici

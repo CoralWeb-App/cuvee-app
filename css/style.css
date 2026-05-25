@@ -504,15 +504,28 @@ html,body{
 
 
 /* ═══ CARNET DE DÉGUSTATION ═══ */
-.carnet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px 14px;}
-.carnet-note-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:transform .15s;}
+.carnet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px 14px 6px;}
+.carnet-note-card{background:var(--white);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s;box-shadow:0 2px 12px rgba(0,0,0,.07);}
 .carnet-note-card:active{transform:scale(.97);}
+/* CNC = Carnet Note Card sub-elements */
+.cnc-img{width:100%;aspect-ratio:3/4;overflow:hidden;position:relative;background:linear-gradient(150deg,#F8F2E6 0%,#EBD9B8 100%);}
+.cnc-img img{width:100%;height:100%;object-fit:cover;}
+.cnc-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+.cnc-img-ph i{font-size:42px;color:rgba(184,146,42,.28);}
+.cnc-tipo{position:absolute;top:8px;left:8px;background:rgba(20,12,4,.52);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#F0E4CC;font-family:var(--sans);font-size:10px;font-weight:500;letter-spacing:.3px;border-radius:5px;padding:3px 7px;line-height:1.4;}
+.cnc-annata{position:absolute;top:8px;right:8px;background:rgba(184,146,42,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-family:var(--sans);font-size:10px;font-weight:600;border-radius:5px;padding:3px 7px;line-height:1.4;}
+.cnc-body{padding:10px 11px 12px;}
+.cnc-maison{font-family:var(--sans);font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.cnc-cuvee{font-family:var(--serif);font-size:15px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.cnc-footer{display:flex;align-items:center;justify-content:space-between;}
+.cnc-glasses{display:flex;gap:2px;}
+.cnc-glasses i{font-size:12px;color:var(--gold);}
+.cnc-date{font-family:var(--sans);font-size:11px;color:var(--ink-5);}
+/* legacy classes kept for safety */
 .carnet-hero{padding:20px 18px 0;}
 .carnet-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 30px;text-align:center;}
 .carnet-empty-icon{width:72px;height:72px;border-radius:50%;background:var(--gold-pale);border:1.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
 .carnet-empty-icon i{font-size:32px;color:var(--gold);}
-.carnet-note-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:transform .15s;}
-.carnet-note-card:active{transform:scale(.97);}
 .carnet-note-img-ph{width:100%;aspect-ratio:1/1;background:var(--ivory-3);display:flex;align-items:center;justify-content:center;}
 .carnet-note-img-ph i{font-size:32px;color:var(--ink-5);}
 .carnet-note-body{padding:14px 16px 16px;}
