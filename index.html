@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=26"/>
+<link rel="stylesheet" href="css/style.css?v=27"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1433,22 +1433,22 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <button class="btn-sm" onclick="saveNote()" style="font-size:15px;">Salva</button>
   </div>
   <div class="scroll">
+    <input type="hidden" id="edit-note-id" value=""/>
 
     <!-- FOTO -->
-    <input type="hidden" id="edit-note-id" value=""/>
-    <div class="form-section" style="margin-top:18px;">
-      <div class="form-section-title">Foto della bottiglia</div>
+    <div class="form-section">
+      <div class="form-section-title"><i class="ti ti-camera"></i> Foto della bottiglia <span class="sec-opt">opzionale</span></div>
       <div class="photo-upload-box" id="photo-box" onclick="document.getElementById('photo-input').click()">
-        <i class="ti ti-camera"></i>
+        <i class="ti ti-bottle"></i>
         <span>Tocca per aggiungere una foto</span>
-        <span style="font-family:var(--sans);font-size:13px;color:var(--ink-5);">Dalla galleria o dalla fotocamera</span>
+        <span style="font-family:var(--sans);font-size:12px;color:var(--ink-5);">Dalla galleria o dalla fotocamera</span>
       </div>
       <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="previewPhoto(this)"/>
     </div>
 
     <!-- BOTTIGLIA -->
     <div class="form-section">
-      <div class="form-section-title">La bottiglia</div>
+      <div class="form-section-title"><i class="ti ti-bottle"></i> La bottiglia</div>
       <div class="input-wrap">
         <label class="input-label">Maison / Produttore <span style="color:#E24B4A;">*</span></label>
         <input class="input-field" id="note-maison" type="text" placeholder="es. Krug, Egly-Ouriet, Salon…"/>
@@ -1467,7 +1467,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <input class="input-field" id="note-dosage" type="text" placeholder="es. Brut, Extra Brut"/>
         </div>
       </div>
-      <div class="input-wrap" style="margin-top:4px;">
+      <div class="input-wrap" style="margin-top:2px;">
         <label class="input-label">Tipologia <span style="font-size:11px;color:var(--ink-5);font-weight:400;">· opzionale</span></label>
         <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;" id="tipo-chips">
           <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'nv')">Sans Année</button>
@@ -1480,15 +1480,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <button type="button" class="tipo-chip non-so" onclick="setNoteTipo(this,'non_so')">Non so</button>
         </div>
       </div>
-      <div class="input-wrap">
-        <label class="input-label">Occasione / Luogo</label>
+      <div class="input-wrap" style="margin-bottom:0;">
+        <label class="input-label">Occasione / Luogo <span style="font-size:11px;color:var(--ink-5);font-weight:400;">· opzionale</span></label>
         <input class="input-field" id="note-luogo" type="text" placeholder="es. Cena con amici, Roma · gennaio 2026"/>
       </div>
     </div>
 
     <!-- PUNTEGGIO -->
     <div class="form-section">
-      <div class="form-section-title">Punteggio personale <span style="color:#E24B4A;">*</span></div>
+      <div class="form-section-title"><i class="ti ti-glass-full"></i> Punteggio <span style="font-size:12px;color:#E24B4A;font-family:var(--sans);font-weight:400;margin-left:2px;">obbligatorio</span></div>
       <div class="rating-row" id="rating-stars">
         <i class="ti ti-glass-full rating-star" onclick="setRating(1)"></i>
         <i class="ti ti-glass-full rating-star" onclick="setRating(2)"></i>
@@ -1496,71 +1496,96 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <i class="ti ti-glass-full rating-star" onclick="setRating(4)"></i>
         <i class="ti ti-glass-full rating-star" onclick="setRating(5)"></i>
       </div>
-      <div style="font-family:var(--sans);font-size:14px;color:var(--ink-5);margin-top:6px;" id="rating-label">Tocca per valutare</div>
+      <div style="font-family:var(--sans);font-size:14px;color:var(--ink-5);margin-top:8px;" id="rating-label">Tocca per valutare *</div>
     </div>
 
     <!-- PARAMETRI SENSORIALI -->
     <div class="form-section">
-      <div class="form-section-title">Parametri sensoriali</div>
-      <div style="margin-bottom:16px;">
-        <div class="slider-label-row"><span class="slider-label">Acidité</span><span class="slider-val" id="val-acidite">5</span></div>
-        <input type="range" min="1" max="10" value="5" oninput="document.getElementById('val-acidite').textContent=this.value">
+      <div class="form-section-title"><i class="ti ti-adjustments-horizontal"></i> Parametri sensoriali <span class="sec-opt">opzionale</span></div>
+      <div class="slider-wrap slider-acidite">
+        <div class="slider-label-row">
+          <span class="slider-label"><i class="ti ti-droplet"></i> Acidité</span>
+          <span class="slider-val" id="val-acidite">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" oninput="this.style.background='linear-gradient(to right,#4A8FA8 '+(this.value-1)/9*100+'%,#E0EDF2 '+(this.value-1)/9*100+'%)';document.getElementById('val-acidite').textContent=this.value">
       </div>
-      <div style="margin-bottom:16px;">
-        <div class="slider-label-row"><span class="slider-label">Effervescence</span><span class="slider-val" id="val-eff">5</span></div>
-        <input type="range" min="1" max="10" value="5" oninput="document.getElementById('val-eff').textContent=this.value">
+      <div class="slider-wrap slider-eff">
+        <div class="slider-label-row">
+          <span class="slider-label"><i class="ti ti-wind"></i> Effervescence</span>
+          <span class="slider-val" id="val-eff">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" oninput="this.style.background='linear-gradient(to right,#9B7DC8 '+(this.value-1)/9*100+'%,#EDE8F6 '+(this.value-1)/9*100+'%)';document.getElementById('val-eff').textContent=this.value">
       </div>
-      <div style="margin-bottom:16px;">
-        <div class="slider-label-row"><span class="slider-label">Complexité aromatique</span><span class="slider-val" id="val-comp">5</span></div>
-        <input type="range" min="1" max="10" value="5" oninput="document.getElementById('val-comp').textContent=this.value">
+      <div class="slider-wrap slider-comp">
+        <div class="slider-label-row">
+          <span class="slider-label"><i class="ti ti-sparkles"></i> Complexité aromatique</span>
+          <span class="slider-val" id="val-comp">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" oninput="this.style.background='linear-gradient(to right,#C8962A '+(this.value-1)/9*100+'%,#F5EDD5 '+(this.value-1)/9*100+'%)';document.getElementById('val-comp').textContent=this.value">
       </div>
-      <div style="margin-bottom:4px;">
-        <div class="slider-label-row"><span class="slider-label">Longueur en bouche</span><span class="slider-val" id="val-lung">5</span></div>
-        <input type="range" min="1" max="10" value="5" oninput="document.getElementById('val-lung').textContent=this.value">
+      <div class="slider-wrap slider-lung" style="padding-bottom:2px;">
+        <div class="slider-label-row">
+          <span class="slider-label"><i class="ti ti-arrow-right"></i> Longueur en bouche</span>
+          <span class="slider-val" id="val-lung">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" oninput="this.style.background='linear-gradient(to right,#4A8A5A '+(this.value-1)/9*100+'%,#DFF0E4 '+(this.value-1)/9*100+'%)';document.getElementById('val-lung').textContent=this.value">
       </div>
     </div>
 
     <!-- AROMI -->
     <div class="form-section">
-      <div class="form-section-title">Aromi percepiti</div>
-      <div class="aromi-grid" id="aromi-grid">
-        <span class="aromi-pill" onclick="togAroma(this)">Brioche</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Agrumi</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Mela verde</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Pera</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Pêche blanche</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Fiori bianchi</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Gesso · minéralité</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Nocciola tostata</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Miele</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Frutta rossa</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Spezie</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Pane tostato</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Burro</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Vaniglia</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Tabacco</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Fungo</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Frutta secca</span>
-        <span class="aromi-pill" onclick="togAroma(this)">Cioccolato</span>
+      <div class="form-section-title"><i class="ti ti-leaf"></i> Aromi percepiti <span class="sec-opt">opzionale</span></div>
+      <div id="aromi-grid">
+        <div style="font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#4A8A5A;background:#EDF7EE;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:8px;">Fruttati &amp; Floreali</div>
+        <div class="aromi-grid" style="margin-bottom:12px;">
+          <span class="aromi-pill" onclick="togAroma(this)">Agrumi</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Mela verde</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Pera</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Pêche blanche</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Frutta rossa</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Fiori bianchi</span>
+        </div>
+        <div style="font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#B8922A;background:#FBF3E0;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:8px;">Tostati &amp; Lattici</div>
+        <div class="aromi-grid" style="margin-bottom:12px;">
+          <span class="aromi-pill" onclick="togAroma(this)">Brioche</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Pane tostato</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Nocciola tostata</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Burro</span>
+        </div>
+        <div style="font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#9B7DC8;background:#F0EAF8;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:8px;">Dolci &amp; Speziati</div>
+        <div class="aromi-grid" style="margin-bottom:12px;">
+          <span class="aromi-pill" onclick="togAroma(this)">Miele</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Vaniglia</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Spezie</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Cioccolato</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Frutta secca</span>
+        </div>
+        <div style="font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#5A7A8A;background:#E8EFF2;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:8px;">Complessi &amp; Minerali</div>
+        <div class="aromi-grid">
+          <span class="aromi-pill" onclick="togAroma(this)">Gesso · minéralité</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Tabacco</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Fungo</span>
+        </div>
       </div>
     </div>
 
     <!-- NOTE LIBERE -->
     <div class="form-section">
-      <div class="form-section-title">Note libere di degustazione</div>
+      <div class="form-section-title"><i class="ti ti-pencil"></i> Note di degustazione <span class="sec-opt">opzionale</span></div>
       <textarea class="note-textarea" id="note-text" placeholder="Descrivi questo Champagne come vuoi — naso, bocca, finale, emozioni, abbinamenti…"></textarea>
     </div>
 
     <!-- PREZZO PAGATO -->
     <div class="form-section">
-      <div class="form-section-title">Prezzo pagato (opzionale)</div>
-      <div class="input-wrap" style="margin-bottom:0;">
-        <input class="input-field" id="note-prezzo" type="number" placeholder="es. 85" style="font-size:19px;"/>
+      <div class="form-section-title"><i class="ti ti-tag"></i> Prezzo pagato <span class="sec-opt">opzionale</span></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:var(--sans);font-size:22px;color:var(--ink-4);font-weight:300;">€</span>
+        <input class="input-field" id="note-prezzo" type="number" placeholder="es. 85" style="font-size:20px;font-weight:500;flex:1;"/>
       </div>
-      <div style="font-family:var(--sans);font-size:14px;color:var(--ink-5);margin-top:6px;">Utile per ricordare il rapporto qualità/prezzo</div>
+      <div style="font-family:var(--sans);font-size:13px;color:var(--ink-5);margin-top:8px;">Utile per ricordare il rapporto qualità/prezzo</div>
     </div>
 
-    <div style="padding:0 18px 32px;margin-top:8px;">
+    <div style="padding:0 14px 36px;margin-top:4px;">
       <button class="btn-gold" id="save-note-btn" onclick="saveNote(currentEditId)" style="font-size:18px;">Salva nel Carnet</button>
     </div>
   </div>

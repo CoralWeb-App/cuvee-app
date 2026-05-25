@@ -531,27 +531,110 @@ html,body{
 .carnet-free-text{font-family:var(--sans);font-size:14px;color:var(--ink-4);}
 .carnet-free-text strong{color:var(--gold);}
 
-/* NUOVA NOTA - FORM */
-#v-carnet-new .form-section{padding:0 18px;margin-bottom:20px;}
-#v-carnet-new .form-section-title{font-family:var(--sans);font-size:12px;letter-spacing:1.2px;color:var(--gold);text-transform:uppercase;font-weight:500;margin-bottom:10px;}
-.rating-row{display:flex;gap:8px;margin-bottom:4px;}
-.rating-star{font-size:32px;color:var(--gold);opacity:.25;cursor:pointer;transition:opacity .15s;}
-.rating-star.on{opacity:1;}
-.photo-upload-box{width:100%;height:160px;background:var(--ivory-3);border:2px dashed var(--border-2);border-radius:var(--radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;}
-.photo-upload-box i{font-size:36px;color:var(--ink-5);}
-.photo-upload-box span{font-family:var(--sans);font-size:15px;color:var(--ink-4);}
-.photo-preview{width:100%;height:200px;object-fit:cover;border-radius:var(--radius-lg);}
-.note-textarea{width:100%;background:var(--white);border:1px solid var(--border-2);border-radius:var(--radius-md);padding:14px 16px;font-family:var(--sans);font-size:17px;color:var(--ink);outline:none;min-height:130px;resize:none;line-height:1.65;}
+/* ── NUOVA NOTA — FORM ── */
+#v-carnet-new .scroll{background:var(--ivory);}
+#v-carnet-new .form-section{
+  background:var(--white);border-radius:16px;
+  padding:18px 18px 20px;margin:0 14px 12px;
+  box-shadow:0 1px 6px rgba(0,0,0,.055);
+}
+#v-carnet-new .form-section:first-of-type{margin-top:14px;}
+#v-carnet-new .form-section-title{
+  font-family:var(--serif);font-size:17px;font-weight:500;color:var(--ink);
+  margin-bottom:14px;padding-bottom:11px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+#v-carnet-new .form-section-title i{font-size:17px;color:var(--gold);}
+#v-carnet-new .form-section-title .sec-opt{
+  font-family:var(--sans);font-size:11px;color:var(--ink-5);font-weight:400;
+  margin-left:auto;letter-spacing:0;text-transform:none;
+}
+
+/* Input labels più prominenti */
+.input-label{
+  font-family:var(--sans);font-size:13px;font-weight:600;
+  color:var(--ink-3);margin-bottom:7px;display:block;letter-spacing:.1px;
+}
+.input-field{
+  width:100%;background:var(--ivory);border:1.5px solid var(--border-2);
+  border-radius:10px;padding:11px 14px;font-family:var(--sans);
+  font-size:16px;color:var(--ink);outline:none;
+}
+.input-field:focus{border-color:var(--gold);background:var(--white);}
+.input-field::placeholder{color:var(--ink-5);}
+
+/* Rating */
+.rating-row{display:flex;gap:10px;margin-bottom:4px;}
+.rating-star{font-size:34px;color:var(--gold);opacity:.2;cursor:pointer;transition:opacity .15s,transform .1s;}
+.rating-star.on{opacity:1;transform:scale(1.08);}
+
+/* Photo box */
+.photo-upload-box{
+  width:100%;height:170px;
+  background:linear-gradient(135deg,#FAF6EE 0%,#F3EDD8 100%);
+  border:2px dashed #D8C890;border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;cursor:pointer;
+}
+.photo-upload-box i{font-size:38px;color:#B8922A;}
+.photo-upload-box span{font-family:var(--sans);font-size:15px;color:var(--ink-3);}
+.photo-preview{width:100%;height:200px;object-fit:cover;border-radius:12px;}
+
+/* Textarea */
+.note-textarea{
+  width:100%;background:var(--ivory);border:1.5px solid var(--border-2);
+  border-radius:10px;padding:13px 15px;font-family:var(--sans);
+  font-size:16px;color:var(--ink);outline:none;min-height:130px;resize:none;line-height:1.7;
+}
 .note-textarea::placeholder{color:var(--ink-5);}
-.note-textarea:focus{border-color:var(--gold);}
+.note-textarea:focus{border-color:var(--gold);background:var(--white);}
+
+/* Aromi */
+.aromi-group-label{
+  font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;margin:12px 0 7px;padding:3px 8px;
+  border-radius:4px;display:inline-block;
+}
 .aromi-grid{display:flex;flex-wrap:wrap;gap:7px;}
-.aromi-pill{font-family:var(--sans);font-size:14px;border-radius:20px;padding:7px 14px;background:var(--ivory-2);border:1px solid var(--border);color:var(--ink-3);cursor:pointer;transition:all .15s;}
+.aromi-pill{
+  font-family:var(--sans);font-size:13px;border-radius:20px;
+  padding:6px 13px;background:var(--ivory);border:1px solid var(--border-2);
+  color:var(--ink-3);cursor:pointer;transition:all .15s;
+}
 .aromi-pill.on{background:var(--gold-pale);border-color:var(--gold);color:#8a6a1e;font-weight:500;}
-.slider-wrap{padding:4px 0;}
-.slider-label-row{display:flex;justify-content:space-between;margin-bottom:6px;}
-.slider-label{font-family:var(--sans);font-size:14px;color:var(--ink-4);}
-.slider-val{font-family:var(--sans);font-size:14px;color:var(--gold);font-weight:500;}
-input[type=range]{width:100%;accent-color:var(--gold);}
+
+/* Sliders parametri sensoriali — colori distinti */
+.slider-wrap{padding:5px 0 12px;}
+.slider-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.slider-label{font-family:var(--sans);font-size:14px;color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px;}
+.slider-label i{font-size:15px;}
+.slider-val{
+  font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+input[type=range]{width:100%;height:5px;border-radius:3px;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;}
+/* Acidité — azzurro */
+.slider-acidite input[type=range]{accent-color:#4A8FA8;background:linear-gradient(to right,#4A8FA8 50%,#E0EDF2 50%);}
+.slider-acidite input[type=range]::-webkit-slider-thumb{background:#4A8FA8;}
+.slider-acidite .slider-val{background:#4A8FA8;}
+.slider-acidite .slider-label i{color:#4A8FA8;}
+/* Effervescence — viola */
+.slider-eff input[type=range]{accent-color:#9B7DC8;background:linear-gradient(to right,#9B7DC8 50%,#EDE8F6 50%);}
+.slider-eff input[type=range]::-webkit-slider-thumb{background:#9B7DC8;}
+.slider-eff .slider-val{background:#9B7DC8;}
+.slider-eff .slider-label i{color:#9B7DC8;}
+/* Complexité — dorato */
+.slider-comp input[type=range]{accent-color:#C8962A;background:linear-gradient(to right,#C8962A 50%,#F5EDD5 50%);}
+.slider-comp input[type=range]::-webkit-slider-thumb{background:#C8962A;}
+.slider-comp .slider-val{background:#C8962A;}
+.slider-comp .slider-label i{color:#C8962A;}
+/* Longueur — verde */
+.slider-lung input[type=range]{accent-color:#4A8A5A;background:linear-gradient(to right,#4A8A5A 50%,#DFF0E4 50%);}
+.slider-lung input[type=range]::-webkit-slider-thumb{background:#4A8A5A;}
+.slider-lung .slider-val{background:#4A8A5A;}
+.slider-lung .slider-label i{color:#4A8A5A;}
 
 
 /* ═══ MAPPA INTERATTIVA ═══ */
