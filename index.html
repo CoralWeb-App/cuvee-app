@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=28"/>
+<link rel="stylesheet" href="css/style.css?v=29"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1339,16 +1339,19 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div id="carnet-count-label" style="font-family:var(--sans);font-size:14px;color:var(--ink-4);margin-top:1px;">Le tue note di degustazione</div>
     </div>
     <div class="topbar-icons">
-      <button onclick="checkAndNewNote()" style="width:36px;height:36px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(30,18,8,.22);flex-shrink:0;">
-        <span style="font-size:22px;color:#fff;font-weight:300;line-height:1;margin-top:-1px;">+</span>
+      <button id="carnet-search-btn" onclick="toggleCarnetSearch()" style="width:36px;height:36px;border-radius:50%;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+        <i class="ti ti-search" style="font-size:22px;color:var(--ink-3);"></i>
+      </button>
+      <button onclick="quickNewNote()" style="width:36px;height:36px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory-2);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(30,18,8,.25);flex-shrink:0;">
+        <span style="font-size:22px;color:#C8A03A;font-weight:300;line-height:1;margin-top:-1px;">+</span>
       </button>
     </div>
   </div>
-  <!-- SEARCH + FILTERS -->
-  <div class="carnet-search-bar">
+  <!-- SEARCH (hidden by default, toggle on icon tap) -->
+  <div id="carnet-search-bar" class="carnet-search-bar" style="display:none;">
     <i class="ti ti-search"></i>
     <input id="carnet-search" type="text" placeholder="Cerca maison o cuvée..." oninput="filterCarnet()"/>
-    <i class="ti ti-x" id="carnet-search-clear" style="display:none;cursor:pointer;font-size:16px;color:var(--ink-5);" onclick="clearCarnetSearch()"></i>
+    <i class="ti ti-x" id="carnet-search-clear" style="cursor:pointer;font-size:16px;color:var(--ink-5);" onclick="closeCarnetSearch()"></i>
   </div>
   <div class="carnet-filter-row">
     <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
@@ -1381,7 +1384,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="f-btn" onclick="setCarnetTypeFilter(this,'nature')">Brut Nature</div>
     </div>
   </div>
-  <div class="scroll" id="carnet-list-scroll" style="background:var(--ivory);">
+  <div class="scroll" id="carnet-list-scroll" style="background:var(--ivory-2);">
 
     <!-- Note caricate dinamicamente dal DB -->
     <div id="carnet-empty" style="padding:50px 24px;text-align:center;">
@@ -1850,6 +1853,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=42"></script>
+<script src="js/app.js?v=43"></script>
 </body>
 </html>

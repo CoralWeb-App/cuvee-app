@@ -1864,9 +1864,33 @@ function clearCarnetSearch() {
   const input = document.getElementById('carnet-search');
   if (input) input.value = '';
   activeSearchQuery = '';
-  const clearBtn = document.getElementById('carnet-search-clear');
-  if (clearBtn) clearBtn.style.display = 'none';
   renderCarnetNotes(allCarnetNotes);
+}
+
+function toggleCarnetSearch() {
+  const bar = document.getElementById('carnet-search-bar');
+  const btn = document.getElementById('carnet-search-btn');
+  if (!bar) return;
+  const isOpen = bar.style.display !== 'none';
+  if (isOpen) {
+    // close
+    bar.style.display = 'none';
+    if (btn) btn.querySelector('i').className = 'ti ti-search';
+    clearCarnetSearch();
+  } else {
+    // open
+    bar.style.display = 'flex';
+    if (btn) btn.querySelector('i').className = 'ti ti-search ti-search-active';
+    setTimeout(() => document.getElementById('carnet-search')?.focus(), 80);
+  }
+}
+
+function closeCarnetSearch() {
+  const bar = document.getElementById('carnet-search-bar');
+  const btn = document.getElementById('carnet-search-btn');
+  if (bar) bar.style.display = 'none';
+  if (btn) btn.querySelector('i').className = 'ti ti-search';
+  clearCarnetSearch();
 }
 
 // Menu contestuale nota
