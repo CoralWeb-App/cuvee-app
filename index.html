@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=29"/>
+<link rel="stylesheet" href="css/style.css?v=30"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1599,26 +1599,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="topbar">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Carnet</button>
     <div class="topbar-icons">
-      <i class="ti ti-dots-vertical" style="cursor:pointer;" onclick="openNoteMenu()"></i>
+      <i class="ti ti-dots-vertical" style="cursor:pointer;font-size:24px;color:var(--ink-4);" onclick="openNoteMenu()"></i>
     </div>
   </div>
-  <div class="scroll">
-    <div id="detail-img-wrap" class="carnet-note-img-ph" style="height:220px;flex-shrink:0;">
-      <i class="ti ti-camera" style="font-size:48px;"></i>
-    </div>
-    <div style="padding:18px 18px 0;">
-      <div class="carnet-note-maison" style="font-size:15px;" id="detail-maison"></div>
-      <div class="carnet-note-name" style="font-size:28px;margin-bottom:4px;" id="detail-cuvee"></div>
-      <div class="carnet-note-meta" style="font-size:16px;margin-bottom:12px;" id="detail-meta"></div>
-      <div class="carnet-note-rating" style="margin-bottom:16px;" id="detail-rating"></div>
-    </div>
-
-    <div id="detail-dynamic-content" style="padding:0 18px 0;"></div>
-
-    <div style="height:32px;"></div>
+  <div class="scroll" style="background:var(--ivory-2);">
+    <div id="detail-content"></div>
+    <div style="height:24px;"></div>
   </div>
-  
-
 </div>
 
 <!-- ═══ MAPPA INTERATTIVA ═══ -->
@@ -1853,6 +1840,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=43"></script>
+<script src="js/app.js?v=44"></script>
 </body>
 </html>

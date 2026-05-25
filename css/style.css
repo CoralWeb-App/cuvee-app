@@ -546,20 +546,19 @@ html,body{
 
 /* ── NUOVA NOTA — FORM ── */
 #v-carnet-new .scroll{background:var(--ivory);}
-#v-carnet-new .form-section{
+.form-section{
   background:var(--white);border-radius:16px;
   padding:18px 18px 20px;margin:0 14px 12px;
   box-shadow:0 1px 6px rgba(0,0,0,.055);
 }
-#v-carnet-new .form-section:first-of-type{margin-top:14px;}
-#v-carnet-new .form-section-title{
+.form-section-title{
   font-family:var(--serif);font-size:17px;font-weight:500;color:var(--ink);
   margin-bottom:14px;padding-bottom:11px;
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:8px;
 }
-#v-carnet-new .form-section-title i{font-size:17px;color:var(--gold);}
-#v-carnet-new .form-section-title .sec-opt{
+.form-section-title i{font-size:17px;color:var(--gold);}
+.form-section-title .sec-opt{
   font-family:var(--sans);font-size:11px;color:var(--ink-5);font-weight:400;
   margin-left:auto;letter-spacing:0;text-transform:none;
 }

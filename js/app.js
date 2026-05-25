@@ -1100,111 +1100,115 @@ let currentNote = null;
 
 function openNoteDetail(note) {
   currentNote = note;
+  const container = document.getElementById('detail-content');
+  if (!container) { go('v-carnet-detail'); return; }
 
-  // Header
-  const maison = document.getElementById('detail-maison');
-  const cuvee = document.getElementById('detail-cuvee');
-  const meta = document.getElementById('detail-meta');
-  const rating = document.getElementById('detail-rating');
+  const _tipoLabel = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',prestige:'Prestige Cuvée',nature:'Brut Nature'};
+  const tipoLabel = (note.tipo && note.tipo !== 'non_so') ? (_tipoLabel[note.tipo]||'') : '';
 
-  if (maison) maison.textContent = note.maison_nome || '';
-  if (cuvee) cuvee.textContent = note.cuvee_nome || '';
+  const paramDefs = [
+    {key:'acidite',      label:'Acidité',             color:'#4A8FA8',bg:'#E0EDF2',icon:'ti-droplet'},
+    {key:'effervescence',label:'Effervescence',        color:'#9B7DC8',bg:'#EDE8F6',icon:'ti-wind'},
+    {key:'complexite',   label:'Complexité aromatique',color:'#C8962A',bg:'#F5EDD5',icon:'ti-sparkles'},
+    {key:'longueur',     label:'Longueur en bouche',   color:'#4A8A5A',bg:'#DFF0E4',icon:'ti-arrow-right'}
+  ].filter(p => note[p.key] != null && note[p.key] !== '');
 
-  const _tipoLabelNote = {'nv':'Sans Année','millesimato':'Millésimé','rose':'Rosé','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','prestige':'Prestige Cuvée','nature':'Brut Nature'};
-  const metaParts = [
-    (note.tipo && note.tipo !== 'non_so') ? _tipoLabelNote[note.tipo] || null : null,
-    note.annata, note.dosage_testo,
-    note.data_degustazione ? 'Degustato il ' + new Date(note.data_degustazione).toLocaleDateString('it-IT', {day:'numeric',month:'long',year:'numeric'}) : ''
-  ].filter(Boolean);
-  if (meta) meta.textContent = metaParts.join(' · ');
+  const date = note.data_degustazione
+    ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})
+    : '';
 
-  if (rating) {
-    rating.innerHTML = Array.from({length:5}, (_,i) =>
-      '<i class="ti ti-glass-full" style="font-size:22px;opacity:' + (i < (note.rating||0) ? '1' : '0.2') + ';"></i>'
-    ).join('');
-  }
+  const glasses = Array.from({length:5},(_,i) =>
+    '<i class="ti ti-glass-full" style="font-size:20px;color:var(--gold);opacity:'+(i<(note.rating||0)?'1':'0.18')+'"></i>'
+  ).join('');
 
-  // Foto
-  const imgWrap = document.getElementById('detail-img-wrap');
-  if (imgWrap) {
-    if (note.foto_url) {
-      imgWrap.innerHTML = '<img src="' + note.foto_url + '" style="width:100%;height:220px;object-fit:cover;"/>';
-      imgWrap.classList.remove('carnet-note-img-ph');
-    } else {
-      imgWrap.className = 'carnet-note-img-ph';
-      imgWrap.style.height = '220px';
-      imgWrap.innerHTML = '<i class="ti ti-camera" style="font-size:48px;"></i>';
-    }
-  }
+  // Helper: card-section with title
+  const sec = (icon,title,body) =>
+    '<div class="form-section" style="margin-top:12px;">' +
+    '<div class="form-section-title"><i class="ti '+icon+'"></i>'+title+'</div>' +
+    body+'</div>';
 
-  // Dynamic content
-  const dynEl = document.getElementById('detail-dynamic-content');
-  if (!dynEl) { go('v-carnet-detail'); return; }
+  // ── HERO: foto sinistra + info destra ───────────────────────
+  const photoEl = note.foto_url
+    ? '<img src="'+note.foto_url+'" style="width:100%;height:100%;object-fit:cover;display:block;"/>'
+    : '<i class="ti ti-bottle" style="font-size:40px;color:rgba(184,146,42,.28);"></i>';
 
-  let html = '';
+  let badges = '';
+  if (note.annata)      badges += '<span style="background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:#8a6a1e;font-weight:500;">'+note.annata+'</span>';
+  if (tipoLabel)        badges += '<span style="background:var(--ivory-2);border:0.5px solid var(--border-2);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:var(--ink-3);">'+tipoLabel+'</span>';
+  if (note.dosage_testo) badges += '<span style="background:var(--ivory-2);border:0.5px solid var(--border-2);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:var(--ink-3);">'+note.dosage_testo+'</span>';
 
-  // Parametri sensoriali
-  const params = [
-    {key:'acidite', label:'Acidité'},
-    {key:'effervescence', label:'Effervescence'},
-    {key:'complexite', label:'Complexité'},
-    {key:'longueur', label:'Longueur en bouche'}
-  ].filter(p => note[p.key]);
+  let html =
+    '<div style="margin:12px 14px 0;background:var(--white);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;min-height:155px;">'+
+      '<div style="width:115px;flex-shrink:0;background:linear-gradient(150deg,#F8F2E6,#EBD9B8);overflow:hidden;display:flex;align-items:center;justify-content:center;">'+
+        photoEl+
+      '</div>'+
+      '<div style="flex:1;padding:15px 14px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;">'+
+        '<div>'+
+          '<div style="font-family:var(--sans);font-size:10px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(note.maison_nome||'')+'</div>'+
+          '<div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">'+(note.cuvee_nome||'')+'</div>'+
+          (badges ? '<div style="display:flex;flex-wrap:wrap;gap:5px;">'+badges+'</div>' : '')+
+        '</div>'+
+        '<div>'+
+          '<div style="display:flex;gap:2px;margin-bottom:4px;">'+glasses+'</div>'+
+          (date ? '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+date+'</div>' : '')+
+        '</div>'+
+      '</div>'+
+    '</div>';
 
-  if (params.length > 0) {
-    html += '<div style="margin-bottom:18px;">';
-    html += '<div style="font-family:var(--sans);font-size:13px;letter-spacing:1.2px;color:var(--gold);text-transform:uppercase;font-weight:500;margin-bottom:12px;">Parametri sensoriali</div>';
-    html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px;">';
-    params.forEach(p => {
+  // ── PARAMETRI SENSORIALI ────────────────────────────────────
+  if (paramDefs.length > 0) {
+    let body = '<div style="display:flex;flex-direction:column;gap:16px;">';
+    paramDefs.forEach(p => {
       const val = note[p.key];
-      const pct = (val / 10 * 100) + '%';
-      html += '<div style="background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">' +
-        '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:4px;">' + p.label + '</div>' +
-        '<div style="display:flex;align-items:center;gap:6px;">' +
-        '<div style="flex:1;height:5px;background:var(--border);border-radius:2px;">' +
-        '<div style="width:' + pct + ';height:100%;background:var(--gold);border-radius:2px;"></div></div>' +
-        '<span style="font-family:var(--sans);font-size:14px;color:var(--gold);font-weight:500;">' + val + '</span>' +
-        '</div></div>';
+      const pct = val / 10 * 100;
+      body +=
+        '<div>'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">'+
+            '<span style="font-family:var(--sans);font-size:14px;color:var(--ink-2);display:flex;align-items:center;gap:6px;"><i class="ti '+p.icon+'" style="color:'+p.color+';font-size:15px;"></i>'+p.label+'</span>'+
+            '<span style="width:26px;height:26px;border-radius:50%;background:'+p.color+';color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;">'+val+'</span>'+
+          '</div>'+
+          '<div style="height:6px;background:'+p.bg+';border-radius:3px;overflow:hidden;">'+
+            '<div style="width:'+pct+'%;height:100%;background:'+p.color+';border-radius:3px;"></div>'+
+          '</div>'+
+        '</div>';
     });
-    html += '</div></div>';
+    body += '</div>';
+    html += sec('ti-adjustments','Parametri sensoriali', body);
   }
 
-  // Aromi
+  // ── AROMI ───────────────────────────────────────────────────
   if (note.aromi && note.aromi.length > 0) {
-    html += '<div style="margin-bottom:18px;">';
-    html += '<div style="font-family:var(--sans);font-size:13px;letter-spacing:1.2px;color:var(--gold);text-transform:uppercase;font-weight:500;margin-bottom:10px;">Aromi percepiti</div>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:7px;">';
-    note.aromi.forEach(a => {
-      html += '<span class="aromi-pill on">' + a + '</span>';
-    });
-    html += '</div></div>';
+    let body = '<div style="display:flex;flex-wrap:wrap;gap:7px;">';
+    note.aromi.forEach(a => { body += '<span class="aromi-pill on">'+a+'</span>'; });
+    body += '</div>';
+    html += sec('ti-leaf','Aromi percepiti', body);
   }
 
-  // Note libere
+  // ── NOTE LIBERE ─────────────────────────────────────────────
   if (note.note_libere) {
-    html += '<div style="margin-bottom:18px;">';
-    html += '<div style="font-family:var(--sans);font-size:13px;letter-spacing:1.2px;color:var(--gold);text-transform:uppercase;font-weight:500;margin-bottom:10px;">Note di degustazione</div>';
-    html += '<div style="font-family:var(--sans);font-size:17px;color:var(--ink-2);line-height:1.7;font-style:italic;">"' + note.note_libere + '"</div>';
-    html += '</div>';
+    const body = '<div style="font-family:var(--sans);font-size:16px;color:var(--ink-3);line-height:1.75;font-style:italic;border-left:3px solid var(--gold-border);padding-left:14px;">&ldquo;'+note.note_libere+'&rdquo;</div>';
+    html += sec('ti-quote','Note di degustazione', body);
   }
 
-  // Luogo e prezzo
-  const extraParts = [];
-  if (note.luogo || note.occasione) {
-    extraParts.push('<div style="background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">' +
-      '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:4px;">Occasione</div>' +
-      '<div style="font-family:var(--sans);font-size:16px;color:var(--ink);">' + (note.occasione || note.luogo) + '</div></div>');
-  }
-  if (note.prezzo_pagato) {
-    extraParts.push('<div style="background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">' +
-      '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:4px;">Prezzo pagato</div>' +
-      '<div style="font-family:var(--serif);font-size:20px;color:var(--gold);font-weight:500;">' + note.prezzo_pagato + '€</div></div>');
-  }
-  if (extraParts.length > 0) {
-    html += '<div style="display:grid;grid-template-columns:' + (extraParts.length > 1 ? '1fr 1fr' : '1fr') + ';gap:9px;margin-bottom:24px;">' + extraParts.join('') + '</div>';
+  // ── DETTAGLI ────────────────────────────────────────────────
+  const detRows = [];
+  if (note.luogo)         detRows.push({icon:'ti-map-pin', label:'Luogo',        val: note.luogo});
+  if (note.prezzo_pagato) detRows.push({icon:'ti-coin',    label:'Prezzo pagato',val: '€ '+note.prezzo_pagato});
+
+  if (detRows.length > 0) {
+    let body = '';
+    detRows.forEach((d,i) => {
+      body +=
+        '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;'+(i<detRows.length-1?'border-bottom:1px solid var(--border);':'')+'">' +
+          '<div style="width:36px;height:36px;border-radius:10px;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti '+d.icon+'" style="font-size:17px;color:var(--gold);"></i></div>'+
+          '<div><div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);margin-bottom:1px;">'+d.label+'</div>'+
+          '<div style="font-family:var(--sans);font-size:16px;color:var(--ink);">'+d.val+'</div></div>'+
+        '</div>';
+    });
+    html += sec('ti-info-circle','Dettagli', body);
   }
 
-  dynEl.innerHTML = html;
+  container.innerHTML = html;
   go('v-carnet-detail');
 }
 
