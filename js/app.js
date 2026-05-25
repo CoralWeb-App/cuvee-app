@@ -1386,6 +1386,18 @@ function showHomeSearchUI() {
   document.getElementById('home-search-cat').style.display = 'flex';
 }
 
+function hideHomeSearchUI() {
+  // Ritardo: lascia registrare eventuali click sui badge prima di nasconderli
+  setTimeout(() => {
+    const input = document.getElementById('home-search-input');
+    if (!input || input.value.trim() !== '') return; // non nascondere se c'è testo
+    document.getElementById('home-search-cat').style.display = 'none';
+    document.getElementById('home-search-results').style.display = 'none';
+    const mainContent = document.getElementById('home-main-content');
+    if (mainContent) mainContent.style.display = '';
+  }, 150);
+}
+
 function doHomeSearch() {
   const q = document.getElementById('home-search-input').value.trim();
   const clear = document.getElementById('home-search-clear');

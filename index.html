@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=22"/>
+<link rel="stylesheet" href="css/style.css?v=23"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -139,7 +139,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="search-bar" onclick="document.getElementById('home-search-input').focus()">
         <i class="ti ti-search" style="font-size:20px;color:var(--ink-4);flex-shrink:0;"></i>
         <input id="home-search-input" type="text" placeholder="Cerca maison, cuvée, termini…"
-               onfocus="showHomeSearchUI()" oninput="doHomeSearch()" autocomplete="off" autocorrect="off" spellcheck="false"/>
+               onfocus="showHomeSearchUI()" onblur="hideHomeSearchUI()" oninput="doHomeSearch()" autocomplete="off" autocorrect="off" spellcheck="false"/>
         <i class="ti ti-x" id="home-search-clear" onclick="clearHomeSearch();event.stopPropagation();"
            style="display:none;font-size:18px;color:var(--ink-4);cursor:pointer;flex-shrink:0;"></i>
       </div>
@@ -1800,6 +1800,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=34"></script>
+<script src="js/app.js?v=35"></script>
 </body>
 </html>
