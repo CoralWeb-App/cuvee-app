@@ -940,8 +940,8 @@ function resizeImage(file, maxSize = 512) {
       // WebP se supportato (iOS 16+), altrimenti JPEG come fallback
       canvas.toBlob(blob => {
         if (blob) { resolve(blob); return; }
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.85);
-      }, 'image/webp', 0.82);
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.72);
+      }, 'image/webp', 0.70);
     };
     img.onerror = reject;
     img.src = url;
@@ -955,7 +955,7 @@ async function uploadAvatar(input) {
 
   try {
     // Ridimensiona a 512x512 (WebP se supportato, altrimenti JPEG)
-    const blob = await resizeImage(input.files[0], 512);
+    const blob = await resizeImage(input.files[0], 200);
 
     // Mostra subito l'immagine localmente — nessuna attesa
     const localUrl = URL.createObjectURL(blob);
