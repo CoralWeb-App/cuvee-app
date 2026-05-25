@@ -104,6 +104,8 @@ function swTab(el,tab){
   document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('on'));
   document.getElementById('tc-'+tab).classList.add('on');
   if(tab==='glossario') loadGlossario();
+  const scrollEl = document.querySelector('#v-guida .scroll');
+  if(scrollEl) scrollEl.scrollTop = 0;
 }
 
 // ═══ GLOSSARIO — dinamico da DB ═══
