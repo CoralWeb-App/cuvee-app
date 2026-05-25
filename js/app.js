@@ -959,22 +959,24 @@ async function uploadAvatar(input) {
     const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
     const path = currentUser.id + '/avatar.' + ext;
 
-    const { error } = await supa.storage
+    const { error: uploadError } = await supa.storage
       .from('avatars')
       .upload(path, blob, { upsert: true, contentType: blob.type });
-    if (error) throw error;
+    if (uploadError) throw uploadError;
 
     const { data: urlData } = supa.storage.from('avatars').getPublicUrl(path);
     const avatarUrl = urlData.publicUrl;
 
     // Salva nel DB
-    await supa.from('users').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
+    const { error: dbError } = await supa.from('users').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
+    if (dbError) throw dbError;
 
     // Aggiorna profilo locale e UI
     if (currentUser.profile) currentUser.profile.avatar_url = avatarUrl;
     updateProfileUI(currentUser.profile);
   } catch(e) {
     console.log('Avatar upload error:', e);
+    alert('Errore caricamento foto: ' + (e.message || e));
   }
 
   if (avatarEl) avatarEl.style.opacity = '1';
