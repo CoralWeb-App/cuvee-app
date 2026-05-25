@@ -952,7 +952,7 @@ async function uploadAvatar(input) {
 
   try {
     // Ridimensiona a 512x512 (WebP se supportato, altrimenti JPEG)
-    const blob = await resizeImage(input.files[0], 150);
+    const blob = await resizeImage(input.files[0], 250);
 
     // Mostra subito l'immagine localmente — nessuna attesa
     const localUrl = URL.createObjectURL(blob);
