@@ -129,13 +129,20 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div class="topbar-icons">
       <i class="ti ti-bell"></i>
-      <div id="home-topbar-avatar" onclick="go('v-profile')" style="width:32px;height:32px;border-radius:50%;background:var(--gold-pale);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;"><i class="ti ti-user" style="font-size:19px;color:var(--gold);"></i></div>
+      <i class="ti ti-settings" onclick="go('v-profile')" style="font-size:22px;color:var(--ink-3);cursor:pointer;"></i>
     </div>
   </div>
   <div class="scroll">
     <div class="home-hero">
-      <div class="greet" id="home-greet">Benvenuto</div>
-      <div class="hero-title">Cosa vuoi scoprire oggi?</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="home-hero-avatar" onclick="go('v-profile')" style="width:50px;height:50px;border-radius:50%;background:var(--gold-pale);border:1.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;">
+          <i class="ti ti-user" style="font-size:24px;color:var(--gold);"></i>
+        </div>
+        <div>
+          <div class="greet" id="home-greet">Benvenuto</div>
+          <div class="hero-title">Cosa vuoi scoprire oggi?</div>
+        </div>
+      </div>
       <div class="search-bar" onclick="document.getElementById('home-search-input').focus()">
         <i class="ti ti-search" style="font-size:20px;color:var(--ink-4);flex-shrink:0;"></i>
         <input id="home-search-input" type="text" placeholder="Cerca maison, cuvée, termini…"
@@ -1862,6 +1869,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=69"></script>
+<script src="js/app.js?v=70"></script>
 </body>
 </html>

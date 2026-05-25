@@ -894,13 +894,13 @@ function updateProfileUI(profile) {
     }
   }
 
-  // Avatar topbar home
-  const homeAvatar = document.getElementById('home-topbar-avatar');
+  // Avatar hero home
+  const homeAvatar = document.getElementById('home-hero-avatar');
   if (homeAvatar) {
     if (profile.avatar_url) {
       homeAvatar.innerHTML = '<img src="' + profile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">';
     } else {
-      homeAvatar.innerHTML = '<i class="ti ti-user" style="font-size:19px;color:var(--gold);"></i>';
+      homeAvatar.innerHTML = '<span style="font-size:20px;font-weight:700;color:var(--gold);">' + initial + '</span>';
     }
   }
 
@@ -948,17 +948,16 @@ function resizeImage(file, maxSize = 250) {
 async function uploadAvatar(input) {
   if (!input.files || !input.files[0] || !currentUser) return;
   const avatarEl = document.getElementById('profile-avatar');
+  const homeAvatar = document.getElementById('home-hero-avatar');
   if (avatarEl) avatarEl.style.opacity = '0.4';
 
   try {
-    // Ridimensiona a 512x512 (WebP se supportato, altrimenti JPEG)
+    // Ridimensiona e ritaglia al quadrato prima dell'upload
     const blob = await resizeImage(input.files[0], 250);
 
     // Mostra subito l'immagine localmente — nessuna attesa
     const localUrl = URL.createObjectURL(blob);
     const imgTag = '<img src="' + localUrl + '" style="width:100%;height:100%;object-fit:cover;">';
-    const avatarEl = document.getElementById('profile-avatar');
-    const homeAvatar = document.getElementById('home-topbar-avatar');
     if (avatarEl) avatarEl.innerHTML = imgTag;
     if (homeAvatar) homeAvatar.innerHTML = imgTag;
 
