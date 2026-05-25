@@ -940,8 +940,8 @@ function resizeImage(file, maxSize = 512) {
       // WebP se supportato (iOS 16+), altrimenti JPEG come fallback
       canvas.toBlob(blob => {
         if (blob) { resolve(blob); return; }
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.72);
-      }, 'image/webp', 0.70);
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.60);
+      }, 'image/webp', 0.60);
     };
     img.onerror = reject;
     img.src = url;
