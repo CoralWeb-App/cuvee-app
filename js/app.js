@@ -965,7 +965,7 @@ async function uploadAvatar(input) {
     if (uploadError) { alert('STORAGE: ' + uploadError.message); throw uploadError; }
 
     const { data: urlData } = supa.storage.from('avatars').getPublicUrl(path);
-    const avatarUrl = urlData.publicUrl;
+    const avatarUrl = urlData.publicUrl + '?t=' + Date.now();
 
     // Salva nel DB
     const { error: dbError } = await supa.from('users').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
