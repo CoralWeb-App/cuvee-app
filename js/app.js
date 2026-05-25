@@ -1074,7 +1074,10 @@ function openNoteDetail(note) {
   if (maison) maison.textContent = note.maison_nome || '';
   if (cuvee) cuvee.textContent = note.cuvee_nome || '';
 
-  const metaParts = [note.annata, note.dosage_testo,
+  const _tipoLabelNote = {'nv':'Sans Année','millesimato':'Millésimé','rose':'Rosé','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','prestige':'Prestige Cuvée','nature':'Brut Nature'};
+  const metaParts = [
+    (note.tipo && note.tipo !== 'non_so') ? _tipoLabelNote[note.tipo] || null : null,
+    note.annata, note.dosage_testo,
     note.data_degustazione ? 'Degustato il ' + new Date(note.data_degustazione).toLocaleDateString('it-IT', {day:'numeric',month:'long',year:'numeric'}) : ''
   ].filter(Boolean);
   if (meta) meta.textContent = metaParts.join(' · ');
@@ -1780,7 +1783,12 @@ function renderCarnetNotes(notes) {
       '<div style="padding:11px 12px 13px;">' +
         '<div style="font-family:var(--sans);font-size:13px;color:var(--gold);font-weight:500;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (note.maison_nome||'') + '</div>' +
         '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + (note.cuvee_nome||'') + '</div>' +
-        '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-5);margin-bottom:7px;">' + (note.annata||'') + '</div>' +
+        '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);margin-bottom:6px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">' +
+          (note.annata ? '<span>' + note.annata + '</span>' : '') +
+          ((note.tipo && note.tipo !== 'non_so' && {nv:'SA',millesimato:'MIL',rose:'Rosé',blanc_de_blancs:'BdB',blanc_de_noirs:'BdN',prestige:'Prest.',nature:'Nature'}[note.tipo])
+            ? '<span style="background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:4px;padding:1px 5px;font-size:10px;color:var(--gold-dark);font-weight:500;">' + {nv:'SA',millesimato:'MIL',rose:'Rosé',blanc_de_blancs:'BdB',blanc_de_noirs:'BdN',prestige:'Prest.',nature:'Nature'}[note.tipo] + '</span>'
+            : '') +
+        '</div>' +
         '<div style="display:flex;align-items:center;justify-content:space-between;">' +
           '<div>' + glasses + '</div>' +
           '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);">' + date + '</div>' +
