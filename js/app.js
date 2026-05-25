@@ -297,7 +297,43 @@ function checkAndNewNote(){
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva nel Carnet';
   go('v-carnet-new');
+  requestAnimationFrame(() => initAllSliders(5));
 }
+/* ── Slider fill ──────────────────────────────────────────────────── */
+const _sliderColors = {
+  acidite: ['#4A8FA8','#E0EDF2'],
+  eff:     ['#9B7DC8','#EDE8F6'],
+  comp:    ['#C8962A','#F5EDD5'],
+  lung:    ['#4A8A5A','#DFF0E4']
+};
+function updSlider(el, key, displayId) {
+  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
+  const pct = (val - min) / (max - min);
+  // Correct for physical thumb width so gradient stop aligns with thumb centre
+  const thumbW = 28; // iOS Safari default range thumb ~28px
+  const trackW = el.offsetWidth > 0 ? el.offsetWidth : 340;
+  const adj = ((pct * (trackW - thumbW)) + thumbW * 0.5) / trackW * 100;
+  const [fill, empty] = _sliderColors[key] || ['#888','#ddd'];
+  el.style.background = `linear-gradient(to right,${fill} ${adj.toFixed(1)}%,${empty} ${adj.toFixed(1)}%)`;
+  if (displayId) document.getElementById(displayId).textContent = el.value;
+}
+function initAllSliders(defaultVal) {
+  const map = [
+    ['val-acidite','acidite'], ['val-eff','eff'],
+    ['val-comp','comp'],       ['val-lung','lung']
+  ];
+  map.forEach(([displayId, key]) => {
+    const display = document.getElementById(displayId);
+    if (!display) return;
+    const wrap = display.closest('.slider-wrap');
+    if (!wrap) return;
+    const inp = wrap.querySelector('input[type=range]');
+    if (!inp) return;
+    if (defaultVal != null) inp.value = defaultVal;
+    updSlider(inp, key, displayId);
+  });
+}
+
 function setRating(n){
   currentRating=n;
   const labels=['','Deludente','Nella media','Buono','Ottimo','Eccellente — da ricordare!'];
@@ -1585,12 +1621,11 @@ function openEditNote(note) {
   };
   Object.entries(sliders).forEach(([id, val]) => {
     const el = document.getElementById(id);
-    if (el && val) el.textContent = val;
-    // Find the input range sibling
-    const labelRow = el?.closest('.slider-wrap') || el?.parentElement;
-    if (labelRow) {
-      const input = labelRow.querySelector('input[type=range]');
-      if (input && val) input.value = val;
+    if (el && val != null) el.textContent = val;
+    const wrap = el?.closest('.slider-wrap');
+    if (wrap) {
+      const input = wrap.querySelector('input[type=range]');
+      if (input && val != null) input.value = val;
     }
   });
 
@@ -1632,6 +1667,7 @@ function openEditNote(note) {
   if (btn) btn.textContent = 'Salva modifiche';
 
   go('v-carnet-new');
+  requestAnimationFrame(() => initAllSliders(null)); // null = keep existing values
 }
 
 async function deleteNote(noteId) {
