@@ -3019,6 +3019,13 @@ function scoreRingSm(score) {
     '<div class="score-label-sm">' + scoreLabel(score) + '</div>' +
   '</div>';
 }
+function scoreRingCard(score) {
+  if (!score) return '';
+  const deg = Math.round((score / 100) * 360);
+  return '<div class="score-ring-sm" style="background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);">' +
+    '<div class="score-ring-sm-inner"><span class="score-num-sm">' + score + '</span></div>' +
+  '</div>';
+}
 
 function dosagePill(tipo) {
   if (!tipo) return '';
@@ -3111,11 +3118,14 @@ function renderBottiglie() {
           dosagePill(b.dosaggio_tipo) +
         '</div>' +
         '<div class="bott-card-footer">' +
-          '<button class="bott-card-cta" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
-            '<span class="bott-card-cta-badge">+</span>' +
-            '<i class="ti ti-notebook"></i> Al Carnet' +
+          '<div class="bott-card-info">' +
+            (b.score_medio ? scoreRingCard(b.score_medio) : '') +
+            (b.fascia_prezzo ? priceScale(b.fascia_prezzo) : '') +
+          '</div>' +
+          '<button class="bott-card-add" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
+            '<span class="bott-card-add-badge">+</span>' +
+            '<i class="ti ti-notebook"></i>' +
           '</button>' +
-          (b.score_medio ? scoreRingSm(b.score_medio) : '') +
         '</div>' +
       '</div>' +
     '</div>';

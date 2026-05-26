@@ -778,24 +778,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .bott-card-prezzo{font-family:var(--sans);font-size:13px;color:var(--ink-3);}
 .bott-wish{font-size:20px;color:var(--ink-5);cursor:pointer;padding:2px;}
 .bott-wish.on{color:var(--gold);}
-.bott-card-cta{
-  position:relative;
-  display:inline-flex;align-items:center;gap:6px;
-  background:#1E1208;border:3px solid var(--ivory);border-radius:10px;
-  padding:6px 13px;margin-top:6px;
-  font-family:var(--sans);font-size:12px;font-weight:600;color:#C8A03A;
-  cursor:pointer;white-space:nowrap;
+.bott-card-add{
+  position:relative;width:42px;height:42px;border-radius:50%;
+  background:#1E1208;border:3px solid var(--ivory);
   box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;cursor:pointer;
 }
-.bott-card-cta i{font-size:13px;color:#C8A03A;}
-.bott-card-cta-badge{
-  position:absolute;top:-9px;right:-9px;
-  width:17px;height:17px;border-radius:50%;
-  background:#C8A03A;color:#1E1208;
-  border:2px solid var(--ivory);
-  font-family:var(--sans);font-size:10px;font-weight:800;
+.bott-card-add i{font-size:18px;color:#C8A03A;}
+.bott-card-add-badge{
+  position:absolute;top:-1px;right:-1px;
+  background:#C8A03A;color:#1E1208;border-radius:50%;
+  width:14px;height:14px;border:2px solid var(--ivory);
+  font-family:var(--sans);font-size:9px;font-weight:800;
   display:flex;align-items:center;justify-content:center;line-height:1;
 }
+.bott-card-info{display:flex;align-items:center;gap:8px;}
 .bott-detail-cta{
   margin:16px 14px 4px;border:none;border-radius:12px;
   width:calc(100% - 28px);padding:14px 16px;
