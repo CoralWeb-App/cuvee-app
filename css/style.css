@@ -73,6 +73,12 @@ html,body{
 .topbar-logo-name{font-family:var(--serif);font-size:19px;color:var(--ink);letter-spacing:3px;font-weight:500;}
 .topbar-icons{display:flex;gap:16px;align-items:center;}
 .topbar-icons i{font-size:24px;color:var(--ink-4);}
+.topbar-avatar-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--gold-pale);border:1.5px solid var(--gold-border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;overflow:hidden;flex-shrink:0;
+}
 .back-btn{
   display:flex;align-items:center;gap:5px;
   background:none;border:none;cursor:pointer;

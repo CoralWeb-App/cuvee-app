@@ -904,6 +904,15 @@ function updateProfileUI(profile) {
     }
   }
 
+  // Avatar topbar (tutte le pagine tranne home)
+  document.querySelectorAll('.topbar-avatar-btn').forEach(btn => {
+    if (profile.avatar_url) {
+      btn.innerHTML = '<img src="' + profile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      btn.innerHTML = '<span style="font-size:13px;font-weight:700;color:var(--gold);">' + initial + '</span>';
+    }
+  });
+
   // Saluto in home
   const greetEl = document.getElementById('home-greet');
   if (greetEl) {
@@ -960,6 +969,7 @@ async function uploadAvatar(input) {
     const imgTag = '<img src="' + localUrl + '" style="width:100%;height:100%;object-fit:cover;">';
     if (avatarEl) avatarEl.innerHTML = imgTag;
     if (homeAvatar) homeAvatar.innerHTML = imgTag;
+    document.querySelectorAll('.topbar-avatar-btn').forEach(btn => btn.innerHTML = imgTag);
 
     // Upload in background
     const path = currentUser.id + '/avatar.jpg';
@@ -981,6 +991,7 @@ async function uploadAvatar(input) {
     const finalTag = '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;">';
     if (avatarEl) avatarEl.innerHTML = finalTag;
     if (homeAvatar) homeAvatar.innerHTML = finalTag;
+    document.querySelectorAll('.topbar-avatar-btn').forEach(btn => btn.innerHTML = finalTag);
 
   } catch(e) {
     console.log('Avatar upload error:', e);
