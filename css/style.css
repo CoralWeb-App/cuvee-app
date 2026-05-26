@@ -795,12 +795,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 }
 .bott-card-info{display:flex;align-items:center;gap:8px;}
 .bott-detail-cta{
-  margin:16px 14px 4px;border:none;border-radius:12px;
+  position:relative;
+  margin:16px 14px 4px;
   width:calc(100% - 28px);padding:14px 16px;
-  background:var(--gold);
-  font-family:var(--sans);font-size:15px;font-weight:600;color:#fff;
+  background:#1E1208;border:3px solid var(--ivory);border-radius:12px;
+  box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);
+  font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;
   display:flex;align-items:center;justify-content:center;gap:8px;
   cursor:pointer;
+}
+.bott-detail-cta-badge{
+  position:absolute;top:-9px;right:-9px;
+  width:20px;height:20px;border-radius:50%;
+  background:#C8A03A;color:#1E1208;
+  border:2px solid var(--ivory);
+  font-family:var(--sans);font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;line-height:1;
 }
 /* Dosage pills */
 .dosage-pill{display:inline-block;font-family:var(--sans);font-size:12px;font-weight:500;border-radius:20px;padding:3px 10px;letter-spacing:.3px;margin-bottom:6px;}

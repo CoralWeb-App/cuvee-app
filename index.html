@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=52"/>
+<link rel="stylesheet" href="css/style.css?v=53"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1023,7 +1023,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Champagne</button>
     <div class="topbar-icons">
       <i class="ti ti-heart" id="bott-detail-wish-icon" style="cursor:pointer;" onclick="toggleWishlistDetail()"></i>
-      <i class="ti ti-notebook" style="cursor:pointer;color:var(--gold);" onclick="openNewNoteFromBottiglia(currentBottiglia.id)"></i>
       <i class="ti ti-share" style="cursor:pointer;" onclick="shareBottiglia()"></i>
       <div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div>
     </div>
@@ -1042,7 +1041,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <!-- CTA AGGIUNGI AL CARNET -->
     <button class="bott-detail-cta" onclick="openNewNoteFromBottiglia(currentBottiglia.id)">
-      <i class="ti ti-notebook" style="font-size:18px;"></i> Aggiungi al mio Carnet
+      <span class="bott-detail-cta-badge">+</span>
+      <i class="ti ti-notebook" style="font-size:18px;"></i> Aggiungi al Carnet
     </button>
     <!-- VINI DI BASE / ASSEMBLAGGIO -->
     <div id="bott-detail-assembl-section" style="display:none;">
