@@ -1149,6 +1149,15 @@ async function toggleFavorite(maisonId) {
 }
 
 // ═══ HELPERS ═══
+function updateProfileCounters() {
+  const n = maisonFavorites.size;
+  const favEl = document.getElementById('profile-fav-count');
+  if (favEl) favEl.textContent = n + (n === 1 ? ' salvato' : ' salvati');
+  const w = wishlistIds.size;
+  const wishEl = document.getElementById('profile-wish-count');
+  if (wishEl) wishEl.textContent = w + (w === 1 ? ' salvato' : ' salvati');
+}
+
 function showError(el, msg) {
   if (!el) return;
   el.textContent = msg;
@@ -2672,9 +2681,7 @@ async function toggleMaisonFavorite(iconEl, maisonId) {
     iconEl.className = 'ti ti-heart-filled maison-heart';
     iconEl.style.color = 'var(--gold)';
   }
-  // Update profile count
-  const favCount = document.getElementById('profile-fav-count');
-  if (favCount) favCount.textContent = maisonFavorites.size + ' maison';
+  updateProfileCounters();
 }
 
 async function toggleDetailFavorite() {
@@ -2691,6 +2698,7 @@ async function toggleDetailFavorite() {
     maisonFavorites.add(id);
     if (icon) { icon.className = 'ti ti-heart-filled'; icon.style.color = 'var(--gold)'; }
   }
+  updateProfileCounters();
 }
 
 function shareMaison() {
@@ -3095,6 +3103,7 @@ async function toggleWishlist(iconEl, bottId) {
     wishlistIds.add(bottId);
   }
   iconEl.className = 'ti ' + (wishlistIds.has(bottId) ? 'ti-heart-filled' : 'ti-heart') + ' bott-wish' + (wishlistIds.has(bottId) ? ' on' : '');
+  updateProfileCounters();
 }
 
 function renderAssemblaggio(b) {
@@ -3274,6 +3283,7 @@ async function toggleWishlistDetail() {
     wishlistIds.add(currentBottiglia.id);
   }
   if (icon) { icon.className = 'ti ' + (wishlistIds.has(currentBottiglia.id) ? 'ti-heart-filled' : 'ti-heart'); icon.style.color = wishlistIds.has(currentBottiglia.id) ? 'var(--gold)' : ''; }
+  updateProfileCounters();
 }
 
 function shareBottiglia() {
