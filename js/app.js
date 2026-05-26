@@ -3120,7 +3120,10 @@ function renderBottiglie() {
         '<div class="bott-card-footer">' +
           '<div class="bott-card-info">' +
             (b.score_medio ? scoreRingCard(b.score_medio) : '') +
-            (b.fascia_prezzo ? priceScale(b.fascia_prezzo) : '') +
+            (b.fascia_prezzo ? '<div style="display:flex;flex-direction:column;gap:2px;">' +
+              priceScale(b.fascia_prezzo) +
+              (b.prezzo_min ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-4);">da ' + b.prezzo_min + '€</span>' : '') +
+            '</div>' : '') +
           '</div>' +
           '<button class="bott-card-add" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
             '<span class="bott-card-add-badge">+</span>' +
