@@ -811,7 +811,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 /* Score ring — small */
 .score-ring-sm{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:3px;}
 .score-ring-sm-inner{width:34px;height:34px;border-radius:50%;background:var(--ivory);display:flex;align-items:center;justify-content:center;}
-.score-num-sm{font-family:var(--serif);font-size:16px;color:var(--ink);font-weight:600;line-height:1;}
+.score-num-sm{font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:700;line-height:1;}
 .score-label-sm{font-family:var(--sans);font-size:9px;color:var(--ink-4);letter-spacing:.2px;text-align:center;line-height:1.2;}
 /* Score ring — large (detail) */
 .score-large-wrap{display:flex;flex-direction:column;align-items:center;padding:22px 18px 16px;border-bottom:1px solid var(--border);}
