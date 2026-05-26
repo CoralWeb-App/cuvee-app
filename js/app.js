@@ -300,7 +300,7 @@ function checkAndNewNote(){
   if (lbl) lbl.textContent = 'Tocca per valutare *';
   resetPhotoStrip();
   const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
-  if (title) title.textContent = 'Nuova nota';
+  if (title) title.textContent = 'Nuova degustazione';
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva nel Carnet';
   go('v-carnet-new');
@@ -355,7 +355,7 @@ function openNewNoteFromBottiglia(bottId) {
   if (b.foto_url) _existingPhotoUrls = [b.foto_url];
 
   const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
-  if (title) title.textContent = 'Nuova nota';
+  if (title) title.textContent = 'Nuova degustazione';
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva nel Carnet';
 
