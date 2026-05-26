@@ -3112,7 +3112,7 @@ function renderBottiglie() {
         '</div>' +
         '<div class="bott-card-footer">' +
           '<button class="bott-card-cta" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
-            '<i class="ti ti-notebook"></i> Al Carnet' +
+            '<i class="ti ti-notebook"></i><i class="ti ti-plus"></i> Al Carnet' +
           '</button>' +
           (b.score_medio ? scoreRingSm(b.score_medio) : '') +
         '</div>' +
