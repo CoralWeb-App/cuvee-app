@@ -3099,8 +3099,6 @@ function renderBottiglie() {
   }
   listEl.innerHTML = filtered.map(b => {
     const tipo = tipoLabel[b.tipo] || b.tipo || '';
-    const inWish = wishlistIds.has(b.id);
-    const prezzoRange = b.prezzo_min && b.prezzo_max ? '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-bottom:2px;">' + b.prezzo_min + '–' + b.prezzo_max + '€</div>' : '';
     return '<div class="bott-card" onclick="openBottigliaDetail(\'' + b.id + '\')">' +
       '<div class="bott-card-img" style="min-height:88px;">' +
         (b.foto_url ? '<img src="' + b.foto_url + '"/>' : '<i class="ti ti-bottle"></i>') +
@@ -3113,12 +3111,10 @@ function renderBottiglie() {
           dosagePill(b.dosaggio_tipo) +
         '</div>' +
         '<div class="bott-card-footer">' +
-          '<div>' + prezzoRange + priceScale(b.fascia_prezzo) + '</div>' +
-          '<div style="display:flex;align-items:center;gap:10px;">' +
-            (b.score_medio ? scoreRingSm(b.score_medio) : '') +
-            '<i class="ti ti-notebook bott-add-note" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)"></i>' +
-            '<i class="ti ' + (inWish ? 'ti-heart-filled' : 'ti-heart') + ' bott-wish' + (inWish ? ' on' : '') + '" data-id="' + b.id + '" onclick="event.stopPropagation();toggleWishlist(this,this.dataset.id)"></i>' +
-          '</div>' +
+          '<button class="bott-card-cta" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
+            '<i class="ti ti-notebook"></i> Al Carnet' +
+          '</button>' +
+          (b.score_medio ? scoreRingSm(b.score_medio) : '') +
         '</div>' +
       '</div>' +
     '</div>';

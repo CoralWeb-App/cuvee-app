@@ -778,7 +778,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .bott-card-prezzo{font-family:var(--sans);font-size:13px;color:var(--ink-3);}
 .bott-wish{font-size:20px;color:var(--ink-5);cursor:pointer;padding:2px;}
 .bott-wish.on{color:var(--gold);}
-.bott-add-note{font-size:20px;color:var(--gold);cursor:pointer;padding:2px;opacity:.85;}
+.bott-card-cta{
+  display:flex;align-items:center;gap:5px;
+  background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:20px;
+  padding:5px 12px;
+  font-family:var(--sans);font-size:12px;font-weight:600;color:var(--gold);
+  cursor:pointer;white-space:nowrap;
+}
+.bott-card-cta i{font-size:14px;}
 .bott-detail-cta{
   margin:16px 14px 4px;border:none;border-radius:12px;
   width:calc(100% - 28px);padding:14px 16px;
