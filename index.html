@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=53"/>
+<link rel="stylesheet" href="css/style.css?v=54"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -163,8 +163,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <!-- CARNET — dark premium -->
     <div onclick="go('v-carnet')" style="margin:0 18px 12px;background:#1E1208;border:1px solid #3A2814;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
       <div style="display:flex;align-items:flex-start;gap:15px;">
-        <div style="width:52px;height:52px;border-radius:13px;background:rgba(184,146,42,.16);border:1px solid rgba(184,146,42,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="ti ti-notebook" style="font-size:26px;color:#C8A03A;"></i>
+        <div style="position:relative;width:52px;height:52px;border-radius:50%;background:#1E1208;border:3px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="position:absolute;top:-1px;right:-1px;width:15px;height:15px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>
+          <i class="ti ti-notebook" style="font-size:24px;color:#C8A03A;"></i>
         </div>
         <div style="flex:1;">
           <div style="font-family:var(--serif);font-size:22px;color:#F0E4CC;font-weight:500;margin-bottom:5px;">Carnet de dégustation</div>
