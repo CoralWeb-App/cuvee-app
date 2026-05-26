@@ -2054,17 +2054,19 @@ async function updateCarnetUI() {
   const emptyEl = document.getElementById('carnet-empty');
   const premBanner = document.getElementById('carnet-premium-banner');
   const countEl = document.getElementById('carnet-note-count');
+  const isPrem = currentUser?.profile?.is_premium;
   if (notes.length === 0) {
     if (emptyEl) emptyEl.style.display = 'block';
     document.getElementById('carnet-notes-list').style.display = 'none';
-    if (premBanner) premBanner.style.display = 'none';
+    if (premBanner) premBanner.style.display = !isPrem ? 'block' : 'none';
   } else {
     if (emptyEl) emptyEl.style.display = 'none';
     document.getElementById('carnet-notes-list').style.display = 'block';
-    const isPrem = currentUser?.profile?.is_premium;
     if (!isPrem && notes.length >= 3) {
       if (premBanner) premBanner.style.display = 'block';
       if (countEl) countEl.textContent = notes.length;
+    } else {
+      if (premBanner) premBanner.style.display = 'none';
     }
   }
 }
