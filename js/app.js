@@ -1073,7 +1073,9 @@ async function updateCarnetUI() {
   if (notes.length === 0) {
     if (emptyEl) emptyEl.style.display = 'block';
     listEl.style.display = 'none';
-    if (premBanner) premBanner.style.display = 'none';
+    // Mostra banner premium anche a 0 note per utenti free
+    const isPremEmpty = currentUser?.profile?.is_premium;
+    if (premBanner) premBanner.style.display = !isPremEmpty ? 'block' : 'none';
     return;
   }
 
