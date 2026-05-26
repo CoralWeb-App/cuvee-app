@@ -281,6 +281,8 @@ function checkAndNewNote(){
   currentEditId = null;
   const hiddenId = document.getElementById('edit-note-id');
   if (hiddenId) hiddenId.value = '';
+  const bottIdEl = document.getElementById('note-bottiglia-id');
+  if (bottIdEl) bottIdEl.value = '';
   currentRating = 0;
   currentNoteType = null;
   document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
@@ -304,6 +306,63 @@ function checkAndNewNote(){
   go('v-carnet-new');
   requestAnimationFrame(() => initAllSliders(5));
 }
+function openNewNoteFromBottiglia(bottId) {
+  if (!currentUser) { go('v-login'); return; }
+  const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
+  if (!b) return;
+
+  // Reset completo
+  currentEditId = null;
+  const hiddenId = document.getElementById('edit-note-id');
+  if (hiddenId) hiddenId.value = '';
+  const bottIdEl = document.getElementById('note-bottiglia-id');
+  if (bottIdEl) bottIdEl.value = bottId;
+  currentRating = 0;
+  currentNoteType = null;
+  document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
+  ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.querySelectorAll('.aromi-pill').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.rating-star').forEach(s => {
+    s.style.opacity = '0.25';
+    s.className = 'ti ti-glass-full rating-star';
+  });
+  const lbl = document.getElementById('rating-label');
+  if (lbl) lbl.textContent = 'Tocca per valutare *';
+
+  // Pre-compila con i dati del catalogo
+  const maisonEl = document.getElementById('note-maison');
+  if (maisonEl) maisonEl.value = b.maison?.nome || '';
+  const cuveeEl = document.getElementById('note-cuvee');
+  if (cuveeEl) cuveeEl.value = b.nome || '';
+  const annataEl = document.getElementById('note-annata');
+  if (annataEl) annataEl.value = b.annata || '';
+  const dosageEl = document.getElementById('note-dosage');
+  if (dosageEl) dosageEl.value = b.dosaggio_tipo || '';
+
+  // Tipo chip
+  if (b.tipo) {
+    currentNoteType = b.tipo;
+    document.querySelectorAll('.tipo-chip').forEach(c => {
+      c.classList.toggle('on', c.getAttribute('onclick')?.includes("'" + b.tipo + "'"));
+    });
+  }
+
+  // Foto dal catalogo come foto iniziale
+  resetPhotoStrip();
+  if (b.foto_url) _existingPhotoUrls = [b.foto_url];
+
+  const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
+  if (title) title.textContent = 'Nuova nota';
+  const btn = document.getElementById('save-note-btn');
+  if (btn) btn.textContent = 'Salva nel Carnet';
+
+  go('v-carnet-new');
+  requestAnimationFrame(() => { initAllSliders(5); renderPhotoStrip(); });
+}
+
 /* ── Slider fill ──────────────────────────────────────────────────── */
 const _sliderColors = {
   acidite: ['#4A8FA8','#E0EDF2'],
@@ -3057,6 +3116,7 @@ function renderBottiglie() {
           '<div>' + prezzoRange + priceScale(b.fascia_prezzo) + '</div>' +
           '<div style="display:flex;align-items:center;gap:10px;">' +
             (b.score_medio ? scoreRingSm(b.score_medio) : '') +
+            '<i class="ti ti-notebook bott-add-note" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)"></i>' +
             '<i class="ti ' + (inWish ? 'ti-heart-filled' : 'ti-heart') + ' bott-wish' + (inWish ? ' on' : '') + '" data-id="' + b.id + '" onclick="event.stopPropagation();toggleWishlist(this,this.dataset.id)"></i>' +
           '</div>' +
         '</div>' +

@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=42"/>
+<link rel="stylesheet" href="css/style.css?v=43"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1023,6 +1023,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Champagne</button>
     <div class="topbar-icons">
       <i class="ti ti-heart" id="bott-detail-wish-icon" style="cursor:pointer;" onclick="toggleWishlistDetail()"></i>
+      <i class="ti ti-notebook" style="cursor:pointer;color:var(--gold);" onclick="openNewNoteFromBottiglia(currentBottiglia.id)"></i>
       <i class="ti ti-share" style="cursor:pointer;" onclick="shareBottiglia()"></i>
       <div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div>
     </div>
@@ -1039,6 +1040,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="detail-meta" id="bott-detail-tipo">—</div>
       <div class="badges-row" id="bott-detail-badges" style="margin-top:6px;"></div>
     </div>
+    <!-- CTA AGGIUNGI AL CARNET -->
+    <button class="bott-detail-cta" onclick="openNewNoteFromBottiglia(currentBottiglia.id)">
+      <i class="ti ti-notebook" style="font-size:18px;"></i> Aggiungi al mio Carnet
+    </button>
     <!-- VINI DI BASE / ASSEMBLAGGIO -->
     <div id="bott-detail-assembl-section" style="display:none;">
       <div class="assembl-header">
@@ -1455,6 +1460,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="scroll">
     <input type="hidden" id="edit-note-id" value=""/>
+    <input type="hidden" id="note-bottiglia-id" value=""/>
 
     <!-- FOTO -->
     <div class="form-section">
@@ -1875,6 +1881,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=72"></script>
+<script src="js/app.js?v=73"></script>
 </body>
 </html>
