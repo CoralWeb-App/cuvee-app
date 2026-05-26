@@ -63,7 +63,7 @@ html,body{
 
 /* ── TOPBAR ── */
 .topbar{
-  padding:env(safe-area-inset-top, 44px) 20px 12px;
+  padding:env(safe-area-inset-top, 44px) 20px 8px;
   padding-top:calc(env(safe-area-inset-top, 44px) + 8px);
   display:flex;align-items:center;justify-content:space-between;
   background:var(--ivory);border-bottom:1px solid var(--border);
@@ -72,9 +72,9 @@ html,body{
 .topbar-logo{display:flex;align-items:center;gap:8px;}
 .topbar-logo-name{font-family:var(--serif);font-size:19px;color:var(--ink);letter-spacing:3px;font-weight:500;}
 .topbar-icons{display:flex;gap:16px;align-items:center;}
-.topbar-icons i{font-size:24px;color:var(--ink-4);}
+.topbar-icons i{font-size:28px;color:var(--ink-4);}
 .topbar-avatar-btn{
-  width:32px;height:32px;border-radius:50%;
+  width:36px;height:36px;border-radius:50%;
   background:var(--gold-pale);border:1.5px solid var(--gold-border);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;overflow:hidden;flex-shrink:0;
