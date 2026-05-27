@@ -1142,6 +1142,7 @@ async function loadBottiglie(maisonId) {
       .from('bottiglie')
       .select('*, link_acquisto(*, partners(nome, url_base))')
       .eq('maison_id', maisonId)
+      .eq('needs_review', false)
       .order('is_featured', { ascending: false })
       .order('created_at', { ascending: true });
     if (error) throw error;
@@ -1728,6 +1729,7 @@ async function ensureBottiglieLoaded() {
       .from('bottiglie')
       .select('*, maison(nome, slug)')
       .eq('is_published', true)
+      .eq('needs_review', false)
       .order('nome', { ascending: true });
     if (!error) allBottiglie = data || [];
     else console.log('ensureBottiglieLoaded error:', error);
@@ -2984,6 +2986,7 @@ async function loadDetailBottles(maisonId) {
       .select('*')
       .eq('maison_id', maisonId)
       .eq('is_published', true)
+      .eq('needs_review', false)
       .order('is_featured', { ascending: false })
       .order('nome', { ascending: true });
 
@@ -3098,6 +3101,7 @@ async function loadAndRenderBottiglie() {
       .from('bottiglie')
       .select('*, maison(nome, slug)')
       .eq('is_published', true)
+      .eq('needs_review', false)
       .order('is_featured', { ascending: false })
       .order('nome', { ascending: true });
     if (error) throw error;
