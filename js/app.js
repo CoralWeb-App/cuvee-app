@@ -48,11 +48,11 @@ function updateBottomNav(id){
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 
   const map = {
-    'bn-home':      ['v-home'],
-    'bn-guida':     ['v-guida','v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'],
-    'bn-carnet':    ['v-carnet','v-carnet-new','v-carnet-detail'],
-    'bn-produttori':['v-maison','v-detail'],
-    'bn-champagne': ['v-bottiglie','v-bottiglia-detail']
+    'bn-home':       ['v-home'],
+    'bn-produttori': ['v-maison','v-detail'],
+    'bn-scan':       ['v-scan-result'],
+    'bn-champagne':  ['v-bottiglie','v-bottiglia-detail'],
+    'bn-carnet-nav': ['v-carnet','v-carnet-new','v-carnet-detail']
   };
   Object.entries(map).forEach(([btnId, views])=>{
     const el = document.getElementById(btnId);
@@ -3389,5 +3389,275 @@ function shareBottiglia() {
   const text = '🍾 ' + currentBottiglia.nome + (currentBottiglia.maison?.nome ? '\n' + currentBottiglia.maison.nome : '') + '\n\n' + (currentBottiglia.note_degustazione || '').substring(0, 150) + '...\n\nScopri su Cuvée app';
   if (navigator.share) { navigator.share({ title: currentBottiglia.nome, text }); }
   else if (navigator.clipboard) { navigator.clipboard.writeText(text); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SCAN FEATURE — riconoscimento bottiglia tramite Claude Vision
+// ══════════════════════════════════════════════════════════════
+
+const EDGE_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/analyze-bottle';
+let _scanPhotoDataUrl = null;
+let _scanResult       = null;
+
+// Avvia la scansione (mode: 'explore' = pagina risultato | 'carnet' = compila form)
+function startScan(mode) {
+  if (!currentUser) { go('v-login'); return; }
+  const input = document.getElementById('scan-input');
+  if (!input) return;
+  input.setAttribute('data-scan-mode', mode || 'explore');
+  input.click();
+}
+
+// Handler del file input
+function handleScanFile(inputEl) {
+  const file = inputEl.files?.[0];
+  if (!file) return;
+  inputEl.value = '';
+  const mode = inputEl.getAttribute('data-scan-mode') || 'explore';
+  _processScan(file, mode);
+}
+
+// Comprime l'immagine via canvas (max 1200px, JPEG 0.82)
+function _compressForScan(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1200;
+        let { width: w, height: h } = img;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else       { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        resolve({ dataUrl, base64: dataUrl.split(',')[1] });
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Flusso principale di scansione
+async function _processScan(file, mode) {
+  _showScanLoading(true);
+  try {
+    // 1. Comprimi
+    const { dataUrl, base64 } = await _compressForScan(file);
+    _scanPhotoDataUrl = dataUrl;
+
+    // 2. Auth token
+    const { data: sessionData } = await supa.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (!token) { _showScanLoading(false); go('v-login'); return; }
+
+    // 3. Chiama Edge Function
+    const resp = await fetch(EDGE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ image_base64: base64, media_type: 'image/jpeg' })
+    });
+    const result = await resp.json();
+
+    // 4. Gestione rate limit
+    if (resp.status === 429) {
+      _showScanLoading(false);
+      _showScanLimitModal();
+      return;
+    }
+    if (!resp.ok || result.error) {
+      _showScanLoading(false);
+      showToast('Errore durante la scansione. Riprova.');
+      return;
+    }
+
+    _scanResult = result;
+
+    // 5. Se champagne: carica foto nel catalogo se mancante
+    if (result.is_champagne) {
+      const bottleId = result.matched_bottle_id || result.new_bottle_id;
+      if (bottleId && !result.bottle_has_photo) {
+        await _uploadBottlePhoto(dataUrl, bottleId);
+      }
+    }
+
+    _showScanLoading(false);
+
+    if (mode === 'carnet') {
+      _fillCarnetFromScan(result, dataUrl);
+    } else {
+      _showScanResultPage(result, dataUrl);
+    }
+
+  } catch(err) {
+    _showScanLoading(false);
+    console.error('scan error:', err);
+    showToast('Errore di connessione. Controlla la rete e riprova.');
+  }
+}
+
+// Carica la foto nel bucket champagne-photos e aggiorna il record
+async function _uploadBottlePhoto(dataUrl, bottleId) {
+  try {
+    const res  = await fetch(dataUrl);
+    const blob = await res.blob();
+    const path = 'bottles/' + bottleId + '.jpg';
+    const { error } = await supa.storage
+      .from('champagne-photos')
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    if (!error) {
+      const { data: u } = supa.storage.from('champagne-photos').getPublicUrl(path);
+      await supa.from('bottiglie').update({ foto_url: u.publicUrl }).eq('id', bottleId);
+      if (_scanResult) _scanResult._uploadedPhotoUrl = u.publicUrl;
+    }
+  } catch(e) { console.error('photo upload error:', e); }
+}
+
+// Mostra/nasconde l'overlay di caricamento
+function _showScanLoading(show) {
+  const el = document.getElementById('scan-loading');
+  if (el) el.classList.toggle('on', show);
+}
+
+// Modal rate limit
+function _showScanLimitModal() {
+  // Usa il paywall esistente oppure un semplice alert stylizzato
+  if (confirm('Hai usato le 5 scansioni mensili gratuite.\nVuoi passare a Premium per scansioni illimitate?')) {
+    go('v-paywall');
+  }
+}
+
+// Mostra la pagina risultato scansione
+function _showScanResultPage(result, photoDataUrl) {
+  _renderScanResult(result, photoDataUrl);
+  go('v-scan-result');
+}
+
+// Costruisce l'HTML della pagina risultato
+function _renderScanResult(result, photoDataUrl) {
+  const container = document.getElementById('scan-result-content');
+  if (!container) return;
+
+  if (!result.is_champagne) {
+    container.innerHTML = _buildNonChampagneHTML(result, photoDataUrl);
+    return;
+  }
+
+  const b      = result.matched_bottle || {};
+  const maison = result.maison || b.maison?.nome || '—';
+  const cuvee  = result.cuvee  || b.nome         || '—';
+  const annata = result.is_sa ? 'Sans Année' : (result.annata || b.annata || null);
+  const dosage = result.dosage || b.dosaggio_tipo || null;
+  const tipo   = result.tipo   || b.tipo          || null;
+  const photo  = (result.is_in_catalog && b.foto_url) ? b.foto_url
+               : (result._uploadedPhotoUrl || photoDataUrl);
+  const desc   = result.descrizione || b.descrizione || '';
+
+  const badge = result.is_in_catalog
+    ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
+    : '<span class="scan-badge scan-badge-ai"><i class="ti ti-sparkles" style="font-size:11px;"></i>Rilevato da scansione</span>';
+
+  let pills = '';
+  if (annata) pills += '<span class="scan-pill scan-pill-gold">' + annata + '</span>';
+  if (dosage) pills += '<span class="scan-pill">' + dosage + '</span>';
+  if (tipo)   pills += '<span class="scan-pill">' + tipo   + '</span>';
+  if (result.prestige) pills += '<span class="scan-pill scan-pill-gold">Prestige</span>';
+
+  const priceRow = (b.prezzo_min || b.fascia_prezzo)
+    ? '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin:4px 0 0;">'
+      + (b.prezzo_min ? 'da ' + b.prezzo_min + '€' : b.fascia_prezzo) + '</div>'
+    : '';
+
+  const catalogBtn = result.is_in_catalog && result.matched_bottle_id
+    ? '<div style="padding:0 14px 8px;">'
+      + '<button class="btn-outline" style="width:100%;" onclick="go(\'v-bottiglia-detail\');loadBottiglia(\'' + result.matched_bottle_id + '\')">'
+      + '<i class="ti ti-external-link"></i> Vedi scheda completa</button></div>'
+    : '';
+
+  container.innerHTML =
+    '<div class="scan-hero-wrap">'
+      + '<img class="scan-hero-img" src="' + photo + '" onerror="this.style.background=\'#1E1208\';this.style.display=\'none\'">'
+      + '<div class="scan-hero-grad"></div>'
+      + '<div class="scan-hero-info">'
+        + badge
+        + '<div class="scan-hero-maison">' + maison + '</div>'
+        + '<div class="scan-hero-cuvee">'  + cuvee  + '</div>'
+        + '<div class="scan-hero-pills">'  + pills  + '</div>'
+      + '</div>'
+    + '</div>'
+    + priceRow.replace('margin:4px 0 0;', 'padding:12px 18px 0;')
+    // ── L'hai assaggiata? card ──
+    + '<div class="scan-assaggiata-card">'
+      + '<div class="scan-assaggiata-icon"><i class="ti ti-notebook" style="font-size:20px;color:var(--gold);"></i></div>'
+      + '<div style="flex:1;">'
+        + '<div style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--ink);margin-bottom:4px;">L\'hai assaggiata?</div>'
+        + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.5;">Aggiungi questa bottiglia al tuo Carnet e tieni traccia di ogni degustazione.</div>'
+      + '</div>'
+    + '</div>'
+    + '<button class="btn-gold" style="margin:0 14px 20px;width:calc(100% - 28px);" onclick="addToCarnetFromScan()">'
+      + '<i class="ti ti-notebook"></i> Aggiungi al Carnet</button>'
+    // ── Descrizione ──
+    + (desc ? '<div style="padding:0 18px 18px;font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">' + desc + '</div>' : '')
+    // ── Tasto scheda completa ──
+    + catalogBtn
+    + '<div style="height:30px;"></div>';
+}
+
+// HTML per bottiglia non Champagne
+function _buildNonChampagneHTML(result, photoDataUrl) {
+  const tipo = result.not_champagne_type || 'qualcosa di diverso';
+  const photoHtml = photoDataUrl
+    ? '<img src="' + photoDataUrl + '" style="width:120px;height:160px;object-fit:cover;border-radius:12px;margin:16px auto;display:block;box-shadow:0 4px 20px rgba(0,0,0,.15);">'
+    : '';
+  return '<div class="scan-not-champ-card">'
+    + '<div style="font-size:52px;margin-bottom:16px;">🕵️</div>'
+    + '<div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:10px;">Ho visto tutto!</div>'
+    + photoHtml
+    + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-bottom:8px;">'
+      + 'Quello che hai in mano sembra essere <strong>' + tipo + '</strong> — non proprio la zona Champagne...'
+    + '</div>'
+    + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-bottom:24px;">'
+      + 'Nessun problema! Cuvée è aperta a tutti. Puoi comunque usarla per tenere traccia di tutto quello che assaggi — Champagne o no. 🥂'
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px;">'
+      + '<button class="btn-gold" onclick="addToCarnetFromScan(_scanResult)">'
+        + '<i class="ti ti-notebook"></i> Aggiungi comunque al Carnet</button>'
+      + '<button class="btn-outline" onclick="startScan(\'explore\')">'
+        + '<i class="ti ti-camera"></i> Riprova la scansione</button>'
+    + '</div>'
+  + '</div><div style="height:30px;"></div>';
+}
+
+// Pre-compila il form carnet dai dati scan e ci va direttamente
+function _fillCarnetFromScan(result, photoDataUrl) {
+  resetPhotoStrip();
+  const fields = {
+    'note-maison':  result.maison || result.matched_bottle?.maison?.nome || '',
+    'note-cuvee':   result.cuvee  || result.matched_bottle?.nome         || '',
+    'note-annata':  result.is_sa  ? 'SA' : (result.annata || ''),
+    'note-dosage':  result.dosage || result.matched_bottle?.dosaggio_tipo || '',
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el && val) el.value = val;
+  });
+  if (photoDataUrl) {
+    _pendingPhotos.push({ id: Date.now(), dataUrl: photoDataUrl });
+  }
+  go('v-carnet-new');
+  requestAnimationFrame(() => { initAllSliders(5); renderPhotoStrip(); });
+}
+
+// Chiamato dal bottone "Aggiungi al Carnet" nella pagina risultato
+function addToCarnetFromScan(result) {
+  result = result || _scanResult;
+  if (!result) return;
+  _fillCarnetFromScan(result, _scanPhotoDataUrl);
 }
 
