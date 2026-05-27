@@ -2029,20 +2029,26 @@ let activeCaliceFilter = 0;
 let activeSearchQuery = '';
 let activeTypeFilter = 'tutti';
 
-// Tipo nota: usa campo DB se presente, altrimenti inferenza dai testi
+// Tipo nota: restituisce ARRAY di tipi (tipo è text[] nel DB)
 function inferTipoNota(n) {
-  // Priorità: tipo salvato esplicitamente (escluso 'non_so' che non filtra)
-  if (n.tipo && n.tipo !== 'non_so') return n.tipo;
+  // tipo è text[] — normalizza sempre ad array
+  let tipi = [];
+  if (Array.isArray(n.tipo)) {
+    tipi = n.tipo.filter(t => t && t !== 'non_so');
+  } else if (n.tipo && n.tipo !== 'non_so') {
+    tipi = [n.tipo]; // legacy stringa
+  }
+  if (tipi.length > 0) return tipi;
   // Fallback inferenza per note vecchie senza campo tipo
   const cuvee = (n.cuvee_nome || '').toLowerCase();
   const dosage = (n.dosage_testo || '').toLowerCase();
   const annata = (n.annata || '').trim();
-  if (/ros[eé]/.test(cuvee)) return 'rose';
-  if (/blanc\s+de\s+blancs/.test(cuvee)) return 'blanc_de_blancs';
-  if (/blanc\s+de\s+noirs/.test(cuvee)) return 'blanc_de_noirs';
-  if (/brut\s+nature|zero\s+dosage|pas\s+dos[eé]|non\s+dos[eé]/.test(dosage) || dosage === 'nature') return 'nature';
-  if (/^\d{4}$/.test(annata)) return 'millesimato';
-  return 'nv';
+  if (/ros[eé]/.test(cuvee)) return ['rose'];
+  if (/blanc\s+de\s+blancs/.test(cuvee)) return ['blanc_de_blancs'];
+  if (/blanc\s+de\s+noirs/.test(cuvee)) return ['blanc_de_noirs'];
+  if (/brut\s+nature|zero\s+dosage|pas\s+dos[eé]|non\s+dos[eé]/.test(dosage) || dosage === 'nature') return ['nature'];
+  if (/^\d{4}$/.test(annata)) return ['millesimato'];
+  return ['nv'];
 }
 
 function setCarnetTypeFilter(el, tipo) {
@@ -2091,7 +2097,7 @@ function renderCarnetNotes(notes) {
     filtered = filtered.filter(n => (n.rating || 0) === activeCaliceFilter);
   }
   if (activeTypeFilter && activeTypeFilter !== 'tutti') {
-    filtered = filtered.filter(n => inferTipoNota(n) === activeTypeFilter);
+    filtered = filtered.filter(n => inferTipoNota(n).includes(activeTypeFilter));
   }
   if (activeSearchQuery) {
     const q = activeSearchQuery.toLowerCase();
@@ -2118,8 +2124,8 @@ function renderCarnetNotes(notes) {
   const _tipoShort = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',nature:'Brut Nature',prestige:'Prestige'};
 
   listEl.innerHTML = '<div class="carnet-grid">' + filtered.map((note) => {
-    const tipo = inferTipoNota(note);
-    const tipoLabel = _tipoShort[tipo] || '';
+    const tipi = inferTipoNota(note);
+    const tipoLabel = tipi.filter(t => t !== 'non_so').map(t => _tipoShort[t] || t).join(' · ');
     const glasses = Array.from({length:5}, (_,i) =>
       '<i class="ti ti-glass-full" style="opacity:'+(i<(note.rating||0)?'1':'0.18')+'"></i>'
     ).join('');
