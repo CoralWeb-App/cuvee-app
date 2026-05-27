@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=56"/>
+<link rel="stylesheet" href="css/style.css?v=57"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -912,62 +912,71 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- PROFILO -->
     <div class="detail-sec-title" style="margin-top:18px;">Profilo</div>
-    <div class="detail-desc" id="detail-desc" style="margin-bottom:20px;">—</div>
+    <div class="detail-desc" id="detail-desc" style="margin-bottom:8px;">—</div>
 
     <!-- FILOSOFIA -->
     <div id="detail-filosofia-section" style="display:none;">
-      <div class="detail-sec-title">Filosofia</div>
-      <div class="detail-desc" id="detail-filosofia" style="margin-bottom:20px;font-style:italic;color:var(--ink-3);"></div>
+      <div class="detail-desc" id="detail-filosofia" style="margin-bottom:8px;font-style:italic;color:var(--ink-3);padding:0 18px;"></div>
     </div>
 
-    <!-- SCHEDA TECNICA -->
-    <div class="detail-sec-title">Scheda</div>
-    <div class="detail-section" style="margin-bottom:20px;">
-      <div id="detail-scheda"></div>
-    </div>
-
-    <!-- VIGNETI -->
-    <div id="detail-vigneti-section" style="display:none;">
-      <div class="detail-sec-title">Vigneti & Uvaggi</div>
-      <div class="detail-section" style="margin-bottom:20px;">
-        <div id="detail-vigneti"></div>
+    <!-- CARD 1: SCHEDA TECNICA -->
+    <div style="height:16px;"></div>
+    <div class="detail-expand-card" id="card-scheda">
+      <div class="detail-expand-header" onclick="toggleDetailCard('card-scheda')">
+        <div class="detail-expand-icon"><i class="ti ti-list-details"></i></div>
+        <div class="detail-expand-title">
+          <strong>Scheda tecnica</strong>
+          <span>Zona, vigneti, produzione, contatti</span>
+        </div>
+        <i class="ti ti-chevron-right detail-expand-chevron"></i>
       </div>
-    </div>
+      <div class="detail-expand-body">
+        <div class="detail-sec-title" style="margin-top:4px;">Scheda</div>
+        <div class="detail-section" style="margin-bottom:16px;"><div id="detail-scheda"></div></div>
 
-    <!-- PRODUZIONE -->
-    <div id="detail-produzione-section" style="display:none;">
-      <div class="detail-sec-title">Produzione</div>
-      <div class="detail-section" style="margin-bottom:20px;">
-        <div id="detail-produzione"></div>
-      </div>
-    </div>
+        <div id="detail-vigneti-section" style="display:none;">
+          <div class="detail-sec-title">Vigneti & Uvaggi</div>
+          <div class="detail-section" style="margin-bottom:16px;"><div id="detail-vigneti"></div></div>
+        </div>
 
-    <!-- DISTRIBUZIONE -->
-    <div id="detail-distribuzione-section" style="display:none;">
-      <div class="detail-sec-title">Distribuzione & Contatti</div>
-      <div class="detail-section" style="margin-bottom:20px;">
-        <div id="detail-distribuzione"></div>
-      </div>
-    </div>
+        <div id="detail-produzione-section" style="display:none;">
+          <div class="detail-sec-title">Produzione</div>
+          <div class="detail-section" style="margin-bottom:16px;"><div id="detail-produzione"></div></div>
+        </div>
 
-    <!-- BOTTIGLIE -->
-    <div id="detail-bottles-section">
-      <div class="detail-sec-title">Catalogo cuvées</div>
-      <div id="detail-bottles-list">
-        <div style="padding:0 18px 16px;font-family:var(--sans);font-size:15px;color:var(--ink-4);">
-          Catalogo in aggiornamento.
+        <div id="detail-distribuzione-section" style="display:none;">
+          <div class="detail-sec-title">Distribuzione & Contatti</div>
+          <div class="detail-section" style="margin-bottom:16px;"><div id="detail-distribuzione"></div></div>
+        </div>
+
+        <div id="detail-partners-section" style="display:none;">
+          <div class="detail-sec-title">Dove comprare in Italia</div>
+          <div id="detail-partners-list" style="padding-bottom:12px;"></div>
         </div>
       </div>
-      <div id="detail-bottles-lock" class="locked-row" style="display:none;">
-        <i class="ti ti-lock"></i>
-        <p>Catalogo completo disponibile con <strong>Piano Premium</strong>.</p>
-      </div>
     </div>
 
-    <!-- PARTNER ACQUISTO -->
-    <div id="detail-partners-section" style="display:none;">
-      <div class="detail-sec-title" style="margin-top:8px;">Dove comprare in Italia</div>
-      <div id="detail-partners-list"></div>
+    <!-- CARD 2: LE CUVÉE -->
+    <div class="detail-expand-card" id="card-cuvee">
+      <div class="detail-expand-header" onclick="toggleDetailCard('card-cuvee')">
+        <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+        <div class="detail-expand-title">
+          <strong>Le cuvée</strong>
+          <span id="detail-cuvee-subtitle">Catalogo bottiglie</span>
+        </div>
+        <i class="ti ti-chevron-right detail-expand-chevron"></i>
+      </div>
+      <div class="detail-expand-body">
+        <div id="detail-bottles-section">
+          <div id="detail-bottles-list">
+            <div style="padding:0 18px 16px;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Catalogo in aggiornamento.</div>
+          </div>
+          <div id="detail-bottles-lock" class="locked-row" style="display:none;">
+            <i class="ti ti-lock"></i>
+            <p>Catalogo completo disponibile con <strong>Piano Premium</strong>.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div style="height:30px;"></div>
@@ -1898,6 +1907,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 </div><!-- #app -->
 
-<script src="js/app.js?v=82"></script>
+<script src="js/app.js?v=83"></script>
 </body>
 </html>

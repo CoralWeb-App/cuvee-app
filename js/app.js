@@ -2954,6 +2954,10 @@ function openMaisonDetail(maisonId) {
   go('v-detail');
 }
 
+function toggleDetailCard(id) {
+  document.getElementById(id)?.classList.toggle('open');
+}
+
 async function loadDetailBottles(maisonId) {
   const listEl = document.getElementById('detail-bottles-list');
   const lockEl = document.getElementById('detail-bottles-lock');
@@ -2967,11 +2971,14 @@ async function loadDetailBottles(maisonId) {
       .order('is_featured', { ascending: false })
       .order('nome', { ascending: true });
 
+    const subtitleEl = document.getElementById('detail-cuvee-subtitle');
     if (!bottles || bottles.length === 0) {
       listEl.innerHTML = '<div style="padding:0 18px 16px;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Catalogo in aggiornamento.</div>';
       if (lockEl) lockEl.style.display = 'none';
+      if (subtitleEl) subtitleEl.textContent = 'Catalogo in aggiornamento';
       return;
     }
+    if (subtitleEl) subtitleEl.textContent = bottles.length + (bottles.length === 1 ? ' cuvée nel catalogo' : ' cuvée nel catalogo');
     const premium = isPremium();
     const visible = premium ? bottles : bottles.slice(0, 2);
     const locked = premium ? [] : bottles.slice(2);
