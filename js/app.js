@@ -2611,6 +2611,13 @@ function renderMaison() {
       normalizeStr(tipoLabelM[m.tipo]).includes(q) ||
       normalizeStr(m.zone?.nome).includes(q)
     );
+    // Ordina: match nel nome prima, poi gli altri
+    filtered.sort((a, b) => {
+      const an = normalizeStr(a.nome), bn = normalizeStr(b.nome);
+      const aScore = an.startsWith(q) ? 3 : an.includes(q) ? 2 : 1;
+      const bScore = bn.startsWith(q) ? 3 : bn.includes(q) ? 2 : 1;
+      return bScore - aScore;
+    });
   }
 
   if (filtered.length === 0) {
@@ -3103,6 +3110,16 @@ function renderBottiglie() {
       normalizeStr(tipoLabelB[b.tipo]).includes(q) ||
       (b.annata ? String(b.annata) : '').includes(q)
     );
+    // Ordina: match nel nome cuvée o maison prima, poi gli altri campi
+    filtered.sort((a, b) => {
+      const scoreOf = x => {
+        const nome = normalizeStr(x.nome), maison = normalizeStr(x.maison?.nome || '');
+        if (nome.startsWith(q) || maison.startsWith(q)) return 3;
+        if (nome.includes(q) || maison.includes(q)) return 2;
+        return 1;
+      };
+      return scoreOf(b) - scoreOf(a);
+    });
   }
   if (!filtered.length) {
     listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;font-family:var(--sans);font-size:16px;color:var(--ink-4);">Nessuna bottiglia trovata</div>';
