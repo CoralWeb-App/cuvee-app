@@ -107,7 +107,7 @@ html,body{
 .bn-carnet > span{color:#B8943A !important;font-size:11px !important;font-family:var(--sans) !important;font-weight:500 !important;}
 .bn-carnet.on .bn-carnet-circle{background:#2A1A08;box-shadow:0 -4px 16px rgba(212,168,60,.22),0 3px 10px rgba(30,18,8,.20);}
 .bn-carnet.on > span{color:var(--gold) !important;font-weight:600 !important;}
-.bn-carnet-badge{position:absolute;top:-1px;right:-1px;background:#C8A03A;color:#1E1208;border-radius:50%;width:15px;height:15px;border:2px solid var(--ivory);font-family:var(--sans);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;}
+.bn-carnet-badge{position:absolute;top:1px;right:1px;background:#C8A03A;color:#1E1208;border-radius:50%;width:19px;height:19px;border:2px solid var(--ivory);font-family:var(--sans);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;}
 
 /* ── TIPO CHIP (form nota) ── */
 .tipo-chip{font-family:var(--sans);font-size:13px;border:1px solid var(--border-2);border-radius:20px;padding:6px 13px;background:var(--white);color:var(--ink-4);cursor:pointer;transition:background .15s,border-color .15s,color .15s;white-space:nowrap;}
