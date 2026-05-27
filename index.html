@@ -283,7 +283,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="tab" data-tab="glossario" onclick="swTab(this,'glossario')"><i class="ti ti-book-2"></i><span>Glossaire</span></div>
     <div class="tab" data-tab="zone" onclick="swTab(this,'zone')"><i class="ti ti-map-2"></i><span>Terroirs</span></div>
     <div class="tab" data-tab="dosaggi" onclick="swTab(this,'dosaggi')"><i class="ti ti-droplet-half-2"></i><span>Dosages</span></div>
-    <div class="tab" data-tab="service" onclick="swTab(this,'service')"><i class="ti ti-glass-champagne"></i><span>Service</span></div>
+    <div class="tab" data-tab="service" onclick="swTab(this,'service')"><i class="ti ti-glass-full"></i><span>Service</span></div>
   </div>
   <div class="scroll">
 
@@ -846,26 +846,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:14px;">La forma del bicchiere definisce l'esperienza: amplifica gli aromi, modella il perlage e influenza l'equilibrio tra acidità e struttura. Scegliere bene il calice è il primo passo verso una degustazione autentica.</div>
       </div>
 
-      <!-- Pills overview -->
-      <div style="display:flex;gap:7px;overflow-x:auto;padding:0 14px 20px;scrollbar-width:none;">
-        <div style="flex:0 0 auto;display:flex;align-items:center;gap:6px;background:#FBF4E0;border:1px solid #E8D098;border-radius:20px;padding:6px 13px;">
-          <span style="font-size:15px;">🥂</span>
-          <div><div style="font-family:var(--serif);font-size:12px;font-weight:700;color:#8A6A1E;letter-spacing:.3px;">Tulipano</div><div style="font-family:var(--sans);font-size:10px;color:#A07830;margin-top:1px;">Top consigliato</div></div>
-        </div>
-        <div style="flex:0 0 auto;display:flex;align-items:center;gap:6px;background:#EDF7E0;border:1px solid #C6E8A0;border-radius:20px;padding:6px 13px;">
-          <span style="font-size:15px;">🍷</span>
-          <div><div style="font-family:var(--serif);font-size:12px;font-weight:700;color:#27500A;letter-spacing:.3px;">Universale</div><div style="font-family:var(--sans);font-size:10px;color:#4A7A1A;margin-top:1px;">Versatile</div></div>
-        </div>
-        <div style="flex:0 0 auto;display:flex;align-items:center;gap:6px;background:#E6EEF6;border:1px solid #A8C4DC;border-radius:20px;padding:6px 13px;">
-          <span style="font-size:15px;">🍸</span>
-          <div><div style="font-family:var(--serif);font-size:12px;font-weight:700;color:#1A3A5A;letter-spacing:.3px;">Coupe</div><div style="font-family:var(--sans);font-size:10px;color:#2E5878;margin-top:1px;">Glamour</div></div>
-        </div>
-        <div style="flex:0 0 auto;display:flex;align-items:center;gap:6px;background:#F4EEF8;border:1px solid #D4B8E0;border-radius:20px;padding:6px 13px;">
-          <span style="font-size:15px;">🫧</span>
-          <div><div style="font-family:var(--serif);font-size:12px;font-weight:700;color:#5A1870;letter-spacing:.3px;">Flûte</div><div style="font-family:var(--sans);font-size:10px;color:#7030A0;margin-top:1px;">Tradizionale</div></div>
-        </div>
-      </div>
-
       <!-- Glass types -->
       <div class="section-label" style="padding:0 14px 10px;">Tipologie di calice</div>
 
@@ -873,7 +853,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="detail-expand-card" id="glass-tulipano">
         <div class="detail-expand-header" onclick="toggleDetailCard('glass-tulipano')">
           <div class="detail-expand-icon" style="background:#FBF4E0;border-color:#E8D098;">
-            <i class="ti ti-glass-champagne" style="color:var(--gold);"></i>
+            <svg viewBox="0 0 20 26" width="18" height="22" fill="none" stroke="#b8922a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="25" x2="16" y2="25"/><line x1="10" y1="25" x2="10" y2="20"/><path d="M7.5 20C4 17 3 12 6 7 7.5 4 8 2.5 8 2.5H12C12 2.5 12.5 4 14 7 17 12 16 17 12.5 20Z"/></svg>
           </div>
           <div class="detail-expand-title">
             <strong>Tulipano</strong>
@@ -911,7 +891,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="detail-expand-card" id="glass-universale">
         <div class="detail-expand-header" onclick="toggleDetailCard('glass-universale')">
           <div class="detail-expand-icon" style="background:#EDF7E0;border-color:#C6E8A0;">
-            <i class="ti ti-glass-full" style="color:#3A8A2A;"></i>
+            <svg viewBox="0 0 20 26" width="18" height="22" fill="none" stroke="#3A8A2A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="25" x2="16" y2="25"/><line x1="10" y1="25" x2="10" y2="20"/><path d="M7.5 20C5 17 3.5 12 4 2H16C16.5 12 15 17 12.5 20Z"/></svg>
           </div>
           <div class="detail-expand-title">
             <strong>Calice Universale</strong>
@@ -949,7 +929,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="detail-expand-card" id="glass-coupe">
         <div class="detail-expand-header" onclick="toggleDetailCard('glass-coupe')">
           <div class="detail-expand-icon" style="background:#E6EEF6;border-color:#A8C4DC;">
-            <i class="ti ti-glass-champagne" style="color:#2E5878;"></i>
+            <svg viewBox="0 0 26 20" width="24" height="15" fill="none" stroke="#2E5878" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="19" x2="23" y2="19"/><line x1="13" y1="19" x2="13" y2="15"/><path d="M9 15C6.5 14.5 1 13 1 9H25C25 13 19.5 14.5 17 15Z"/></svg>
           </div>
           <div class="detail-expand-title">
             <strong>Coupe</strong>
@@ -986,7 +966,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="detail-expand-card" id="glass-flute">
         <div class="detail-expand-header" onclick="toggleDetailCard('glass-flute')">
           <div class="detail-expand-icon" style="background:#F4EEF8;border-color:#D4B8E0;">
-            <i class="ti ti-glass-full" style="color:#7030A0;"></i>
+            <svg viewBox="0 0 20 26" width="18" height="22" fill="none" stroke="#7030A0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="25" x2="16" y2="25"/><line x1="10" y1="25" x2="10" y2="20"/><path d="M7.5 20L7 2H13L12.5 20Z"/></svg>
           </div>
           <div class="detail-expand-title">
             <strong>Flûte</strong>
