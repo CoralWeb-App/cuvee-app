@@ -103,7 +103,8 @@ html,body{
 .bn.on i,.bn.on span{color:var(--gold);}
 .bn-carnet{position:relative;flex:1 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:flex-end !important;padding:4px 0 !important;gap:3px !important;background:transparent !important;border-radius:0 !important;margin:0 !important;top:auto !important;}
 .bn-carnet-circle{position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;background:#1E1208;border:3px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;}
-.bn-carnet-circle i{font-size:24px !important;color:#C8A03A !important;}
+.bn-carnet-circle > i{font-size:24px !important;color:#C8A03A !important;}
+.bn-carnet-badge i{font-size:9px !important;color:#1E1208 !important;}
 .bn-carnet > span{color:#B8943A !important;font-size:11px !important;font-family:var(--sans) !important;font-weight:500 !important;}
 .bn-carnet.on .bn-carnet-circle{background:#2A1A08;box-shadow:0 -4px 16px rgba(212,168,60,.22),0 3px 10px rgba(30,18,8,.20);}
 .bn-carnet.on > span{color:var(--gold) !important;font-weight:600 !important;}
