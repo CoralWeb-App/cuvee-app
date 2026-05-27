@@ -200,7 +200,7 @@ serve(async (req) => {
 
       const { data: bottles } = await adminSupa
         .from('bottiglie')
-        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_sa, foto_url, descrizione, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, maison(id, nome, slug)')
+        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, maison(id, nome, slug)')
         .eq('is_published', true)
         .eq('needs_review', false)
 
@@ -262,10 +262,9 @@ serve(async (req) => {
             slug:                 bottleSlug,
             maison_id:            maisonId,
             annata:               ai.is_sa ? null : (ai.annata ?? null),
-            is_sa:                ai.is_sa ?? true,
+            is_millesimato:       !(ai.is_sa ?? true),
             dosaggio_tipo:        ai.dosage ?? null,
-            tipo:                 ai.tipo ?? null,
-            descrizione:          ai.descrizione ?? null,
+            tipo:                 ai.tipo ? (ai.tipo as string).replace(/ /g, '_') : null,
             note_degustazione:    ai.note_degustazione ?? null,
             abbinamento:          ai.abbinamento ?? null,
             finestra_da:          ai.finestra_da ?? null,
@@ -279,6 +278,7 @@ serve(async (req) => {
             maturazione_mesi:     ai.maturazione_mesi ?? null,
             produzione_bottiglie: ai.produzione_bottiglie ?? null,
             score_medio:          ai.punteggio ?? null,
+            source:               'scan',
             is_published:         true,
             needs_review:         true,
           })
@@ -292,16 +292,17 @@ serve(async (req) => {
           const { data: nb2, error: bottErr2 } = await adminSupa
             .from('bottiglie')
             .insert({
-              nome:          ai.cuvee,
-              slug:          bottleSlug + '-' + Date.now(),
-              maison_id:     maisonId,
-              annata:        ai.is_sa ? null : (ai.annata ?? null),
-              is_sa:         ai.is_sa ?? true,
-              dosaggio_tipo: ai.dosage ?? null,
-              tipo:          ai.tipo ?? null,
-              score_medio:   ai.punteggio ?? null,
-              is_published:  true,
-              needs_review:  true,
+              nome:           ai.cuvee,
+              slug:           bottleSlug + '-' + Date.now(),
+              maison_id:      maisonId,
+              annata:         ai.is_sa ? null : (ai.annata ?? null),
+              is_millesimato: !(ai.is_sa ?? true),
+              dosaggio_tipo:  ai.dosage ?? null,
+              tipo:           ai.tipo ? (ai.tipo as string).replace(/ /g, '_') : null,
+              score_medio:    ai.punteggio ?? null,
+              source:         'scan',
+              is_published:   true,
+              needs_review:   true,
             })
             .select('id')
             .single()
@@ -413,11 +414,10 @@ serve(async (req) => {
       maison:             ai.maison,
       cuvee:              ai.cuvee,
       annata:             ai.annata,
-      is_sa:              ai.is_sa,
+      is_sa:              ai.is_sa ?? (mb ? !mb.is_millesimato : true),
       dosage:             ai.dosage,
       tipo:               ai.tipo,
       prestige:           ai.prestige,
-      descrizione:        ai.descrizione,
       is_in_catalog:      !!matchedBottle,
       matched_bottle:     matchedBottle,
       matched_bottle_id:  matchedBottle?.id ?? null,
