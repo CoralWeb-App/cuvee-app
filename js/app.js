@@ -3494,7 +3494,8 @@ async function _processScan(file, mode) {
     }
 
     _scanResult = result;
-    // Foto upload gestito dall'Edge Function (service role, bypassa RLS)
+    // Log debug errors from Edge Function (DB insert / storage)
+    if (result._debug) console.warn('scan _debug:', result._debug);
     _showScanLoading(false);
 
     if (mode === 'carnet') {

@@ -16,6 +16,13 @@ const json = (data: unknown, status = 200) =>
 
 const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
 
+// Genera slug URL-safe da una stringa
+const makeSlug = (s: string) => (s || '')
+  .toLowerCase()
+  .replace(/[àáâã]/g,'a').replace(/[èéêë]/g,'e').replace(/[ìíîï]/g,'i')
+  .replace(/[òóôõö]/g,'o').replace(/[ùúûü]/g,'u').replace(/[ñ]/g,'n')
+  .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
+
 const SYSTEM_PROMPT =
   'Sei un maestro sommelier con 30 anni di esperienza in Champagne e conoscenza enciclopedica di ogni maison, cuvee speciale e annata. ' +
   'Hai degustato migliaia di Champagne e conosci perfettamente blend, dosaggi, maturazioni e stile di ogni produttore.\n\n' +
@@ -231,7 +238,7 @@ serve(async (req) => {
       } else {
         const { data: newMaison, error: maisonErr } = await adminSupa
           .from('maison')
-          .insert({ nome: ai.maison, needs_review: true })
+          .insert({ nome: ai.maison, slug: makeSlug(ai.maison as string), needs_review: true })
           .select('id')
           .single()
         if (maisonErr) {
@@ -242,10 +249,17 @@ serve(async (req) => {
       }
 
       if (maisonId) {
+        // Genera slug univoco: maison-cuvee[-annata]
+        const bottleSlug = makeSlug(
+          (ai.maison as string) + '-' + (ai.cuvee as string) +
+          (!ai.is_sa && ai.annata ? '-' + ai.annata : '')
+        )
+
         const { data: nb, error: bottErr } = await adminSupa
           .from('bottiglie')
           .insert({
             nome:                 ai.cuvee,
+            slug:                 bottleSlug,
             maison_id:            maisonId,
             annata:               ai.is_sa ? null : (ai.annata ?? null),
             is_sa:                ai.is_sa ?? true,
@@ -274,11 +288,12 @@ serve(async (req) => {
         if (bottErr) {
           console.error('bottiglie insert error:', JSON.stringify(bottErr))
           _dbErrors.push('bottiglie: ' + bottErr.message)
-          // Retry con solo i campi essenziali
+          // Retry con soli campi essenziali + slug
           const { data: nb2, error: bottErr2 } = await adminSupa
             .from('bottiglie')
             .insert({
               nome:          ai.cuvee,
+              slug:          bottleSlug + '-' + Date.now(),
               maison_id:     maisonId,
               annata:        ai.is_sa ? null : (ai.annata ?? null),
               is_sa:         ai.is_sa ?? true,
@@ -307,6 +322,17 @@ serve(async (req) => {
 
     if (ai.is_champagne && bottleId && !bottleHasPhoto && image_base64) {
       try {
+        // Assicura che il bucket esista (crea se non esiste)
+        const { data: buckets } = await adminSupa.storage.listBuckets()
+        const bucketExists = (buckets || []).some((b: any) => b.name === 'champagne-photos')
+        if (!bucketExists) {
+          const { error: bucketErr } = await adminSupa.storage.createBucket('champagne-photos', { public: true })
+          if (bucketErr) {
+            console.error('bucket create error:', JSON.stringify(bucketErr))
+            _dbErrors.push('bucket_create: ' + bucketErr.message)
+          }
+        }
+
         const imageBytes = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
         const storagePath = 'bottles/' + bottleId + '.jpg'
 
