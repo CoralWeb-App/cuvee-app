@@ -73,7 +73,7 @@ serve(async (req) => {
 
     const aiMsg = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 1500,
       messages: [{
         role: 'user',
         content: [
@@ -83,7 +83,7 @@ serve(async (req) => {
           },
           {
             type: 'text',
-            text: `Sei un esperto sommelier di Champagne. Analizza con attenzione l'etichetta della bottiglia nell'immagine.
+            text: `Sei un esperto sommelier e critico di Champagne. Analizza con attenzione l'etichetta della bottiglia nell'immagine.
 
 Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
 {
@@ -97,6 +97,11 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
   "tipo": uno tra "blanc de blancs","blanc de noirs","rosé","assemblage" oppure null,
   "prestige": true se cuvée prestige/tête de cuvée (es. Dom Pérignon, Cristal, Belle Époque),
   "descrizione": "massimo 180 caratteri in italiano, tono elegante, oppure null",
+  "punteggio": numero intero 0-100 che rappresenta la qualità stimata di questo Champagne secondo la scala Parker/RVF basata sulle tue conoscenze (es. Dom Pérignon ~96, Moët Brut Impérial ~88), o null se non riesci a identificarlo con sufficiente certezza,
+  "note_degustazione": "note di degustazione professionali in italiano, 200-300 caratteri, con riferimenti a colore, perlage, profumi e gusto — oppure null",
+  "abbinamento": "2-3 abbinamenti gastronomici consigliati in italiano, separati da virgola — oppure null",
+  "finestra_da": anno intero di inizio della finestra di degustazione ottimale (es: 2024), o null,
+  "finestra_a": anno intero di fine della finestra di degustazione ottimale (es: 2035), o null,
   "not_champagne_type": "tipo di bevanda se NON è Champagne AOC, es: Prosecco, Cava, Franciacorta, vino bianco, birra... oppure null"
 }`,
           },
@@ -124,7 +129,7 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
 
       const { data: bottles } = await adminSupa
         .from('bottiglie')
-        .select('id, nome, tipo, dosaggio_tipo, annata, is_sa, foto_url, descrizione, prezzo_min, prezzo_max, fascia_prezzo, maison(id, nome, slug)')
+        .select('id, nome, tipo, dosaggio_tipo, annata, is_sa, foto_url, descrizione, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, maison(id, nome, slug)')
         .eq('is_published', true)
         .eq('needs_review', false)
 
@@ -172,16 +177,20 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
         const { data: nb } = await adminSupa
           .from('bottiglie')
           .insert({
-            nome:         ai.cuvee,
-            maison_id:    maisonId,
-            annata:       ai.is_sa ? null : (ai.annata ?? null),
-            is_sa:        ai.is_sa ?? true,
-            dosaggio_tipo: ai.dosage ?? null,
-            tipo:         ai.tipo ?? null,
-            descrizione:  ai.descrizione ?? null,
-            is_published: true,
-            source:       'ai_scan',
-            needs_review: true,
+            nome:              ai.cuvee,
+            maison_id:         maisonId,
+            annata:            ai.is_sa ? null : (ai.annata ?? null),
+            is_sa:             ai.is_sa ?? true,
+            dosaggio_tipo:     ai.dosage ?? null,
+            tipo:              ai.tipo ?? null,
+            descrizione:       ai.descrizione ?? null,
+            note_degustazione: ai.note_degustazione ?? null,
+            abbinamento:       ai.abbinamento ?? null,
+            finestra_da:       ai.finestra_da ?? null,
+            finestra_a:        ai.finestra_a  ?? null,
+            is_published:      true,
+            source:            'ai_scan',
+            needs_review:      true,
           })
           .select('id')
           .single()
@@ -189,45 +198,82 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
       }
     }
 
+    // ── Upload foto nel catalogo (service role, bypassa RLS) ─────
+    let uploadedPhotoUrl: string | null = null
+    const bottleId = matchedBottle?.id ?? newBottleId
+
+    if (ai.is_champagne && bottleId && !bottleHasPhoto && image_base64) {
+      try {
+        const imageBytes = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
+        const storagePath = 'bottles/' + bottleId + '.jpg'
+        const { error: uploadErr } = await adminSupa.storage
+          .from('champagne-photos')
+          .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
+        if (!uploadErr) {
+          const { data: urlData } = adminSupa.storage
+            .from('champagne-photos')
+            .getPublicUrl(storagePath)
+          uploadedPhotoUrl = urlData.publicUrl
+          await adminSupa.from('bottiglie')
+            .update({ foto_url: uploadedPhotoUrl })
+            .eq('id', bottleId)
+        }
+      } catch(e) {
+        console.error('photo upload error:', e)
+      }
+    }
+
     // ── Salva record scansione ───────────────────────────────────
     const { data: scan } = await userSupa
       .from('bottle_scans')
       .insert({
-        user_id:          user.id,
-        is_champagne:     ai.is_champagne ?? false,
-        detected_maison:  ai.maison ?? null,
-        detected_cuvee:   ai.cuvee ?? null,
-        detected_annata:  ai.annata ?? null,
-        detected_dosage:  ai.dosage ?? null,
-        detected_tipo:    ai.tipo ?? null,
-        confidence:       ai.confidence ?? 0,
+        user_id:            user.id,
+        is_champagne:       ai.is_champagne ?? false,
+        detected_maison:    ai.maison ?? null,
+        detected_cuvee:     ai.cuvee ?? null,
+        detected_annata:    ai.annata ?? null,
+        detected_dosage:    ai.dosage ?? null,
+        detected_tipo:      ai.tipo ?? null,
+        confidence:         ai.confidence ?? 0,
         not_champagne_type: ai.not_champagne_type ?? null,
-        matched_bottle_id: matchedBottle?.id ?? null,
-        new_bottle_id:    newBottleId,
-        result_json:      ai,
+        matched_bottle_id:  matchedBottle?.id ?? null,
+        new_bottle_id:      newBottleId,
+        result_json:        ai,
       })
       .select('id')
       .single()
 
+    // ── Enriched data: prefer catalog, fallback to AI ────────────
+    const mb = matchedBottle as any
+    const enriched = {
+      score_medio:       mb?.score_medio      ?? null,
+      note_degustazione: mb?.note_degustazione ?? ai.note_degustazione ?? null,
+      abbinamento:       mb?.abbinamento       ?? ai.abbinamento       ?? null,
+      finestra_da:       mb?.finestra_da       ?? ai.finestra_da       ?? null,
+      finestra_a:        mb?.finestra_a        ?? ai.finestra_a        ?? null,
+    }
+
     // ── Risposta ─────────────────────────────────────────────────
     return json({
-      scan_id:          scan?.id,
-      is_champagne:     ai.is_champagne,
-      confidence:       ai.confidence,
+      scan_id:            scan?.id,
+      is_champagne:       ai.is_champagne,
+      confidence:         ai.confidence,
       not_champagne_type: ai.not_champagne_type,
-      maison:           ai.maison,
-      cuvee:            ai.cuvee,
-      annata:           ai.annata,
-      is_sa:            ai.is_sa,
-      dosage:           ai.dosage,
-      tipo:             ai.tipo,
-      prestige:         ai.prestige,
-      descrizione:      ai.descrizione,
-      is_in_catalog:    !!matchedBottle,
-      matched_bottle:   matchedBottle,
-      matched_bottle_id: matchedBottle?.id ?? null,
-      new_bottle_id:    newBottleId,
-      bottle_has_photo: bottleHasPhoto,
+      maison:             ai.maison,
+      cuvee:              ai.cuvee,
+      annata:             ai.annata,
+      is_sa:              ai.is_sa,
+      dosage:             ai.dosage,
+      tipo:               ai.tipo,
+      prestige:           ai.prestige,
+      descrizione:        ai.descrizione,
+      is_in_catalog:      !!matchedBottle,
+      matched_bottle:     matchedBottle,
+      matched_bottle_id:  matchedBottle?.id ?? null,
+      new_bottle_id:      newBottleId,
+      bottle_has_photo:   bottleHasPhoto,
+      uploaded_photo_url: uploadedPhotoUrl,
+      ...enriched,
     })
 
   } catch (err) {

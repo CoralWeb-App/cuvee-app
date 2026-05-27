@@ -231,22 +231,30 @@ function selectPlan(el){
 }
 // CARNET
 let currentRating=0;
-let currentNoteType=null;
+let _noteTypes=[];  // array — supporta selezione multipla
 let _pendingPhotos=[];      // {id,dataUrl,blob,ext} – new photos to upload
 let _existingPhotoUrls=[];  // URLs already saved (edit mode)
 let _lightboxPhotos=[];
 let _lightboxIdx=0;
 
 function setNoteTipo(el, tipo){
-  if(currentNoteType === tipo){
-    // Tap sullo stesso chip → deseleziona
-    currentNoteType = null;
-    document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
-    return;
+  if (tipo === 'non_so') {
+    // "Non so" è esclusivo — deseleziona tutto il resto
+    _noteTypes = _noteTypes.includes('non_so') ? [] : ['non_so'];
+  } else {
+    // Rimuovi "non so" se era attivo
+    _noteTypes = _noteTypes.filter(t => t !== 'non_so');
+    const idx = _noteTypes.indexOf(tipo);
+    if (idx >= 0) { _noteTypes.splice(idx, 1); }
+    else          { _noteTypes.push(tipo); }
   }
-  currentNoteType = tipo;
-  document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
+  _syncTipoChips();
+}
+function _syncTipoChips() {
+  document.querySelectorAll('.tipo-chip').forEach(c => {
+    const m = /,'([^']+)'\)/.exec(c.getAttribute('onclick') || '');
+    c.classList.toggle('on', !!(m && _noteTypes.includes(m[1])));
+  });
 }
 
 // Chiamata dal pulsante Carnet nella bottom nav:
@@ -284,8 +292,8 @@ function checkAndNewNote(){
   const bottIdEl = document.getElementById('note-bottiglia-id');
   if (bottIdEl) bottIdEl.value = '';
   currentRating = 0;
-  currentNoteType = null;
-  document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
+  _noteTypes = [];
+  _syncTipoChips();
   // Reset form
   ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo'].forEach(id => {
     const el = document.getElementById(id);
@@ -318,8 +326,8 @@ function openNewNoteFromBottiglia(bottId) {
   const bottIdEl = document.getElementById('note-bottiglia-id');
   if (bottIdEl) bottIdEl.value = bottId;
   currentRating = 0;
-  currentNoteType = null;
-  document.querySelectorAll('.tipo-chip').forEach(c => c.classList.remove('on'));
+  _noteTypes = [];
+  _syncTipoChips();
   ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -342,12 +350,15 @@ function openNewNoteFromBottiglia(bottId) {
   const dosageEl = document.getElementById('note-dosage');
   if (dosageEl) dosageEl.value = b.dosaggio_tipo || '';
 
-  // Tipo chip
+  // Tipo chip (da catalogo)
   if (b.tipo) {
-    currentNoteType = b.tipo;
-    document.querySelectorAll('.tipo-chip').forEach(c => {
-      c.classList.toggle('on', c.getAttribute('onclick')?.includes("'" + b.tipo + "'"));
-    });
+    _noteTypes = Array.isArray(b.tipo) ? [...b.tipo] : [b.tipo];
+    if (b.annata && !b.is_sa && !_noteTypes.includes('millesimato')) _noteTypes.push('millesimato');
+    _syncTipoChips();
+    if (false) { // keep old pattern reference
+      document.querySelectorAll('.tipo-chip').forEach(c => {
+      });
+    }
   }
 
   // Foto dal catalogo come foto iniziale
@@ -616,7 +627,7 @@ async function saveNote(editId = null){
     longueur: parseInt(document.getElementById('val-lung')?.textContent) || null,
     aromi: Array.from(document.querySelectorAll('.aromi-pill.on')).map(el => el.textContent),
     data_degustazione: new Date().toISOString().split('T')[0],
-    tipo: currentNoteType || null
+    tipo: _noteTypes.length ? _noteTypes : null
   };
 
   if (!nota.maison_nome || !nota.cuvee_nome) {
@@ -1111,7 +1122,7 @@ async function loadMaison(filters = {}) {
       .order('ordine', { ascending: true });
 
     if (filters.zona) query = query.eq('zona_id', filters.zona);
-    if (filters.tipo) query = query.eq('tipo', filters.tipo);
+    if (filters.tipo) query = query.contains('tipo', [filters.tipo]);
     if (filters.featured) query = query.eq('is_featured', true);
     if (filters.search) query = query.textSearch('search_vector', filters.search);
 
@@ -1377,7 +1388,8 @@ function openNoteDetail(note) {
   if (!container) { go('v-carnet-detail'); return; }
 
   const _tipoLabel = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',prestige:'Prestige Cuvée',nature:'Brut Nature'};
-  const tipoLabel = (note.tipo && note.tipo !== 'non_so') ? (_tipoLabel[note.tipo]||'') : '';
+  const tipoArr = Array.isArray(note.tipo) ? note.tipo : (note.tipo ? [note.tipo] : []);
+  const tipoLabel = tipoArr.filter(t => t !== 'non_so').map(t => _tipoLabel[t]||t).join(' · ');
 
   const paramDefs = [
     {key:'acidite',      label:'Acidité',             color:'#4A8FA8',bg:'#E0EDF2',icon:'ti-droplet'},
@@ -1934,10 +1946,8 @@ function openEditNote(note) {
   if (lbl) lbl.textContent = labels[currentRating] || '';
 
   // Set tipo chip
-  currentNoteType = note.tipo || null;
-  document.querySelectorAll('.tipo-chip').forEach(c => {
-    c.classList.toggle('on', c.getAttribute('onclick')?.includes("'"+currentNoteType+"'"));
-  });
+  _noteTypes = Array.isArray(note.tipo) ? [...note.tipo] : (note.tipo ? [note.tipo] : []);
+  _syncTipoChips();
 
   // Set aromi
   document.querySelectorAll('.aromi-pill').forEach(pill => {
@@ -3478,15 +3488,7 @@ async function _processScan(file, mode) {
     }
 
     _scanResult = result;
-
-    // 5. Se champagne: carica foto nel catalogo se mancante
-    if (result.is_champagne) {
-      const bottleId = result.matched_bottle_id || result.new_bottle_id;
-      if (bottleId && !result.bottle_has_photo) {
-        await _uploadBottlePhoto(dataUrl, bottleId);
-      }
-    }
-
+    // Foto upload gestito dall'Edge Function (service role, bypassa RLS)
     _showScanLoading(false);
 
     if (mode === 'carnet') {
@@ -3555,9 +3557,12 @@ function _renderScanResult(result, photoDataUrl) {
   const annata = result.is_sa ? 'Sans Année' : (result.annata || b.annata || null);
   const dosage = result.dosage || b.dosaggio_tipo || null;
   const tipo   = result.tipo   || b.tipo          || null;
-  const photo  = (result.is_in_catalog && b.foto_url) ? b.foto_url
-               : (result._uploadedPhotoUrl || photoDataUrl);
-  const desc   = result.descrizione || b.descrizione || '';
+  const photo  = b.foto_url || result.uploaded_photo_url || photoDataUrl || '';
+  const score  = result.score_medio || b.score_medio || null;
+  const noteDeg    = result.note_degustazione || b.note_degustazione || '';
+  const abbinamento = result.abbinamento || b.abbinamento || '';
+  const finestra_da = result.finestra_da || b.finestra_da || null;
+  const finestra_a  = result.finestra_a  || b.finestra_a  || null;
 
   const badge = result.is_in_catalog
     ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
@@ -3567,45 +3572,86 @@ function _renderScanResult(result, photoDataUrl) {
   if (annata) pills += '<span class="scan-pill scan-pill-gold">' + annata + '</span>';
   if (dosage) pills += '<span class="scan-pill">' + dosage + '</span>';
   if (tipo)   pills += '<span class="scan-pill">' + tipo   + '</span>';
-  if (result.prestige) pills += '<span class="scan-pill scan-pill-gold">Prestige</span>';
+  if (result.prestige) pills += '<span class="scan-pill scan-pill-gold">✦ Prestige</span>';
 
-  const priceRow = (b.prezzo_min || b.fascia_prezzo)
-    ? '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin:4px 0 0;">'
+  const priceHtml = (b.prezzo_min || b.fascia_prezzo)
+    ? '<div style="font-family:var(--sans);font-size:13px;color:var(--gold);font-weight:500;margin-top:8px;">'
       + (b.prezzo_min ? 'da ' + b.prezzo_min + '€' : b.fascia_prezzo) + '</div>'
     : '';
 
+  // Foto verticale sinistra
+  const photoHtml = photo
+    ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.background=\'#1E1208\';this.style.display=\'none\'">'
+    : '<i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>';
+
+  // Score ring
+  const scoreHtml = score ? scoreRingSm(score) : '';
+
+  // Finestra di degustazione
+  let finestraHtml = '';
+  if (finestra_da || finestra_a) {
+    const now = new Date().getFullYear();
+    const from = finestra_da || now;
+    const to   = finestra_a  || (now + 8);
+    const span = to - from;
+    const elapsed = Math.min(Math.max(now - from, 0), span);
+    const pct = span > 0 ? Math.round((elapsed / span) * 100) : 0;
+    finestraHtml =
+      '<div class="form-section" style="margin:0 14px 14px;">'
+      + '<div class="form-section-title"><i class="ti ti-calendar-time"></i> Finestra di degustazione</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-top:10px;">'
+        + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">' + from + '</span>'
+        + '<div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden;">'
+          + '<div style="height:100%;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:4px;width:' + pct + '%;"></div>'
+        + '</div>'
+        + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">' + to + '</span>'
+      + '</div>'
+      + '</div>';
+  }
+
   const catalogBtn = result.is_in_catalog && result.matched_bottle_id
-    ? '<div style="padding:0 14px 8px;">'
+    ? '<div style="padding:0 14px 14px;">'
       + '<button class="btn-outline" style="width:100%;" onclick="go(\'v-bottiglia-detail\');loadBottiglia(\'' + result.matched_bottle_id + '\')">'
       + '<i class="ti ti-external-link"></i> Vedi scheda completa</button></div>'
     : '';
 
   container.innerHTML =
-    '<div class="scan-hero-wrap">'
-      + '<img class="scan-hero-img" src="' + photo + '" onerror="this.style.background=\'#1E1208\';this.style.display=\'none\'">'
-      + '<div class="scan-hero-grad"></div>'
-      + '<div class="scan-hero-info">'
+    // ── Layout: foto verticale sx + info dx ──
+    '<div style="display:flex;gap:14px;padding:16px 14px 0;align-items:flex-start;">'
+      + '<div style="width:40%;max-width:150px;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;flex-shrink:0;display:flex;align-items:center;justify-content:center;">'
+        + photoHtml
+      + '</div>'
+      + '<div style="flex:1;min-width:0;">'
         + badge
-        + '<div class="scan-hero-maison">' + maison + '</div>'
-        + '<div class="scan-hero-cuvee">'  + cuvee  + '</div>'
-        + '<div class="scan-hero-pills">'  + pills  + '</div>'
+        + '<div style="font-family:var(--sans);font-size:10px;color:var(--ink-4);letter-spacing:1.4px;text-transform:uppercase;margin:7px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + maison + '</div>'
+        + '<div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">' + cuvee + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' + pills + '</div>'
+        + priceHtml
+        + (scoreHtml ? '<div style="margin-top:10px;">' + scoreHtml + '</div>' : '')
       + '</div>'
     + '</div>'
-    + priceRow.replace('margin:4px 0 0;', 'padding:12px 18px 0;')
-    // ── L'hai assaggiata? card ──
-    + '<div class="scan-assaggiata-card">'
-      + '<div class="scan-assaggiata-icon"><i class="ti ti-notebook" style="font-size:20px;color:var(--gold);"></i></div>'
-      + '<div style="flex:1;">'
-        + '<div style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--ink);margin-bottom:4px;">L\'hai assaggiata?</div>'
-        + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.5;">Aggiungi questa bottiglia al tuo Carnet e tieni traccia di ogni degustazione.</div>'
-      + '</div>'
+    // ── "L'hai assaggiata?" card unificata ──
+    + '<div style="margin:16px 14px 4px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px 20px;text-align:center;">'
+      + '<div style="font-family:var(--serif);font-size:20px;color:var(--ink-2);font-style:italic;font-weight:600;margin-bottom:14px;">L\'hai assaggiata?</div>'
+      + '<button onclick="addToCarnetFromScan()" style="position:relative;width:100%;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:13px 20px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;">'
+        + '<span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>'
+        + '<i class="ti ti-notebook" style="font-size:17px;"></i> Aggiungi al Carnet'
+      + '</button>'
     + '</div>'
-    + '<button class="btn-gold" style="margin:0 14px 20px;width:calc(100% - 28px);" onclick="addToCarnetFromScan()">'
-      + '<i class="ti ti-notebook"></i> Aggiungi al Carnet</button>'
-    // ── Descrizione ──
-    + (desc ? '<div style="padding:0 18px 18px;font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">' + desc + '</div>' : '')
-    // ── Tasto scheda completa ──
-    + catalogBtn
+    // ── Note di degustazione ──
+    + (noteDeg ? '<div class="form-section" style="margin:14px 14px 0;">'
+        + '<div class="form-section-title"><i class="ti ti-notes"></i> Note di degustazione</div>'
+        + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:8px;">' + noteDeg + '</div>'
+      + '</div>' : '')
+    // ── Abbinamento ──
+    + (abbinamento ? '<div class="form-section" style="margin:14px 14px 0;">'
+        + '<div class="form-section-title"><i class="ti ti-chef-hat"></i> Abbinamento</div>'
+        + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:8px;">' + abbinamento + '</div>'
+      + '</div>' : '')
+    // ── Finestra ──
+    + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
+    // ── Scheda completa ──
+    + (catalogBtn ? '<div style="margin-top:4px;">' + catalogBtn + '</div>' : '')
     + '<div style="height:30px;"></div>';
 }
 
@@ -3637,19 +3683,45 @@ function _buildNonChampagneHTML(result, photoDataUrl) {
 // Pre-compila il form carnet dai dati scan e ci va direttamente
 function _fillCarnetFromScan(result, photoDataUrl) {
   resetPhotoStrip();
+  const b = result.matched_bottle || {};
+
+  // Campi testo
   const fields = {
-    'note-maison':  result.maison || result.matched_bottle?.maison?.nome || '',
-    'note-cuvee':   result.cuvee  || result.matched_bottle?.nome         || '',
-    'note-annata':  result.is_sa  ? 'SA' : (result.annata || ''),
-    'note-dosage':  result.dosage || result.matched_bottle?.dosaggio_tipo || '',
+    'note-maison': result.maison || b.maison?.nome || '',
+    'note-cuvee':  result.cuvee  || b.nome         || '',
+    'note-annata': result.is_sa  ? 'SA' : (result.annata || b.annata || ''),
+    'note-dosage': result.dosage || b.dosaggio_tipo || '',
   };
   Object.entries(fields).forEach(([id, val]) => {
     const el = document.getElementById(id);
     if (el && val) el.value = val;
   });
-  if (photoDataUrl) {
-    _pendingPhotos.push({ id: Date.now(), dataUrl: photoDataUrl });
+
+  // Tipo chips — mappa AI tipo → chip value
+  const tipoMap = {
+    'blanc de blancs': 'blanc_de_blancs',
+    'blanc de noirs':  'blanc_de_noirs',
+    'rosé':            'rose',
+  };
+  _noteTypes = [];
+  if (result.is_sa)                          _noteTypes.push('nv');
+  else if (result.annata || b.annata)        _noteTypes.push('millesimato');
+  const mappedTipo = result.tipo ? (tipoMap[result.tipo] || null) : null;
+  if (mappedTipo && !_noteTypes.includes(mappedTipo)) _noteTypes.push(mappedTipo);
+  if (result.dosage === 'Brut Nature')       _noteTypes.push('nature');
+  if (result.prestige)                       _noteTypes.push('prestige');
+  _syncTipoChips();
+
+  // Foto: usa uploaded_photo_url se disponibile (già salvata nel catalogo), altrimenti dataUrl locale
+  const photoToAdd = result.uploaded_photo_url || photoDataUrl;
+  if (photoToAdd) {
+    if (photoToAdd.startsWith('http')) {
+      _existingPhotoUrls.push(photoToAdd);
+    } else {
+      _pendingPhotos.push({ id: Date.now(), dataUrl: photoToAdd, blob: null, ext: 'jpg' });
+    }
   }
+
   go('v-carnet-new');
   requestAnimationFrame(() => { initAllSliders(5); renderPhotoStrip(); });
 }
