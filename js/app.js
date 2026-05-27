@@ -3473,7 +3473,7 @@ async function _processScan(file, mode) {
     }
     if (!resp.ok || result.error) {
       _showScanLoading(false);
-      showToast('Errore durante la scansione. Riprova.');
+      alert('Errore durante la scansione. Riprova.\n' + (result?.message || result?.error || ''));
       return;
     }
 
@@ -3498,7 +3498,7 @@ async function _processScan(file, mode) {
   } catch(err) {
     _showScanLoading(false);
     console.error('scan error:', err);
-    showToast('Errore di connessione. Controlla la rete e riprova.');
+    alert('Errore di connessione. Controlla la rete e riprova.\n' + (err?.message || err));
   }
 }
 
