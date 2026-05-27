@@ -1042,8 +1042,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <!-- CTA AGGIUNGI AL CARNET -->
     <div style="margin:20px 14px 4px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 18px 22px;text-align:center;">
-      <div style="font-family:var(--serif);font-size:21px;color:var(--ink-2);font-style:italic;margin-bottom:14px;">L'hai assaggiato?</div>
-      <button onclick="openNewNoteFromBottiglia(currentBottiglia.id)" style="position:relative;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:13px 28px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+      <div style="font-family:var(--serif);font-size:21px;color:var(--ink-2);font-style:italic;font-weight:600;margin-bottom:14px;">L'hai assaggiato?</div>
+      <button onclick="openNewNoteFromBottiglia(currentBottiglia.id)" style="position:relative;width:100%;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:13px 20px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;">
         <span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>
         <i class="ti ti-notebook" style="font-size:17px;"></i> Aggiungi al Carnet
       </button>
