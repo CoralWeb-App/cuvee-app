@@ -37,13 +37,14 @@ serve(async (req) => {
     if (authErr || !user) return json({ error: 'Non autorizzato' }, 401)
 
     // ── Rate limiting (free: 5 scansioni/mese) ──────────────────
-    const { data: profile } = await userSupa
+    // Usa adminSupa per leggere il profilo: bypassa RLS e garantisce lettura corretta
+    const { data: profile } = await adminSupa
       .from('profiles')
       .select('is_premium')
       .eq('id', user.id)
       .single()
 
-    const isPremium = profile?.is_premium ?? false
+    const isPremium = profile?.is_premium === true
 
     if (!isPremium) {
       const monthStart = new Date()

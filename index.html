@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=60"/>
+<link rel="stylesheet" href="css/style.css?v=61"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -2217,11 +2217,42 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="scan-load-sub">Il sommelier AI sta leggendo l'etichetta</div>
 </div>
 
+<!-- ═══ SCAN PHOTO PREVIEW ═══ -->
+<div id="scan-preview-modal">
+  <img id="scan-preview-img" src="" alt=""/>
+  <div class="scan-preview-bar">
+    <button class="scan-preview-cancel" onclick="cancelScanPreview()"><i class="ti ti-x"></i> Annulla</button>
+    <button class="scan-preview-confirm" onclick="confirmScanPreview()">
+      <i class="ti ti-scan"></i> Analizza Bottiglia
+    </button>
+  </div>
+</div>
+
+<!-- ═══ SCAN LIMIT MODAL ═══ -->
+<div id="scan-limit-modal">
+  <div class="scan-limit-inner">
+    <div class="scan-limit-emoji">🥂</div>
+    <div class="scan-limit-title">Scansioni del mese terminate</div>
+    <div class="scan-limit-desc">Hai usato le <strong>5 scansioni gratuite</strong> di questo mese. Si rinnovano il 1° del mese prossimo.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-label">Con <strong>Cuvée Premium</strong> hai:</div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><i class="ti ti-camera"></i><span>Scansioni illimitate ogni mese</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-building"></i><span>400+ produttori completi</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-bottle"></i><span>Catalogo completo di tutte le cuvées</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-calendar"></i><span>Guide des millésimes dal 2000</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-download"></i><span>Accesso offline ai contenuti</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closeScanLimitModal();go('v-paywall');">Scopri Premium</button>
+    <button class="scan-limit-skip" onclick="closeScanLimitModal()">Non ora</button>
+  </div>
+</div>
+
 <!-- Hidden inputs for scan & photo -->
-<input type="file" id="scan-input" accept="image/*" capture="environment" style="display:none;" onchange="handleScanFile(this)"/>
+<input type="file" id="scan-input" accept="image/*" style="display:none;" onchange="handleScanFile(this)"/>
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=87"></script>
+<script src="js/app.js?v=88"></script>
 </body>
 </html>

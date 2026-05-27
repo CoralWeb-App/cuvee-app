@@ -3418,13 +3418,36 @@ function startScan(mode) {
   input.click();
 }
 
-// Handler del file input
+// Handler del file input — mostra preview prima di analizzare
+let _pendingScanFile = null;
 function handleScanFile(inputEl) {
   const file = inputEl.files?.[0];
   if (!file) return;
   inputEl.value = '';
   const mode = inputEl.getAttribute('data-scan-mode') || 'explore';
-  _processScan(file, mode);
+  // Mostra anteprima con bottone "Analizza Bottiglia"
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    _pendingScanFile = { file, mode };
+    const img = document.getElementById('scan-preview-img');
+    const modal = document.getElementById('scan-preview-modal');
+    if (img) img.src = e.target.result;
+    if (modal) modal.classList.add('on');
+  };
+  reader.readAsDataURL(file);
+}
+function confirmScanPreview() {
+  const modal = document.getElementById('scan-preview-modal');
+  if (modal) modal.classList.remove('on');
+  if (_pendingScanFile) {
+    _processScan(_pendingScanFile.file, _pendingScanFile.mode);
+    _pendingScanFile = null;
+  }
+}
+function cancelScanPreview() {
+  const modal = document.getElementById('scan-preview-modal');
+  if (modal) modal.classList.remove('on');
+  _pendingScanFile = null;
 }
 
 // Comprime l'immagine via canvas (max 1200px, JPEG 0.82)
@@ -3527,12 +3550,14 @@ function _showScanLoading(show) {
   if (el) el.classList.toggle('on', show);
 }
 
-// Modal rate limit
+// Modal rate limit — overlay in-app
 function _showScanLimitModal() {
-  // Usa il paywall esistente oppure un semplice alert stylizzato
-  if (confirm('Hai usato le 5 scansioni mensili gratuite.\nVuoi passare a Premium per scansioni illimitate?')) {
-    go('v-paywall');
-  }
+  const modal = document.getElementById('scan-limit-modal');
+  if (modal) modal.classList.add('on');
+}
+function closeScanLimitModal() {
+  const modal = document.getElementById('scan-limit-modal');
+  if (modal) modal.classList.remove('on');
 }
 
 // Mostra la pagina risultato scansione
