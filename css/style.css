@@ -102,13 +102,17 @@ html,body{
 .bn span{font-family:var(--sans);font-size:13px;color:var(--ink-5);font-weight:400;}
 .bn.on i,.bn.on span{color:var(--gold);}
 .bn-carnet{position:relative;flex:1 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:flex-end !important;padding:4px 0 !important;gap:3px !important;background:transparent !important;border-radius:0 !important;margin:0 !important;top:auto !important;}
-.bn-carnet-circle{position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;background:#1E1208;border:3px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;}
+.bn-carnet-circle{position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;background:#1E1208;border:3px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;animation:scanGlow 3s ease-in-out infinite;}
+.bn-carnet-circle::before,.bn-carnet-circle::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid rgba(200,160,58,.55);animation:scanRipple 2.6s ease-out infinite;pointer-events:none;}
+.bn-carnet-circle::after{animation-delay:1.3s;}
 .bn-carnet-circle > i{font-size:24px !important;color:#C8A03A !important;}
 .bn-carnet-badge i{font-size:9px !important;color:#1E1208 !important;}
 .bn-carnet > span{color:#B8943A !important;font-size:11px !important;font-family:var(--sans) !important;font-weight:500 !important;}
 .bn-carnet.on .bn-carnet-circle{background:#2A1A08;box-shadow:0 -4px 16px rgba(212,168,60,.22),0 3px 10px rgba(30,18,8,.20);}
 .bn-carnet.on > span{color:var(--gold) !important;font-weight:600 !important;}
 .bn-carnet-badge{position:absolute;top:-4px;right:-4px;background:#C8A03A;color:#1E1208;border-radius:50%;width:18px;height:18px;border:2px solid var(--ivory);display:flex;align-items:center;justify-content:center;}
+@keyframes scanRipple{0%{transform:scale(1);opacity:.7;}100%{transform:scale(1.9);opacity:0;}}
+@keyframes scanGlow{0%,100%{box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18),0 0 0px rgba(200,160,58,0);}50%{box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18),0 0 18px rgba(200,160,58,.35);}}
 
 /* ── TIPO CHIP (form nota) ── */
 .tipo-chip{font-family:var(--sans);font-size:13px;border:1px solid var(--border-2);border-radius:20px;padding:6px 13px;background:var(--white);color:var(--ink-4);cursor:pointer;transition:background .15s,border-color .15s,color .15s;white-space:nowrap;}
