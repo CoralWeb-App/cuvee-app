@@ -3557,6 +3557,8 @@ function _renderScanResult(result, photoDataUrl) {
   const maison = result.maison || b.maison?.nome || '—';
   const cuvee  = result.cuvee  || b.nome         || '—';
   const annata = result.is_sa ? 'Sans Année' : (result.annata || b.annata || null);
+  // Titolo completo: cuvée + annata (per i millesimati l'anno è sempre nel titolo)
+  const cuveeTitle = cuvee + (!result.is_sa && annata ? ' ' + annata : '');
   const dosage = result.dosage || b.dosaggio_tipo || null;
   const tipo   = result.tipo   || b.tipo          || null;
   const photo  = b.foto_url || result.uploaded_photo_url || photoDataUrl || '';
@@ -3596,8 +3598,16 @@ function _renderScanResult(result, photoDataUrl) {
     ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.background=\'#1E1208\';this.style.display=\'none\'">'
     : '<i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>';
 
-  // Score ring
-  const scoreHtml = score ? scoreRingSm(score) : '';
+  // Score ring — allineato a sinistra come il testo
+  const scoreSmHtml = score ? (function() {
+    const deg = Math.round((score / 100) * 360);
+    return '<div style="display:inline-flex;flex-direction:column;align-items:flex-start;flex-shrink:0;margin-top:10px;">' +
+      '<div class="score-ring-sm" style="background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);">' +
+        '<div class="score-ring-sm-inner"><span class="score-num-sm">' + score + '</span></div>' +
+      '</div>' +
+      '<div class="score-label-sm">' + scoreLabel(score) + '</div>' +
+    '</div>';
+  })() : '';
 
   // Finestra di degustazione
   let finestraHtml = '';
@@ -3636,10 +3646,10 @@ function _renderScanResult(result, photoDataUrl) {
       + '<div style="flex:1;min-width:0;">'
         + badge
         + '<div style="font-family:var(--sans);font-size:10px;color:var(--ink-4);letter-spacing:1.4px;text-transform:uppercase;margin:7px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + maison + '</div>'
-        + '<div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">' + cuvee + '</div>'
+        + '<div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">' + cuveeTitle + '</div>'
         + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' + pills + '</div>'
         + priceHtml
-        + (scoreHtml ? '<div style="margin-top:10px;">' + scoreHtml + '</div>' : '')
+        + scoreSmHtml
       + '</div>'
     + '</div>'
     // ── "L'hai assaggiata?" card unificata ──
