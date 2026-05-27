@@ -3560,11 +3560,21 @@ function _renderScanResult(result, photoDataUrl) {
   const dosage = result.dosage || b.dosaggio_tipo || null;
   const tipo   = result.tipo   || b.tipo          || null;
   const photo  = b.foto_url || result.uploaded_photo_url || photoDataUrl || '';
-  const score  = result.score_medio || b.score_medio || null;
+  const score  = result.score_medio != null ? result.score_medio : (b.score_medio ?? null);
   const noteDeg    = result.note_degustazione || b.note_degustazione || '';
   const abbinamento = result.abbinamento || b.abbinamento || '';
   const finestra_da = result.finestra_da || b.finestra_da || null;
   const finestra_a  = result.finestra_a  || b.finestra_a  || null;
+  // Scheda tecnica fields
+  const pctChardonnay  = result.pct_chardonnay  ?? b.pct_chardonnay  ?? null;
+  const pctPinotNoir   = result.pct_pinot_noir   ?? b.pct_pinot_noir   ?? null;
+  const pctMeunier     = result.pct_meunier      ?? b.pct_meunier      ?? null;
+  const provenienzaUve = result.provenienza_uve  ?? b.provenienza_uve  ?? null;
+  const vinificazione  = result.vinificazione    ?? b.vinificazione    ?? null;
+  const malolattica    = result.malolattica      ?? b.malolattica      ?? null;
+  const maturazioneMesi= result.maturazione_mesi ?? b.maturazione_mesi ?? null;
+  const prodBottiglie  = result.produzione_bottiglie ?? b.produzione_bottiglie ?? null;
+  const dosaggioGl     = result.dosaggio_gl      ?? b.dosaggio_gl     ?? null;
 
   const badge = result.is_in_catalog
     ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
@@ -3650,6 +3660,36 @@ function _renderScanResult(result, photoDataUrl) {
         + '<div class="form-section-title"><i class="ti ti-chef-hat"></i> Abbinamento</div>'
         + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:8px;">' + abbinamento + '</div>'
       + '</div>' : '')
+    // ── Scheda tecnica ──
+    + (function(){
+        const uvaggi = [
+          pctChardonnay ? pctChardonnay + '% Chardonnay' : null,
+          pctPinotNoir  ? pctPinotNoir  + '% Pinot Noir'  : null,
+          pctMeunier    ? pctMeunier    + '% Meunier'      : null,
+        ].filter(Boolean).join(' · ');
+        const dosageLabel = dosaggioGl != null
+          ? (dosaggioGl + ' g/l' + (dosage ? ' — ' + dosage : ''))
+          : (dosage || null);
+        const schedaRows = [
+          { l:'Produttore',             v: maison !== '—' ? maison : null },
+          { l:'Uvaggi',                 v: uvaggi || null },
+          { l:'Dosaggio',               v: dosageLabel },
+          { l:'Provenienza uve',        v: provenienzaUve },
+          { l:'Vinificazione',          v: vinificazione },
+          { l:'Malolattica',            v: malolattica },
+          { l:'Maturazione sui lieviti',v: maturazioneMesi ? maturazioneMesi + ' mesi' : null },
+          { l:'Produzione',             v: prodBottiglie ? prodBottiglie.toLocaleString('it') + ' bott.' : null },
+        ].filter(r => r.v);
+        if (!schedaRows.length) return '';
+        return '<div class="form-section" style="margin:14px 14px 0;">'
+          + '<div class="form-section-title"><i class="ti ti-list-details"></i> Scheda tecnica</div>'
+          + '<div style="margin-top:8px;">'
+          + schedaRows.map(r =>
+              '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span>'
+              + '<span class="detail-row-value">' + r.v + '</span></div>'
+            ).join('')
+          + '</div></div>';
+      })()
     // ── Finestra ──
     + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
     // ── Scheda completa ──
@@ -3720,7 +3760,18 @@ function _fillCarnetFromScan(result, photoDataUrl) {
     if (photoToAdd.startsWith('http')) {
       _existingPhotoUrls.push(photoToAdd);
     } else {
-      _pendingPhotos.push({ id: Date.now(), dataUrl: photoToAdd, blob: null, ext: 'jpg' });
+      // Converte dataUrl in Blob reale per poterla caricare su storage
+      fetch(photoToAdd)
+        .then(r => r.blob())
+        .then(blob => {
+          _pendingPhotos.push({ id: Date.now(), dataUrl: photoToAdd, blob, ext: 'jpg' });
+          renderPhotoStrip();
+        })
+        .catch(() => {
+          // Fallback: usa dataUrl direttamente
+          _pendingPhotos.push({ id: Date.now(), dataUrl: photoToAdd, blob: null, ext: 'jpg' });
+          renderPhotoStrip();
+        });
     }
   }
 

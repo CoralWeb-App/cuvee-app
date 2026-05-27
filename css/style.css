@@ -862,13 +862,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .scan-hero-maison{font-family:var(--sans);font-size:11px;color:rgba(240,228,204,.55);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
 .scan-hero-cuvee{font-family:var(--serif);font-size:26px;color:#F0E4CC;font-weight:500;line-height:1.2;margin-bottom:10px;}
 .scan-hero-pills{display:flex;flex-wrap:wrap;gap:5px;}
-.scan-pill{font-family:var(--sans);font-size:11px;background:rgba(255,255,255,.11);color:rgba(240,228,204,.82);border:0.5px solid rgba(255,255,255,.16);border-radius:20px;padding:3px 9px;}
-.scan-pill-gold{background:rgba(200,160,58,.2);border-color:rgba(200,160,58,.32);color:#E8C870;}
+.scan-pill{font-family:var(--sans);font-size:11px;background:var(--ivory-3);color:var(--ink-3);border:0.5px solid var(--border-2);border-radius:20px;padding:3px 9px;font-weight:500;}
+.scan-pill-gold{background:rgba(184,146,42,.12);border-color:rgba(184,146,42,.35);color:#7a5a0a;}
 
 /* Scan result — source badge */
 .scan-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px;margin-bottom:8px;letter-spacing:.3px;}
-.scan-badge-catalog{background:rgba(60,180,80,.16);border:0.5px solid rgba(60,200,80,.32);color:#70DC80;}
-.scan-badge-ai{background:rgba(200,160,58,.16);border:0.5px solid rgba(200,160,58,.32);color:#E8C870;}
+.scan-badge-catalog{background:rgba(40,160,70,.10);border:0.5px solid rgba(40,160,70,.3);color:#1a7a3a;}
+.scan-badge-ai{background:rgba(184,146,42,.12);border:0.5px solid rgba(184,146,42,.35);color:#7a5a0a;}
 
 /* Scan result — "L'hai assaggiata?" card */
 .scan-assaggiata-card{display:flex;align-items:flex-start;gap:13px;margin:16px 14px 10px;background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:16px 14px;}

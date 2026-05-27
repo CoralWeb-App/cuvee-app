@@ -36,8 +36,7 @@ serve(async (req) => {
     const { data: { user }, error: authErr } = await userSupa.auth.getUser()
     if (authErr || !user) return json({ error: 'Non autorizzato' }, 401)
 
-    // ── Rate limiting (free: 5 scansioni/mese) ──────────────────
-    // Legge is_premium dalla tabella 'users' (dove viene salvato dall'app)
+    // ── Rate limiting ────────────────────────────────────────────
     const { data: profile } = await adminSupa
       .from('users')
       .select('is_premium')
@@ -74,7 +73,7 @@ serve(async (req) => {
 
     const aiMsg = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      max_tokens: 2000,
       messages: [{
         role: 'user',
         content: [
@@ -86,24 +85,34 @@ serve(async (req) => {
             type: 'text',
             text: `Sei un esperto sommelier e critico di Champagne. Analizza con attenzione l'etichetta della bottiglia nell'immagine.
 
+IMPORTANTE per il campo "cuvee": inserisci il nome COMPLETO della bottiglia incluse denominazioni speciali come P2, P3, Plénitude, R.D., Belle Époque, Blanc de Blancs, Rosé ecc, ma SENZA il nome del produttore se già in "maison" e SENZA l'annata. Esempi: "Dom Pérignon P2 Plénitude", "Cristal Rosé", "Belle Époque Blanc de Blancs", "Grande Cuvée".
+
 Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
 {
   "is_champagne": boolean,
   "confidence": 0-100,
-  "maison": "nome esatto del produttore come scritto in etichetta, o null",
-  "cuvee": "nome esatto della cuvée come scritto in etichetta, o null",
+  "maison": "nome esatto del produttore/maison come scritto in etichetta, o null",
+  "cuvee": "nome COMPLETO della cuvée incluse denominazioni speciali (P2, Plénitude, R.D., Belle Époque...) ma SENZA il nome maison se già sopra e SENZA l'annata, o null",
   "annata": "anno come stringa es '2018', o null se sans année",
   "is_sa": true se sans année/non-vintage, false se ha annata specifica,
   "dosage": uno tra "Brut Nature","Extra Brut","Brut","Extra Sec","Sec","Demi-Sec","Doux" oppure null,
   "tipo": uno tra "blanc de blancs","blanc de noirs","rosé","assemblage" oppure null,
   "prestige": true se cuvée prestige/tête de cuvée (es. Dom Pérignon, Cristal, Belle Époque),
   "descrizione": "massimo 180 caratteri in italiano, tono elegante, oppure null",
-  "punteggio": numero intero 0-100 che rappresenta la qualità stimata di questo Champagne secondo la scala Parker/RVF basata sulle tue conoscenze (es. Dom Pérignon ~96, Moët Brut Impérial ~88), o null se non riesci a identificarlo con sufficiente certezza,
-  "note_degustazione": "note di degustazione professionali in italiano, 200-300 caratteri, con riferimenti a colore, perlage, profumi e gusto — oppure null",
-  "abbinamento": "2-3 abbinamenti gastronomici consigliati in italiano, separati da virgola — oppure null",
-  "finestra_da": anno intero di inizio della finestra di degustazione ottimale (es: 2024), o null,
-  "finestra_a": anno intero di fine della finestra di degustazione ottimale (es: 2035), o null,
-  "not_champagne_type": "tipo di bevanda se NON è Champagne AOC, es: Prosecco, Cava, Franciacorta, vino bianco, birra... oppure null"
+  "punteggio": numero intero 0-100 qualità stimata scala Parker/RVF (Dom Pérignon ~96, Cristal ~95, Moët Brut Impérial ~88), o null se non identificabile con certezza,
+  "note_degustazione": "note degustazione professionali in italiano 200-300 caratteri, colore, perlage, profumi, gusto, oppure null",
+  "abbinamento": "2-3 abbinamenti gastronomici in italiano separati da virgola, oppure null",
+  "finestra_da": anno intero inizio finestra degustazione ottimale (es: 2024), o null,
+  "finestra_a": anno intero fine finestra degustazione (es: 2035), o null,
+  "pct_chardonnay": percentuale integer Chardonnay 0-100 o null,
+  "pct_pinot_noir": percentuale integer Pinot Noir 0-100 o null,
+  "pct_meunier": percentuale integer Pinot Meunier 0-100 o null,
+  "provenienza_uve": "zona/village di provenienza uve in italiano, oppure null",
+  "vinificazione": "breve descrizione vinificazione in italiano, oppure null",
+  "malolattica": "completa, parziale o assente, oppure null",
+  "maturazione_mesi": numero integer mesi maturazione sui lieviti o null,
+  "produzione_bottiglie": numero integer stima bottiglie prodotte o null,
+  "not_champagne_type": "tipo bevanda se NON è Champagne AOC (Prosecco, Cava, Franciacorta...) oppure null"
 }`,
           },
         ],
@@ -130,7 +139,7 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
 
       const { data: bottles } = await adminSupa
         .from('bottiglie')
-        .select('id, nome, tipo, dosaggio_tipo, annata, is_sa, foto_url, descrizione, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, maison(id, nome, slug)')
+        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_sa, foto_url, descrizione, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, maison(id, nome, slug)')
         .eq('is_published', true)
         .eq('needs_review', false)
 
@@ -153,7 +162,6 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
     let newBottleId: string | null = null
 
     if (ai.is_champagne && !matchedBottle && ai.maison && ai.cuvee) {
-      // Trova o crea la maison
       let maisonId: string | null = null
 
       const { data: existingMaison } = await adminSupa
@@ -166,35 +174,46 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
       if (existingMaison) {
         maisonId = existingMaison.id
       } else {
-        const { data: newMaison } = await adminSupa
+        const { data: newMaison, error: maisonErr } = await adminSupa
           .from('maison')
           .insert({ nome: ai.maison, source: 'ai_scan', needs_review: true })
           .select('id')
           .single()
+        if (maisonErr) console.error('maison insert error:', maisonErr)
         maisonId = newMaison?.id ?? null
       }
 
       if (maisonId) {
-        const { data: nb } = await adminSupa
+        const { data: nb, error: bottErr } = await adminSupa
           .from('bottiglie')
           .insert({
-            nome:              ai.cuvee,
-            maison_id:         maisonId,
-            annata:            ai.is_sa ? null : (ai.annata ?? null),
-            is_sa:             ai.is_sa ?? true,
-            dosaggio_tipo:     ai.dosage ?? null,
-            tipo:              ai.tipo ?? null,
-            descrizione:       ai.descrizione ?? null,
-            note_degustazione: ai.note_degustazione ?? null,
-            abbinamento:       ai.abbinamento ?? null,
-            finestra_da:       ai.finestra_da ?? null,
-            finestra_a:        ai.finestra_a  ?? null,
-            is_published:      true,
-            source:            'ai_scan',
-            needs_review:      true,
+            nome:                 ai.cuvee,
+            maison_id:            maisonId,
+            annata:               ai.is_sa ? null : (ai.annata ?? null),
+            is_sa:                ai.is_sa ?? true,
+            dosaggio_tipo:        ai.dosage ?? null,
+            tipo:                 ai.tipo ?? null,
+            descrizione:          ai.descrizione ?? null,
+            note_degustazione:    ai.note_degustazione ?? null,
+            abbinamento:          ai.abbinamento ?? null,
+            finestra_da:          ai.finestra_da ?? null,
+            finestra_a:           ai.finestra_a  ?? null,
+            pct_chardonnay:       ai.pct_chardonnay ?? null,
+            pct_pinot_noir:       ai.pct_pinot_noir ?? null,
+            pct_meunier:          ai.pct_meunier ?? null,
+            provenienza_uve:      ai.provenienza_uve ?? null,
+            vinificazione:        ai.vinificazione ?? null,
+            malolattica:          ai.malolattica ?? null,
+            maturazione_mesi:     ai.maturazione_mesi ?? null,
+            produzione_bottiglie: ai.produzione_bottiglie ?? null,
+            score_medio:          ai.punteggio ?? null,
+            is_published:         true,
+            source:               'ai_scan',
+            needs_review:         true,
           })
           .select('id')
           .single()
+        if (bottErr) console.error('bottiglie insert error:', bottErr)
         newBottleId = nb?.id ?? null
       }
     }
@@ -210,7 +229,9 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
         const { error: uploadErr } = await adminSupa.storage
           .from('champagne-photos')
           .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
-        if (!uploadErr) {
+        if (uploadErr) {
+          console.error('storage upload error:', uploadErr)
+        } else {
           const { data: urlData } = adminSupa.storage
             .from('champagne-photos')
             .getPublicUrl(storagePath)
@@ -247,11 +268,20 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
     // ── Enriched data: prefer catalog, fallback to AI ────────────
     const mb = matchedBottle as any
     const enriched = {
-      score_medio:       mb?.score_medio      ?? null,
-      note_degustazione: mb?.note_degustazione ?? ai.note_degustazione ?? null,
-      abbinamento:       mb?.abbinamento       ?? ai.abbinamento       ?? null,
-      finestra_da:       mb?.finestra_da       ?? ai.finestra_da       ?? null,
-      finestra_a:        mb?.finestra_a        ?? ai.finestra_a        ?? null,
+      score_medio:          mb?.score_medio          ?? (ai.punteggio as number | null) ?? null,
+      note_degustazione:    mb?.note_degustazione     ?? ai.note_degustazione    ?? null,
+      abbinamento:          mb?.abbinamento           ?? ai.abbinamento          ?? null,
+      finestra_da:          mb?.finestra_da           ?? ai.finestra_da          ?? null,
+      finestra_a:           mb?.finestra_a            ?? ai.finestra_a           ?? null,
+      pct_chardonnay:       mb?.pct_chardonnay        ?? ai.pct_chardonnay       ?? null,
+      pct_pinot_noir:       mb?.pct_pinot_noir        ?? ai.pct_pinot_noir       ?? null,
+      pct_meunier:          mb?.pct_meunier           ?? ai.pct_meunier          ?? null,
+      provenienza_uve:      mb?.provenienza_uve       ?? ai.provenienza_uve      ?? null,
+      vinificazione:        mb?.vinificazione         ?? ai.vinificazione        ?? null,
+      malolattica:          mb?.malolattica           ?? ai.malolattica          ?? null,
+      maturazione_mesi:     mb?.maturazione_mesi      ?? ai.maturazione_mesi     ?? null,
+      produzione_bottiglie: mb?.produzione_bottiglie  ?? ai.produzione_bottiglie ?? null,
+      dosaggio_gl:          mb?.dosaggio_gl           ?? null,
     }
 
     // ── Risposta ─────────────────────────────────────────────────
