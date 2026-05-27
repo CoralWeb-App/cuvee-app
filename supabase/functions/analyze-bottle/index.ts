@@ -72,8 +72,31 @@ serve(async (req) => {
     const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY')! })
 
     const aiMsg = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 2000,
+      system: `Sei un maestro sommelier con 30 anni di esperienza in Champagne e conoscenza enciclopedica di ogni maison, cuvée speciale e annata. Hai degustato migliaia di Champagne e conosci perfettamente blend, dosaggi, maturazioni e stile di ogni produttore.
+
+REGOLA CRITICA per il campo "cuvee" — LEGGI CON ATTENZIONE:
+Il campo "cuvee" deve contenere il nome COMPLETO e PRECISO della cuvée, incluse TUTTE le denominazioni speciali visibili sulla bottiglia o capsula, MA senza il nome della maison se già nel campo "maison" e senza l'annata.
+
+Esempi fondamentali:
+• Dom Pérignon con "P2" o "Deuxième Plénitude" sulla capsula/bottiglia → cuvee: "P2"
+• Dom Pérignon con "P3" o "Troisième Plénitude" → cuvee: "P3"
+• Dom Pérignon normale → cuvee: "Dom Pérignon"
+• Dom Pérignon Rosé → cuvee: "Dom Pérignon Rosé"
+• Bollinger R.D. → cuvee: "R.D."
+• Bollinger La Grande Année → cuvee: "La Grande Année"
+• Krug Grande Cuvée → cuvee: "Grande Cuvée"
+• Pol Roger Sir Winston Churchill → cuvee: "Sir Winston Churchill"
+• Pommery Louise → cuvee: "Louise"
+• Laurent-Perrier Grand Siècle → cuvee: "Grand Siècle"
+• Taittinger Comtes de Champagne → cuvee: "Comtes de Champagne"
+• Louis Roederer Cristal Rosé → cuvee: "Cristal Rosé"
+• Perrier-Jouët Belle Époque → cuvee: "Belle Époque"
+• Ruinart Blanc de Blancs → cuvee: "Blanc de Blancs"
+
+Per campi tecnici come uvaggio, dosaggio, vinificazione, malolattica, maturazione:
+Usa la tua conoscenza enciclopedica per fornire dati precisi anche se non visibili sull'etichetta. Per le grandi cuvées di cui conosci le caratteristiche, inserisci sempre i valori corretti.`,
       messages: [{
         role: 'user',
         content: [
@@ -83,28 +106,33 @@ serve(async (req) => {
           },
           {
             type: 'text',
-            text: `Sei un esperto sommelier e critico di Champagne. Analizza con attenzione l'etichetta della bottiglia nell'immagine.
+            text: `Analizza questa bottiglia con la massima precisione.
 
-IMPORTANTE per il campo "cuvee": inserisci il nome COMPLETO della bottiglia incluse denominazioni speciali come P2, P3, Plénitude, R.D., Belle Époque, Blanc de Blancs, Rosé ecc, ma SENZA il nome del produttore se già in "maison" e SENZA l'annata. Esempi: "Dom Pérignon P2 Plénitude", "Cristal Rosé", "Belle Époque Blanc de Blancs", "Grande Cuvée".
+ISTRUZIONI SPECIALI:
+1. "cuvee": scrivi il nome COMPLETO con denominazioni speciali (P2, P3, R.D., Belle Époque, Rosé, Blanc de Blancs, ecc.) ma SENZA il nome della maison se già in "maison" e SENZA l'annata
+2. Per uvaggio (pct_chardonnay/pinot_noir/meunier): usa la tua conoscenza delle caratteristiche tipiche della maison e cuvée
+3. Per maturazione_mesi: per cuvées speciali come P2 = ~144 mesi, P3 = ~216 mesi, R.D. = 180+ mesi, Dom Pérignon = ~84 mesi, Cristal = ~72 mesi
+4. Per score: usa la scala Parker/RVF (Dom Pérignon P2 ~98, Dom Pérignon ~96, Cristal ~95, Cristal Rosé ~97, Krug GC ~95, NM Brut ~87-89)
+5. Per finestra_da/finestra_a: calcola basandoti sull'annata e sulla tipologia
 
 Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
 {
   "is_champagne": boolean,
   "confidence": 0-100,
   "maison": "nome esatto del produttore/maison come scritto in etichetta, o null",
-  "cuvee": "nome COMPLETO della cuvée incluse denominazioni speciali (P2, Plénitude, R.D., Belle Époque...) ma SENZA il nome maison se già sopra e SENZA l'annata, o null",
+  "cuvee": "nome COMPLETO della cuvée con denominazioni speciali (P2, P3, R.D., Belle Époque, Rosé...) ma SENZA il nome maison se già sopra e SENZA l'annata, o null",
   "annata": "anno come stringa es '2018', o null se sans année",
   "is_sa": true se sans année/non-vintage, false se ha annata specifica,
   "dosage": uno tra "Brut Nature","Extra Brut","Brut","Extra Sec","Sec","Demi-Sec","Doux" oppure null,
   "tipo": uno tra "blanc de blancs","blanc de noirs","rosé","assemblage" oppure null,
-  "prestige": true se cuvée prestige/tête de cuvée (es. Dom Pérignon, Cristal, Belle Époque),
+  "prestige": true se cuvée prestige/tête de cuvée (es. Dom Pérignon, Cristal, Belle Époque, R.D., Grande Année, Grande Cuvée, Grand Siècle, Comtes de Champagne, Sir Winston Churchill, Louise, Clos du Mesnil),
   "descrizione": "massimo 180 caratteri in italiano, tono elegante, oppure null",
-  "punteggio": numero intero 0-100 qualità stimata scala Parker/RVF (Dom Pérignon ~96, Cristal ~95, Moët Brut Impérial ~88), o null se non identificabile con certezza,
-  "note_degustazione": "note degustazione professionali in italiano 200-300 caratteri, colore, perlage, profumi, gusto, oppure null",
+  "punteggio": numero intero 0-100 qualità stimata scala Parker/RVF, o null se non identificabile con certezza,
+  "note_degustazione": "note degustazione professionali in italiano 200-300 caratteri: colore, perlage, profumi, gusto, oppure null",
   "abbinamento": "2-3 abbinamenti gastronomici in italiano separati da virgola, oppure null",
   "finestra_da": anno intero inizio finestra degustazione ottimale (es: 2024), o null,
   "finestra_a": anno intero fine finestra degustazione (es: 2035), o null,
-  "pct_chardonnay": percentuale integer Chardonnay 0-100 o null,
+  "pct_chardonnay": percentuale integer Chardonnay 0-100 (usa conoscenza tipica della cuvée) o null,
   "pct_pinot_noir": percentuale integer Pinot Noir 0-100 o null,
   "pct_meunier": percentuale integer Pinot Meunier 0-100 o null,
   "provenienza_uve": "zona/village di provenienza uve in italiano, oppure null",
@@ -126,6 +154,7 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
       const m = rawText.match(/\{[\s\S]*\}/)
       if (m) ai = JSON.parse(m[0])
     } catch {
+      console.error('JSON parse error, raw:', rawText.substring(0, 500))
       ai = { is_champagne: false, confidence: 0 }
     }
 
@@ -160,10 +189,12 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
 
     // ── Auto-aggiunta al catalogo (Champagne non trovato) ────────
     let newBottleId: string | null = null
+    const _dbErrors: string[] = []
 
     if (ai.is_champagne && !matchedBottle && ai.maison && ai.cuvee) {
       let maisonId: string | null = null
 
+      // Cerca maison esistente (prima parola)
       const { data: existingMaison } = await adminSupa
         .from('maison')
         .select('id')
@@ -176,45 +207,75 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
       } else {
         const { data: newMaison, error: maisonErr } = await adminSupa
           .from('maison')
-          .insert({ nome: ai.maison, source: 'ai_scan', needs_review: true })
+          .insert({ nome: ai.maison, needs_review: true })
           .select('id')
           .single()
-        if (maisonErr) console.error('maison insert error:', maisonErr)
+        if (maisonErr) {
+          console.error('maison insert error:', JSON.stringify(maisonErr))
+          _dbErrors.push('maison: ' + maisonErr.message)
+        }
         maisonId = newMaison?.id ?? null
       }
 
       if (maisonId) {
+        const bottlePayload: Record<string, unknown> = {
+          nome:                 ai.cuvee,
+          maison_id:            maisonId,
+          annata:               ai.is_sa ? null : (ai.annata ?? null),
+          is_sa:                ai.is_sa ?? true,
+          dosaggio_tipo:        ai.dosage ?? null,
+          tipo:                 ai.tipo ?? null,
+          descrizione:          ai.descrizione ?? null,
+          note_degustazione:    ai.note_degustazione ?? null,
+          abbinamento:          ai.abbinamento ?? null,
+          finestra_da:          ai.finestra_da ?? null,
+          finestra_a:           ai.finestra_a  ?? null,
+          pct_chardonnay:       ai.pct_chardonnay ?? null,
+          pct_pinot_noir:       ai.pct_pinot_noir ?? null,
+          pct_meunier:          ai.pct_meunier ?? null,
+          provenienza_uve:      ai.provenienza_uve ?? null,
+          vinificazione:        ai.vinificazione ?? null,
+          malolattica:          ai.malolattica ?? null,
+          maturazione_mesi:     ai.maturazione_mesi ?? null,
+          produzione_bottiglie: ai.produzione_bottiglie ?? null,
+          score_medio:          ai.punteggio ?? null,
+          is_published:         true,
+          needs_review:         true,
+        }
+
         const { data: nb, error: bottErr } = await adminSupa
           .from('bottiglie')
-          .insert({
-            nome:                 ai.cuvee,
-            maison_id:            maisonId,
-            annata:               ai.is_sa ? null : (ai.annata ?? null),
-            is_sa:                ai.is_sa ?? true,
-            dosaggio_tipo:        ai.dosage ?? null,
-            tipo:                 ai.tipo ?? null,
-            descrizione:          ai.descrizione ?? null,
-            note_degustazione:    ai.note_degustazione ?? null,
-            abbinamento:          ai.abbinamento ?? null,
-            finestra_da:          ai.finestra_da ?? null,
-            finestra_a:           ai.finestra_a  ?? null,
-            pct_chardonnay:       ai.pct_chardonnay ?? null,
-            pct_pinot_noir:       ai.pct_pinot_noir ?? null,
-            pct_meunier:          ai.pct_meunier ?? null,
-            provenienza_uve:      ai.provenienza_uve ?? null,
-            vinificazione:        ai.vinificazione ?? null,
-            malolattica:          ai.malolattica ?? null,
-            maturazione_mesi:     ai.maturazione_mesi ?? null,
-            produzione_bottiglie: ai.produzione_bottiglie ?? null,
-            score_medio:          ai.punteggio ?? null,
-            is_published:         true,
-            source:               'ai_scan',
-            needs_review:         true,
-          })
+          .insert(bottlePayload)
           .select('id')
           .single()
-        if (bottErr) console.error('bottiglie insert error:', bottErr)
-        newBottleId = nb?.id ?? null
+
+        if (bottErr) {
+          console.error('bottiglie insert error:', JSON.stringify(bottErr))
+          _dbErrors.push('bottiglie: ' + bottErr.message)
+          // Retry senza campi opzionali che potrebbero mancare nello schema
+          const { data: nb2, error: bottErr2 } = await adminSupa
+            .from('bottiglie')
+            .insert({
+              nome:          ai.cuvee,
+              maison_id:     maisonId,
+              annata:        ai.is_sa ? null : (ai.annata ?? null),
+              is_sa:         ai.is_sa ?? true,
+              dosaggio_tipo: ai.dosage ?? null,
+              tipo:          ai.tipo ?? null,
+              score_medio:   ai.punteggio ?? null,
+              is_published:  true,
+              needs_review:  true,
+            })
+            .select('id')
+            .single()
+          if (bottErr2) {
+            console.error('bottiglie retry error:', JSON.stringify(bottErr2))
+            _dbErrors.push('bottiglie_retry: ' + bottErr2.message)
+          }
+          newBottleId = nb2?.id ?? null
+        } else {
+          newBottleId = nb?.id ?? null
+        }
       }
     }
 
@@ -226,22 +287,33 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
       try {
         const imageBytes = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
         const storagePath = 'bottles/' + bottleId + '.jpg'
+
         const { error: uploadErr } = await adminSupa.storage
           .from('champagne-photos')
           .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
+
         if (uploadErr) {
-          console.error('storage upload error:', uploadErr)
+          console.error('storage upload error:', JSON.stringify(uploadErr))
+          _dbErrors.push('storage: ' + uploadErr.message)
         } else {
           const { data: urlData } = adminSupa.storage
             .from('champagne-photos')
             .getPublicUrl(storagePath)
           uploadedPhotoUrl = urlData.publicUrl
-          await adminSupa.from('bottiglie')
+
+          const { error: updateErr } = await adminSupa
+            .from('bottiglie')
             .update({ foto_url: uploadedPhotoUrl })
             .eq('id', bottleId)
+
+          if (updateErr) {
+            console.error('foto_url update error:', JSON.stringify(updateErr))
+            _dbErrors.push('foto_update: ' + updateErr.message)
+          }
         }
       } catch(e) {
-        console.error('photo upload error:', e)
+        console.error('photo upload exception:', e)
+        _dbErrors.push('photo_exception: ' + String(e))
       }
     }
 
@@ -304,6 +376,7 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
       new_bottle_id:      newBottleId,
       bottle_has_photo:   bottleHasPhoto,
       uploaded_photo_url: uploadedPhotoUrl,
+      _debug:             _dbErrors.length ? _dbErrors : undefined,
       ...enriched,
     })
 
