@@ -37,9 +37,9 @@ serve(async (req) => {
     if (authErr || !user) return json({ error: 'Non autorizzato' }, 401)
 
     // ── Rate limiting (free: 5 scansioni/mese) ──────────────────
-    // Usa adminSupa per leggere il profilo: bypassa RLS e garantisce lettura corretta
+    // Legge is_premium dalla tabella 'users' (dove viene salvato dall'app)
     const { data: profile } = await adminSupa
-      .from('profiles')
+      .from('users')
       .select('is_premium')
       .eq('id', user.id)
       .single()
