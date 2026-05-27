@@ -3418,36 +3418,13 @@ function startScan(mode) {
   input.click();
 }
 
-// Handler del file input — mostra preview prima di analizzare
-let _pendingScanFile = null;
+// Handler del file input
 function handleScanFile(inputEl) {
   const file = inputEl.files?.[0];
   if (!file) return;
   inputEl.value = '';
   const mode = inputEl.getAttribute('data-scan-mode') || 'explore';
-  // Mostra anteprima con bottone "Analizza Bottiglia"
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    _pendingScanFile = { file, mode };
-    const img = document.getElementById('scan-preview-img');
-    const modal = document.getElementById('scan-preview-modal');
-    if (img) img.src = e.target.result;
-    if (modal) modal.classList.add('on');
-  };
-  reader.readAsDataURL(file);
-}
-function confirmScanPreview() {
-  const modal = document.getElementById('scan-preview-modal');
-  if (modal) modal.classList.remove('on');
-  if (_pendingScanFile) {
-    _processScan(_pendingScanFile.file, _pendingScanFile.mode);
-    _pendingScanFile = null;
-  }
-}
-function cancelScanPreview() {
-  const modal = document.getElementById('scan-preview-modal');
-  if (modal) modal.classList.remove('on');
-  _pendingScanFile = null;
+  _processScan(file, mode);
 }
 
 // Comprime l'immagine via canvas (max 1200px, JPEG 0.82)

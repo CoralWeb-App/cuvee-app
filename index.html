@@ -2217,17 +2217,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="scan-load-sub">Il sommelier AI sta leggendo l'etichetta</div>
 </div>
 
-<!-- ═══ SCAN PHOTO PREVIEW ═══ -->
-<div id="scan-preview-modal">
-  <img id="scan-preview-img" src="" alt=""/>
-  <div class="scan-preview-bar">
-    <button class="scan-preview-cancel" onclick="cancelScanPreview()"><i class="ti ti-x"></i> Annulla</button>
-    <button class="scan-preview-confirm" onclick="confirmScanPreview()">
-      <i class="ti ti-scan"></i> Analizza Bottiglia
-    </button>
-  </div>
-</div>
-
 <!-- ═══ SCAN LIMIT MODAL ═══ -->
 <div id="scan-limit-modal">
   <div class="scan-limit-inner">
@@ -2253,6 +2242,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=89"></script>
+<script src="js/app.js?v=90"></script>
 </body>
 </html>
