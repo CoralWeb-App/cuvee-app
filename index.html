@@ -2249,10 +2249,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div>
 
 <!-- Hidden inputs for scan & photo -->
-<input type="file" id="scan-input" accept="image/*" style="display:none;" onchange="handleScanFile(this)"/>
+<input type="file" id="scan-input" accept="image/*" capture="environment" style="display:none;" onchange="handleScanFile(this)"/>
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=88"></script>
+<script src="js/app.js?v=89"></script>
 </body>
 </html>
