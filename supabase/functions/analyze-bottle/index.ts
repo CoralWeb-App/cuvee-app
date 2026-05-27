@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.0'
+import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.39.0'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +15,64 @@ const json = (data: unknown, status = 200) =>
   })
 
 const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+
+const SYSTEM_PROMPT =
+  'Sei un maestro sommelier con 30 anni di esperienza in Champagne e conoscenza enciclopedica di ogni maison, cuvee speciale e annata. ' +
+  'Hai degustato migliaia di Champagne e conosci perfettamente blend, dosaggi, maturazioni e stile di ogni produttore.\n\n' +
+  'REGOLA CRITICA per il campo "cuvee":\n' +
+  'Il campo "cuvee" deve contenere il nome COMPLETO e PRECISO incluse TUTTE le denominazioni speciali visibili sulla bottiglia o capsula, ' +
+  'MA senza il nome della maison se gia nel campo "maison" e senza l annata.\n\n' +
+  'Esempi fondamentali:\n' +
+  '- Dom Perignon con P2 o Deuxieme Plenitude sulla capsula/bottiglia -> cuvee: "P2"\n' +
+  '- Dom Perignon con P3 o Troisieme Plenitude -> cuvee: "P3"\n' +
+  '- Dom Perignon normale -> cuvee: "Dom Perignon"\n' +
+  '- Dom Perignon Rose -> cuvee: "Dom Perignon Rose"\n' +
+  '- Bollinger R.D. -> cuvee: "R.D."\n' +
+  '- Bollinger La Grande Annee -> cuvee: "La Grande Annee"\n' +
+  '- Krug Grande Cuvee -> cuvee: "Grande Cuvee"\n' +
+  '- Pol Roger Sir Winston Churchill -> cuvee: "Sir Winston Churchill"\n' +
+  '- Laurent-Perrier Grand Siecle -> cuvee: "Grand Siecle"\n' +
+  '- Taittinger Comtes de Champagne -> cuvee: "Comtes de Champagne"\n' +
+  '- Louis Roederer Cristal Rose -> cuvee: "Cristal Rose"\n' +
+  '- Perrier-Jouet Belle Epoque -> cuvee: "Belle Epoque"\n\n' +
+  'Per campi tecnici come uvaggio, dosaggio, vinificazione, malolattica, maturazione: ' +
+  'usa la tua conoscenza enciclopedica per fornire dati precisi anche se non visibili sull etichetta.'
+
+const USER_PROMPT =
+  'Analizza questa bottiglia con la massima precisione.\n\n' +
+  'ISTRUZIONI:\n' +
+  '1. "cuvee": nome COMPLETO con denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs, ecc.) ma SENZA nome maison e SENZA annata\n' +
+  '2. Per uvaggio: usa la tua conoscenza delle caratteristiche tipiche della maison e cuvee\n' +
+  '3. Per maturazione_mesi: P2=144, P3=216, R.D.=180+, Dom Perignon=84, Cristal=72\n' +
+  '4. Per punteggio scala Parker/RVF: Dom Perignon P2=98, Dom Perignon=96, Cristal=95, Cristal Rose=97, Krug GC=95, NM Brut=87-89\n' +
+  '5. Per finestra_da/finestra_a: calcola basandoti sull annata e tipologia\n\n' +
+  'Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:\n' +
+  '{\n' +
+  '  "is_champagne": boolean,\n' +
+  '  "confidence": 0-100,\n' +
+  '  "maison": "nome esatto produttore come in etichetta, o null",\n' +
+  '  "cuvee": "nome COMPLETO con denominazioni speciali ma SENZA maison e SENZA annata, o null",\n' +
+  '  "annata": "anno come stringa es 2018, o null se sans annee",\n' +
+  '  "is_sa": true se sans annee/non-vintage, false se ha annata specifica,\n' +
+  '  "dosage": "Brut Nature" o "Extra Brut" o "Brut" o "Extra Sec" o "Sec" o "Demi-Sec" o "Doux" o null,\n' +
+  '  "tipo": "blanc de blancs" o "blanc de noirs" o "rose" o "assemblage" o null,\n' +
+  '  "prestige": true se cuvee prestige/tete de cuvee,\n' +
+  '  "descrizione": "max 180 caratteri italiano tono elegante, o null",\n' +
+  '  "punteggio": numero intero 0-100 qualita stimata scala Parker/RVF o null,\n' +
+  '  "note_degustazione": "200-300 caratteri italiano: colore perlage profumi gusto, o null",\n' +
+  '  "abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola, o null",\n' +
+  '  "finestra_da": anno intero inizio finestra degustazione ottimale o null,\n' +
+  '  "finestra_a": anno intero fine finestra degustazione o null,\n' +
+  '  "pct_chardonnay": percentuale integer Chardonnay 0-100 o null,\n' +
+  '  "pct_pinot_noir": percentuale integer Pinot Noir 0-100 o null,\n' +
+  '  "pct_meunier": percentuale integer Pinot Meunier 0-100 o null,\n' +
+  '  "provenienza_uve": "zona/village provenienza uve italiano, o null",\n' +
+  '  "vinificazione": "breve descrizione vinificazione italiano, o null",\n' +
+  '  "malolattica": "completa" o "parziale" o "assente" o null,\n' +
+  '  "maturazione_mesi": numero integer mesi maturazione sui lieviti o null,\n' +
+  '  "produzione_bottiglie": numero integer stima bottiglie prodotte o null,\n' +
+  '  "not_champagne_type": "tipo bevanda se NON e Champagne AOC, o null"\n' +
+  '}'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -71,84 +129,51 @@ serve(async (req) => {
     // ── Anthropic Vision ─────────────────────────────────────────
     const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY')! })
 
-    const aiMsg = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2000,
-      system: `Sei un maestro sommelier con 30 anni di esperienza in Champagne e conoscenza enciclopedica di ogni maison, cuvée speciale e annata. Hai degustato migliaia di Champagne e conosci perfettamente blend, dosaggi, maturazioni e stile di ogni produttore.
-
-REGOLA CRITICA per il campo "cuvee" — LEGGI CON ATTENZIONE:
-Il campo "cuvee" deve contenere il nome COMPLETO e PRECISO della cuvée, incluse TUTTE le denominazioni speciali visibili sulla bottiglia o capsula, MA senza il nome della maison se già nel campo "maison" e senza l'annata.
-
-Esempi fondamentali:
-• Dom Pérignon con "P2" o "Deuxième Plénitude" sulla capsula/bottiglia → cuvee: "P2"
-• Dom Pérignon con "P3" o "Troisième Plénitude" → cuvee: "P3"
-• Dom Pérignon normale → cuvee: "Dom Pérignon"
-• Dom Pérignon Rosé → cuvee: "Dom Pérignon Rosé"
-• Bollinger R.D. → cuvee: "R.D."
-• Bollinger La Grande Année → cuvee: "La Grande Année"
-• Krug Grande Cuvée → cuvee: "Grande Cuvée"
-• Pol Roger Sir Winston Churchill → cuvee: "Sir Winston Churchill"
-• Pommery Louise → cuvee: "Louise"
-• Laurent-Perrier Grand Siècle → cuvee: "Grand Siècle"
-• Taittinger Comtes de Champagne → cuvee: "Comtes de Champagne"
-• Louis Roederer Cristal Rosé → cuvee: "Cristal Rosé"
-• Perrier-Jouët Belle Époque → cuvee: "Belle Époque"
-• Ruinart Blanc de Blancs → cuvee: "Blanc de Blancs"
-
-Per campi tecnici come uvaggio, dosaggio, vinificazione, malolattica, maturazione:
-Usa la tua conoscenza enciclopedica per fornire dati precisi anche se non visibili sull'etichetta. Per le grandi cuvées di cui conosci le caratteristiche, inserisci sempre i valori corretti.`,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type, data: image_base64 },
-          },
-          {
-            type: 'text',
-            text: `Analizza questa bottiglia con la massima precisione.
-
-ISTRUZIONI SPECIALI:
-1. "cuvee": scrivi il nome COMPLETO con denominazioni speciali (P2, P3, R.D., Belle Époque, Rosé, Blanc de Blancs, ecc.) ma SENZA il nome della maison se già in "maison" e SENZA l'annata
-2. Per uvaggio (pct_chardonnay/pinot_noir/meunier): usa la tua conoscenza delle caratteristiche tipiche della maison e cuvée
-3. Per maturazione_mesi: per cuvées speciali come P2 = ~144 mesi, P3 = ~216 mesi, R.D. = 180+ mesi, Dom Pérignon = ~84 mesi, Cristal = ~72 mesi
-4. Per score: usa la scala Parker/RVF (Dom Pérignon P2 ~98, Dom Pérignon ~96, Cristal ~95, Cristal Rosé ~97, Krug GC ~95, NM Brut ~87-89)
-5. Per finestra_da/finestra_a: calcola basandoti sull'annata e sulla tipologia
-
-Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
-{
-  "is_champagne": boolean,
-  "confidence": 0-100,
-  "maison": "nome esatto del produttore/maison come scritto in etichetta, o null",
-  "cuvee": "nome COMPLETO della cuvée con denominazioni speciali (P2, P3, R.D., Belle Époque, Rosé...) ma SENZA il nome maison se già sopra e SENZA l'annata, o null",
-  "annata": "anno come stringa es '2018', o null se sans année",
-  "is_sa": true se sans année/non-vintage, false se ha annata specifica,
-  "dosage": uno tra "Brut Nature","Extra Brut","Brut","Extra Sec","Sec","Demi-Sec","Doux" oppure null,
-  "tipo": uno tra "blanc de blancs","blanc de noirs","rosé","assemblage" oppure null,
-  "prestige": true se cuvée prestige/tête de cuvée (es. Dom Pérignon, Cristal, Belle Époque, R.D., Grande Année, Grande Cuvée, Grand Siècle, Comtes de Champagne, Sir Winston Churchill, Louise, Clos du Mesnil),
-  "descrizione": "massimo 180 caratteri in italiano, tono elegante, oppure null",
-  "punteggio": numero intero 0-100 qualità stimata scala Parker/RVF, o null se non identificabile con certezza,
-  "note_degustazione": "note degustazione professionali in italiano 200-300 caratteri: colore, perlage, profumi, gusto, oppure null",
-  "abbinamento": "2-3 abbinamenti gastronomici in italiano separati da virgola, oppure null",
-  "finestra_da": anno intero inizio finestra degustazione ottimale (es: 2024), o null,
-  "finestra_a": anno intero fine finestra degustazione (es: 2035), o null,
-  "pct_chardonnay": percentuale integer Chardonnay 0-100 (usa conoscenza tipica della cuvée) o null,
-  "pct_pinot_noir": percentuale integer Pinot Noir 0-100 o null,
-  "pct_meunier": percentuale integer Pinot Meunier 0-100 o null,
-  "provenienza_uve": "zona/village di provenienza uve in italiano, oppure null",
-  "vinificazione": "breve descrizione vinificazione in italiano, oppure null",
-  "malolattica": "completa, parziale o assente, oppure null",
-  "maturazione_mesi": numero integer mesi maturazione sui lieviti o null,
-  "produzione_bottiglie": numero integer stima bottiglie prodotte o null,
-  "not_champagne_type": "tipo bevanda se NON è Champagne AOC (Prosecco, Cava, Franciacorta...) oppure null"
-}`,
-          },
-        ],
-      }],
-    })
+    let rawText = ''
+    try {
+      const aiMsg = await anthropic.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 2000,
+        system: SYSTEM_PROMPT,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: media_type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: image_base64 },
+            },
+            { type: 'text', text: USER_PROMPT },
+          ],
+        }],
+      })
+      rawText = aiMsg.content[0].type === 'text' ? aiMsg.content[0].text : ''
+    } catch (aiErr: any) {
+      console.error('Sonnet error, trying haiku:', JSON.stringify(aiErr))
+      // Fallback su Haiku se Sonnet non disponibile
+      try {
+        const fallbackMsg = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 2000,
+          system: SYSTEM_PROMPT,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: { type: 'base64', media_type: media_type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: image_base64 },
+              },
+              { type: 'text', text: USER_PROMPT },
+            ],
+          }],
+        })
+        rawText = fallbackMsg.content[0].type === 'text' ? fallbackMsg.content[0].text : ''
+      } catch (fallbackErr: any) {
+        console.error('Haiku fallback error:', JSON.stringify(fallbackErr))
+        return json({ error: 'AI non disponibile: ' + (aiErr?.message || String(aiErr)) }, 500)
+      }
+    }
 
     // ── Parse JSON risposta AI ───────────────────────────────────
-    const rawText = aiMsg.content[0].type === 'text' ? aiMsg.content[0].text : ''
     let ai: Record<string, unknown> = {}
     try {
       const m = rawText.match(/\{[\s\S]*\}/)
@@ -194,7 +219,6 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
     if (ai.is_champagne && !matchedBottle && ai.maison && ai.cuvee) {
       let maisonId: string | null = null
 
-      // Cerca maison esistente (prima parola)
       const { data: existingMaison } = await adminSupa
         .from('maison')
         .select('id')
@@ -218,41 +242,39 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
       }
 
       if (maisonId) {
-        const bottlePayload: Record<string, unknown> = {
-          nome:                 ai.cuvee,
-          maison_id:            maisonId,
-          annata:               ai.is_sa ? null : (ai.annata ?? null),
-          is_sa:                ai.is_sa ?? true,
-          dosaggio_tipo:        ai.dosage ?? null,
-          tipo:                 ai.tipo ?? null,
-          descrizione:          ai.descrizione ?? null,
-          note_degustazione:    ai.note_degustazione ?? null,
-          abbinamento:          ai.abbinamento ?? null,
-          finestra_da:          ai.finestra_da ?? null,
-          finestra_a:           ai.finestra_a  ?? null,
-          pct_chardonnay:       ai.pct_chardonnay ?? null,
-          pct_pinot_noir:       ai.pct_pinot_noir ?? null,
-          pct_meunier:          ai.pct_meunier ?? null,
-          provenienza_uve:      ai.provenienza_uve ?? null,
-          vinificazione:        ai.vinificazione ?? null,
-          malolattica:          ai.malolattica ?? null,
-          maturazione_mesi:     ai.maturazione_mesi ?? null,
-          produzione_bottiglie: ai.produzione_bottiglie ?? null,
-          score_medio:          ai.punteggio ?? null,
-          is_published:         true,
-          needs_review:         true,
-        }
-
         const { data: nb, error: bottErr } = await adminSupa
           .from('bottiglie')
-          .insert(bottlePayload)
+          .insert({
+            nome:                 ai.cuvee,
+            maison_id:            maisonId,
+            annata:               ai.is_sa ? null : (ai.annata ?? null),
+            is_sa:                ai.is_sa ?? true,
+            dosaggio_tipo:        ai.dosage ?? null,
+            tipo:                 ai.tipo ?? null,
+            descrizione:          ai.descrizione ?? null,
+            note_degustazione:    ai.note_degustazione ?? null,
+            abbinamento:          ai.abbinamento ?? null,
+            finestra_da:          ai.finestra_da ?? null,
+            finestra_a:           ai.finestra_a  ?? null,
+            pct_chardonnay:       ai.pct_chardonnay ?? null,
+            pct_pinot_noir:       ai.pct_pinot_noir ?? null,
+            pct_meunier:          ai.pct_meunier ?? null,
+            provenienza_uve:      ai.provenienza_uve ?? null,
+            vinificazione:        ai.vinificazione ?? null,
+            malolattica:          ai.malolattica ?? null,
+            maturazione_mesi:     ai.maturazione_mesi ?? null,
+            produzione_bottiglie: ai.produzione_bottiglie ?? null,
+            score_medio:          ai.punteggio ?? null,
+            is_published:         true,
+            needs_review:         true,
+          })
           .select('id')
           .single()
 
         if (bottErr) {
           console.error('bottiglie insert error:', JSON.stringify(bottErr))
           _dbErrors.push('bottiglie: ' + bottErr.message)
-          // Retry senza campi opzionali che potrebbero mancare nello schema
+          // Retry con solo i campi essenziali
           const { data: nb2, error: bottErr2 } = await adminSupa
             .from('bottiglie')
             .insert({
@@ -382,6 +404,6 @@ Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:
 
   } catch (err) {
     console.error('analyze-bottle error:', err)
-    return json({ error: "Errore durante l'analisi. Riprova." }, 500)
+    return json({ error: 'Errore interno: ' + String(err) }, 500)
   }
 })
