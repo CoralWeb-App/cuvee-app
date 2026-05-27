@@ -3728,25 +3728,41 @@ function _renderScanResult(result, photoDataUrl) {
 
 // HTML per bottiglia non Champagne
 function _buildNonChampagneHTML(result, photoDataUrl) {
-  const tipo = result.not_champagne_type || 'qualcosa di diverso';
+  const tipo = result.not_champagne_type || 'Bevanda non identificata';
   const photoHtml = photoDataUrl
-    ? '<img src="' + photoDataUrl + '" style="width:120px;height:160px;object-fit:cover;border-radius:12px;margin:16px auto;display:block;box-shadow:0 4px 20px rgba(0,0,0,.15);">'
-    : '';
-  return '<div class="scan-not-champ-card">'
-    + '<div style="font-size:52px;margin-bottom:16px;">🕵️</div>'
-    + '<div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:10px;">Ho visto tutto!</div>'
-    + photoHtml
-    + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-bottom:8px;">'
-      + 'Quello che hai in mano sembra essere <strong>' + tipo + '</strong> — non proprio la zona Champagne...'
+    ? '<div style="width:110px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;">'
+        + '<img src="' + photoDataUrl + '" style="width:100%;height:100%;object-fit:cover;">'
+      + '</div>'
+    : '<div style="width:110px;flex-shrink:0;border-radius:12px;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;">'
+        + '<i class="ti ti-bottle" style="font-size:32px;color:rgba(200,160,58,.3);"></i>'
+      + '</div>';
+  return '<div style="padding:16px 14px 0;">'
+    // ── Layout foto + info ──
+    + '<div style="display:flex;gap:14px;align-items:flex-start;">'
+      + photoHtml
+      + '<div style="flex:1;min-width:0;">'
+        + '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(180,60,40,.10);border:0.5px solid rgba(180,60,40,.3);border-radius:20px;padding:3px 9px;margin-bottom:10px;">'
+          + '<span style="font-family:var(--sans);font-size:11px;font-weight:500;color:#8b2a1a;letter-spacing:.3px;">Non è Champagne AOC</span>'
+        + '</div>'
+        + '<div style="font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:10px;">' + tipo + '</div>'
+        + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.6;">'
+          + 'Non proviene dalla zona Champagne o non rispetta il disciplinare AOC.'
+        + '</div>'
+      + '</div>'
     + '</div>'
-    + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-bottom:24px;">'
-      + 'Nessun problema! Cuvée è aperta a tutti. Puoi comunque usarla per tenere traccia di tutto quello che assaggi — Champagne o no. 🥂'
-    + '</div>'
-    + '<div style="display:flex;flex-direction:column;gap:10px;">'
-      + '<button class="btn-gold" onclick="addToCarnetFromScan(_scanResult)">'
-        + '<i class="ti ti-notebook"></i> Aggiungi comunque al Carnet</button>'
-      + '<button class="btn-outline" onclick="startScan(\'explore\')">'
-        + '<i class="ti ti-camera"></i> Riprova la scansione</button>'
+    // ── Divider + messaggio ──
+    + '<div style="margin:20px 0 0;padding:16px 0 0;border-top:1px solid var(--border);">'
+      + '<div style="font-family:var(--serif);font-size:17px;color:var(--ink-2);font-style:italic;font-weight:600;margin-bottom:6px;">Vuoi comunque aggiungerlo?</div>'
+      + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.6;margin-bottom:18px;">Cuvée è aperta a tutto ciò che assaggi. Tieni traccia anche di questa esperienza nel tuo Carnet.</div>'
+      // ── Pulsante Aggiungi (stesso stile champagne) ──
+      + '<button onclick="addToCarnetFromScan(_scanResult)" style="position:relative;width:100%;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:13px 20px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;margin-bottom:10px;">'
+        + '<span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>'
+        + '<i class="ti ti-notebook" style="font-size:17px;"></i> Aggiungi al Carnet'
+      + '</button>'
+      // ── Pulsante Riprova ──
+      + '<button class="btn-outline" onclick="startScan(\'explore\')" style="width:100%;">'
+        + '<i class="ti ti-camera"></i> Riprova la scansione'
+      + '</button>'
     + '</div>'
   + '</div><div style="height:30px;"></div>';
 }
