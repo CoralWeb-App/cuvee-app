@@ -3711,6 +3711,14 @@ function _renderScanResult(result, photoDataUrl) {
     + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
     // ── Scheda completa ──
     + (catalogBtn ? '<div style="margin-top:4px;">' + catalogBtn + '</div>' : '')
+    // ── Debug panel (visibile su iPhone, rimuovere dopo test) ──
+    + '<div style="margin:14px 14px 0;padding:12px;background:#f8f4e8;border:1px solid #c8a03a55;border-radius:8px;font-family:monospace;font-size:11px;color:#5a4010;word-break:break-all;">'
+      + '<strong>🔍 Scan debug</strong><br>'
+      + 'In catalogo: ' + (result.is_in_catalog ? 'SÌ (id: ' + result.matched_bottle_id + ')' : 'NO') + '<br>'
+      + 'Nuova bottiglia: ' + (result.new_bottle_id ? 'aggiunta (id: ' + result.new_bottle_id + ')' : 'non aggiunta') + '<br>'
+      + 'Foto upload: ' + (result.uploaded_photo_url ? 'OK' : (result.bottle_has_photo ? 'già presente' : 'no')) + '<br>'
+      + (result._debug && result._debug.length ? '<span style="color:#c0392b;">Errori: ' + result._debug.join(' | ') + '</span>' : '<span style="color:#27ae60;">Nessun errore DB/storage</span>')
+    + '</div>'
     + '<div style="height:30px;"></div>';
 }
 
