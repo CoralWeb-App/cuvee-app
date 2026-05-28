@@ -994,7 +994,7 @@ function updateProfileUI(profile) {
   // Premium badge nel profilo
   const premBadge = document.querySelector('#v-profile .ti-crown')?.closest('div[style*="inline-flex"]');
   if (premBadge) {
-    if (profile.is_premium) {
+    if (isPremium()) {
       premBadge.style.display = 'inline-flex';
     } else {
       premBadge.style.display = 'none';
@@ -2380,7 +2380,11 @@ async function deactivatePremium() {
 // ═══ PREMIUM STATE MANAGEMENT ═══
 
 function isPremium() {
-  return currentUser?.profile?.is_premium === true;
+  const p = currentUser?.profile;
+  if (!p || p.is_premium !== true) return false;
+  // Se c'è una data di scadenza, verifica che non sia passata
+  if (p.premium_until) return new Date(p.premium_until) > new Date();
+  return true;
 }
 
 // Aggiorna tutta l'UI in base allo stato premium

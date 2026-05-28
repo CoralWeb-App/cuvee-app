@@ -124,11 +124,12 @@ serve(async (req) => {
     // ── Rate limiting ────────────────────────────────────────────
     const { data: profile } = await adminSupa
       .from('users')
-      .select('is_premium')
+      .select('is_premium, premium_until')
       .eq('id', user.id)
       .single()
 
-    const isPremium = profile?.is_premium === true
+    const isPremium = profile?.is_premium === true &&
+      (!profile?.premium_until || new Date(profile.premium_until) > new Date())
 
     if (!isPremium) {
       const monthStart = new Date()
