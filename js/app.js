@@ -3559,6 +3559,11 @@ function _renderScanResult(result, photoDataUrl) {
   const container = document.getElementById('scan-result-content');
   if (!container) return;
 
+  if (result.is_bottle === false) {
+    container.innerHTML = _buildInvalidScanHTML(photoDataUrl);
+    return;
+  }
+
   if (!result.is_champagne) {
     container.innerHTML = _buildNonChampagneHTML(result, photoDataUrl);
     return;
@@ -3716,6 +3721,40 @@ function _renderScanResult(result, photoDataUrl) {
     // ── Scheda completa ──
     + (catalogBtn ? '<div style="margin-top:4px;">' + catalogBtn + '</div>' : '')
     + '<div style="height:30px;"></div>';
+}
+
+// HTML per scan non valido (non è una bottiglia)
+function _buildInvalidScanHTML(photoDataUrl) {
+  const photoHtml = photoDataUrl
+    ? '<div style="width:100px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;opacity:.5;">'
+        + '<img src="' + photoDataUrl + '" style="width:100%;height:100%;object-fit:cover;">'
+      + '</div>'
+    : '';
+  return '<div style="padding:24px 14px 0;">'
+    + '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;">'
+      + photoHtml
+      + '<div style="flex:1;min-width:0;">'
+        + '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(100,100,100,.10);border:0.5px solid rgba(100,100,100,.25);border-radius:20px;padding:3px 9px;margin-bottom:10px;">'
+          + '<span style="font-family:var(--sans);font-size:11px;font-weight:500;color:var(--ink-4);letter-spacing:.3px;">Scansione non valida</span>'
+        + '</div>'
+        + '<div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:600;font-style:italic;line-height:1.2;margin-bottom:8px;">'
+          + 'Mmm, qui non vedo nessuna bottiglia…'
+        + '</div>'
+        + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.6;">'
+          + 'Cuvée riconosce solo bottiglie e bevande. Punta la fotocamera su una bottiglia e riprova!'
+        + '</div>'
+      + '</div>'
+    + '</div>'
+    + '<div style="padding:16px 18px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:18px;">'
+      + '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-style:italic;font-weight:600;margin-bottom:6px;">Solo bottiglie, per favore 🍾</div>'
+      + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;">'
+        + 'Questa app è dedicata al mondo delle bollicine — inquadra una bottiglia di Champagne, vino o qualsiasi bevanda per iniziare.'
+      + '</div>'
+    + '</div>'
+    + '<button class="btn-outline" onclick="startScan(\'explore\')" style="width:100%;">'
+      + '<i class="ti ti-camera"></i> Riprova la scansione'
+    + '</button>'
+  + '</div><div style="height:30px;"></div>';
 }
 
 // HTML per bottiglia non Champagne

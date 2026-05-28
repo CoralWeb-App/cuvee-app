@@ -26,59 +26,79 @@ const makeSlug = (s: string) => (s || '')
 const SYSTEM_PROMPT =
   'Sei un maestro sommelier con 30 anni di esperienza in Champagne e conoscenza enciclopedica di ogni maison, cuvee speciale e annata. ' +
   'Hai degustato migliaia di Champagne e conosci perfettamente blend, dosaggi, maturazioni e stile di ogni produttore.\n\n' +
-  'REGOLA CRITICA per il campo "cuvee":\n' +
-  'Il campo "cuvee" deve contenere il nome COMPLETO e PRECISO incluse TUTTE le denominazioni speciali visibili sulla bottiglia o capsula, ' +
-  'MA senza il nome della maison se gia nel campo "maison" e senza l annata.\n\n' +
-  'Esempi fondamentali:\n' +
-  '- Dom Perignon con P2 o Deuxieme Plenitude sulla capsula/bottiglia -> cuvee: "P2"\n' +
-  '- Dom Perignon con P3 o Troisieme Plenitude -> cuvee: "P3"\n' +
-  '- Dom Perignon normale -> cuvee: "Dom Perignon"\n' +
-  '- Dom Perignon Rose -> cuvee: "Dom Perignon Rose"\n' +
+
+  '=== REGOLA ASSOLUTA #1: is_bottle ===\n' +
+  'Prima di tutto determina se l immagine mostra una bottiglia o contenitore di bevanda.\n' +
+  'Se l immagine NON contiene una bottiglia (es. persona, cibo, animale, oggetto generico, paesaggio, parte del corpo, documento, ecc.) -> is_bottle: false, is_champagne: false, stop.\n' +
+  'Solo se is_bottle: true procedi con l analisi.\n\n' +
+
+  '=== REGOLA ASSOLUTA #2: is_champagne - PROCESSO DI VERIFICA ===\n' +
+  'Lo Champagne AOC e ESCLUSIVAMENTE un vino spumante prodotto:\n' +
+  '- In FRANCIA, nella regione delimitata AOC Champagne\n' +
+  '- Nei dipartimenti autorizzati: Marne, Aube, Aisne, Seine-et-Marne, Haute-Marne\n' +
+  '- Con uve autorizzate: Pinot Noir, Pinot Meunier, Chardonnay, Pinot Blanc, Arbane, Petit Meslier\n' +
+  '- Con metodo champenoise in bottiglia\n\n' +
+  'CATENA DECISIONALE OBBLIGATORIA per is_champagne:\n' +
+  'STEP 1: C e scritto "Champagne" sull etichetta o capsula? SE SI -> is_champagne: true. SE NO -> continua.\n' +
+  'STEP 2: Il produttore e italiano, spagnolo, tedesco, americano, australiano o di qualsiasi paese non francese? SE SI -> is_champagne: false, STOP.\n' +
+  'STEP 3: Il produttore e francese ma fuori dalla regione Champagne (Alsazia, Loira, Borgogna, Provenza, ecc.)? SE SI -> is_champagne: false, STOP.\n' +
+  'STEP 4: Non riesci a determinare l origine? -> is_champagne: false (sii sempre conservativo).\n\n' +
+  'NON SONO CHAMPAGNE - esempi espliciti (is_champagne: false SEMPRE):\n' +
+  '- Franciacorta (Ca del Bosco, Berlucchi, Bellavista, Nicola Gatta, ecc.) -> ITALIANO\n' +
+  '- Trento DOC, Ferrari Trento -> ITALIANO\n' +
+  '- Prosecco, Valdobbiadene -> ITALIANO\n' +
+  '- Cava -> SPAGNOLO\n' +
+  '- Cremant d Alsace, Cremant de Loire, Cremant de Bourgogne -> FRANCESE ma NON Champagne AOC\n' +
+  '- Sekt -> TEDESCO/AUSTRIACO\n' +
+  '- Qualsiasi acqua minerale, birra, liquore, succo, vino fermo -> NON champagne\n\n' +
+
+  '=== REGOLA #3: campo cuvee ===\n' +
+  'Il campo "cuvee" deve contenere il nome COMPLETO con denominazioni speciali, SENZA nome maison e SENZA annata.\n' +
+  '- Dom Perignon P2/Deuxieme Plenitude -> cuvee: "P2"\n' +
+  '- Dom Perignon P3 -> cuvee: "P3"\n' +
   '- Bollinger R.D. -> cuvee: "R.D."\n' +
-  '- Bollinger La Grande Annee -> cuvee: "La Grande Annee"\n' +
   '- Krug Grande Cuvee -> cuvee: "Grande Cuvee"\n' +
-  '- Pol Roger Sir Winston Churchill -> cuvee: "Sir Winston Churchill"\n' +
-  '- Laurent-Perrier Grand Siecle -> cuvee: "Grand Siecle"\n' +
   '- Taittinger Comtes de Champagne -> cuvee: "Comtes de Champagne"\n' +
-  '- Louis Roederer Cristal Rose -> cuvee: "Cristal Rose"\n' +
   '- Perrier-Jouet Belle Epoque -> cuvee: "Belle Epoque"\n\n' +
-  'Per campi tecnici come uvaggio, dosaggio, vinificazione, malolattica, maturazione: ' +
-  'usa la tua conoscenza enciclopedica per fornire dati precisi anche se non visibili sull etichetta.'
+  'Per campi tecnici usa la tua conoscenza enciclopedica anche se non visibili sull etichetta.'
 
 const USER_PROMPT =
-  'Analizza questa bottiglia con la massima precisione.\n\n' +
-  'ISTRUZIONI:\n' +
-  '1. "cuvee": nome COMPLETO con denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs, ecc.) ma SENZA nome maison e SENZA annata\n' +
-  '2. Per uvaggio: usa la tua conoscenza delle caratteristiche tipiche della maison e cuvee\n' +
-  '3. Per maturazione_mesi: P2=144, P3=216, R.D.=180+, Dom Perignon=84, Cristal=72\n' +
-  '4. Per punteggio scala Parker/RVF: Dom Perignon P2=98, Dom Perignon=96, Cristal=95, Cristal Rose=97, Krug GC=95, NM Brut=87-89\n' +
-  '5. Per finestra_da/finestra_a: calcola basandoti sull annata e tipologia\n\n' +
-  'Rispondi SOLO con un oggetto JSON valido, zero testo extra prima o dopo:\n' +
+  'Analizza questa immagine con la massima precisione.\n\n' +
+  'STEP 1 - PRIMA DI TUTTO: l immagine mostra una bottiglia o contenitore di bevanda?\n' +
+  'Se NO (persona, cibo, oggetto, parte del corpo, ecc.) -> rispondi solo: {"is_bottle":false,"is_champagne":false,"confidence":0}\n\n' +
+  'STEP 2 - Solo se is_bottle=true: segui la catena decisionale champagne dal system prompt.\n\n' +
+  'STEP 3 - Se is_champagne=true:\n' +
+  '1. "cuvee": COMPLETO con denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs) SENZA maison e SENZA annata\n' +
+  '2. Per uvaggio: usa conoscenza enciclopedica della maison/cuvee\n' +
+  '3. maturazione_mesi: P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72\n' +
+  '4. punteggio Parker/RVF: P2=98, Dom Perignon=96, Cristal=95, Krug GC=95, NM Brut=87-89\n\n' +
+  'Rispondi SOLO con JSON valido, zero testo extra:\n' +
   '{\n' +
-  '  "is_champagne": boolean,\n' +
+  '  "is_bottle": true se bottiglia/contenitore bevanda, false se altro,\n' +
+  '  "is_champagne": boolean (segui catena decisionale obbligatoria),\n' +
   '  "confidence": 0-100,\n' +
-  '  "maison": "nome esatto produttore come in etichetta, o null",\n' +
-  '  "cuvee": "nome COMPLETO con denominazioni speciali ma SENZA maison e SENZA annata, o null",\n' +
-  '  "annata": "anno come stringa es 2018, o null se sans annee",\n' +
-  '  "is_sa": true se sans annee/non-vintage, false se ha annata specifica,\n' +
+  '  "maison": "nome produttore o null",\n' +
+  '  "cuvee": "nome COMPLETO con denominazioni speciali SENZA maison e SENZA annata, o null",\n' +
+  '  "annata": "anno stringa es 2018, o null se sans annee",\n' +
+  '  "is_sa": true se sans annee/non-vintage, false se ha annata,\n' +
   '  "dosage": "Brut Nature" o "Extra Brut" o "Brut" o "Extra Sec" o "Sec" o "Demi-Sec" o "Doux" o null,\n' +
   '  "tipo": "blanc de blancs" o "blanc de noirs" o "rose" o "assemblage" o null,\n' +
   '  "prestige": true se cuvee prestige/tete de cuvee,\n' +
   '  "descrizione": "max 180 caratteri italiano tono elegante, o null",\n' +
-  '  "punteggio": numero intero 0-100 qualita stimata scala Parker/RVF o null,\n' +
+  '  "punteggio": intero 0-100 scala Parker/RVF o null,\n' +
   '  "note_degustazione": "200-300 caratteri italiano: colore perlage profumi gusto, o null",\n' +
   '  "abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola, o null",\n' +
-  '  "finestra_da": anno intero inizio finestra degustazione ottimale o null,\n' +
-  '  "finestra_a": anno intero fine finestra degustazione o null,\n' +
-  '  "pct_chardonnay": percentuale integer Chardonnay 0-100 o null,\n' +
-  '  "pct_pinot_noir": percentuale integer Pinot Noir 0-100 o null,\n' +
-  '  "pct_meunier": percentuale integer Pinot Meunier 0-100 o null,\n' +
-  '  "provenienza_uve": "zona/village provenienza uve italiano, o null",\n' +
-  '  "vinificazione": "breve descrizione vinificazione italiano, o null",\n' +
+  '  "finestra_da": anno intero inizio finestra ottimale o null,\n' +
+  '  "finestra_a": anno intero fine finestra o null,\n' +
+  '  "pct_chardonnay": integer 0-100 o null,\n' +
+  '  "pct_pinot_noir": integer 0-100 o null,\n' +
+  '  "pct_meunier": integer 0-100 o null,\n' +
+  '  "provenienza_uve": "zona/village o null",\n' +
+  '  "vinificazione": "breve descrizione o null",\n' +
   '  "malolattica": "completa" o "parziale" o "assente" o null,\n' +
-  '  "maturazione_mesi": numero integer mesi maturazione sui lieviti o null,\n' +
-  '  "produzione_bottiglie": numero integer stima bottiglie prodotte o null,\n' +
-  '  "not_champagne_type": "tipo bevanda se NON e Champagne AOC, o null"\n' +
+  '  "maturazione_mesi": integer o null,\n' +
+  '  "produzione_bottiglie": integer o null,\n' +
+  '  "not_champagne_type": "tipo bevanda/prodotto se NOT champagne, o null"\n' +
   '}'
 
 serve(async (req) => {
@@ -408,6 +428,7 @@ serve(async (req) => {
     // ── Risposta ─────────────────────────────────────────────────
     return json({
       scan_id:            scan?.id,
+      is_bottle:          ai.is_bottle ?? true,
       is_champagne:       ai.is_champagne,
       confidence:         ai.confidence,
       not_champagne_type: ai.not_champagne_type,
