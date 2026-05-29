@@ -154,45 +154,184 @@ serve(async (req) => {
     const { image_base64, media_type = 'image/jpeg' } = await req.json()
     if (!image_base64) return json({ error: 'Immagine mancante' }, 400)
 
-    // ── Anthropic Vision ─────────────────────────────────────────
     const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY')! })
+    const imgSource  = { type: 'base64' as const, media_type: media_type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: image_base64 }
+    const _dbErrors: string[] = []
 
+    // ════════════════════════════════════════════════════════════
+    // STAGE 1 — Quick pre-check con Haiku (economico)
+    //   Identifica solo maison+cuvee senza analisi completa.
+    //   Se la bottiglia è già nel catalogo saltiamo Sonnet → risparmio 80-90% costi AI.
+    // ════════════════════════════════════════════════════════════
+    const QUICK_PROMPT =
+      'Guarda questa immagine. Rispondi SOLO con JSON valido, zero testo extra:\n' +
+      '{"is_bottle":true/false,"is_champagne":true/false,' +
+      '"maison":"nome produttore o null","cuvee":"nome cuvee SENZA maison e SENZA annata o null",' +
+      '"annata":"anno es.2018 o null","is_sa":true/false,' +
+      '"confidence":0-100,"not_champagne_type":"tipo se non champagne o null"}'
+
+    let quick: Record<string, unknown> = { is_bottle: true, is_champagne: false, confidence: 0 }
+    try {
+      const qMsg = await anthropic.messages.create({
+        model:      'claude-3-5-haiku-20241022',
+        max_tokens: 250,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: imgSource },
+          { type: 'text',  text: QUICK_PROMPT },
+        ]}],
+      })
+      const qText = qMsg.content[0].type === 'text' ? qMsg.content[0].text : ''
+      const m = qText.match(/\{[\s\S]*\}/)
+      if (m) quick = JSON.parse(m[0])
+    } catch(e) {
+      console.error('quick-check error:', e)
+      // Se Haiku fallisce procediamo direttamente con Sonnet (nessun risparmio ma nessuna perdita)
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // STAGE 2 — Ricerca nel catalogo con dati quick-check
+    // ════════════════════════════════════════════════════════════
+    let matchedBottle: Record<string, unknown> | null = null
+    let bottleHasPhoto = false
+
+    if (quick.is_champagne && quick.maison && quick.cuvee) {
+      const qMaison = norm(quick.maison as string)
+      const qCuvee  = norm(quick.cuvee  as string)
+
+      const { data: bottles } = await adminSupa
+        .from('bottiglie')
+        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, maison(id, nome, slug)')
+        .eq('is_published', true)
+        .eq('needs_review', false)
+
+      if (bottles) {
+        const found = (bottles as any[]).find(b => {
+          const bNome   = norm(b.nome || '')
+          const bMaison = norm(b.maison?.nome || '')
+          return (bMaison.includes(qMaison) || qMaison.includes(bMaison)) &&
+                 (bNome.includes(qCuvee)    || qCuvee.includes(bNome))
+        })
+        if (found) { matchedBottle = found; bottleHasPhoto = !!found.foto_url }
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // STAGE 3a — DB HIT: bottiglia già nel catalogo
+    //   → Upload foto se mancante, salva scan, rispondi con dati DB.
+    //   → Nessuna chiamata a Sonnet: risparmio garantito!
+    // ════════════════════════════════════════════════════════════
+    if (matchedBottle) {
+      // Upload foto se la bottiglia non ne ha ancora una
+      let uploadedPhotoUrl: string | null = null
+      const mb = matchedBottle as any
+
+      if (!bottleHasPhoto && image_base64) {
+        try {
+          const { data: buckets } = await adminSupa.storage.listBuckets()
+          const bucketExists = (buckets || []).some((b: any) => b.name === 'champagne-photos')
+          if (!bucketExists) {
+            await adminSupa.storage.createBucket('champagne-photos', { public: true })
+          }
+          const imageBytes  = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
+          const storagePath = 'bottles/' + mb.id + '.jpg'
+          const { error: uploadErr } = await adminSupa.storage
+            .from('champagne-photos')
+            .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
+          if (!uploadErr) {
+            const { data: urlData } = adminSupa.storage.from('champagne-photos').getPublicUrl(storagePath)
+            uploadedPhotoUrl = urlData.publicUrl
+            await adminSupa.from('bottiglie').update({ foto_url: uploadedPhotoUrl }).eq('id', mb.id)
+          } else {
+            console.error('photo upload (cache hit):', JSON.stringify(uploadErr))
+          }
+        } catch(e) { console.error('photo exception (cache hit):', e) }
+      }
+
+      // Salva record scansione
+      const { data: scan } = await userSupa
+        .from('bottle_scans')
+        .insert({
+          user_id:           user.id,
+          is_champagne:      true,
+          detected_maison:   quick.maison ?? null,
+          detected_cuvee:    quick.cuvee  ?? null,
+          detected_annata:   quick.annata ?? null,
+          detected_dosage:   mb.dosaggio_tipo ?? null,
+          detected_tipo:     mb.tipo ?? null,
+          confidence:        quick.confidence ?? 0,
+          matched_bottle_id: mb.id,
+          new_bottle_id:     null,
+          result_json:       { ...quick, from_cache: true },
+        })
+        .select('id')
+        .single()
+
+      // Risposta identica alla scansione reale — l'utente non vede differenza
+      return json({
+        scan_id:            scan?.id,
+        is_bottle:          true,
+        is_champagne:       true,
+        confidence:         quick.confidence ?? 90,
+        not_champagne_type: null,
+        maison:             quick.maison  ?? mb.maison?.nome ?? null,
+        cuvee:              quick.cuvee   ?? mb.nome ?? null,
+        annata:             quick.annata  ?? mb.annata ?? null,
+        is_sa:              quick.is_sa   ?? !mb.is_millesimato,
+        dosage:             mb.dosaggio_tipo ?? null,
+        tipo:               mb.tipo ?? null,
+        prestige:           false,
+        is_in_catalog:      true,
+        matched_bottle:     matchedBottle,
+        matched_bottle_id:  mb.id,
+        new_bottle_id:      null,
+        bottle_has_photo:   bottleHasPhoto,
+        uploaded_photo_url: uploadedPhotoUrl,
+        from_cache:         true,
+        // Dati tecnici dal catalogo
+        score_medio:          mb.score_medio          ?? null,
+        note_degustazione:    mb.note_degustazione     ?? null,
+        abbinamento:          mb.abbinamento           ?? null,
+        finestra_da:          mb.finestra_da           ?? null,
+        finestra_a:           mb.finestra_a            ?? null,
+        pct_chardonnay:       mb.pct_chardonnay        ?? null,
+        pct_pinot_noir:       mb.pct_pinot_noir        ?? null,
+        pct_meunier:          mb.pct_meunier           ?? null,
+        provenienza_uve:      mb.provenienza_uve       ?? null,
+        vinificazione:        mb.vinificazione         ?? null,
+        malolattica:          mb.malolattica           ?? null,
+        maturazione_mesi:     mb.maturazione_mesi      ?? null,
+        produzione_bottiglie: mb.produzione_bottiglie  ?? null,
+        dosaggio_gl:          mb.dosaggio_gl           ?? null,
+      })
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // STAGE 3b — DB MISS: bottiglia non in catalogo
+    //   → Analisi completa con Sonnet (comportamento originale)
+    // ════════════════════════════════════════════════════════════
     let rawText = ''
     try {
       const aiMsg = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model:      'claude-3-5-sonnet-20241022',
         max_tokens: 2000,
-        system: SYSTEM_PROMPT,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: media_type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: image_base64 },
-            },
-            { type: 'text', text: USER_PROMPT },
-          ],
-        }],
+        system:     SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: imgSource },
+          { type: 'text',  text: USER_PROMPT },
+        ]}],
       })
       rawText = aiMsg.content[0].type === 'text' ? aiMsg.content[0].text : ''
     } catch (aiErr: any) {
       console.error('Sonnet error, trying haiku:', JSON.stringify(aiErr))
-      // Fallback su Haiku se Sonnet non disponibile
       try {
         const fallbackMsg = await anthropic.messages.create({
-          model: 'claude-haiku-4-5-20251001',
+          model:      'claude-3-5-haiku-20241022',
           max_tokens: 2000,
-          system: SYSTEM_PROMPT,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: { type: 'base64', media_type: media_type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: image_base64 },
-              },
-              { type: 'text', text: USER_PROMPT },
-            ],
-          }],
+          system:     SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: imgSource },
+            { type: 'text',  text: USER_PROMPT },
+          ]}],
         })
         rawText = fallbackMsg.content[0].type === 'text' ? fallbackMsg.content[0].text : ''
       } catch (fallbackErr: any) {
@@ -211,40 +350,10 @@ serve(async (req) => {
       ai = { is_champagne: false, confidence: 0 }
     }
 
-    // ── Ricerca nel catalogo ─────────────────────────────────────
-    let matchedBottle: Record<string, unknown> | null = null
-    let bottleHasPhoto = false
-
-    if (ai.is_champagne && ai.maison && ai.cuvee) {
-      const qMaison = norm(ai.maison as string)
-      const qCuvee  = norm(ai.cuvee as string)
-
-      const { data: bottles } = await adminSupa
-        .from('bottiglie')
-        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, maison(id, nome, slug)')
-        .eq('is_published', true)
-        .eq('needs_review', false)
-
-      if (bottles) {
-        const found = (bottles as any[]).find(b => {
-          const bNome   = norm(b.nome || '')
-          const bMaison = norm(b.maison?.nome || '')
-          const maisonOk = bMaison.includes(qMaison) || qMaison.includes(bMaison)
-          const cuveeOk  = bNome.includes(qCuvee)   || qCuvee.includes(bNome)
-          return maisonOk && cuveeOk
-        })
-        if (found) {
-          matchedBottle  = found
-          bottleHasPhoto = !!found.foto_url
-        }
-      }
-    }
-
     // ── Auto-aggiunta al catalogo (Champagne non trovato) ────────
     let newBottleId: string | null = null
-    const _dbErrors: string[] = []
 
-    if (ai.is_champagne && !matchedBottle && ai.maison && ai.cuvee) {
+    if (ai.is_champagne && ai.maison && ai.cuvee) {
       let maisonId: string | null = null
 
       const { data: existingMaison } = await adminSupa
@@ -270,12 +379,10 @@ serve(async (req) => {
       }
 
       if (maisonId) {
-        // Genera slug univoco: maison-cuvee[-annata]
         const bottleSlug = makeSlug(
           (ai.maison as string) + '-' + (ai.cuvee as string) +
           (!ai.is_sa && ai.annata ? '-' + ai.annata : '')
         )
-
         const { data: nb, error: bottErr } = await adminSupa
           .from('bottiglie')
           .insert({
@@ -309,7 +416,6 @@ serve(async (req) => {
         if (bottErr) {
           console.error('bottiglie insert error:', JSON.stringify(bottErr))
           _dbErrors.push('bottiglie: ' + bottErr.message)
-          // Retry con soli campi essenziali + slug
           const { data: nb2, error: bottErr2 } = await adminSupa
             .from('bottiglie')
             .insert({
@@ -338,44 +444,30 @@ serve(async (req) => {
       }
     }
 
-    // ── Upload foto nel catalogo (service role, bypassa RLS) ─────
+    // ── Upload foto (bottiglia nuova) ────────────────────────────
     let uploadedPhotoUrl: string | null = null
-    const bottleId = matchedBottle?.id ?? newBottleId
+    const bottleId = newBottleId  // matchedBottle è null qui (siamo nel DB MISS path)
 
-    if (ai.is_champagne && bottleId && !bottleHasPhoto && image_base64) {
+    if (ai.is_champagne && bottleId && image_base64) {
       try {
-        // Assicura che il bucket esista (crea se non esiste)
         const { data: buckets } = await adminSupa.storage.listBuckets()
         const bucketExists = (buckets || []).some((b: any) => b.name === 'champagne-photos')
         if (!bucketExists) {
-          const { error: bucketErr } = await adminSupa.storage.createBucket('champagne-photos', { public: true })
-          if (bucketErr) {
-            console.error('bucket create error:', JSON.stringify(bucketErr))
-            _dbErrors.push('bucket_create: ' + bucketErr.message)
-          }
+          await adminSupa.storage.createBucket('champagne-photos', { public: true })
         }
-
-        const imageBytes = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
+        const imageBytes  = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
         const storagePath = 'bottles/' + bottleId + '.jpg'
-
         const { error: uploadErr } = await adminSupa.storage
           .from('champagne-photos')
           .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
-
         if (uploadErr) {
           console.error('storage upload error:', JSON.stringify(uploadErr))
           _dbErrors.push('storage: ' + uploadErr.message)
         } else {
-          const { data: urlData } = adminSupa.storage
-            .from('champagne-photos')
-            .getPublicUrl(storagePath)
+          const { data: urlData } = adminSupa.storage.from('champagne-photos').getPublicUrl(storagePath)
           uploadedPhotoUrl = urlData.publicUrl
-
           const { error: updateErr } = await adminSupa
-            .from('bottiglie')
-            .update({ foto_url: uploadedPhotoUrl })
-            .eq('id', bottleId)
-
+            .from('bottiglie').update({ foto_url: uploadedPhotoUrl }).eq('id', bottleId)
           if (updateErr) {
             console.error('foto_url update error:', JSON.stringify(updateErr))
             _dbErrors.push('foto_update: ' + updateErr.message)
@@ -394,36 +486,35 @@ serve(async (req) => {
         user_id:            user.id,
         is_champagne:       ai.is_champagne ?? false,
         detected_maison:    ai.maison ?? null,
-        detected_cuvee:     ai.cuvee ?? null,
+        detected_cuvee:     ai.cuvee  ?? null,
         detected_annata:    ai.annata ?? null,
         detected_dosage:    ai.dosage ?? null,
-        detected_tipo:      ai.tipo ?? null,
+        detected_tipo:      ai.tipo   ?? null,
         confidence:         ai.confidence ?? 0,
         not_champagne_type: ai.not_champagne_type ?? null,
-        matched_bottle_id:  matchedBottle?.id ?? null,
+        matched_bottle_id:  null,
         new_bottle_id:      newBottleId,
-        result_json:        ai,
+        result_json:        { ...ai, from_cache: false },
       })
       .select('id')
       .single()
 
     // ── Enriched data: prefer catalog, fallback to AI ────────────
-    const mb = matchedBottle as any
     const enriched = {
-      score_medio:          mb?.score_medio          ?? (ai.punteggio as number | null) ?? null,
-      note_degustazione:    mb?.note_degustazione     ?? ai.note_degustazione    ?? null,
-      abbinamento:          mb?.abbinamento           ?? ai.abbinamento          ?? null,
-      finestra_da:          mb?.finestra_da           ?? ai.finestra_da          ?? null,
-      finestra_a:           mb?.finestra_a            ?? ai.finestra_a           ?? null,
-      pct_chardonnay:       mb?.pct_chardonnay        ?? ai.pct_chardonnay       ?? null,
-      pct_pinot_noir:       mb?.pct_pinot_noir        ?? ai.pct_pinot_noir       ?? null,
-      pct_meunier:          mb?.pct_meunier           ?? ai.pct_meunier          ?? null,
-      provenienza_uve:      mb?.provenienza_uve       ?? ai.provenienza_uve      ?? null,
-      vinificazione:        mb?.vinificazione         ?? ai.vinificazione        ?? null,
-      malolattica:          mb?.malolattica           ?? ai.malolattica          ?? null,
-      maturazione_mesi:     mb?.maturazione_mesi      ?? ai.maturazione_mesi     ?? null,
-      produzione_bottiglie: mb?.produzione_bottiglie  ?? ai.produzione_bottiglie ?? null,
-      dosaggio_gl:          mb?.dosaggio_gl           ?? null,
+      score_medio:          (ai.punteggio as number | null) ?? null,
+      note_degustazione:    ai.note_degustazione    ?? null,
+      abbinamento:          ai.abbinamento          ?? null,
+      finestra_da:          ai.finestra_da          ?? null,
+      finestra_a:           ai.finestra_a           ?? null,
+      pct_chardonnay:       ai.pct_chardonnay       ?? null,
+      pct_pinot_noir:       ai.pct_pinot_noir       ?? null,
+      pct_meunier:          ai.pct_meunier          ?? null,
+      provenienza_uve:      ai.provenienza_uve      ?? null,
+      vinificazione:        ai.vinificazione        ?? null,
+      malolattica:          ai.malolattica          ?? null,
+      maturazione_mesi:     ai.maturazione_mesi     ?? null,
+      produzione_bottiglie: ai.produzione_bottiglie ?? null,
+      dosaggio_gl:          null,
     }
 
     // ── Risposta ─────────────────────────────────────────────────
@@ -436,16 +527,17 @@ serve(async (req) => {
       maison:             ai.maison,
       cuvee:              ai.cuvee,
       annata:             ai.annata,
-      is_sa:              ai.is_sa ?? (mb ? !mb.is_millesimato : true),
+      is_sa:              ai.is_sa ?? true,
       dosage:             ai.dosage,
       tipo:               ai.tipo,
       prestige:           ai.prestige,
-      is_in_catalog:      !!matchedBottle,
-      matched_bottle:     matchedBottle,
-      matched_bottle_id:  matchedBottle?.id ?? null,
+      is_in_catalog:      false,
+      matched_bottle:     null,
+      matched_bottle_id:  null,
       new_bottle_id:      newBottleId,
-      bottle_has_photo:   bottleHasPhoto,
+      bottle_has_photo:   false,
       uploaded_photo_url: uploadedPhotoUrl,
+      from_cache:         false,
       _debug:             _dbErrors.length ? _dbErrors : undefined,
       ...enriched,
     })
