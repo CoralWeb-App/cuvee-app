@@ -3394,9 +3394,9 @@ async function openBottigliaDetail(bottId) {
   if (scoreWrap && scoreRingEl && b.score_medio) {
     const deg = Math.round((b.score_medio / 100) * 360);
     scoreRingEl.innerHTML =
-      '<div style="width:36px;height:36px;border-radius:50%;background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px;">' +
-        '<div style="width:27px;height:27px;border-radius:50%;background:var(--ivory);display:flex;align-items:center;justify-content:center;">' +
-          '<span style="font-family:var(--sans);font-size:12px;color:var(--ink);font-weight:600;line-height:1;">' + b.score_medio + '</span>' +
+      '<div style="width:46px;height:46px;border-radius:50%;background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px;">' +
+        '<div style="width:35px;height:35px;border-radius:50%;background:var(--ivory);display:flex;align-items:center;justify-content:center;">' +
+          '<span style="font-family:var(--sans);font-size:14px;color:var(--ink);font-weight:600;line-height:1;">' + b.score_medio + '</span>' +
         '</div>' +
       '</div>';
     const lblEl = document.getElementById('bott-detail-score-label');
