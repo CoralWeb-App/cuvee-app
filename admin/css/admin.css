@@ -1033,6 +1033,63 @@ html, body {
 .status-dot.online  { background: #22c55e; }
 .status-dot.offline { background: #6b7280; }
 
+/* Sort filter buttons */
+.adm-filter-sort {
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-2);
+  background: none;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.adm-filter-sort i { font-size: 13px; }
+.adm-filter-sort:hover { border-color: var(--text-2); color: var(--text-2); }
+.adm-filter-sort.active {
+  background: var(--gold-dim);
+  border-color: rgba(200,160,58,.3);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* Letter filter row */
+.adm-filters-letter {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.adm-filter-letter {
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  min-width: 22px;
+  text-align: center;
+}
+.adm-filter-letter:hover { border-color: var(--text-2); color: var(--text-2); }
+.adm-filter-letter.active {
+  background: var(--gold-dim);
+  border-color: rgba(200,160,58,.3);
+  color: var(--gold);
+}
+.adm-filter-letter.all-btn {
+  min-width: 38px;
+  border-radius: 20px;
+  padding: 3px 9px;
+}
+
 
 /* ══════════════════════════════════════════════════════
    TABLES

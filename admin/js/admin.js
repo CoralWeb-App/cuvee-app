@@ -13,6 +13,8 @@ let bottigliaPage         = 1
 let bottigliaSearch       = ''
 let bottigliaFilter       = ''
 let bottigliaStatusFilter = ''
+let bottigliaSort         = 'nome'
+let bottigliaLetterFilter = ''
 let maisonSearch    = ''
 let searchTimer     = null
 
@@ -897,8 +899,6 @@ async function renderBottiglie() {
       .from('bottiglie')
       .select('*, maison:maison_id(nome)', { count: 'exact' })
       .eq('needs_review', false)
-      .order('nome')
-      .range((bottigliaPage-1)*PER_PAGE, bottigliaPage*PER_PAGE - 1)
 
     if (bottigliaSearch) {
       // nome_norm = lower(unaccent(nome)) → accent-insensitive
@@ -907,6 +907,32 @@ async function renderBottiglie() {
     if (bottigliaFilter) query = query.eq('tipo', bottigliaFilter)
     if (bottigliaStatusFilter === 'online')  query = query.eq('is_published', true)
     if (bottigliaStatusFilter === 'offline') query = query.eq('is_published', false)
+    if (bottigliaLetterFilter) query = query.ilike('nome_norm', `${bottigliaLetterFilter}%`)
+
+    // ── Ordinamento ──────────────────────────────────
+    switch (bottigliaSort) {
+      case 'recente':
+        query = query.order('created_at', { ascending: false })
+        break
+      case 'prezzo_asc':
+        query = query.order('prezzo_min', { ascending: true,  nullsFirst: false })
+        break
+      case 'prezzo_desc':
+        query = query.order('prezzo_max', { ascending: false, nullsFirst: false })
+        break
+      case 'score':
+        query = query.order('score_medio', { ascending: false, nullsFirst: false })
+        break
+      case 'millesimato':
+        query = query
+          .order('is_millesimato', { ascending: false })
+          .order('annata', { ascending: false, nullsFirst: false })
+        break
+      default:
+        query = query.order('nome')
+    }
+
+    query = query.range((bottigliaPage-1)*PER_PAGE, bottigliaPage*PER_PAGE - 1)
 
     const { data, count, error } = await query
     if (error) throw error
@@ -978,6 +1004,24 @@ function filterBottigliaStatus(status, btn) {
   document.querySelectorAll('#view-bottiglie .adm-filter-status').forEach(b => b.classList.remove('active'))
   if (!bottigliaStatusFilter) document.querySelector('#view-bottiglie .adm-filter-status').classList.add('active')
   else btn.classList.add('active')
+  bottigliaPage = 1; renderBottiglie()
+}
+
+function filterBottigliaSort(sort, btn) {
+  bottigliaSort = sort
+  document.querySelectorAll('#view-bottiglie .adm-filter-sort').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  bottigliaPage = 1; renderBottiglie()
+}
+
+function filterBottigliaLetter(letter, btn) {
+  bottigliaLetterFilter = (letter !== '' && letter === bottigliaLetterFilter) ? '' : letter
+  document.querySelectorAll('#view-bottiglie .adm-filter-letter').forEach(b => b.classList.remove('active'))
+  if (!bottigliaLetterFilter) {
+    document.querySelector('#view-bottiglie .adm-filter-letter.all-btn')?.classList.add('active')
+  } else {
+    btn.classList.add('active')
+  }
   bottigliaPage = 1; renderBottiglie()
 }
 

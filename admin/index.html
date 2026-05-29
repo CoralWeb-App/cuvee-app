@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="css/admin.css?v=4">
+  <link rel="stylesheet" href="css/admin.css?v=5">
 </head>
 <body>
 
@@ -355,11 +355,54 @@
           <button class="adm-filter" onclick="filterBottiglie('assemblage', this)">Assemblage</button>
           <button class="adm-filter" onclick="filterBottiglie('millesimato', this)">Millésimés</button>
         </div>
-        <div class="adm-filters adm-filters-status" style="margin-top:6px;">
+        <div class="adm-filters adm-filters-status" style="margin-top:6px;margin-bottom:0;">
           <span class="adm-filters-label">STATO:</span>
           <button class="adm-filter-status active" onclick="filterBottigliaStatus('', this)">Tutti</button>
           <button class="adm-filter-status" onclick="filterBottigliaStatus('online', this)"><span class="status-dot online"></span> Online</button>
           <button class="adm-filter-status" onclick="filterBottigliaStatus('offline', this)"><span class="status-dot offline"></span> Offline</button>
+        </div>
+
+        <!-- SORT -->
+        <div class="adm-filters" style="margin-top:8px;margin-bottom:0;">
+          <span class="adm-filters-label">ORDINA:</span>
+          <button class="adm-filter-sort active" onclick="filterBottigliaSort('nome', this)"><i class="ti ti-sort-az"></i> A → Z</button>
+          <button class="adm-filter-sort" onclick="filterBottigliaSort('recente', this)"><i class="ti ti-clock"></i> Più recente</button>
+          <button class="adm-filter-sort" onclick="filterBottigliaSort('prezzo_asc', this)"><i class="ti ti-currency-euro"></i> Prezzo ↑</button>
+          <button class="adm-filter-sort" onclick="filterBottigliaSort('prezzo_desc', this)"><i class="ti ti-currency-euro"></i> Prezzo ↓</button>
+          <button class="adm-filter-sort" onclick="filterBottigliaSort('score', this)"><i class="ti ti-star"></i> Score ↓</button>
+          <button class="adm-filter-sort" onclick="filterBottigliaSort('millesimato', this)"><i class="ti ti-calendar-event"></i> Millésimé</button>
+        </div>
+
+        <!-- LETTER FILTER -->
+        <div class="adm-filters-letter" style="margin-top:8px;margin-bottom:14px;">
+          <span class="adm-filters-label" style="margin-right:4px;">A–Z</span>
+          <button class="adm-filter-letter all-btn active" onclick="filterBottigliaLetter('', this)">Tutti</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('a', this)">A</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('b', this)">B</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('c', this)">C</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('d', this)">D</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('e', this)">E</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('f', this)">F</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('g', this)">G</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('h', this)">H</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('i', this)">I</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('j', this)">J</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('k', this)">K</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('l', this)">L</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('m', this)">M</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('n', this)">N</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('o', this)">O</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('p', this)">P</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('q', this)">Q</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('r', this)">R</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('s', this)">S</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('t', this)">T</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('u', this)">U</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('v', this)">V</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('w', this)">W</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('x', this)">X</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('y', this)">Y</button>
+          <button class="adm-filter-letter" onclick="filterBottigliaLetter('z', this)">Z</button>
         </div>
 
         <div class="adm-table-wrap">
