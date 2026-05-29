@@ -1355,9 +1355,17 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <!-- FINESTRA DEGUSTAZIONE -->
     <div id="bott-detail-finestra-section" style="display:none;padding:0 14px;margin-bottom:20px;margin-top:16px;">
       <div class="finestra-wrap">
-        <div class="finestra-title">Finestra di degustazione</div>
-        <div class="finestra-bar-bg"><div class="finestra-bar-fill" id="bott-finestra-fill" style="width:100%"></div></div>
-        <div class="finestra-labels"><span id="bott-finestra-da">—</span><span id="bott-finestra-a">—</span></div>
+        <div class="finestra-title"><i class="ti ti-calendar-time" style="font-size:11px;margin-right:4px;"></i>Finestra di degustazione</div>
+        <!-- Track con finestra evidenziata e marker "adesso" -->
+        <div style="position:relative;height:8px;background:var(--border);border-radius:6px;margin-bottom:10px;overflow:visible;">
+          <div id="bott-finestra-fill" style="position:absolute;top:0;height:8px;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:6px;transition:all .4s;"></div>
+          <div id="bott-finestra-now" style="position:absolute;top:-4px;width:3px;height:16px;background:var(--ink-2);border-radius:2px;transform:translateX(-50%);"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span id="bott-finestra-da" style="font-family:var(--sans);font-size:11px;color:var(--ink-4);">—</span>
+          <span id="bott-finestra-stato" style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--gold);"></span>
+          <span id="bott-finestra-a" style="font-family:var(--sans);font-size:11px;color:var(--ink-4);">—</span>
+        </div>
       </div>
     </div>
     <!-- NOTE DEGUSTAZIONE -->

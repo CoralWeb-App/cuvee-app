@@ -3306,18 +3306,33 @@ function renderAssemblaggio(b) {
     else totalEl.textContent = '';
   }
 
-  el.innerHTML = items.map(item => {
+  // Mappa colori e label
+  const itemsRendered = items.map(item => {
     const label = item.anno
       ? String(item.anno)
-      : (item.tipo === 'riserva' ? 'Vini di riserva' : (item.label || 'Vini base'));
-    const perc = item.perc || 0;
+      : (item.tipo === 'riserva' ? 'Riserva' : (item.label || 'Base'));
+    const perc  = item.perc || 0;
     const color = item.anno ? colors[colorIdx++ % colors.length] : '#c4b49a';
-    return '<div class="assembl-row">' +
-      '<div class="assembl-year">' + label + '</div>' +
-      '<div class="assembl-bar-wrap"><div class="assembl-bar-fill" style="width:' + perc + '%;background:' + color + ';"></div></div>' +
-      '<div class="assembl-perc">' + perc + '%</div>' +
-    '</div>';
-  }).join('') + '<div class="assembl-divider"></div>';
+    return { label, perc, color };
+  });
+
+  // Barra impilata unica
+  const stackedBar = '<div style="display:flex;border-radius:8px;overflow:hidden;height:10px;margin:0 18px 14px;gap:1px;">'
+    + itemsRendered.map(i => '<div style="flex:' + i.perc + ';background:' + i.color + ';transition:flex .3s;" title="' + i.label + ': ' + i.perc + '%"></div>').join('')
+    + '</div>';
+
+  // Legend chips
+  const legend = '<div style="display:flex;flex-wrap:wrap;gap:8px 14px;padding:0 18px 4px;">'
+    + itemsRendered.map(i =>
+        '<div style="display:flex;align-items:center;gap:5px;">'
+        + '<div style="width:8px;height:8px;border-radius:50%;background:' + i.color + ';flex-shrink:0;"></div>'
+        + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-2);font-weight:600;">' + i.label + '</span>'
+        + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">' + i.perc + '%</span>'
+        + '</div>'
+      ).join('')
+    + '</div>';
+
+  el.innerHTML = stackedBar + legend + '<div class="assembl-divider"></div>';
 }
 
 function bottDetailPhotoClick() {
@@ -3330,14 +3345,21 @@ async function openBottigliaDetail(bottId) {
   currentBottiglia = b;
   const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
 
-  // Foto verticale cliccabile
+  // Foto verticale cliccabile — riempie il contenitore senza barre nere
   const hero = document.getElementById('bott-detail-hero');
   window._bottDetailPhotoUrl = b.foto_url || null;
   if (hero) {
-    hero.style.cursor = b.foto_url ? 'zoom-in' : 'default';
-    hero.innerHTML = b.foto_url
-      ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.cursor=\'default\';this.style.display=\'none\'">'
-      : '<i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>';
+    if (b.foto_url) {
+      hero.style.position = 'relative';
+      hero.style.display  = 'block';
+      hero.style.cursor   = 'zoom-in';
+      hero.innerHTML = '<img src="' + b.foto_url + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.cursor=\'default\';this.style.display=\'none\'">';
+    } else {
+      hero.style.position = '';
+      hero.style.display  = 'flex';
+      hero.style.cursor   = 'default';
+      hero.innerHTML = '<i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>';
+    }
   }
 
   // Wishlist icon
@@ -3366,38 +3388,53 @@ async function openBottigliaDetail(bottId) {
     badgesEl.innerHTML = bdg;
   }
 
-  // Score piccolo nella colonna destra (come scan result)
+  // Score compatto nella colonna destra
   const scoreWrap = document.getElementById('bott-detail-score-wrap');
   const scoreRingEl = document.getElementById('bott-detail-score-ring');
   if (scoreWrap && scoreRingEl && b.score_medio) {
     const deg = Math.round((b.score_medio / 100) * 360);
     scoreRingEl.innerHTML =
-      '<div class="score-ring-sm" style="background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);">' +
-        '<div class="score-ring-sm-inner"><span class="score-num-sm">' + b.score_medio + '</span></div>' +
+      '<div style="width:36px;height:36px;border-radius:50%;background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px;">' +
+        '<div style="width:27px;height:27px;border-radius:50%;background:var(--ivory);display:flex;align-items:center;justify-content:center;">' +
+          '<span style="font-family:var(--sans);font-size:12px;color:var(--ink);font-weight:600;line-height:1;">' + b.score_medio + '</span>' +
+        '</div>' +
       '</div>';
     const lblEl = document.getElementById('bott-detail-score-label');
     if (lblEl) lblEl.textContent = scoreLabel(b.score_medio);
     scoreWrap.style.display = 'flex';
   } else if (scoreWrap) { scoreWrap.style.display = 'none'; }
 
-  // Finestra degustazione
+  // Finestra degustazione — timeline con marker "adesso"
   const finSection = document.getElementById('bott-detail-finestra-section');
   if (finSection) {
     if (b.finestra_da || b.finestra_a) {
       finSection.style.display = 'block';
-      const now = new Date().getFullYear();
+      const now  = new Date().getFullYear();
       const from = b.finestra_da || now;
-      const to = b.finestra_a || (now + 10);
-      const total = Math.max(to - now + 5, 1);
-      const start = Math.max(0, from - now);
-      const width = Math.min(100, Math.round(((to - from) / total) * 100));
-      const left = Math.min(80, Math.round((start / total) * 100));
-      const fillEl = document.getElementById('bott-finestra-fill');
-      if (fillEl) { fillEl.style.width = width + '%'; fillEl.style.marginLeft = left + '%'; }
-      const daEl = document.getElementById('bott-finestra-da');
-      const aEl = document.getElementById('bott-finestra-a');
-      if (daEl) daEl.textContent = from <= now ? 'Pronta ora' : 'Da ' + from;
-      if (aEl) aEl.textContent = 'Fino al ' + to;
+      const to   = b.finestra_a  || (now + 10);
+      // Span totale track: 2 anni prima di from → 2 anni dopo to
+      const trackFrom = from - 2;
+      const trackTo   = to   + 2;
+      const trackSpan = trackTo - trackFrom;
+      const toPercent = v => Math.max(0, Math.min(100, Math.round(((v - trackFrom) / trackSpan) * 100)));
+
+      const fillEl  = document.getElementById('bott-finestra-fill');
+      const nowEl   = document.getElementById('bott-finestra-now');
+      const daEl    = document.getElementById('bott-finestra-da');
+      const aEl     = document.getElementById('bott-finestra-a');
+      const statoEl = document.getElementById('bott-finestra-stato');
+
+      if (fillEl) { fillEl.style.left = toPercent(from) + '%'; fillEl.style.width = (toPercent(to) - toPercent(from)) + '%'; }
+      if (nowEl)  nowEl.style.left = toPercent(now) + '%';
+      if (daEl)   daEl.textContent  = from;
+      if (aEl)    aEl.textContent   = to;
+
+      // Stato corrente
+      let stato = '';
+      if (now < from)      stato = 'Da aprire nel ' + from;
+      else if (now <= to)  stato = now === from ? 'Appena pronta' : (now >= to - 1 ? 'In declino' : '● Ottimale ora');
+      else                 stato = 'Oltre la finestra';
+      if (statoEl) { statoEl.textContent = stato; statoEl.style.color = (now >= from && now <= to) ? 'var(--gold)' : 'var(--ink-4)'; }
     } else { finSection.style.display = 'none'; }
   }
 
