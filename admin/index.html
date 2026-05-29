@@ -355,6 +355,12 @@
           <button class="adm-filter" onclick="filterBottiglie('assemblage', this)">Assemblage</button>
           <button class="adm-filter" onclick="filterBottiglie('millesimato', this)">Millésimés</button>
         </div>
+        <div class="adm-filters adm-filters-status" style="margin-top:6px;">
+          <span class="adm-filters-label">STATO:</span>
+          <button class="adm-filter-status active" onclick="filterBottigliaStatus('', this)">Tutti</button>
+          <button class="adm-filter-status" onclick="filterBottigliaStatus('online', this)"><span class="status-dot online"></span> Online</button>
+          <button class="adm-filter-status" onclick="filterBottigliaStatus('offline', this)"><span class="status-dot offline"></span> Offline</button>
+        </div>
 
         <div class="adm-table-wrap">
           <table class="adm-table">

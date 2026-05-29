@@ -9,9 +9,10 @@ let currentAdmin    = null
 let utentiPage      = 1
 let utentiFilter    = 'all'
 let utentiSearch    = ''
-let bottigliaPage   = 1
-let bottigliaSearch = ''
-let bottigliaFilter = ''
+let bottigliaPage         = 1
+let bottigliaSearch       = ''
+let bottigliaFilter       = ''
+let bottigliaStatusFilter = ''
 let maisonSearch    = ''
 let searchTimer     = null
 
@@ -904,6 +905,8 @@ async function renderBottiglie() {
       query = query.ilike('nome_norm', `%${norm(bottigliaSearch)}%`)
     }
     if (bottigliaFilter) query = query.eq('tipo', bottigliaFilter)
+    if (bottigliaStatusFilter === 'online')  query = query.eq('is_published', true)
+    if (bottigliaStatusFilter === 'offline') query = query.eq('is_published', false)
 
     const { data, count, error } = await query
     if (error) throw error
@@ -970,6 +973,14 @@ function filterBottiglie(tipo, btn) {
   bottigliaPage = 1; renderBottiglie()
 }
 
+function filterBottigliaStatus(status, btn) {
+  bottigliaStatusFilter = (status === bottigliaStatusFilter) ? '' : status
+  document.querySelectorAll('#view-bottiglie .adm-filter-status').forEach(b => b.classList.remove('active'))
+  if (!bottigliaStatusFilter) document.querySelector('#view-bottiglie .adm-filter-status').classList.add('active')
+  else btn.classList.add('active')
+  bottigliaPage = 1; renderBottiglie()
+}
+
 function searchBottiglie(val) {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => { bottigliaSearch = val.trim(); bottigliaPage = 1; renderBottiglie() }, 400)
@@ -1027,7 +1038,8 @@ async function editBottiglia(id) {
     ).join('')
 
     // Columns handled by the custom UI below — excluded from buildAllColsForm
-    const CUSTOM = ['id','nome','maison_id','tipo','is_millesimato','dosaggio_gl','needs_review','created_at','updated_at','foto_url','photo_url','nome_norm']
+    const CUSTOM = ['id','nome','maison_id','tipo','is_millesimato','dosaggio_gl','needs_review','created_at','updated_at','foto_url','photo_url','nome_norm',
+      'link_millesima','link_callmewine','link_tannico','link_custom1_nome','link_custom1_url','link_custom2_nome','link_custom2_url']
     const FULL   = ['descrizione','vitigni','note','note_degustazione']
     const TA     = ['descrizione','note','note_degustazione']
 
@@ -1071,6 +1083,67 @@ async function editBottiglia(id) {
             <input class="adm-form-input" type="number" step="0.1" min="0" data-col="dosaggio_gl" value="${b.dosaggio_gl ?? ''}">
           </div>
           ${extraFields}
+
+          <!-- ── DOVE ACQUISTARE ─────────────────────── -->
+          <div style="grid-column:1/-1;margin-top:4px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px;">
+              <i class="ti ti-shopping-bag"></i> Link Dove Acquistare
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label"><i class="ti ti-bottle" style="margin-right:4px;color:var(--gold)"></i>LINK MILLÉSIMA</label>
+                <input class="adm-form-input" type="url" data-col="link_millesima"
+                       value="${esc(b.link_millesima ?? '')}"
+                       placeholder="https://www.millesima.it/prodotto/...">
+              </div>
+
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label"><i class="ti ti-bottle" style="margin-right:4px;color:var(--gold)"></i>LINK CALLMEWINE</label>
+                <input class="adm-form-input" type="url" data-col="link_callmewine"
+                       value="${esc(b.link_callmewine ?? '')}"
+                       placeholder="https://www.callmewine.com/...">
+              </div>
+
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label"><i class="ti ti-bottle" style="margin-right:4px;color:var(--gold)"></i>LINK TANNICO</label>
+                <input class="adm-form-input" type="url" data-col="link_tannico"
+                       value="${esc(b.link_tannico ?? '')}"
+                       placeholder="https://www.tannico.it/...">
+              </div>
+
+              <div style="grid-column:1/-1;margin-top:2px;padding-top:10px;border-top:1px dashed var(--border);">
+                <div style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--text-3);text-transform:uppercase;margin-bottom:10px;">
+                  Link personalizzati (opzionali)
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div class="adm-form-field">
+                    <label class="adm-form-label">PERSONALIZZATO 1 · NOME</label>
+                    <input class="adm-form-input" type="text" data-col="link_custom1_nome"
+                           value="${esc(b.link_custom1_nome ?? '')}" placeholder="es. Vino.com">
+                  </div>
+                  <div class="adm-form-field">
+                    <label class="adm-form-label">PERSONALIZZATO 1 · URL</label>
+                    <input class="adm-form-input" type="url" data-col="link_custom1_url"
+                           value="${esc(b.link_custom1_url ?? '')}" placeholder="https://...">
+                  </div>
+                  <div class="adm-form-field">
+                    <label class="adm-form-label">PERSONALIZZATO 2 · NOME</label>
+                    <input class="adm-form-input" type="text" data-col="link_custom2_nome"
+                           value="${esc(b.link_custom2_nome ?? '')}" placeholder="es. Vinolog">
+                  </div>
+                  <div class="adm-form-field">
+                    <label class="adm-form-label">PERSONALIZZATO 2 · URL</label>
+                    <input class="adm-form-input" type="url" data-col="link_custom2_url"
+                           value="${esc(b.link_custom2_url ?? '')}" placeholder="https://...">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <!-- ── END DOVE ACQUISTARE ──────────────────── -->
+
           ${photoPreviewField(fotoUrl, fotoCol, b.id)}
         </div>
         <div class="adm-edit-meta">

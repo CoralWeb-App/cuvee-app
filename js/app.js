@@ -3471,6 +3471,53 @@ async function openBottigliaDetail(bottId) {
     if (b.abbinamento) abbEl.textContent = b.abbinamento;
   }
 
+  // ── Dove acquistare (link dal DB) ────────────────────
+  const buySection = document.getElementById('bott-buy-section');
+  if (buySection) {
+    const SUPPLIERS = [
+      { key:'link_millesima',  name:'Millésima',   desc:'Specialista Champagne · spedizione rapida',         favicon:'https://www.millesima.it/favicon.ico' },
+      { key:'link_callmewine', name:'Callmewine',  desc:'Enoteca online italiana · oltre 10.000 etichette',  favicon:'https://www.callmewine.com/favicon.ico' },
+      { key:'link_tannico',    name:'Tannico',      desc:'Marketplace del vino · prezzi competitivi',         favicon:'https://www.tannico.it/favicon.ico' },
+    ];
+
+    // Costruisci lista righe: 3 fornitori fissi + custom opzionali
+    const links = [
+      ...SUPPLIERS.map(s => ({ name: s.name, desc: s.desc, favicon: s.favicon, url: b[s.key] || '' })),
+      ...(b.link_custom1_nome && b.link_custom1_url ? [{ name: b.link_custom1_nome, desc: 'Link personalizzato', favicon: null, url: b.link_custom1_url }] : []),
+      ...(b.link_custom2_nome && b.link_custom2_url ? [{ name: b.link_custom2_nome, desc: 'Link personalizzato', favicon: null, url: b.link_custom2_url }] : []),
+    ];
+    const hasAnyLink = links.some(l => l.url);
+
+    const rows = links.map((l, i) => {
+      const isLast  = i === links.length - 1;
+      const hasLink = !!l.url;
+      const logoEl  = l.favicon
+        ? '<img src="' + l.favicon + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:24px;height:24px;object-fit:contain;" alt=""><i class="ti ti-bottle" style="display:none;font-size:18px;color:var(--gold);"></i>'
+        : '<i class="ti ti-link" style="font-size:18px;color:var(--gold);"></i>';
+      return '<a '
+        + (hasLink ? 'href="' + l.url + '" target="_blank"' : 'href="javascript:void(0)"')
+        + ' class="buy-row' + (hasLink ? '' : ' buy-row-empty') + '"'
+        + (isLast ? ' style="border-bottom:none;' + (hasLink ? '' : 'opacity:.45') + '"' : (!hasLink ? ' style="opacity:.45"' : ''))
+        + '>'
+        + '<div class="buy-logo">' + logoEl + '</div>'
+        + '<div class="buy-info"><div class="buy-name">' + l.name + '</div><div class="buy-desc">' + l.desc + '</div></div>'
+        + (hasLink ? '<i class="ti ti-chevron-right buy-arrow"></i>' : '<i class="ti ti-minus" style="color:var(--ink-5);font-size:12px;margin-right:2px;"></i>')
+        + '</a>';
+    }).join('');
+
+    buySection.innerHTML =
+      '<div style="font-family:var(--sans);font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:10px;">'
+      + '<i class="ti ti-shopping-bag" style="font-size:10px;margin-right:5px;"></i>Dove acquistare'
+      + '</div>'
+      + '<div style="background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">'
+      + rows
+      + '</div>'
+      + (!hasAnyLink
+          ? '<div style="font-family:var(--sans);font-size:10px;color:var(--ink-5);text-align:center;margin-top:8px;line-height:1.5;">I link di acquisto verranno personalizzati per ogni bottiglia</div>'
+          : '');
+  }
+  // ── End Dove acquistare ──────────────────────────────
+
   go('v-bottiglia-detail');
 }
 

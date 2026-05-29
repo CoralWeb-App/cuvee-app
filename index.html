@@ -1380,57 +1380,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="detail-desc" id="bott-detail-abbinamento" style="margin-bottom:20px;"></div>
     </div>
 
-    <!-- ACQUISTO -->
-    <div style="margin:8px 14px 0;">
-      <div style="font-family:var(--sans);font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:10px;">
-        <i class="ti ti-shopping-bag" style="font-size:10px;margin-right:5px;"></i>Dove acquistare
-      </div>
-      <div style="background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
-
-        <!-- Millésima -->
-        <a href="#" target="_blank" class="buy-row">
-          <div class="buy-logo">
-            <img src="https://www.millesima.it/favicon.ico" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:24px;height:24px;object-fit:contain;" alt="">
-            <i class="ti ti-bottle" style="display:none;font-size:18px;color:var(--gold);"></i>
-          </div>
-          <div class="buy-info">
-            <div class="buy-name">Millésima</div>
-            <div class="buy-desc">Specialista Champagne · spedizione rapida</div>
-          </div>
-          <i class="ti ti-chevron-right buy-arrow"></i>
-        </a>
-
-        <!-- Callmewine -->
-        <a href="#" target="_blank" class="buy-row">
-          <div class="buy-logo">
-            <img src="https://www.callmewine.com/favicon.ico" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:24px;height:24px;object-fit:contain;" alt="">
-            <i class="ti ti-bottle" style="display:none;font-size:18px;color:var(--gold);"></i>
-          </div>
-          <div class="buy-info">
-            <div class="buy-name">Callmewine</div>
-            <div class="buy-desc">Enoteca online italiana · oltre 10.000 etichette</div>
-          </div>
-          <i class="ti ti-chevron-right buy-arrow"></i>
-        </a>
-
-        <!-- Tannico -->
-        <a href="#" target="_blank" class="buy-row" style="border-bottom:none;">
-          <div class="buy-logo">
-            <img src="https://www.tannico.it/favicon.ico" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:24px;height:24px;object-fit:contain;" alt="">
-            <i class="ti ti-bottle" style="display:none;font-size:18px;color:var(--gold);"></i>
-          </div>
-          <div class="buy-info">
-            <div class="buy-name">Tannico</div>
-            <div class="buy-desc">Marketplace del vino · prezzi competitivi</div>
-          </div>
-          <i class="ti ti-chevron-right buy-arrow"></i>
-        </a>
-
-      </div>
-      <div style="font-family:var(--sans);font-size:10px;color:var(--ink-5);text-align:center;margin-top:8px;line-height:1.5;">
-        I link di acquisto verranno personalizzati per ogni bottiglia
-      </div>
-    </div>
+    <!-- ACQUISTO (popolato dinamicamente da openBottigliaDetail) -->
+    <div id="bott-buy-section" style="margin:8px 14px 0;"></div>
 
     <div style="height:36px;"></div>
   </div>
