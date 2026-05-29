@@ -901,8 +901,18 @@ async function renderBottiglie() {
       .eq('needs_review', false)
 
     if (bottigliaSearch) {
-      // nome_norm = lower(unaccent(nome)) → accent-insensitive
-      query = query.ilike('nome_norm', `%${norm(bottigliaSearch)}%`)
+      const searchNorm = norm(bottigliaSearch)
+      // Cerca anche per nome maison: pre-query leggera + norm() client-side (accent-insensitive)
+      const { data: allMaisonSearch } = await supa.from('maison').select('id, nome')
+      const maisonIds = (allMaisonSearch || [])
+        .filter(m => norm(m.nome ?? '').includes(searchNorm))
+        .map(m => m.id)
+      if (maisonIds.length > 0) {
+        // OR: nome bottiglia oppure maison corrispondente
+        query = query.or(`nome_norm.ilike.%${searchNorm}%,maison_id.in.(${maisonIds.join(',')})`)
+      } else {
+        query = query.ilike('nome_norm', `%${searchNorm}%`)
+      }
     }
     if (bottigliaFilter === 'millesimato') query = query.eq('is_millesimato', true)
     else if (bottigliaFilter)              query = query.eq('tipo', bottigliaFilter)
