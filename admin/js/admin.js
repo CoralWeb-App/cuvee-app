@@ -1037,115 +1037,280 @@ async function editBottiglia(id) {
       `<option value="${m.id}" ${m.id === b.maison_id ? 'selected' : ''}>${esc(m.nome)}</option>`
     ).join('')
 
-    // Columns handled by the custom UI below — excluded from buildAllColsForm
-    const CUSTOM = ['id','nome','maison_id','tipo','is_millesimato','dosaggio_gl','needs_review','created_at','updated_at','foto_url','photo_url','nome_norm',
-      'link_millesima','link_callmewine','link_tannico','link_custom1_nome','link_custom1_url','link_custom2_nome','link_custom2_url']
-    const FULL   = ['descrizione','vitigni','note','note_degustazione']
-    const TA     = ['descrizione','note','note_degustazione']
+    // Columns handled manually below — excluded from buildAllColsForm catch-all
+    const CUSTOM = [
+      'id','nome','maison_id','tipo','is_millesimato','dosaggio_gl','needs_review',
+      'created_at','updated_at','foto_url','photo_url','nome_norm',
+      'annata','anno','score_medio','finestra_da','finestra_a',
+      'dosaggio_tipo','fascia_prezzo','prezzo_min','prezzo_max',
+      'pct_pinot_noir','pct_chardonnay','pct_meunier',
+      'provenienza_uve','vini_base','assemblaggio',
+      'vinificazione','malolattica','maturazione_mesi','produzione_bottiglie',
+      'descrizione','note_degustazione','abbinamento','vitigni','note',
+      'is_featured','is_published',
+      'link_millesima','link_callmewine','link_tannico',
+      'link_custom1_nome','link_custom1_url','link_custom2_nome','link_custom2_url'
+    ]
 
-    const fotoCol = b.foto_url !== undefined ? 'foto_url' : 'photo_url'
-    const fotoUrl = b.foto_url ?? b.photo_url ?? null
-    const extraFields = buildAllColsForm(b, { skip: CUSTOM, fullRow: FULL, textareaCols: TA })
+    const fotoCol  = b.foto_url !== undefined ? 'foto_url' : 'photo_url'
+    const fotoUrl  = b.foto_url ?? b.photo_url ?? null
+    const extraFields = buildAllColsForm(b, { skip: CUSTOM })
 
     const html = `
       <div class="adm-edit-form">
-        <div class="adm-edit-grid">
-          <div class="adm-form-field" style="grid-column:1/-1">
-            <label class="adm-form-label">NOME BOTTIGLIA</label>
-            <input class="adm-form-input" type="text" data-col="nome" value="${esc(b.nome ?? '')}">
-          </div>
-          <div class="adm-form-field">
-            <label class="adm-form-label">MAISON</label>
-            <select class="adm-form-input" data-col="maison_id">
-              <option value="">— Seleziona —</option>
-              ${maisonOptions}
-            </select>
-          </div>
-          <div class="adm-form-field">
-            <label class="adm-form-label">TIPO</label>
-            <select class="adm-form-input" data-col="tipo">
-              <option value="">—</option>
-              <option value="assemblage"      ${b.tipo==='assemblage'?'selected':''}>Assemblage</option>
-              <option value="blanc_de_blancs" ${b.tipo==='blanc_de_blancs'?'selected':''}>Blanc de Blancs</option>
-              <option value="blanc_de_noirs"  ${b.tipo==='blanc_de_noirs'?'selected':''}>Blanc de Noirs</option>
-              <option value="rose"            ${b.tipo==='rose'?'selected':''}>Rosé</option>
-            </select>
-          </div>
-          <div class="adm-form-field">
-            <label class="adm-form-label">MILLÉSIMÉ</label>
-            <select class="adm-form-input" data-col="is_millesimato">
-              <option value="false" ${!b.is_millesimato?'selected':''}>Sans Année (S.A.)</option>
-              <option value="true"  ${b.is_millesimato?'selected':''}>Millésimé</option>
-            </select>
-          </div>
-          <div class="adm-form-field">
-            <label class="adm-form-label">DOSAGGIO (g/L)</label>
-            <input class="adm-form-input" type="number" step="0.1" min="0" data-col="dosaggio_gl" value="${b.dosaggio_gl ?? ''}">
-          </div>
-          ${extraFields}
 
-          <!-- ── DOVE ACQUISTARE ─────────────────────── -->
-          <div style="grid-column:1/-1;margin-top:4px;padding-top:16px;border-top:1px solid var(--border);">
-            <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px;">
-              <i class="ti ti-shopping-bag"></i> Link Dove Acquistare
+        <!-- ═══ FOTO ═══════════════════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-photo"></i> Foto</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              ${photoPreviewField(fotoUrl, fotoCol, b.id)}
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          </div>
+        </div>
 
+        <!-- ═══ IDENTITÀ ════════════════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-id-badge-2"></i> Identità</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
               <div class="adm-form-field" style="grid-column:1/-1">
-                <label class="adm-form-label"><i class="ti ti-bottle" style="margin-right:4px;color:var(--gold)"></i>LINK MILLÉSIMA</label>
+                <label class="adm-form-label">Nome Bottiglia</label>
+                <input class="adm-form-input" type="text" data-col="nome" value="${esc(b.nome ?? '')}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Maison</label>
+                <select class="adm-form-input" data-col="maison_id">
+                  <option value="">— Seleziona —</option>
+                  ${maisonOptions}
+                </select>
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Tipo</label>
+                <select class="adm-form-input" data-col="tipo">
+                  <option value="">—</option>
+                  <option value="assemblage"      ${b.tipo==='assemblage'      ?'selected':''}>Assemblage</option>
+                  <option value="blanc_de_blancs" ${b.tipo==='blanc_de_blancs' ?'selected':''}>Blanc de Blancs</option>
+                  <option value="blanc_de_noirs"  ${b.tipo==='blanc_de_noirs'  ?'selected':''}>Blanc de Noirs</option>
+                  <option value="rose"            ${b.tipo==='rose'            ?'selected':''}>Rosé</option>
+                </select>
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Millésimé</label>
+                <select class="adm-form-input" data-col="is_millesimato">
+                  <option value="false" ${!b.is_millesimato?'selected':''}>Sans Année (S.A.)</option>
+                  <option value="true"  ${b.is_millesimato ?'selected':''}>Millésimé</option>
+                </select>
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Annata</label>
+                <input class="adm-form-input" type="number" min="1900" max="2100" data-col="annata" value="${b.annata ?? b.anno ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Stato</label>
+                <select class="adm-form-input" data-col="is_published">
+                  <option value="true"  ${b.is_published !== false ?'selected':''}>● Online</option>
+                  <option value="false" ${b.is_published === false  ?'selected':''}>○ Offline</option>
+                </select>
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">In Evidenza</label>
+                <select class="adm-form-input" data-col="is_featured">
+                  <option value="false" ${!b.is_featured?'selected':''}>No</option>
+                  <option value="true"  ${b.is_featured ?'selected':''}>Sì</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ CARATTERISTICHE ══════════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-list-details"></i> Caratteristiche</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field">
+                <label class="adm-form-label">Dosaggio (g/L)</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" data-col="dosaggio_gl" value="${b.dosaggio_gl ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Dosaggio Tipo</label>
+                <input class="adm-form-input" type="text" data-col="dosaggio_tipo"
+                       value="${esc(b.dosaggio_tipo ?? '')}" placeholder="es. Brut, Extra Brut…">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Score Medio</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" max="100" data-col="score_medio" value="${b.score_medio ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Fascia Prezzo</label>
+                <input class="adm-form-input" type="text" data-col="fascia_prezzo"
+                       value="${esc(b.fascia_prezzo ?? '')}" placeholder="es. €€€">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Prezzo Min (€)</label>
+                <input class="adm-form-input" type="number" step="0.01" data-col="prezzo_min" value="${b.prezzo_min ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Prezzo Max (€)</label>
+                <input class="adm-form-input" type="number" step="0.01" data-col="prezzo_max" value="${b.prezzo_max ?? ''}">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ UVAGGI & ASSEMBLAGGIO ════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-plant-2"></i> Uvaggi & Assemblaggio</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field">
+                <label class="adm-form-label">% Pinot Noir</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" max="100" data-col="pct_pinot_noir" value="${b.pct_pinot_noir ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">% Chardonnay</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" max="100" data-col="pct_chardonnay" value="${b.pct_chardonnay ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">% Meunier</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" max="100" data-col="pct_meunier" value="${b.pct_meunier ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Provenienza Uve</label>
+                <input class="adm-form-input" type="text" data-col="provenienza_uve" value="${esc(b.provenienza_uve ?? '')}">
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Vitigni</label>
+                <input class="adm-form-input" type="text" data-col="vitigni"
+                       value="${esc(b.vitigni ?? '')}" placeholder="es. 50% Pinot Noir, 30% Chardonnay…">
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Vini di Base (note)</label>
+                <textarea class="adm-form-input" rows="2" style="resize:vertical" data-col="vini_base">${esc(b.vini_base ?? '')}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PRODUZIONE & FINESTRA ════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-tools"></i> Produzione & Finestra di Degustazione</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Vinificazione</label>
+                <input class="adm-form-input" type="text" data-col="vinificazione" value="${esc(b.vinificazione ?? '')}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Malolattica</label>
+                <input class="adm-form-input" type="text" data-col="malolattica" value="${esc(b.malolattica ?? '')}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Maturazione (mesi)</label>
+                <input class="adm-form-input" type="number" data-col="maturazione_mesi" value="${b.maturazione_mesi ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Produzione (bottiglie)</label>
+                <input class="adm-form-input" type="number" data-col="produzione_bottiglie" value="${b.produzione_bottiglie ?? ''}">
+              </div>
+              <div class="adm-form-field"></div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Finestra Da (anno)</label>
+                <input class="adm-form-input" type="number" min="1990" max="2100" data-col="finestra_da" value="${b.finestra_da ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Finestra A (anno)</label>
+                <input class="adm-form-input" type="number" min="1990" max="2100" data-col="finestra_a" value="${b.finestra_a ?? ''}">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ DESCRIZIONE & NOTE ═══════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-notes"></i> Descrizione & Note</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Descrizione</label>
+                <textarea class="adm-form-input" rows="3" style="resize:vertical" data-col="descrizione">${esc(b.descrizione ?? '')}</textarea>
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Note Degustazione</label>
+                <textarea class="adm-form-input" rows="4" style="resize:vertical" data-col="note_degustazione">${esc(b.note_degustazione ?? '')}</textarea>
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Abbinamento</label>
+                <textarea class="adm-form-input" rows="2" style="resize:vertical" data-col="abbinamento">${esc(b.abbinamento ?? '')}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ DOVE ACQUISTARE ══════════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-shopping-bag"></i> Dove Acquistare</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Link Millésima</label>
                 <input class="adm-form-input" type="url" data-col="link_millesima"
                        value="${esc(b.link_millesima ?? '')}"
                        placeholder="https://www.millesima.it/prodotto/...">
               </div>
-
               <div class="adm-form-field" style="grid-column:1/-1">
-                <label class="adm-form-label"><i class="ti ti-bottle" style="margin-right:4px;color:var(--gold)"></i>LINK CALLMEWINE</label>
+                <label class="adm-form-label">Link Callmewine</label>
                 <input class="adm-form-input" type="url" data-col="link_callmewine"
                        value="${esc(b.link_callmewine ?? '')}"
                        placeholder="https://www.callmewine.com/...">
               </div>
-
               <div class="adm-form-field" style="grid-column:1/-1">
-                <label class="adm-form-label"><i class="ti ti-bottle" style="margin-right:4px;color:var(--gold)"></i>LINK TANNICO</label>
+                <label class="adm-form-label">Link Tannico</label>
                 <input class="adm-form-input" type="url" data-col="link_tannico"
                        value="${esc(b.link_tannico ?? '')}"
                        placeholder="https://www.tannico.it/...">
               </div>
-
-              <div style="grid-column:1/-1;margin-top:2px;padding-top:10px;border-top:1px dashed var(--border);">
-                <div style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--text-3);text-transform:uppercase;margin-bottom:10px;">
+              <div style="grid-column:1/-1;padding-top:4px;border-top:1px dashed var(--border);">
+                <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">
                   Link personalizzati (opzionali)
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="adm-edit-grid" style="margin:0">
                   <div class="adm-form-field">
-                    <label class="adm-form-label">PERSONALIZZATO 1 · NOME</label>
+                    <label class="adm-form-label">Personalizzato 1 · Nome</label>
                     <input class="adm-form-input" type="text" data-col="link_custom1_nome"
                            value="${esc(b.link_custom1_nome ?? '')}" placeholder="es. Vino.com">
                   </div>
                   <div class="adm-form-field">
-                    <label class="adm-form-label">PERSONALIZZATO 1 · URL</label>
+                    <label class="adm-form-label">Personalizzato 1 · URL</label>
                     <input class="adm-form-input" type="url" data-col="link_custom1_url"
                            value="${esc(b.link_custom1_url ?? '')}" placeholder="https://...">
                   </div>
                   <div class="adm-form-field">
-                    <label class="adm-form-label">PERSONALIZZATO 2 · NOME</label>
+                    <label class="adm-form-label">Personalizzato 2 · Nome</label>
                     <input class="adm-form-input" type="text" data-col="link_custom2_nome"
                            value="${esc(b.link_custom2_nome ?? '')}" placeholder="es. Vinolog">
                   </div>
                   <div class="adm-form-field">
-                    <label class="adm-form-label">PERSONALIZZATO 2 · URL</label>
+                    <label class="adm-form-label">Personalizzato 2 · URL</label>
                     <input class="adm-form-input" type="url" data-col="link_custom2_url"
                            value="${esc(b.link_custom2_url ?? '')}" placeholder="https://...">
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
-          <!-- ── END DOVE ACQUISTARE ──────────────────── -->
-
-          ${photoPreviewField(fotoUrl, fotoCol, b.id)}
         </div>
+
+        ${extraFields ? `
+        <!-- ═══ ALTRE INFORMAZIONI ══════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-dots"></i> Altre Informazioni</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">${extraFields}</div>
+          </div>
+        </div>` : ''}
+
         <div class="adm-edit-meta">
           <code class="adm-code" style="font-size:10px">${b.id}</code>
           <span style="color:var(--text-3);font-size:11px">Aggiunta: ${fmtDate(b.created_at)}</span>
