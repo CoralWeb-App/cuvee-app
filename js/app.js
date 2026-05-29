@@ -647,8 +647,44 @@ async function saveNote(editId = null){
     return;
   }
 
-  // Upload all pending photos + keep existing URLs
-  const allPhotoUrls = [..._existingPhotoUrls];
+  // Upload all pending photos + gestione foto esistenti
+  const allPhotoUrls = [];
+
+  // Foto esistenti: copia quelle del catalogo (champagne-photos) nel bucket personale
+  // → ogni nota carnet ha copia indipendente; eliminare la nota non tocca il catalogo
+  for (const url of _existingPhotoUrls) {
+    if (url && url.includes('/champagne-photos/')) {
+      // Scarica dal bucket catalogo e ricarica nel bucket personale
+      try {
+        const marker = '/champagne-photos/';
+        const idx = url.indexOf(marker);
+        const storagePath = idx !== -1 ? url.substring(idx + marker.length).split('?')[0] : null;
+        let copied = false;
+        if (storagePath) {
+          const { data: fileBlob, error: dlErr } = await supa.storage
+            .from('champagne-photos').download(storagePath);
+          if (!dlErr && fileBlob) {
+            const carnetPath = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).substr(2,5)}.jpg`;
+            const { error: upErr } = await supa.storage
+              .from('carnet-photos')
+              .upload(carnetPath, fileBlob, { contentType: 'image/jpeg', upsert: true });
+            if (!upErr) {
+              const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(carnetPath);
+              if (urlData?.publicUrl) { allPhotoUrls.push(urlData.publicUrl); copied = true; }
+            }
+          }
+        }
+        if (!copied) allPhotoUrls.push(url); // fallback: usa URL originale
+      } catch(e) {
+        console.log('Catalog photo copy error:', e);
+        allPhotoUrls.push(url); // fallback sicuro
+      }
+    } else {
+      allPhotoUrls.push(url); // già in carnet-photos, tenere com'è
+    }
+  }
+
+  // Nuove foto scattate dall'utente
   for (const photo of _pendingPhotos) {
     try {
       const path = currentUser.id+'/'+Date.now()+'_'+Math.random().toString(36).substr(2,5)+'.'+photo.ext;
@@ -1980,10 +2016,10 @@ function openEditNote(note) {
 async function deleteNote(noteId) {
   if (!confirm('Vuoi eliminare questa nota? L\'operazione non è reversibile.')) return;
   try {
-    // Prima recupera la nota per ottenere la foto_url
+    // Recupera la nota per ottenere TUTTE le foto (foto_url + foto_urls)
     const { data: noteData } = await supa
       .from('carnet_notes')
-      .select('foto_url')
+      .select('foto_url, foto_urls')
       .eq('id', noteId)
       .single();
 
@@ -1995,23 +2031,29 @@ async function deleteNote(noteId) {
       .eq('user_id', currentUser.id);
     if (error) throw error;
 
-    // Elimina la foto dallo storage se presente
-    if (noteData?.foto_url) {
-      try {
-        // Estrai il path dal URL pubblico
-        // URL format: .../storage/v1/object/public/carnet-photos/USER_ID/FILENAME
-        const url = noteData.foto_url;
-        const marker = '/carnet-photos/';
-        const pathStart = url.indexOf(marker);
-        if (pathStart !== -1) {
-          const storagePath = url.substring(pathStart + marker.length);
-          await supa.storage.from('carnet-photos').remove([storagePath]);
-          console.log('Photo deleted from storage:', storagePath);
-        }
-      } catch(storageErr) {
-        console.log('Storage delete error:', storageErr);
-        // Non bloccare se la foto non si cancella
+    // Elimina TUTTE le foto dallo storage (sia foto_url che foto_urls)
+    try {
+      const allUrls = [
+        ...(noteData?.foto_urls
+          ? (Array.isArray(noteData.foto_urls) ? noteData.foto_urls : [noteData.foto_urls])
+          : []),
+        ...(noteData?.foto_url && !noteData?.foto_urls ? [noteData.foto_url] : []),
+      ].filter(Boolean);
+
+      const marker = '/carnet-photos/';
+      const storagePaths = [...new Set(
+        allUrls
+          .filter(url => url.includes(marker))
+          .map(url => url.substring(url.indexOf(marker) + marker.length).split('?')[0])
+      )];
+
+      if (storagePaths.length) {
+        await supa.storage.from('carnet-photos').remove(storagePaths);
+        console.log('Photos deleted from storage:', storagePaths);
       }
+    } catch(storageErr) {
+      console.log('Storage delete error:', storageErr);
+      // Non bloccare se le foto non si cancellano
     }
 
     goBack();
@@ -3278,17 +3320,24 @@ function renderAssemblaggio(b) {
   }).join('') + '<div class="assembl-divider"></div>';
 }
 
+function bottDetailPhotoClick() {
+  if (window._bottDetailPhotoUrl) openLightbox([window._bottDetailPhotoUrl], 0);
+}
+
 async function openBottigliaDetail(bottId) {
   const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
   if (!b) return;
   currentBottiglia = b;
   const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
 
-  // Hero
+  // Foto verticale cliccabile
   const hero = document.getElementById('bott-detail-hero');
+  window._bottDetailPhotoUrl = b.foto_url || null;
   if (hero) {
-    if (b.foto_url) { hero.innerHTML = '<img src="' + b.foto_url + '" style="width:100%;height:200px;object-fit:cover;"/>'; hero.className = ''; }
-    else { hero.className = 'img-ph detail-hero-ph'; hero.innerHTML = '<i class="ti ti-bottle" style="font-size:40px;"></i>'; }
+    hero.style.cursor = b.foto_url ? 'zoom-in' : 'default';
+    hero.innerHTML = b.foto_url
+      ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.cursor=\'default\';this.style.display=\'none\'">'
+      : '<i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>';
   }
 
   // Wishlist icon
@@ -3317,18 +3366,17 @@ async function openBottigliaDetail(bottId) {
     badgesEl.innerHTML = bdg;
   }
 
-  // Score
+  // Score piccolo nella colonna destra (come scan result)
   const scoreWrap = document.getElementById('bott-detail-score-wrap');
   const scoreRingEl = document.getElementById('bott-detail-score-ring');
   if (scoreWrap && scoreRingEl && b.score_medio) {
     const deg = Math.round((b.score_medio / 100) * 360);
-    scoreRingEl.innerHTML = '<div class="score-ring-lg" style="background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);">' +
-      '<div class="score-ring-lg-inner"><span class="score-num-lg">' + b.score_medio + '</span></div>' +
-    '</div>';
+    scoreRingEl.innerHTML =
+      '<div class="score-ring-sm" style="background:conic-gradient(var(--gold) ' + deg + 'deg,var(--border) 0deg);">' +
+        '<div class="score-ring-sm-inner"><span class="score-num-sm">' + b.score_medio + '</span></div>' +
+      '</div>';
     const lblEl = document.getElementById('bott-detail-score-label');
     if (lblEl) lblEl.textContent = scoreLabel(b.score_medio);
-    const fonteEl = document.getElementById('bott-detail-score-fonte');
-    if (fonteEl) fonteEl.textContent = b.score_note || 'Stima editoriale — consenso critico internazionale';
     scoreWrap.style.display = 'flex';
   } else if (scoreWrap) { scoreWrap.style.display = 'none'; }
 

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CUVÉE · Cave OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/admin.css?v=3">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOGIN PAGE
+═══════════════════════════════════════════════════════ -->
+<div id="login-page">
+  <canvas id="binary-canvas"></canvas>
+
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="login-logo-c">C</span>uvée
+    </div>
+    <div class="login-subtitle">CAVE OS · TERMINAL v2.4</div>
+
+    <div class="login-prompt">
+      <span class="prompt-caret">$</span>
+      <span class="prompt-label">AUTH_REQUIRED</span>
+    </div>
+
+    <div class="login-field">
+      <label class="login-label">EMAIL</label>
+      <input id="login-email" class="login-input" type="email" placeholder="admin@cuvee.app" autocomplete="email">
+    </div>
+
+    <div class="login-field">
+      <label class="login-label">PASSWORD</label>
+      <div class="login-pass-wrap">
+        <input id="login-pass" class="login-input" type="password" placeholder="••••••••••••">
+        <button type="button" class="login-eye-btn" onclick="toggleLoginPass(this)" tabindex="-1" aria-label="Mostra/nascondi password">
+          <i class="ti ti-eye" id="login-eye-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="login-error" class="login-error" style="display:none;"></div>
+
+    <button id="login-btn" class="login-btn" onclick="adminLogin()">
+      <i class="ti ti-terminal-2"></i>
+      // ACCEDI AL TERMINALE
+    </button>
+
+    <div class="login-footer">
+      <span class="login-footer-dot online"></span>
+      Sistema operativo attivo · Supabase connected
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ADMIN SHELL
+═══════════════════════════════════════════════════════ -->
+<div id="admin-shell">
+
+  <!-- HEADER -->
+  <header class="adm-header">
+    <div class="adm-header-left">
+      <div class="adm-logo">
+        <span class="adm-logo-c">C</span>uvée
+      </div>
+      <div class="adm-header-sep">|</div>
+      <span class="adm-live-badge" id="live-badge">
+        <span class="live-dot" id="live-dot"></span>
+        <span id="live-label">LIVE</span>
+      </span>
+      <span class="adm-breadcrumb">
+        cuvée os / admin platform /
+        <span id="adm-header-view">Dashboard</span>
+      </span>
+    </div>
+    <div class="adm-header-right">
+      <div class="adm-header-stat">
+        <span class="adm-header-stat-label">SESSION</span>
+        <span class="adm-header-stat-val" id="uptime-val">00:00</span>
+      </div>
+      <div class="adm-header-stat">
+        <span class="adm-header-stat-label">DB</span>
+        <span class="adm-header-stat-val" id="db-val">—</span>
+      </div>
+      <div class="adm-user-btn" id="adm-user-btn" onclick="toggleAdminMenu(event)">
+        <div class="adm-avatar" id="adm-user-initial">A</div>
+        <span id="adm-user-email" class="adm-user-email">admin@cuvee.app</span>
+        <i class="ti ti-chevron-down adm-logout-icon" id="adm-user-chevron"></i>
+        <div class="adm-user-dropdown" id="adm-user-dropdown">
+          <button class="adm-dropdown-item adm-dropdown-danger" onclick="adminLogout()">
+            <i class="ti ti-logout"></i> Disconnetti
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- LAYOUT: sidebar + main -->
+  <div class="adm-layout">
+
+    <!-- SIDEBAR -->
+    <nav class="adm-sidebar">
+      <div class="adm-nav-section-label">SISTEMA</div>
+
+      <div class="adm-nav-item active" data-view="dashboard" onclick="showView('dashboard')">
+        <i class="ti ti-layout-dashboard adm-nav-icon"></i>
+        <span>Dashboard</span>
+      </div>
+
+      <div class="adm-nav-item" data-view="approvazioni" onclick="showView('approvazioni')">
+        <i class="ti ti-clock-check adm-nav-icon"></i>
+        <span>Approvazioni</span>
+        <span class="adm-nav-badge">4</span>
+      </div>
+
+      <div class="adm-nav-section-label">CATALOGO</div>
+
+      <div class="adm-nav-item" data-view="bottiglie" onclick="showView('bottiglie')">
+        <i class="ti ti-bottle adm-nav-icon"></i>
+        <span>Champagne</span>
+      </div>
+
+      <div class="adm-nav-item" data-view="maison" onclick="showView('maison')">
+        <i class="ti ti-building-estate adm-nav-icon"></i>
+        <span>Maison</span>
+      </div>
+
+      <div class="adm-nav-section-label">UTENTI</div>
+
+      <div class="adm-nav-item" data-view="utenti" onclick="showView('utenti')">
+        <i class="ti ti-users adm-nav-icon"></i>
+        <span>Utenti</span>
+      </div>
+
+      <div class="adm-nav-item" data-view="abbonamenti" onclick="showView('abbonamenti')">
+        <i class="ti ti-crown adm-nav-icon"></i>
+        <span>Abbonamenti</span>
+      </div>
+
+      <div class="adm-nav-section-label">ANALYTICS</div>
+
+      <div class="adm-nav-item" data-view="stats" onclick="showView('stats')">
+        <i class="ti ti-chart-bar adm-nav-icon"></i>
+        <span>Statistiche</span>
+      </div>
+
+      <div class="adm-sidebar-footer">
+        <div class="adm-sidebar-version">CAVE OS v2.4.0</div>
+        <div class="adm-sidebar-env">
+          <span class="live-dot"></span>
+          production
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="adm-main">
+
+      <!-- ─── VIEW: DASHBOARD ─────────────────────────── -->
+      <div id="view-dashboard" class="adm-view active">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Dashboard</h1>
+            <p class="adm-view-sub">Panoramica sistema · aggiornato adesso</p>
+          </div>
+          <div class="adm-view-actions">
+            <button class="adm-btn adm-btn-ghost">
+              <i class="ti ti-refresh"></i> Aggiorna
+            </button>
+          </div>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="adm-stats-grid">
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon"><i class="ti ti-bottle"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="dash-bottiglie">…</div>
+              <div class="adm-stat-label">Bottiglie in catalogo</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon"><i class="ti ti-building-estate"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="dash-maison">…</div>
+              <div class="adm-stat-label">Maison attive</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon"><i class="ti ti-users"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="dash-utenti">…</div>
+              <div class="adm-stat-label">Utenti registrati</div>
+            </div>
+          </div>
+          <div class="adm-stat-card accent">
+            <div class="adm-stat-icon pending"><i class="ti ti-clock-check"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val accent" id="dash-pending">…</div>
+              <div class="adm-stat-label">In attesa di approvazione</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECONDARY STATS ROW -->
+        <div class="adm-stats-grid-sm">
+          <div class="adm-stat-mini">
+            <span class="adm-stat-mini-label">Scansioni oggi</span>
+            <span class="adm-stat-mini-val" id="dash-today">…</span>
+          </div>
+          <div class="adm-stat-mini">
+            <span class="adm-stat-mini-label">Scansioni totali</span>
+            <span class="adm-stat-mini-val" id="dash-total">…</span>
+          </div>
+          <div class="adm-stat-mini">
+            <span class="adm-stat-mini-label">Utenti Premium</span>
+            <span class="adm-stat-mini-val gold" id="dash-premium">…</span>
+          </div>
+        </div>
+
+        <!-- LOWER GRID: ACTIVITY + PENDING -->
+        <div class="adm-dashboard-grid">
+
+          <!-- RECENT ACTIVITY FEED -->
+          <div class="adm-card">
+            <div class="adm-card-header">
+              <span class="adm-card-title">
+                <i class="ti ti-activity"></i> Attività recente
+              </span>
+              <span class="adm-card-meta">modifiche recenti al catalogo</span>
+            </div>
+            <div class="adm-feed" id="dash-feed">
+              <div class="adm-feed-item">
+                <div class="adm-feed-dot gold"></div>
+                <div class="adm-feed-body">
+                  <span class="adm-feed-ev">Caricamento...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PENDING APPROVALS MINI -->
+          <div class="adm-card">
+            <div class="adm-card-header">
+              <span class="adm-card-title">
+                <i class="ti ti-clock-check"></i> Da approvare
+              </span>
+              <button class="adm-btn adm-btn-xs" onclick="showView('approvazioni')">
+                Vedi tutto <i class="ti ti-arrow-right"></i>
+              </button>
+            </div>
+            <div id="dash-pending-list">
+              <div class="adm-pending-item">
+                <div class="adm-pending-thumb"><i class="ti ti-bottle"></i></div>
+                <div class="adm-pending-info"><div class="adm-pending-name">Caricamento...</div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ─── VIEW: APPROVAZIONI ──────────────────────── -->
+      <div id="view-approvazioni" class="adm-view">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Coda Approvazioni</h1>
+            <p class="adm-view-sub">Champagne e Maison rilevati dall'AI in attesa di revisione</p>
+          </div>
+          <div class="adm-view-actions">
+            <span class="adm-badge pending" id="approvazioni-count">… IN CODA</span>
+          </div>
+        </div>
+
+        <div class="adm-section-divider" style="padding-top:4px">
+          <i class="ti ti-bottle"></i> CHAMPAGNE IN ATTESA DI APPROVAZIONE
+        </div>
+
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>BOTTIGLIA</th>
+                <th>MAISON</th>
+                <th>TIPO</th>
+                <th>MILLÉSIME</th>
+                <th>RILEVATA</th>
+                <th>SCAN ID</th>
+                <th>AZIONI</th>
+              </tr>
+            </thead>
+            <tbody id="approvazioni-tbody">
+              <tr><td colspan="7" class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="approvazioni-maison-wrap" style="display:none;margin-top:28px">
+          <div class="adm-section-divider">
+            <i class="ti ti-building-store"></i> MAISON NUOVE DA VERIFICARE
+          </div>
+          <div class="adm-table-wrap">
+            <table class="adm-table">
+              <thead>
+                <tr>
+                  <th>MAISON</th>
+                  <th>SLUG</th>
+                  <th>RILEVATA</th>
+                  <th>AZIONI</th>
+                </tr>
+              </thead>
+              <tbody id="approvazioni-maison-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- ─── VIEW: BOTTIGLIE ─────────────────────────── -->
+      <div id="view-bottiglie" class="adm-view">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Catalogo Champagne</h1>
+            <p class="adm-view-sub" id="bottiglie-subtitle">Caricamento...</p>
+          </div>
+          <div class="adm-view-actions">
+            <div class="adm-search-wrap">
+              <i class="ti ti-search adm-search-icon"></i>
+              <input class="adm-search" type="text" placeholder="Cerca bottiglia, maison…" oninput="searchBottiglie(this.value)">
+            </div>
+            <button class="adm-btn adm-btn-primary">
+              <i class="ti ti-plus"></i> Nuova bottiglia
+            </button>
+          </div>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="adm-filters">
+          <button class="adm-filter active" onclick="filterBottiglie('', this)">Tutti</button>
+          <button class="adm-filter" onclick="filterBottiglie('blanc_de_noirs', this)">Blanc de Noirs</button>
+          <button class="adm-filter" onclick="filterBottiglie('blanc_de_blancs', this)">Blanc de Blancs</button>
+          <button class="adm-filter" onclick="filterBottiglie('rose', this)">Rosé</button>
+          <button class="adm-filter" onclick="filterBottiglie('assemblage', this)">Assemblage</button>
+          <button class="adm-filter" onclick="filterBottiglie('millesimato', this)">Millésimés</button>
+        </div>
+
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>BOTTIGLIA</th>
+                <th>MAISON</th>
+                <th>TIPO</th>
+                <th>MILLÉSIME</th>
+                <th>DOSAGGIO</th>
+                <th>SCAN</th>
+                <th>STATO</th>
+                <th>AZIONI</th>
+              </tr>
+            </thead>
+            <tbody id="bottiglie-tbody">
+              <tr><td colspan="7" class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="adm-table-footer">
+          <span class="adm-table-count" id="bottiglie-footer-count"></span>
+          <div class="adm-pagination" id="bottiglie-pagination"></div>
+        </div>
+      </div>
+
+
+      <!-- ─── VIEW: MAISON ────────────────────────────── -->
+      <div id="view-maison" class="adm-view">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Gestione Maison</h1>
+            <p class="adm-view-sub" id="maison-subtitle">Caricamento...</p>
+          </div>
+          <div class="adm-view-actions">
+            <div class="adm-search-wrap">
+              <i class="ti ti-search adm-search-icon"></i>
+              <input class="adm-search" type="text" placeholder="Cerca maison…" oninput="searchMaison(this.value)">
+            </div>
+            <button class="adm-btn adm-btn-primary">
+              <i class="ti ti-plus"></i> Nuova maison
+            </button>
+          </div>
+        </div>
+
+        <div class="adm-maison-grid" id="maison-grid">
+          <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento maison...</div>
+        </div>
+      </div>
+
+
+      <!-- ─── VIEW: UTENTI ───────────────────────────── -->
+      <div id="view-utenti" class="adm-view adm-view-utenti">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Utenti</h1>
+            <p class="adm-view-sub" id="utenti-count">Caricamento...</p>
+          </div>
+          <div class="adm-view-actions">
+            <div class="adm-search-wrap">
+              <i class="ti ti-search adm-search-icon"></i>
+              <input class="adm-search" type="text" placeholder="Cerca email…" oninput="searchUtenti(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="adm-filters">
+          <button class="adm-filter active" onclick="filterUtenti('all', this)">Tutti</button>
+          <button class="adm-filter" onclick="filterUtenti('premium', this)">Premium</button>
+          <button class="adm-filter" onclick="filterUtenti('free', this)">Free</button>
+        </div>
+
+        <!-- SPLIT LAYOUT: list + detail panel -->
+        <div class="adm-utenti-layout">
+
+          <!-- LEFT: table list -->
+          <div class="adm-utenti-list">
+            <div class="adm-table-wrap">
+              <table class="adm-table">
+                <thead>
+                  <tr>
+                    <th>UTENTE</th>
+                    <th>PIANO</th>
+                    <th>SCAN</th>
+                    <th>CARNET</th>
+                    <th>REGISTRATO</th>
+                  </tr>
+                </thead>
+                <tbody id="utenti-tbody">
+                  <tr><td colspan="5" class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="adm-table-footer">
+              <span class="adm-table-count" id="utenti-footer-count"></span>
+              <div class="adm-pagination" id="utenti-pagination"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: user detail panel -->
+          <div class="adm-user-detail" id="user-detail-panel">
+            <div class="adm-user-detail-empty">
+              <i class="ti ti-user-search"></i>
+              <p>Seleziona un utente<br>per vedere i dettagli</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ─── VIEW: ABBONAMENTI ──────────────────────── -->
+      <div id="view-abbonamenti" class="adm-view">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Abbonamenti Premium</h1>
+            <p class="adm-view-sub">Gestione manuale abbonamenti premium</p>
+          </div>
+          <div class="adm-view-actions">
+            <div class="adm-search-wrap">
+              <i class="ti ti-search adm-search-icon"></i>
+              <input class="adm-search" type="text" placeholder="Cerca utente…">
+            </div>
+          </div>
+        </div>
+
+        <!-- PREMIUM STATS -->
+        <div class="adm-stats-grid-sm" style="margin-bottom: 24px;">
+          <div class="adm-stat-mini">
+            <span class="adm-stat-mini-label">Attivi ora</span>
+            <span class="adm-stat-mini-val gold" id="abb-active">…</span>
+          </div>
+          <div class="adm-stat-mini">
+            <span class="adm-stat-mini-label">Scadono entro 7 gg</span>
+            <span class="adm-stat-mini-val" style="color: var(--amber)" id="abb-expiring">…</span>
+          </div>
+          <div class="adm-stat-mini">
+            <span class="adm-stat-mini-label">Scaduti</span>
+            <span class="adm-stat-mini-val" style="color: var(--red)" id="abb-expired">…</span>
+          </div>
+        </div>
+
+        <!-- ASSIGN PREMIUM FORM -->
+        <div class="adm-card" style="margin-bottom: 24px;">
+          <div class="adm-card-header">
+            <span class="adm-card-title">
+              <i class="ti ti-crown"></i> Assegna Premium
+            </span>
+            <span class="adm-card-meta">assegnazione manuale</span>
+          </div>
+          <div class="adm-form-grid">
+            <div class="adm-form-field">
+              <label class="adm-form-label">UTENTE / EMAIL</label>
+              <input id="prem-email" class="adm-form-input" type="text" placeholder="email@esempio.com">
+            </div>
+            <div class="adm-form-field">
+              <label class="adm-form-label">DATA INIZIO</label>
+              <input id="prem-from" class="adm-form-input" type="date" value="2026-05-28">
+            </div>
+            <div class="adm-form-field">
+              <label class="adm-form-label">DATA FINE</label>
+              <input id="prem-until" class="adm-form-input" type="date" value="2027-05-28">
+            </div>
+            <div class="adm-form-field">
+              <label class="adm-form-label">NOTE (opzionale)</label>
+              <input id="prem-notes" class="adm-form-input" type="text" placeholder="es. Influencer partner, codice promo…">
+            </div>
+          </div>
+          <div class="adm-form-actions">
+            <button class="adm-btn adm-btn-primary" onclick="assignPremium()">
+              <i class="ti ti-crown"></i> Attiva Premium
+            </button>
+          </div>
+        </div>
+
+        <!-- PREMIUM LIST TABLE -->
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>UTENTE</th>
+                <th>INIZIO</th>
+                <th>SCADENZA</th>
+                <th>NOTE</th>
+                <th>STATO</th>
+                <th>AZIONI</th>
+              </tr>
+            </thead>
+            <tbody id="abbonamenti-tbody">
+              <tr><td colspan="6" class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+      <!-- ─── VIEW: STATS ─────────────────────────────── -->
+      <div id="view-stats" class="adm-view">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Statistiche</h1>
+            <p class="adm-view-sub">Analisi utilizzo piattaforma</p>
+          </div>
+          <div class="adm-view-actions">
+            <select class="adm-form-input" style="width:auto;padding:6px 12px;">
+              <option>Ultimi 7 giorni</option>
+              <option>Ultimi 30 giorni</option>
+              <option>Ultimi 90 giorni</option>
+              <option>Quest'anno</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="adm-stats-grid">
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon"><i class="ti ti-scan"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-scans">…</div>
+              <div class="adm-stat-label">Scansioni totali</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon"><i class="ti ti-bottle"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-bottiglie">…</div>
+              <div class="adm-stat-label">Bottiglie in catalogo</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon"><i class="ti ti-users"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-utenti">…</div>
+              <div class="adm-stat-label">Utenti registrati</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon"><i class="ti ti-crown"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-premium">…</div>
+              <div class="adm-stat-label">Utenti premium</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adm-charts-grid">
+
+          <!-- CHART: Scansioni per giorno -->
+          <div class="adm-card">
+            <div class="adm-card-header">
+              <span class="adm-card-title"><i class="ti ti-chart-line"></i> Scansioni giornaliere</span>
+            </div>
+            <div class="adm-chart-area">
+              <div class="adm-chart-bars">
+                <div class="adm-bar-wrap"><div class="adm-bar" style="height:52%"></div><span>L</span></div>
+                <div class="adm-bar-wrap"><div class="adm-bar" style="height:68%"></div><span>M</span></div>
+                <div class="adm-bar-wrap"><div class="adm-bar" style="height:45%"></div><span>M</span></div>
+                <div class="adm-bar-wrap"><div class="adm-bar" style="height:81%"></div><span>G</span></div>
+                <div class="adm-bar-wrap"><div class="adm-bar" style="height:94%"></div><span>V</span></div>
+                <div class="adm-bar-wrap"><div class="adm-bar" style="height:100%"></div><span>S</span></div>
+                <div class="adm-bar-wrap"><div class="adm-bar" style="height:76%"></div><span>D</span></div>
+              </div>
+              <div class="adm-chart-label">Venerdì e sabato → picchi di utilizzo</div>
+            </div>
+          </div>
+
+          <!-- CHART: Tipo bottiglie più scansionate -->
+          <div class="adm-card">
+            <div class="adm-card-header">
+              <span class="adm-card-title"><i class="ti ti-chart-donut"></i> Tipo più scansionato</span>
+            </div>
+            <div class="adm-donut-area">
+              <div class="adm-donut-legend">
+                <div class="adm-donut-item">
+                  <div class="adm-donut-dot" style="background:#C8A03A"></div>
+                  <span class="adm-donut-label">Assemblage</span>
+                  <span class="adm-donut-pct">41%</span>
+                </div>
+                <div class="adm-donut-item">
+                  <div class="adm-donut-dot" style="background:#6B8AE8"></div>
+                  <span class="adm-donut-label">Blanc de Blancs</span>
+                  <span class="adm-donut-pct">28%</span>
+                </div>
+                <div class="adm-donut-item">
+                  <div class="adm-donut-dot" style="background:#E87B7B"></div>
+                  <span class="adm-donut-label">Rosé</span>
+                  <span class="adm-donut-pct">19%</span>
+                </div>
+                <div class="adm-donut-item">
+                  <div class="adm-donut-dot" style="background:#5BBCAD"></div>
+                  <span class="adm-donut-label">Blanc de Noirs</span>
+                  <span class="adm-donut-pct">12%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TOP BOTTIGLIE -->
+          <div class="adm-card">
+            <div class="adm-card-header">
+              <span class="adm-card-title"><i class="ti ti-trophy"></i> Top bottiglie per scansioni</span>
+            </div>
+            <div class="adm-top-list" id="stats-top-bottiglie">
+              <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento...</div>
+            </div>
+          </div>
+
+          <!-- TOP MAISON -->
+          <div class="adm-card">
+            <div class="adm-card-header">
+              <span class="adm-card-title"><i class="ti ti-building-estate"></i> Top 5 maison</span>
+            </div>
+            <div class="adm-top-list">
+              <div class="adm-top-item">
+                <span class="adm-top-rank">01</span>
+                <div class="adm-top-info">
+                  <span class="adm-top-name">Bollinger</span>
+                  <div class="adm-top-bar"><div class="adm-top-fill" style="width:100%"></div></div>
+                </div>
+                <span class="adm-top-count">312</span>
+              </div>
+              <div class="adm-top-item">
+                <span class="adm-top-rank">02</span>
+                <div class="adm-top-info">
+                  <span class="adm-top-name">Ruinart</span>
+                  <div class="adm-top-bar"><div class="adm-top-fill" style="width:92%"></div></div>
+                </div>
+                <span class="adm-top-count">287</span>
+              </div>
+              <div class="adm-top-item">
+                <span class="adm-top-rank">03</span>
+                <div class="adm-top-info">
+                  <span class="adm-top-name">Krug</span>
+                  <div class="adm-top-bar"><div class="adm-top-fill" style="width:77%"></div></div>
+                </div>
+                <span class="adm-top-count">241</span>
+              </div>
+              <div class="adm-top-item">
+                <span class="adm-top-rank">04</span>
+                <div class="adm-top-info">
+                  <span class="adm-top-name">Dom Pérignon / Moët</span>
+                  <div class="adm-top-bar"><div class="adm-top-fill" style="width:63%"></div></div>
+                </div>
+                <span class="adm-top-count">198</span>
+              </div>
+              <div class="adm-top-item">
+                <span class="adm-top-rank">05</span>
+                <div class="adm-top-info">
+                  <span class="adm-top-name">Taittinger</span>
+                  <div class="adm-top-bar"><div class="adm-top-fill" style="width:56%"></div></div>
+                </div>
+                <span class="adm-top-count">175</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div><!-- /.adm-layout -->
+</div><!-- /#admin-shell -->
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL OVERLAY
+═══════════════════════════════════════════════════════ -->
+<div id="adm-modal" class="adm-modal-overlay">
+  <div class="adm-modal-box" id="adm-modal-box">
+    <div class="adm-modal-header">
+      <span class="adm-modal-title" id="modal-title">—</span>
+      <button class="adm-modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="adm-modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/admin.js?v=3"></script>
+
+</body>
+</html>

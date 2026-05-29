@@ -1314,16 +1314,27 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
   </div>
   <div class="scroll" id="bott-detail-scroll">
-    <!-- HERO -->
-    <div id="bott-detail-hero" class="img-ph detail-hero-ph">
-      <i class="ti ti-bottle" style="font-size:36px;"></i>
-    </div>
-    <!-- NOME & INFO -->
-    <div class="detail-info">
-      <div style="font-family:var(--sans);font-size:12px;color:var(--gold);font-weight:500;letter-spacing:.3px;margin-bottom:4px;" id="bott-detail-maison-nome">—</div>
-      <div class="detail-name" id="bott-detail-nome">—</div>
-      <div class="detail-meta" id="bott-detail-tipo">—</div>
-      <div class="badges-row" id="bott-detail-badges" style="margin-top:6px;"></div>
+    <!-- HEADER: foto verticale sinistra + info destra -->
+    <div style="display:flex;gap:14px;padding:16px 14px 0;align-items:flex-start;">
+      <!-- Foto verticale cliccabile -->
+      <div id="bott-detail-hero"
+           onclick="bottDetailPhotoClick()"
+           style="width:40%;max-width:150px;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>
+      </div>
+      <!-- Info a destra -->
+      <div style="flex:1;min-width:0;padding-top:2px;">
+        <div id="bott-detail-maison-nome"
+             style="font-family:var(--sans);font-size:10px;color:var(--gold);font-weight:600;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        <div class="detail-name" id="bott-detail-nome">—</div>
+        <div class="detail-meta" id="bott-detail-tipo" style="margin-top:4px;margin-bottom:8px;">—</div>
+        <div class="badges-row" id="bott-detail-badges"></div>
+        <!-- Score piccolo inline -->
+        <div id="bott-detail-score-wrap" style="display:none;flex-direction:column;align-items:flex-start;margin-top:10px;">
+          <div id="bott-detail-score-ring"></div>
+          <div class="score-label-sm" id="bott-detail-score-label">—</div>
+        </div>
+      </div>
     </div>
     <!-- CTA AGGIUNGI AL CARNET -->
     <div style="margin:20px 14px 4px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 18px 22px;text-align:center;">
@@ -1340,12 +1351,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <span class="assembl-total" id="bott-detail-assembl-total"></span>
       </div>
       <div id="bott-detail-assembl"></div>
-    </div>
-    <!-- SCORE -->
-    <div class="score-large-wrap" id="bott-detail-score-wrap">
-      <div id="bott-detail-score-ring"></div>
-      <div class="score-label-lg" id="bott-detail-score-label">—</div>
-      <div class="score-fonte" id="bott-detail-score-fonte">—</div>
     </div>
     <!-- FINESTRA DEGUSTAZIONE -->
     <div id="bott-detail-finestra-section" style="display:none;padding:0 14px;margin-bottom:20px;margin-top:16px;">
