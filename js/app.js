@@ -917,7 +917,7 @@ async function signOut() {
   currentMaisonFilter = 'tutti';
   currentMaisonLetter = 'tutti';
   currentMaisonSearch = '';
-  currentBottFilter   = 'tutti';
+  currentBottFilters  = new Set();
   currentBottLetter   = 'tutti';
   currentBottSearch   = '';
   // Svuota stack navigazione
@@ -3078,7 +3078,7 @@ async function loadDetailBottles(maisonId) {
 
 // ═══ BOTTIGLIE — Lista completa ═══
 let allBottiglie = [];
-let currentBottFilter = 'tutti';
+let currentBottFilters = new Set();   // multi-select
 let currentBottSearch = '';
 let currentBottLetter = 'tutti';
 let currentBottiglia = null;
@@ -3175,7 +3175,37 @@ function renderBottiglie() {
   if (!listEl) return;
   const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
   let filtered = allBottiglie;
-  if (currentBottFilter !== 'tutti') filtered = filtered.filter(b => b.tipo === currentBottFilter);
+
+  // Multi-filter: AND logic tra filtri attivi
+  if (currentBottFilters.size > 0) {
+    filtered = filtered.filter(b => {
+      for (const f of currentBottFilters) {
+        switch (f) {
+          case 'millesimato':
+            if (b.is_millesimato !== true) return false; break;
+          case 'nv':
+            if (b.is_millesimato === true) return false; break;
+          case 'rose':
+            if (b.tipo !== 'rose') return false; break;
+          case 'blanc_de_blancs':
+            if (b.tipo !== 'blanc_de_blancs') return false; break;
+          case 'blanc_de_noirs':
+            if (b.tipo !== 'blanc_de_noirs') return false; break;
+          case 'assemblage':
+            if (b.tipo !== 'assemblage') return false; break;
+          case 'nature': {
+            const pasD = ['brut nature','pas dosé','pas dose','nature','zero dosage']
+            const dTipo = (b.dosaggio_tipo || '').toLowerCase()
+            if (b.dosaggio_gl !== 0 && !pasD.some(t => dTipo.includes(t))) return false; break;
+          }
+          case 'prestige':
+            if (!b.is_featured) return false; break;
+        }
+      }
+      return true;
+    });
+  }
+
   if (currentBottLetter !== 'tutti') filtered = filtered.filter(b => bottInitial(b.nome) === currentBottLetter);
   if (currentBottSearch) {
     const q = normalizeStr(currentBottSearch);
@@ -3234,10 +3264,25 @@ function renderBottiglie() {
   }).join('');
 }
 
-function setBottFilter(el, filter) {
-  document.querySelectorAll('#bott-filters .f-btn').forEach(b => b.classList.remove('on'));
-  el.classList.add('on');
-  currentBottFilter = filter;
+function toggleBottFilter(el, filter) {
+  if (filter === 'tutti') {
+    currentBottFilters.clear();
+  } else {
+    // millesimato e nv sono mutuamente esclusivi
+    if (filter === 'millesimato') currentBottFilters.delete('nv');
+    if (filter === 'nv') currentBottFilters.delete('millesimato');
+    if (currentBottFilters.has(filter)) {
+      currentBottFilters.delete(filter);
+    } else {
+      currentBottFilters.add(filter);
+    }
+  }
+  // Aggiorna visual: .on sui filtri attivi, Tutti se nessuno attivo
+  document.querySelectorAll('#bott-filters .f-btn').forEach(b => {
+    const f = b.dataset.filter;
+    const active = f === 'tutti' ? currentBottFilters.size === 0 : currentBottFilters.has(f);
+    b.classList.toggle('on', active);
+  });
   renderBottiglie();
 }
 

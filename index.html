@@ -1282,14 +1282,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="filter-bar">
     <div class="filter-row" id="bott-filters">
-      <div class="f-btn on" onclick="setBottFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn" onclick="setBottFilter(this,'nv')">Sans Année</div>
-      <div class="f-btn" onclick="setBottFilter(this,'millesimato')">Millésimé</div>
-      <div class="f-btn" onclick="setBottFilter(this,'rose')">Rosé</div>
-      <div class="f-btn" onclick="setBottFilter(this,'blanc_de_blancs')">Blanc de Blancs</div>
-      <div class="f-btn" onclick="setBottFilter(this,'blanc_de_noirs')">Blanc de Noirs</div>
-      <div class="f-btn" onclick="setBottFilter(this,'prestige')">Prestige Cuvée</div>
-      <div class="f-btn" onclick="setBottFilter(this,'nature')">Brut Nature</div>
+      <div class="f-btn on"  data-filter="tutti"          onclick="toggleBottFilter(this,'tutti')">Tutti</div>
+      <div class="f-btn"     data-filter="millesimato"    onclick="toggleBottFilter(this,'millesimato')">Millésimé</div>
+      <div class="f-btn"     data-filter="nv"             onclick="toggleBottFilter(this,'nv')">Sans Année</div>
+      <div class="f-btn"     data-filter="blanc_de_blancs" onclick="toggleBottFilter(this,'blanc_de_blancs')">Blanc de Blancs</div>
+      <div class="f-btn"     data-filter="blanc_de_noirs"  onclick="toggleBottFilter(this,'blanc_de_noirs')">Blanc de Noirs</div>
+      <div class="f-btn"     data-filter="rose"            onclick="toggleBottFilter(this,'rose')">Rosé</div>
+      <div class="f-btn"     data-filter="assemblage"      onclick="toggleBottFilter(this,'assemblage')">Assemblage</div>
+      <div class="f-btn"     data-filter="nature"          onclick="toggleBottFilter(this,'nature')">Brut Nature</div>
+      <div class="f-btn"     data-filter="prestige"        onclick="toggleBottFilter(this,'prestige')">In Evidenza</div>
     </div>
     <div class="filter-row" id="bott-letter-filters" style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px;"></div>
   </div>
