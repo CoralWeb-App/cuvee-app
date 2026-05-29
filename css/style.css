@@ -847,6 +847,27 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 /* divisore sotto la sezione */
 .assembl-divider{height:1px;background:var(--border);margin:18px 18px 0;}
 
+/* ── Sezione acquisto ─────────────────────────────────── */
+.buy-row{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;
+  text-decoration:none;
+  border-bottom:1px solid var(--border);
+  transition:background .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.buy-row:active{background:var(--ivory-3);}
+.buy-logo{
+  width:40px;height:40px;border-radius:10px;
+  background:var(--white);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;overflow:hidden;
+}
+.buy-info{flex:1;min-width:0;}
+.buy-name{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.buy-desc{font-family:var(--sans);font-size:11px;color:var(--ink-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.buy-arrow{font-size:15px;color:var(--gold);flex-shrink:0;}
+
 /* ══════════════════════════════════════════════
    SCAN FEATURE
 ══════════════════════════════════════════════ */
