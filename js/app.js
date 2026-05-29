@@ -3852,6 +3852,21 @@ function _renderScanResult(result, photoDataUrl) {
     + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
     // ── Scheda completa ──
     + (catalogBtn ? '<div style="margin-top:4px;">' + catalogBtn + '</div>' : '')
+    // ── Debug: sorgente risultato ──
+    + (function() {
+        const fromCache = result.from_cache === true;
+        const icon  = fromCache ? 'ti-database' : 'ti-sparkles';
+        const color = fromCache ? '#22c55e' : '#C8A03A';
+        const bg    = fromCache ? 'rgba(34,197,94,.07)' : 'rgba(200,160,58,.07)';
+        const border= fromCache ? 'rgba(34,197,94,.2)'  : 'rgba(200,160,58,.2)';
+        const label = fromCache
+          ? '✓ Bottiglia trovata nel database — risultati dal catalogo'
+          : '✦ Scansione nuova — analisi AI in tempo reale';
+        return '<div style="margin:16px 14px 0;padding:12px 14px;background:' + bg + ';border:1px solid ' + border + ';border-radius:10px;display:flex;align-items:center;gap:10px;">'
+          + '<i class="ti ' + icon + '" style="font-size:16px;color:' + color + ';flex-shrink:0;"></i>'
+          + '<span style="font-family:var(--sans);font-size:12px;color:' + color + ';line-height:1.4;">' + label + '</span>'
+          + '</div>';
+      })()
     + '<div style="height:30px;"></div>';
 }
 
