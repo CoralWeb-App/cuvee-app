@@ -1329,10 +1329,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="detail-name" id="bott-detail-nome">—</div>
         <div class="detail-meta" id="bott-detail-tipo" style="margin-top:4px;margin-bottom:8px;">—</div>
         <div class="badges-row" id="bott-detail-badges"></div>
-        <!-- Score piccolo inline -->
-        <div id="bott-detail-score-wrap" style="display:none;flex-direction:column;align-items:flex-start;margin-top:10px;">
+        <!-- Score inline: cerchio + label a destra -->
+        <div id="bott-detail-score-wrap" style="display:none;flex-direction:row;align-items:center;gap:9px;margin-top:10px;">
           <div id="bott-detail-score-ring"></div>
-          <div class="score-label-sm" id="bott-detail-score-label">—</div>
+          <div id="bott-detail-score-label" style="font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-3);line-height:1.2;">—</div>
         </div>
       </div>
     </div>
