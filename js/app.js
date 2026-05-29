@@ -917,6 +917,9 @@ async function signOut() {
   currentMaisonFilter = 'tutti';
   currentMaisonLetter = 'tutti';
   currentMaisonSearch = '';
+  currentBottFilter   = 'tutti';
+  currentBottLetter   = 'tutti';
+  currentBottSearch   = '';
   // Svuota stack navigazione
   stack.length = 0;
   // Nascondi bottom nav
@@ -3077,6 +3080,7 @@ async function loadDetailBottles(maisonId) {
 let allBottiglie = [];
 let currentBottFilter = 'tutti';
 let currentBottSearch = '';
+let currentBottLetter = 'tutti';
 let currentBottiglia = null;
 let wishlistIds = new Set();
 
@@ -3148,7 +3152,6 @@ async function loadAndRenderBottiglie() {
       .select('*, maison(nome, slug)')
       .eq('is_published', true)
       .eq('needs_review', false)
-      .order('is_featured', { ascending: false })
       .order('nome', { ascending: true });
     if (error) throw error;
     allBottiglie = data || [];
@@ -3159,6 +3162,7 @@ async function loadAndRenderBottiglie() {
     if (countEl) countEl.textContent = allBottiglie.length + ' cuvée nel catalogo';
     if (loadingEl) loadingEl.style.display = 'none';
     if (listEl) listEl.style.display = 'block';
+    buildBottLetterFilters();
     renderBottiglie();
   } catch(e) {
     console.log('loadBottiglie error:', e);
@@ -3172,6 +3176,7 @@ function renderBottiglie() {
   const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
   let filtered = allBottiglie;
   if (currentBottFilter !== 'tutti') filtered = filtered.filter(b => b.tipo === currentBottFilter);
+  if (currentBottLetter !== 'tutti') filtered = filtered.filter(b => bottInitial(b.nome) === currentBottLetter);
   if (currentBottSearch) {
     const q = normalizeStr(currentBottSearch);
     const tipoLabelB = {'nv':'sans année','millesimato':'millésimé','prestige':'prestige cuvée','blanc_de_blancs':'blanc de blancs','blanc_de_noirs':'blanc de noirs','rose':'rosé','nature':'brut nature'};
@@ -3233,6 +3238,33 @@ function setBottFilter(el, filter) {
   document.querySelectorAll('#bott-filters .f-btn').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
   currentBottFilter = filter;
+  renderBottiglie();
+}
+
+// Prima lettera del nome bottiglia (ignora parentesi e simboli)
+function bottInitial(nome) {
+  if (!nome) return '';
+  const m = nome.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
+  return m ? m[0].toUpperCase() : '';
+}
+
+function buildBottLetterFilters() {
+  const row = document.getElementById('bott-letter-filters');
+  if (!row) return;
+  const letters = [...new Set(
+    allBottiglie.map(b => bottInitial(b.nome)).filter(Boolean)
+  )].sort();
+  let html = '<div class="f-btn on" onclick="setBottLetter(this,\'tutti\')">Tutte</div>';
+  letters.forEach(l => {
+    html += '<div class="f-btn" onclick="setBottLetter(this,\'' + l + '\')">' + l + '</div>';
+  });
+  row.innerHTML = html;
+}
+
+function setBottLetter(el, letter) {
+  document.querySelectorAll('#bott-letter-filters .f-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  currentBottLetter = letter;
   renderBottiglie();
 }
 
