@@ -904,7 +904,8 @@ async function renderBottiglie() {
       // nome_norm = lower(unaccent(nome)) → accent-insensitive
       query = query.ilike('nome_norm', `%${norm(bottigliaSearch)}%`)
     }
-    if (bottigliaFilter) query = query.eq('tipo', bottigliaFilter)
+    if (bottigliaFilter === 'millesimato') query = query.eq('is_millesimato', true)
+    else if (bottigliaFilter)              query = query.eq('tipo', bottigliaFilter)
     if (bottigliaStatusFilter === 'online')  query = query.eq('is_published', true)
     if (bottigliaStatusFilter === 'offline') query = query.eq('is_published', false)
     if (bottigliaLetterFilter) query = query.ilike('nome_norm', `${bottigliaLetterFilter}%`)
