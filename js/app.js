@@ -3306,33 +3306,29 @@ function renderAssemblaggio(b) {
     else totalEl.textContent = '';
   }
 
-  // Mappa colori e label
-  const itemsRendered = items.map(item => {
+  // Riserva sempre presente (0% se assente nei dati)
+  const hasRiserva = items.some(i => !i.anno);
+  if (!hasRiserva) items = [...items, { tipo: 'riserva', perc: 0 }];
+
+  // Card per ogni componente
+  const cards = items.map(item => {
+    const isRiserva = !item.anno;
     const label = item.anno
       ? String(item.anno)
       : (item.tipo === 'riserva' ? 'Riserva' : (item.label || 'Base'));
     const perc  = item.perc || 0;
-    const color = item.anno ? colors[colorIdx++ % colors.length] : '#c4b49a';
-    return { label, perc, color };
-  });
+    const color = isRiserva ? '#c4b49a' : colors[colorIdx++ % colors.length];
+    const percColor = perc > 0 ? 'var(--gold)' : 'var(--ink-4)';
 
-  // Barra impilata unica
-  const stackedBar = '<div style="display:flex;border-radius:8px;overflow:hidden;height:10px;margin:0 18px 14px;gap:1px;">'
-    + itemsRendered.map(i => '<div style="flex:' + i.perc + ';background:' + i.color + ';transition:flex .3s;" title="' + i.label + ': ' + i.perc + '%"></div>').join('')
-    + '</div>';
+    return '<div style="background:var(--ivory-2);border:1px solid var(--border);border-top:3px solid ' + color + ';'
+      + 'border-radius:8px;padding:10px 8px;text-align:center;flex:1;min-width:62px;max-width:90px;">'
+      + '<div style="font-family:var(--serif);font-size:13px;color:var(--ink-2);font-weight:600;margin-bottom:5px;">' + label + '</div>'
+      + '<div style="font-family:var(--sans);font-size:15px;font-weight:700;color:' + percColor + ';">' + perc + '%</div>'
+      + '</div>';
+  }).join('');
 
-  // Legend chips
-  const legend = '<div style="display:flex;flex-wrap:wrap;gap:8px 14px;padding:0 18px 4px;">'
-    + itemsRendered.map(i =>
-        '<div style="display:flex;align-items:center;gap:5px;">'
-        + '<div style="width:8px;height:8px;border-radius:50%;background:' + i.color + ';flex-shrink:0;"></div>'
-        + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-2);font-weight:600;">' + i.label + '</span>'
-        + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">' + i.perc + '%</span>'
-        + '</div>'
-      ).join('')
-    + '</div>';
-
-  el.innerHTML = stackedBar + legend + '<div class="assembl-divider"></div>';
+  el.innerHTML = '<div style="display:flex;gap:8px;padding:0 18px 16px;flex-wrap:wrap;">' + cards + '</div>'
+    + '<div class="assembl-divider"></div>';
 }
 
 function bottDetailPhotoClick() {
