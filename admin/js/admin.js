@@ -1046,7 +1046,7 @@ async function editBottiglia(id) {
       'pct_pinot_noir','pct_chardonnay','pct_meunier',
       'provenienza_uve','vini_base','assemblaggio',
       'vinificazione','malolattica','maturazione_mesi','produzione_bottiglie',
-      'descrizione','note_degustazione','abbinamento','vitigni','note',
+      'note_vigneto','note_degustazione','abbinamento','score_note','stile',
       'is_featured','is_published',
       'link_millesima','link_callmewine','link_tannico',
       'link_custom1_nome','link_custom1_url','link_custom2_nome','link_custom2_url'
@@ -1181,9 +1181,9 @@ async function editBottiglia(id) {
                 <input class="adm-form-input" type="text" data-col="provenienza_uve" value="${esc(b.provenienza_uve ?? '')}">
               </div>
               <div class="adm-form-field" style="grid-column:1/-1">
-                <label class="adm-form-label">Vitigni</label>
-                <input class="adm-form-input" type="text" data-col="vitigni"
-                       value="${esc(b.vitigni ?? '')}" placeholder="es. 50% Pinot Noir, 30% Chardonnay…">
+                <label class="adm-form-label">Stile</label>
+                <input class="adm-form-input" type="text" data-col="stile"
+                       value="${esc(b.stile ?? '')}" placeholder="es. Blanc de Blancs, Rosé, Prestige…">
               </div>
               <div class="adm-form-field" style="grid-column:1/-1">
                 <label class="adm-form-label">Vini di Base (note)</label>
@@ -1233,8 +1233,8 @@ async function editBottiglia(id) {
           <div class="adm-edit-card-body">
             <div class="adm-edit-grid">
               <div class="adm-form-field" style="grid-column:1/-1">
-                <label class="adm-form-label">Descrizione</label>
-                <textarea class="adm-form-input" rows="3" style="resize:vertical" data-col="descrizione">${esc(b.descrizione ?? '')}</textarea>
+                <label class="adm-form-label">Note Vigneto</label>
+                <textarea class="adm-form-input" rows="3" style="resize:vertical" data-col="note_vigneto">${esc(b.note_vigneto ?? '')}</textarea>
               </div>
               <div class="adm-form-field" style="grid-column:1/-1">
                 <label class="adm-form-label">Note Degustazione</label>
@@ -1243,6 +1243,11 @@ async function editBottiglia(id) {
               <div class="adm-form-field" style="grid-column:1/-1">
                 <label class="adm-form-label">Abbinamento</label>
                 <textarea class="adm-form-input" rows="2" style="resize:vertical" data-col="abbinamento">${esc(b.abbinamento ?? '')}</textarea>
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Note Punteggio</label>
+                <input class="adm-form-input" type="text" data-col="score_note"
+                       value="${esc(b.score_note ?? '')}" placeholder="Breve commento al punteggio…">
               </div>
             </div>
           </div>
