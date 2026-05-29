@@ -173,7 +173,7 @@ serve(async (req) => {
     let quick: Record<string, unknown> = { is_bottle: true, is_champagne: false, confidence: 0 }
     try {
       const qMsg = await anthropic.messages.create({
-        model:      'claude-3-5-haiku-20241022',
+        model:      'claude-haiku-4-5-20251001',
         max_tokens: 250,
         messages: [{ role: 'user', content: [
           { type: 'image', source: imgSource },
@@ -312,7 +312,7 @@ serve(async (req) => {
     let rawText = ''
     try {
       const aiMsg = await anthropic.messages.create({
-        model:      'claude-3-5-sonnet-20241022',
+        model:      'claude-sonnet-4-5-20251001',
         max_tokens: 2000,
         system:     SYSTEM_PROMPT,
         messages: [{ role: 'user', content: [
@@ -325,7 +325,7 @@ serve(async (req) => {
       console.error('Sonnet error, trying haiku:', JSON.stringify(aiErr))
       try {
         const fallbackMsg = await anthropic.messages.create({
-          model:      'claude-3-5-haiku-20241022',
+          model:      'claude-haiku-4-5-20251001',
           max_tokens: 2000,
           system:     SYSTEM_PROMPT,
           messages: [{ role: 'user', content: [
