@@ -84,11 +84,22 @@ const USER_PROMPT =
   'STEP 1 - PRIMA DI TUTTO: l immagine mostra una bottiglia o contenitore di bevanda?\n' +
   'Se NO (persona, cibo, oggetto, parte del corpo, ecc.) -> rispondi solo: {"is_bottle":false,"is_champagne":false,"confidence":0}\n\n' +
   'STEP 2 - Solo se is_bottle=true: segui la catena decisionale champagne dal system prompt.\n\n' +
-  'STEP 3 - Se is_champagne=true:\n' +
+  'STEP 3 - Se is_champagne=true, usa tutta la tua conoscenza enciclopedica:\n' +
   '1. "cuvee": COMPLETO con denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs) SENZA maison e SENZA annata\n' +
   '2. Per uvaggio: usa conoscenza enciclopedica della maison/cuvee\n' +
-  '3. maturazione_mesi: P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72\n' +
-  '4. punteggio Parker/RVF: P2=98, Dom Perignon=96, Cristal=95, Krug GC=95, NM Brut=87-89\n\n' +
+  '3. maturazione_mesi: P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72, Krug GC=72, NM standard=36\n' +
+  '4. punteggio Parker/RVF: P2=98, Dom Perignon=96, Cristal=95, Krug GC=95, NM Brut grande maison=87-89\n' +
+  '5. assemblaggio: per NV indica le annate dei vins de base con % e i vins de reserve con %. Per millesimati lascia null.\n' +
+  '6. PREZZO (campo critico - sii preciso): indica il prezzo REALE di vendita al dettaglio in Italia (enoteca/online italiano,\n' +
+  '   bottiglia 75cl). USA questi riferimenti precisi di mercato italiano 2025-2026:\n' +
+  '   - NM entry (Moët Brut, Veuve Clicquot Yellow, Mumm Cordon Rouge): 38-50€\n' +
+  '   - NM premium (Bollinger Special Cuvée, Pol Roger Brut, Taittinger Brut): 50-70€\n' +
+  '   - Rosé NM grande maison: 55-80€\n' +
+  '   - RM/RC artigiani noti (Egly-Ouriet, Selosse, Larmandier): 60-120€\n' +
+  '   - Prestige NM (Dom Pérignon, Cristal, Belle Epoque, Comtes de Champagne): 150-250€\n' +
+  '   - Prestige ultra (Krug GC, Dom Pérignon P2, Cristal Rosé): 200-400€\n' +
+  '   - Icone (Salon, Krug Clos du Mesnil, Dom Pérignon P3): 400-900€\n' +
+  '   NON usare prezzi francesi o UK. Arrotonda a multipli di 5€.\n\n' +
   'Rispondi SOLO con JSON valido, zero testo extra:\n' +
   '{\n' +
   '  "is_bottle": true se bottiglia/contenitore bevanda, false se altro,\n' +
@@ -110,13 +121,14 @@ const USER_PROMPT =
   '  "pct_chardonnay": integer 0-100 o null,\n' +
   '  "pct_pinot_noir": integer 0-100 o null,\n' +
   '  "pct_meunier": integer 0-100 o null,\n' +
+  '  "assemblaggio": array di oggetti per NV: [{"anno":2021,"perc":65},{"tipo":"riserva","perc":35}] oppure con label [{"tipo":"riserva","label":"reserve perpetuelle","perc":30}], null per millesimati,\n' +
   '  "provenienza_uve": "zona/village o null",\n' +
   '  "vinificazione": "breve descrizione o null",\n' +
   '  "malolattica": "completa" o "parziale" o "assente" o null,\n' +
   '  "maturazione_mesi": integer o null,\n' +
   '  "produzione_bottiglie": integer o null,\n' +
-  '  "prezzo_min": integer prezzo minimo medio mercato italiano in euro (es. 45) o null,\n' +
-  '  "prezzo_max": integer prezzo massimo medio mercato italiano in euro (es. 65) o null,\n' +
+  '  "prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, arrotondato a 5, o null,\n' +
+  '  "prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, arrotondato a 5, o null,\n' +
   '  "not_champagne_type": "tipo bevanda/prodotto se NOT champagne, o null"\n' +
   '}'
 
@@ -444,6 +456,7 @@ serve(async (req) => {
             maturazione_mesi:     ai.maturazione_mesi ?? null,
             produzione_bottiglie: ai.produzione_bottiglie ?? null,
             score_medio:          ai.punteggio ?? null,
+            assemblaggio:         ai.assemblaggio ?? null,
             prezzo_min:           ai.prezzo_min ?? null,
             prezzo_max:           ai.prezzo_max ?? null,
             fascia_prezzo:        fasciaFromPrezzo((ai.prezzo_min as number | null) ?? null),
@@ -569,6 +582,7 @@ serve(async (req) => {
       maturazione_mesi:     ai.maturazione_mesi     ?? null,
       produzione_bottiglie: ai.produzione_bottiglie ?? null,
       dosaggio_gl:          null,
+      assemblaggio:         ai.assemblaggio         ?? null,
       prezzo_min:           (ai.prezzo_min as number | null) ?? null,
       prezzo_max:           (ai.prezzo_max as number | null) ?? null,
       fascia_prezzo:        fasciaFromPrezzo((ai.prezzo_min as number | null) ?? null),

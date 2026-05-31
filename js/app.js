@@ -3837,6 +3837,10 @@ function _renderScanResult(result, photoDataUrl) {
   const maturazioneMesi= result.maturazione_mesi ?? b.maturazione_mesi ?? null;
   const prodBottiglie  = result.produzione_bottiglie ?? b.produzione_bottiglie ?? null;
   const dosaggioGl     = result.dosaggio_gl      ?? b.dosaggio_gl     ?? null;
+  const prezzoMin      = result.prezzo_min       ?? b.prezzo_min      ?? null;
+  const prezzoMax      = result.prezzo_max       ?? b.prezzo_max      ?? null;
+  const fascia         = result.fascia_prezzo    ?? b.fascia_prezzo   ?? null;
+  const assemblaggio   = result.assemblaggio     ?? b.assemblaggio    ?? null;
 
   const badge = result.is_in_catalog
     ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
@@ -3848,9 +3852,17 @@ function _renderScanResult(result, photoDataUrl) {
   if (tipo)   pills += '<span class="scan-pill">' + tipo   + '</span>';
   if (result.prestige) pills += '<span class="scan-pill scan-pill-gold">✦ Prestige</span>';
 
-  const priceHtml = (b.prezzo_min || b.fascia_prezzo)
-    ? '<div style="font-family:var(--sans);font-size:13px;color:var(--gold);font-weight:500;margin-top:8px;">'
-      + (b.prezzo_min ? 'da ' + b.prezzo_min + '€' : b.fascia_prezzo) + '</div>'
+  const priceHtml = (prezzoMin || fascia)
+    ? '<div style="margin-top:10px;">'
+        + priceScale(fascia, prezzoMin)
+        + (prezzoMin
+            ? '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-top:3px;">'
+                + 'da <b style="color:var(--gold);">' + prezzoMin + '€</b>'
+                + (prezzoMax ? ' – <b style="color:var(--gold);">' + prezzoMax + '€</b>' : '')
+                + ' <span style="color:var(--ink-4);font-size:11px;">(Italia, 75cl)</span>'
+              + '</div>'
+            : '')
+      + '</div>'
     : '';
 
   // Foto verticale sinistra
@@ -3930,6 +3942,32 @@ function _renderScanResult(result, photoDataUrl) {
         + '<div class="form-section-title"><i class="ti ti-chef-hat"></i> Abbinamento</div>'
         + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:8px;">' + abbinamento + '</div>'
       + '</div>' : '')
+    // ── Assemblaggio ──
+    + (function(){
+        if (!assemblaggio || !Array.isArray(assemblaggio) || !assemblaggio.length) return '';
+        const anni    = assemblaggio.filter((x:any) => x.anno).sort((a:any,b:any) => b.anno - a.anno);
+        const riserve = assemblaggio.filter((x:any) => x.tipo === 'riserva');
+        if (!anni.length && !riserve.length) return '';
+        const bars = assemblaggio.map((x:any) => {
+          const isRis  = x.tipo === 'riserva';
+          const label  = isRis ? (x.label || 'Vins de réserve') : String(x.anno);
+          const bg     = isRis ? 'var(--border-2)' : 'var(--gold)';
+          const pct    = x.perc || 0;
+          return '<div style="margin-bottom:6px;">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">'
+              + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-3);">' + label + '</span>'
+              + '<span style="font-family:var(--sans);font-size:12px;font-weight:600;color:var(--gold);">' + pct + '%</span>'
+            + '</div>'
+            + '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">'
+              + '<div style="height:100%;width:' + pct + '%;background:' + bg + ';border-radius:3px;transition:width .4s;"></div>'
+            + '</div>'
+          + '</div>';
+        }).join('');
+        return '<div class="form-section" style="margin:14px 14px 0;">'
+          + '<div class="form-section-title"><i class="ti ti-chart-bar"></i> Assemblaggio</div>'
+          + '<div style="margin-top:10px;">' + bars + '</div>'
+        + '</div>';
+      })()
     // ── Scheda tecnica ──
     + (function(){
         const uvaggi = [
