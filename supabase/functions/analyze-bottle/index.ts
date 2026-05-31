@@ -252,7 +252,7 @@ serve(async (req) => {
 
       const { data: bottles } = await adminSupa
         .from('bottiglie')
-        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, descrizione, maison(id, nome, slug)')
+        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, maison(id, nome, slug)')
         .eq('is_published', true)
         .eq('needs_review', false)
 
@@ -367,7 +367,6 @@ serve(async (req) => {
         produzione_bottiglie: mb.produzione_bottiglie  ?? null,
         dosaggio_gl:          mb.dosaggio_gl           ?? null,
         assemblaggio:         mb.assemblaggio          ?? null,
-        descrizione:          mb.descrizione           ?? null,
         prezzo_min:           mb.prezzo_min            ?? null,
         prezzo_max:           mb.prezzo_max            ?? null,
         fascia_prezzo:        mb.fascia_prezzo         ?? fasciaFromPrezzo(mb.prezzo_min ?? null),
@@ -459,7 +458,6 @@ serve(async (req) => {
             dosaggio_tipo:        ai.dosage ?? null,
             dosaggio_gl:          ai.dosaggio_gl ?? null,
             tipo:                 ai.tipo ? (ai.tipo as string).replace(/ /g, '_') : null,
-            descrizione:          ai.descrizione ?? null,
             note_degustazione:    ai.note_degustazione ?? null,
             abbinamento:          ai.abbinamento ?? null,
             finestra_da:          ai.finestra_da ?? null,
@@ -498,8 +496,7 @@ serve(async (req) => {
               dosaggio_tipo:        ai.dosage ?? null,
               dosaggio_gl:          ai.dosaggio_gl ?? null,
               tipo:                 ai.tipo ? (ai.tipo as string).replace(/ /g, '_') : null,
-              descrizione:          ai.descrizione ?? null,
-              note_degustazione:    ai.note_degustazione ?? null,
+                note_degustazione:    ai.note_degustazione ?? null,
               abbinamento:          ai.abbinamento ?? null,
               finestra_da:          ai.finestra_da ?? null,
               finestra_a:           ai.finestra_a  ?? null,
@@ -617,7 +614,6 @@ serve(async (req) => {
       maturazione_mesi:     ai.maturazione_mesi     ?? null,
       produzione_bottiglie: ai.produzione_bottiglie ?? null,
       dosaggio_gl:          (ai.dosaggio_gl as number | null) ?? null,
-      descrizione:          ai.descrizione          ?? null,
       assemblaggio:         ai.assemblaggio         ?? null,
       prezzo_min:           (ai.prezzo_min as number | null) ?? null,
       prezzo_max:           (ai.prezzo_max as number | null) ?? null,
