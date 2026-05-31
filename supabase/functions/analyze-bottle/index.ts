@@ -198,7 +198,7 @@ serve(async (req) => {
     let quick: Record<string, unknown> = { is_bottle: true, is_champagne: false, confidence: 0 }
     try {
       const qMsg = await anthropic.messages.create({
-        model:      'claude-haiku-4-5-20250514',
+        model:      'claude-haiku-4-5-20251001',
         max_tokens: 250,
         messages: [{ role: 'user', content: [
           { type: 'image', source: imgSource },
@@ -359,7 +359,7 @@ serve(async (req) => {
     // Meglio un errore visibile che un'analisi degradata di nascosto.
     try {
       const aiMsg = await anthropic.messages.create({
-        model:      'claude-sonnet-4-5-20250514',
+        model:      'claude-sonnet-4-6',
         max_tokens: 2000,
         system:     SYSTEM_PROMPT,
         messages: [{ role: 'user', content: [
