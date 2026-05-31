@@ -121,7 +121,6 @@ const USER_PROMPT =
   '  "dosage": "Brut Nature" o "Extra Brut" o "Brut" o "Extra Sec" o "Sec" o "Demi-Sec" o "Doux" o null,\n' +
   '  "tipo": "blanc de blancs" o "blanc de noirs" o "rose" o "assemblage" o null,\n' +
   '  "prestige": true se cuvee prestige/tete de cuvee,\n' +
-  '  "descrizione": "max 180 caratteri italiano tono elegante, o null",\n' +
   '  "punteggio": intero 0-100 scala Parker/RVF o null,\n' +
   '  "note_degustazione": "200-300 caratteri italiano: colore perlage profumi gusto, o null",\n' +
   '  "abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola, o null",\n' +
@@ -137,7 +136,6 @@ const USER_PROMPT =
   '  "dosaggio_gl": numero decimale grammi/litro tipici per questa cuvee (es. Brut Nature=0, Extra Brut=4, Brut=9, Sec=25) o null,\n' +
   '  "maturazione_mesi": integer o null,\n' +
   '  "produzione_bottiglie": integer o null,\n' +
-  '  "descrizione": "max 180 caratteri italiano, tono elegante, descrive stile e identità della cuvee, o null",\n' +
   '  "prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, arrotondato a 5, o null,\n' +
   '  "prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, arrotondato a 5, o null,\n' +
   '  "not_champagne_type": "tipo bevanda/prodotto se NOT champagne, o null"\n' +
