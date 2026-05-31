@@ -3136,7 +3136,7 @@ function priceScale(fascia, prezzo) {
   const levels = {'media_gamma':2,'premium':3,'alta_gamma':4,'lusso':5};
   let n = levels[fascia] || 0;
   if (!n && prezzo) {
-    n = prezzo <= 45 ? 2 : prezzo <= 100 ? 3 : prezzo <= 200 ? 4 : 5;
+    n = prezzo <= 60 ? 2 : prezzo <= 120 ? 3 : prezzo <= 250 ? 4 : 5;
   }
   if (!n) return '';
   const symbols = Array.from({length:5}, (_,i) =>
