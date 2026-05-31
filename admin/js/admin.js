@@ -886,10 +886,21 @@ async function approveBottiglia(id) {
 async function rejectBottiglia(id, nome) {
   if (!confirm(`Eliminare definitivamente "${nome || 'questa bottiglia'}"?\nL'operazione non è reversibile.`)) return
   try {
-    // 1. Elimina foto dallo storage via funzione SQL con SECURITY DEFINER
-    //    (bypassa RLS — file caricati con service role non eliminabili via anon key)
-    const { error: rpcErr } = await supa.rpc('delete_bottle_photo', { p_bottle_id: id })
-    if (rpcErr) console.warn('Storage delete via RPC warning:', rpcErr.message)
+    // 1. Elimina foto dallo storage via admin-photo-upload (service role, bypassa RLS)
+    const { data: { session } } = await supa.auth.getSession()
+    if (session) {
+      const resp = await fetch(`${SUPA_URL}/functions/v1/admin-photo-upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type':  'application/json',
+          'apikey':        SUPA_ANON,
+        },
+        body: JSON.stringify({ action: 'delete', bottle_id: id }),
+      })
+      const r = await resp.json()
+      if (!resp.ok) console.warn('Storage delete warning:', r.error)
+    }
 
     // 2. Elimina bottiglia dal DB
     const { data: deleted, error } = await supa.from('bottiglie').delete().eq('id', id).select('id')
