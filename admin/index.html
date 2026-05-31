@@ -451,6 +451,60 @@
           </div>
         </div>
 
+        <!-- FILTERS TIPO -->
+        <div class="adm-filters">
+          <button class="adm-filter active" onclick="filterMaison('', this)">Tutti</button>
+          <button class="adm-filter" onclick="filterMaison('grande_maison', this)">Grande Maison <small style="opacity:.6">NM · ND · MA</small></button>
+          <button class="adm-filter" onclick="filterMaison('vigneron', this)">Vigneron <small style="opacity:.6">RM · RC · SR</small></button>
+          <button class="adm-filter" onclick="filterMaison('cooperativa', this)">Cooperativa <small style="opacity:.6">CM</small></button>
+        </div>
+        <!-- FILTERS STATUS -->
+        <div class="adm-filters adm-filters-status" style="margin-top:6px;margin-bottom:0;">
+          <span class="adm-filters-label">STATO:</span>
+          <button class="adm-filter-status active" onclick="filterMaisonStatus('', this)">Tutti</button>
+          <button class="adm-filter-status" onclick="filterMaisonStatus('online', this)"><span class="status-dot online"></span> Online</button>
+          <button class="adm-filter-status" onclick="filterMaisonStatus('offline', this)"><span class="status-dot offline"></span> Offline</button>
+        </div>
+
+        <!-- SORT -->
+        <div class="adm-filters" style="margin-top:8px;margin-bottom:0;">
+          <span class="adm-filters-label">ORDINA:</span>
+          <button class="adm-filter-sort active" onclick="filterMaisonSort('nome', this)"><i class="ti ti-sort-az"></i> A → Z</button>
+          <button class="adm-filter-sort" onclick="filterMaisonSort('recente', this)"><i class="ti ti-clock"></i> Più recente</button>
+        </div>
+
+        <!-- LETTER FILTER -->
+        <div class="adm-filters-letter" style="margin-top:8px;margin-bottom:14px;">
+          <span class="adm-filters-label" style="margin-right:4px;">A–Z</span>
+          <button class="adm-filter-letter all-btn active" onclick="filterMaisonLetter('', this)">Tutti</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('a', this)">A</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('b', this)">B</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('c', this)">C</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('d', this)">D</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('e', this)">E</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('f', this)">F</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('g', this)">G</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('h', this)">H</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('i', this)">I</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('j', this)">J</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('k', this)">K</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('l', this)">L</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('m', this)">M</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('n', this)">N</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('o', this)">O</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('p', this)">P</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('q', this)">Q</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('r', this)">R</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('s', this)">S</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('t', this)">T</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('u', this)">U</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('v', this)">V</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('w', this)">W</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('x', this)">X</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('y', this)">Y</button>
+          <button class="adm-filter-letter" onclick="filterMaisonLetter('z', this)">Z</button>
+        </div>
+
         <div class="adm-maison-grid" id="maison-grid">
           <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento maison...</div>
         </div>
@@ -654,6 +708,51 @@
           </div>
         </div>
 
+        <!-- ── SEZIONE COSTI AI ─────────────────────────────────── -->
+        <div style="margin:28px 0 12px;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-4);text-transform:uppercase;">
+          Analisi Costi AI
+        </div>
+        <div class="adm-stats-grid">
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon" style="background:#E8F5E9"><i class="ti ti-bolt" style="color:#388E3C"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-haiku-count">…</div>
+              <div class="adm-stat-label">Scan Haiku — cache hit</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon" style="background:#E3F2FD"><i class="ti ti-brain" style="color:#1565C0"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-sonnet-count">…</div>
+              <div class="adm-stat-label">Scan Sonnet — full analysis</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon" style="background:#FFF8E1"><i class="ti ti-percentage" style="color:#F9A825"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-hit-rate">…</div>
+              <div class="adm-stat-label">Hit rate catalogo</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon" style="background:#FCE4EC"><i class="ti ti-currency-dollar" style="color:#C62828"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-total-cost">…</div>
+              <div class="adm-stat-label">Costo AI totale (USD)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown dettagliato costi -->
+        <div class="adm-card" style="margin-bottom:24px">
+          <div class="adm-card-header">
+            <span class="adm-card-title"><i class="ti ti-receipt"></i> Breakdown costi per tipo scansione</span>
+          </div>
+          <div id="stats-cost-breakdown" style="padding:16px">
+            <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento...</div>
+          </div>
+        </div>
+
         <div class="adm-charts-grid">
 
           <!-- CHART: Scansioni per giorno -->
@@ -789,7 +888,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=4"></script>
+<script src="js/admin.js?v=9"></script>
 
 </body>
 </html>

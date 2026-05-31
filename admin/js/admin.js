@@ -15,8 +15,12 @@ let bottigliaFilter       = ''
 let bottigliaStatusFilter = ''
 let bottigliaSort         = 'nome'
 let bottigliaLetterFilter = ''
-let maisonSearch    = ''
-let searchTimer     = null
+let maisonSearch       = ''
+let maisonTipoFilter   = ''
+let maisonStatusFilter = ''
+let maisonSort         = 'nome'
+let maisonLetterFilter = ''
+let searchTimer        = null
 
 const PER_PAGE = 15
 
@@ -158,7 +162,7 @@ function showView(id) {
   if (id === 'dashboard')    loadDashboard()
   if (id === 'approvazioni') loadApprovazioni()
   if (id === 'bottiglie')    { bottigliaPage = 1; renderBottiglie() }
-  if (id === 'maison')       { maisonSearch = ''; loadMaison() }
+  if (id === 'maison')       { maisonSearch = ''; maisonTipoFilter = ''; maisonStatusFilter = ''; maisonSort = 'nome'; maisonLetterFilter = ''; loadMaison() }
   if (id === 'utenti')       { utentiPage = 1; utentiFilter = 'all'; utentiSearch = ''; renderUtenti() }
   if (id === 'abbonamenti')  loadAbbonamenti()
   if (id === 'stats')        loadStats()
@@ -746,7 +750,7 @@ async function loadApprovazioni() {
 
 async function approvaMaison(id) {
   try {
-    const { data: upd, error } = await supa.from('maison').update({ needs_review: false }).eq('id', id).select('id')
+    const { data: upd, error } = await supa.from('maison').update({ needs_review: false, is_published: true }).eq('id', id).select('id')
     if (error) throw error
     if (!upd?.length) throw new Error('Approvazione bloccata da RLS — aggiungi policy UPDATE su maison')
     showToast('Maison approvata ✓')
@@ -778,6 +782,9 @@ async function viewApprovazioneDetail(id) {
     const maisonOptions = (maisonList || []).map(m =>
       `<option value="${m.id}" ${m.id === b.maison_id ? 'selected' : ''}>${esc(m.nome)}</option>`
     ).join('')
+
+    const fotoCol  = b.foto_url !== undefined ? 'foto_url' : 'photo_url'
+    const fotoUrl  = b.foto_url ?? b.photo_url ?? null
 
     const CUSTOM = ['id','nome','maison_id','tipo','is_millesimato','dosaggio_gl','needs_review','created_at','updated_at']
     const FULL   = ['descrizione','vitigni','note','note_degustazione','photo_url']
@@ -849,7 +856,7 @@ async function viewApprovazioneDetail(id) {
 async function saveAndApproveBottiglia(id) {
   const saved = await saveBottigliaFields(id, false)
   if (!saved) return
-  const { data: upd, error } = await supa.from('bottiglie').update({ needs_review: false }).eq('id', id).select('id')
+  const { data: upd, error } = await supa.from('bottiglie').update({ needs_review: false, is_published: true }).eq('id', id).select('id')
   if (error) { showToast(error.message, 'error'); return }
   if (!upd?.length) { showToast('Approvazione bloccata da RLS — esegui la query SQL admin', 'error'); return }
   closeModal()
@@ -1404,20 +1411,47 @@ async function loadMaison() {
   if (!grid) return
   grid.innerHTML = '<div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento...</div>'
   try {
-    // Fetch all, filter client-side with norm() → accenti/maiuscole ignorati
-    const { data: all, error } = await supa.from('maison').select('*').order('nome')
+    // ── Sort: gestito lato DB per affidabilità ─────────
+    let query = supa.from('maison').select('*')
+    if (maisonSort === 'recente') {
+      query = query.order('created_at', { ascending: false }).order('id', { ascending: false })
+    } else {
+      query = query.order('nome')
+    }
+
+    const { data: all, error } = await query
     if (error) throw error
 
-    const data = maisonSearch
-      ? all.filter(m => {
-          const q = norm(maisonSearch)
-          return norm(m.nome ?? '').includes(q)
-              || norm(m.regione ?? m.zona ?? m.region ?? '').includes(q)
-        })
-      : all
+    // ── Filtri client-side (solo rimozione righe, l'ordine DB è già corretto) ──
+    let data = all
 
+    if (maisonSearch) {
+      const q = norm(maisonSearch)
+      data = data.filter(m =>
+        norm(m.nome ?? '').includes(q)
+        || norm(m.regione ?? m.zona ?? m.region ?? '').includes(q)
+      )
+    }
+
+    // tipo è una stringa ('NM','RM','RC','CM'…) — gruppi come nell'app
+    if (maisonTipoFilter === 'grande_maison') {
+      data = data.filter(m => ['NM','ND','MA'].includes(m.tipo))
+    } else if (maisonTipoFilter === 'vigneron') {
+      data = data.filter(m => ['RM','RC','SR'].includes(m.tipo))
+    } else if (maisonTipoFilter === 'cooperativa') {
+      data = data.filter(m => m.tipo === 'CM')
+    }
+
+    if (maisonStatusFilter === 'online')  data = data.filter(m => m.is_published !== false)
+    if (maisonStatusFilter === 'offline') data = data.filter(m => m.is_published === false)
+
+    if (maisonLetterFilter) {
+      data = data.filter(m => norm(m.nome ?? '').startsWith(maisonLetterFilter))
+    }
+
+    const isFiltered = !!(maisonSearch || maisonTipoFilter || maisonStatusFilter || maisonLetterFilter)
     const sub = document.getElementById('maison-subtitle')
-    if (sub) sub.textContent = (maisonSearch ? `${data.length} / ${all.length}` : data.length) + ' maison nel catalogo'
+    if (sub) sub.textContent = (isFiltered ? `${data.length} / ${all.length}` : data.length) + ' maison nel catalogo'
 
     if (!data.length) { grid.innerHTML = '<div class="adm-loading-block" style="color:var(--text-3)">Nessuna maison trovata</div>'; return }
 
@@ -1443,9 +1477,44 @@ async function loadMaison() {
                 onclick="event.stopPropagation();toggleMaisonStatus('${m.id}',${m.is_published !== false})">
             ${m.is_published !== false ? 'ONLINE' : 'OFFLINE'}
           </span>
+          ${m.tipo ? `<span style="margin-left:6px;font-family:var(--mono);font-size:10px;color:var(--text-3);letter-spacing:.05em">${esc(m.tipo)} · ${{ NM:'Grande Maison', ND:'Grande Maison', MA:'Grande Maison', RM:'Vigneron', RC:'Vigneron', SR:'Vigneron', CM:'Cooperativa' }[m.tipo] ?? m.tipo}</span>` : ''}
         </div>
       </div>`).join('')
   } catch(e) { grid.innerHTML = `<div class="adm-error-cell">${esc(e.message)}</div>` }
+}
+
+function filterMaison(tipo, btn) {
+  maisonTipoFilter = (tipo === maisonTipoFilter) ? '' : tipo
+  document.querySelectorAll('#view-maison .adm-filter').forEach(b => b.classList.remove('active'))
+  if (!maisonTipoFilter) document.querySelector('#view-maison .adm-filter').classList.add('active')
+  else btn.classList.add('active')
+  loadMaison()
+}
+
+function filterMaisonStatus(status, btn) {
+  maisonStatusFilter = (status === maisonStatusFilter) ? '' : status
+  document.querySelectorAll('#view-maison .adm-filter-status').forEach(b => b.classList.remove('active'))
+  if (!maisonStatusFilter) document.querySelector('#view-maison .adm-filter-status').classList.add('active')
+  else btn.classList.add('active')
+  loadMaison()
+}
+
+function filterMaisonSort(sort, btn) {
+  maisonSort = sort
+  document.querySelectorAll('#view-maison .adm-filter-sort').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  loadMaison()
+}
+
+function filterMaisonLetter(letter, btn) {
+  maisonLetterFilter = (letter !== '' && letter === maisonLetterFilter) ? '' : letter
+  document.querySelectorAll('#view-maison .adm-filter-letter').forEach(b => b.classList.remove('active'))
+  if (!maisonLetterFilter) {
+    document.querySelector('#view-maison .adm-filter-letter.all-btn')?.classList.add('active')
+  } else {
+    btn.classList.add('active')
+  }
+  loadMaison()
 }
 
 function searchMaison(val) {
@@ -1977,6 +2046,9 @@ async function revokeAbb(userId, email) {
 // ══════════════════════════════════════════════════════
 async function loadStats() {
   try {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '-' }
+
+    // ── Contatori base ───────────────────────────────────────────
     const [
       { count: totScans },
       { count: totBottiglie },
@@ -1989,12 +2061,127 @@ async function loadStats() {
       supa.from('users').select('*', { count:'exact', head:true }).eq('is_premium', true),
     ])
 
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '-' }
     set('stats-scans',     (totScans??0).toLocaleString('it'))
     set('stats-bottiglie', (totBottiglie??0).toLocaleString('it'))
     set('stats-utenti',    (totUtenti??0).toLocaleString('it'))
     set('stats-premium',   (totPremium??0).toLocaleString('it'))
 
+    // ── Statistiche costi AI (via RPC aggregata) ─────────────────
+    const { data: scanStats, error: rpcErr } = await supa.rpc('get_scan_stats')
+    if (scanStats && !rpcErr) {
+      const s = scanStats
+      const haikuN   = Number(s.haiku_only_count    ?? 0)
+      const sonnetN  = Number(s.sonnet_full_count    ?? 0)
+      const fbN      = Number(s.haiku_fallback_count ?? 0)
+      const tracked  = haikuN + sonnetN + fbN   // scansioni con tracking (esclude legacy)
+      const hitRate  = tracked > 0 ? Math.round(haikuN / tracked * 100) : null
+      const totalCost = Number(s.total_cost_usd ?? 0)
+
+      set('stats-haiku-count',  haikuN.toLocaleString('it'))
+      set('stats-sonnet-count', (sonnetN + fbN).toLocaleString('it'))
+      set('stats-hit-rate',     hitRate !== null ? hitRate + '%' : '—')
+      set('stats-total-cost',   '$' + totalCost.toFixed(4))
+
+      // ── Breakdown dettagliato ────────────────────────────────
+      const haikuCost   = Number(s.haiku_only_cost_usd     ?? 0)
+      const sonnetCost  = Number(s.sonnet_full_cost_usd    ?? 0)
+      const fbCost      = Number(s.haiku_fallback_cost_usd ?? 0)
+      const haikuInTok  = Number(s.total_haiku_input_tokens  ?? 0)
+      const haikuOutTok = Number(s.total_haiku_output_tokens ?? 0)
+      const sonnetInTok = Number(s.total_sonnet_input_tokens  ?? 0)
+      const sonnetOutTok= Number(s.total_sonnet_output_tokens ?? 0)
+      const avgHaiku    = Number(s.avg_cost_haiku_only  ?? 0)
+      const avgSonnet   = Number(s.avg_cost_sonnet_full ?? 0)
+
+      const fmtTok = n => n >= 1_000_000
+        ? (n/1_000_000).toFixed(2) + 'M'
+        : n >= 1_000 ? (n/1_000).toFixed(1) + 'K' : String(n)
+
+      const breakdownEl = document.getElementById('stats-cost-breakdown')
+      if (breakdownEl) {
+        const saving = tracked > 0 && (sonnetN + fbN) > 0
+          ? (() => {
+              // Risparmio stimato: ogni scan haiku-only ha evitato ~1 scan sonnet
+              const sonnetAvgCost = avgSonnet || 0.004
+              const savedUsd = haikuN * (sonnetAvgCost - avgHaiku)
+              return savedUsd > 0 ? '$' + savedUsd.toFixed(4) : null
+            })()
+          : null
+
+        breakdownEl.innerHTML = `
+          <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px">
+            <thead>
+              <tr style="color:var(--text-4);border-bottom:1px solid var(--border-1)">
+                <th style="text-align:left;padding:6px 8px;font-weight:600">Tipo scan</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:600">Conteggio</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:600">Token input</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:600">Token output</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:600">Costo USD</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:600">Costo medio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border-1)">
+                <td style="padding:8px;display:flex;align-items:center;gap:6px">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#388E3C"></span>
+                  <span>Haiku — cache hit</span>
+                </td>
+                <td style="text-align:right;padding:8px">${haikuN.toLocaleString('it')}</td>
+                <td style="text-align:right;padding:8px">${fmtTok(haikuInTok)}</td>
+                <td style="text-align:right;padding:8px">${fmtTok(haikuOutTok)}</td>
+                <td style="text-align:right;padding:8px">$${haikuCost.toFixed(4)}</td>
+                <td style="text-align:right;padding:8px">$${avgHaiku.toFixed(5)}</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border-1)">
+                <td style="padding:8px;display:flex;align-items:center;gap:6px">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1565C0"></span>
+                  <span>Sonnet — full analysis</span>
+                </td>
+                <td style="text-align:right;padding:8px">${sonnetN.toLocaleString('it')}</td>
+                <td style="text-align:right;padding:8px">${fmtTok(sonnetInTok)}</td>
+                <td style="text-align:right;padding:8px">${fmtTok(sonnetOutTok)}</td>
+                <td style="text-align:right;padding:8px">$${sonnetCost.toFixed(4)}</td>
+                <td style="text-align:right;padding:8px">$${avgSonnet.toFixed(5)}</td>
+              </tr>
+              ${fbN > 0 ? `
+              <tr style="border-bottom:1px solid var(--border-1)">
+                <td style="padding:8px;display:flex;align-items:center;gap:6px">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E65100"></span>
+                  <span>Haiku — fallback Sonnet</span>
+                </td>
+                <td style="text-align:right;padding:8px">${fbN.toLocaleString('it')}</td>
+                <td style="text-align:right;padding:8px">—</td>
+                <td style="text-align:right;padding:8px">—</td>
+                <td style="text-align:right;padding:8px">$${fbCost.toFixed(4)}</td>
+                <td style="text-align:right;padding:8px">—</td>
+              </tr>` : ''}
+              <tr style="font-weight:600;border-top:2px solid var(--border-2)">
+                <td style="padding:8px">Totale (scansioni tracciate)</td>
+                <td style="text-align:right;padding:8px">${tracked.toLocaleString('it')}</td>
+                <td style="text-align:right;padding:8px">${fmtTok(haikuInTok + sonnetInTok)}</td>
+                <td style="text-align:right;padding:8px">${fmtTok(haikuOutTok + sonnetOutTok)}</td>
+                <td style="text-align:right;padding:8px">$${totalCost.toFixed(4)}</td>
+                <td style="text-align:right;padding:8px">—</td>
+              </tr>
+            </tbody>
+          </table>
+          ${saving ? `
+          <div style="margin-top:12px;padding:10px 14px;background:#E8F5E9;border-radius:8px;font-family:var(--sans);font-size:12px;color:#1B5E20;display:flex;align-items:center;gap:8px">
+            <i class="ti ti-pig-money" style="font-size:16px"></i>
+            <span>Risparmio stimato grazie al catalogo (scan haiku al posto di Sonnet): <strong>${saving}</strong></span>
+          </div>` : ''}
+          ${Number(s.legacy_count ?? 0) > 0 ? `
+          <div style="margin-top:8px;font-family:var(--sans);font-size:11px;color:var(--text-4)">
+            * ${Number(s.legacy_count).toLocaleString('it')} scansioni precedenti non hanno dati di costo (registrate prima del tracking).
+          </div>` : ''}`
+      }
+    } else {
+      // RPC non disponibile (migration non ancora eseguita)
+      const el = document.getElementById('stats-cost-breakdown')
+      if (el) el.innerHTML = '<div style="padding:12px;font-family:var(--sans);font-size:12px;color:var(--text-4)"><i class="ti ti-info-circle"></i> Esegui prima la migration <code>sql_scan_tracking_migration.sql</code> per abilitare il tracking costi.</div>'
+    }
+
+    // ── Top bottiglie per scansioni ──────────────────────────────
     const { data: topScans } = await supa
       .from('bottle_scans')
       .select('matched_bottle_id, bottiglie:matched_bottle_id(nome)')
