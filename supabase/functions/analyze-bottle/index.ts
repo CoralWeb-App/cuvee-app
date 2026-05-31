@@ -419,11 +419,16 @@ serve(async (req) => {
     // ── Auto-aggiunta al catalogo (Champagne non trovato) ────────
     let newBottleId: string | null = null
 
-    // ── Secondo controllo DB con i dati accurati di Sonnet ──────
-    // Il quick-check Haiku può sbagliare il nome maison (es. "Henriot" invece di "Henri Giraud").
-    // Dopo Sonnet rifacciamo la ricerca con il nome corretto prima di creare una bottiglia nuova.
-    if (ai.is_champagne && ai.maison && ai.cuvee) {
-      const sMaison = norm(ai.maison as string)
+    // ── Secondo controllo DB — SOLO se Haiku aveva sbagliato il nome maison ──
+    // Interviene solo quando Sonnet identifica una maison DIVERSA da Haiku,
+    // evitando falsi match (es. "Vintage" che becca "Vintage 2018" nel catalogo).
+    const haikuMaison = norm((quick.maison as string) || '')
+    const sonnetMaison = norm((ai.maison as string) || '')
+    const haikuGotMaisonWrong = !!ai.is_champagne && !!ai.maison && !!ai.cuvee &&
+      haikuMaison !== sonnetMaison && haikuMaison.length > 0
+
+    if (haikuGotMaisonWrong) {
+      const sMaison = sonnetMaison
       const sCuvee  = norm(ai.cuvee  as string)
       const { data: allBottles2 } = await adminSupa
         .from('bottiglie')
@@ -434,8 +439,10 @@ serve(async (req) => {
         const found2 = (allBottles2 as any[]).find(b => {
           const bNome   = norm(b.nome || '')
           const bMaison = norm(b.maison?.nome || '')
-          return (bMaison.includes(sMaison) || sMaison.includes(bMaison)) &&
-                 (bNome.includes(sCuvee)    || sCuvee.includes(bNome))
+          // Match esatto maison + match esatto o contenuto cuvée (min 4 char per evitare falsi positivi)
+          const maisonMatch = bMaison === sMaison || bMaison.includes(sMaison) || sMaison.includes(bMaison)
+          const cuveeMatch  = sCuvee.length >= 4 && (bNome === sCuvee || bNome.includes(sCuvee) || sCuvee.includes(bNome))
+          return maisonMatch && cuveeMatch
         })
         if (found2) {
           // Trovata! Sonnet ha corretto Haiku — restituiamo come cache hit
