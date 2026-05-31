@@ -886,14 +886,28 @@ async function approveBottiglia(id) {
 async function rejectBottiglia(id, nome) {
   if (!confirm(`Eliminare definitivamente "${nome || 'questa bottiglia'}"?\nL'operazione non è reversibile.`)) return
   try {
-    // Elimina foto dallo storage (non blocca se non esiste)
-    await supa.storage.from('champagne-photos').remove([`bottles/${id}.jpg`])
+    // Recupera foto_url dal DB per estrarre il path esatto nello storage
+    const { data: bottRow } = await supa.from('bottiglie').select('foto_url').eq('id', id).single()
+    const fotoUrl = bottRow?.foto_url || null
 
+    // Elimina foto dallo storage usando il path reale
+    if (fotoUrl) {
+      // Estrae il path dopo "/champagne-photos/" dalla URL pubblica
+      const match = fotoUrl.match(/champagne-photos\/(.+)$/)
+      const storagePath = match ? match[1] : `bottles/${id}.jpg`
+      const { error: storageErr } = await supa.storage.from('champagne-photos').remove([storagePath])
+      if (storageErr) console.warn('Storage delete warning:', storageErr.message)
+    } else {
+      // Fallback: prova con il path standard
+      await supa.storage.from('champagne-photos').remove([`bottles/${id}.jpg`])
+    }
+
+    // Elimina bottiglia dal DB
     const { data: deleted, error } = await supa.from('bottiglie').delete().eq('id', id).select('id')
     if (error) throw error
-    if (!deleted?.length) throw new Error('Eliminazione bloccata da RLS — esegui la query SQL admin per aggiungere la policy DELETE su bottiglie')
+    if (!deleted?.length) throw new Error('Eliminazione bloccata da RLS — aggiungi policy DELETE su bottiglie')
     closeModal()
-    showToast('Bottiglia e foto eliminate')
+    showToast('Bottiglia eliminata ✓')
     loadApprovazioni()
   } catch(e) { showToast(e.message, 'error') }
 }
