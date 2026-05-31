@@ -3142,13 +3142,15 @@ function priceScale(fascia, prezzo) {
     n = levels[fascia] || 0;
   }
   if (!n) return '';
-  const euroSymbols = Array.from({length:5}, (_,i) =>
-    '<span style="font-size:14px;font-weight:' + (i<Math.min(n,5)?'700':'400') + ';color:' + (i<Math.min(n,5)?'var(--gold)':'var(--border-2)') + ';line-height:1;">€</span>'
-  ).join('');
-  const luxBadge = n === 6
-    ? '<span style="font-size:12px;color:var(--gold);margin-left:3px;" title="Gran Lusso"><i class="ti ti-crown" style="font-size:13px;vertical-align:middle;"></i></span>'
-    : '';
-  return '<div class="price-scale" style="display:flex;align-items:center;">' + euroSymbols + luxBadge + '</div>';
+  const symbols = Array.from({length:6}, (_,i) => {
+    const active = i < n;
+    const isTopLevel = active && i === 5;
+    if (isTopLevel) {
+      return '<span style="font-size:14px;font-weight:700;color:#111;-webkit-text-stroke:0.5px var(--gold);line-height:1;">€</span>';
+    }
+    return '<span style="font-size:14px;font-weight:' + (active?'700':'400') + ';color:' + (active?'var(--gold)':'var(--border-2)') + ';line-height:1;">€</span>';
+  }).join('');
+  return '<div class="price-scale" style="display:flex;align-items:center;gap:1px;">' + symbols + '</div>';
 }
 
 async function loadAndRenderBottiglie() {
