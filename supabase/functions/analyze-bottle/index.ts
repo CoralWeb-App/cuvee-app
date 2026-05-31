@@ -180,10 +180,8 @@ serve(async (req) => {
     // ── Token counters ───────────────────────────────────────────
     let haikuInTok  = 0  // quick-check haiku tokens
     let haikuOutTok = 0
-    let sonnetInTok  = 0  // full-analysis sonnet tokens (0 if cache hit or fallback)
+    let sonnetInTok  = 0  // full-analysis sonnet tokens (0 if cache hit)
     let sonnetOutTok = 0
-    let haikuFbInTok  = 0  // haiku fallback tokens (when sonnet fails)
-    let haikuFbOutTok = 0
 
     // ════════════════════════════════════════════════════════════
     // STAGE 1 — Quick pre-check con Haiku (economico)
@@ -354,8 +352,11 @@ serve(async (req) => {
     //   → Fallback a Haiku se Sonnet non disponibile (scan_type = 'haiku_fallback')
     // ════════════════════════════════════════════════════════════
     let rawText = ''
-    let scanType = 'sonnet_full'
+    const scanType = 'sonnet_full'
 
+    // ── Sonnet full analysis — nessun fallback silenzioso a Haiku ──
+    // Se Sonnet fallisce, la scansione fallisce con errore esplicito.
+    // Meglio un errore visibile che un'analisi degradata di nascosto.
     try {
       const aiMsg = await anthropic.messages.create({
         model:      'claude-sonnet-4-5-20251001',
@@ -366,31 +367,15 @@ serve(async (req) => {
           { type: 'text',  text: USER_PROMPT },
         ]}],
       })
-      // Traccia token usage sonnet
       sonnetInTok  = aiMsg.usage?.input_tokens  ?? 0
       sonnetOutTok = aiMsg.usage?.output_tokens ?? 0
       rawText = aiMsg.content[0].type === 'text' ? aiMsg.content[0].text : ''
     } catch (aiErr: any) {
-      console.error('Sonnet error, trying haiku:', JSON.stringify(aiErr))
-      try {
-        const fallbackMsg = await anthropic.messages.create({
-          model:      'claude-haiku-4-5-20251001',
-          max_tokens: 2000,
-          system:     SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: [
-            { type: 'image', source: imgSource },
-            { type: 'text',  text: USER_PROMPT },
-          ]}],
-        })
-        // Fallback: usa slot haiku (prezzi haiku, non sonnet)
-        haikuFbInTok  = fallbackMsg.usage?.input_tokens  ?? 0
-        haikuFbOutTok = fallbackMsg.usage?.output_tokens ?? 0
-        scanType = 'haiku_fallback'
-        rawText = fallbackMsg.content[0].type === 'text' ? fallbackMsg.content[0].text : ''
-      } catch (fallbackErr: any) {
-        console.error('Haiku fallback error:', JSON.stringify(fallbackErr))
-        return json({ error: 'AI non disponibile: ' + (aiErr?.message || String(aiErr)) }, 500)
-      }
+      console.error('Sonnet error:', JSON.stringify(aiErr))
+      return json({
+        error: 'Analisi non disponibile al momento, riprova tra qualche istante.',
+        error_detail: aiErr?.message || String(aiErr),
+      }, 503)
     }
 
     // ── Parse JSON risposta AI ───────────────────────────────────
@@ -537,9 +522,8 @@ serve(async (req) => {
 
     // ── Costo totale scansione completa ──────────────────────────
     const costUsd = parseFloat((
-      haikuInTok    * PRICE_HAIKU_IN   + haikuOutTok    * PRICE_HAIKU_OUT +
-      sonnetInTok   * PRICE_SONNET_IN  + sonnetOutTok   * PRICE_SONNET_OUT +
-      haikuFbInTok  * PRICE_HAIKU_IN   + haikuFbOutTok  * PRICE_HAIKU_OUT
+      haikuInTok  * PRICE_HAIKU_IN  + haikuOutTok  * PRICE_HAIKU_OUT +
+      sonnetInTok * PRICE_SONNET_IN + sonnetOutTok * PRICE_SONNET_OUT
     ).toFixed(6))
 
     // ── Salva record scansione con tracking completo ─────────────
@@ -560,8 +544,8 @@ serve(async (req) => {
         result_json:        { ...ai, from_cache: false },
         // ── Tracking costi ──
         scan_type:            scanType,
-        haiku_input_tokens:   haikuInTok  + haikuFbInTok,
-        haiku_output_tokens:  haikuOutTok + haikuFbOutTok,
+        haiku_input_tokens:   haikuInTok,
+        haiku_output_tokens:  haikuOutTok,
         sonnet_input_tokens:  sonnetInTok  > 0 ? sonnetInTok  : null,
         sonnet_output_tokens: sonnetOutTok > 0 ? sonnetOutTok : null,
         cost_usd:             costUsd,
