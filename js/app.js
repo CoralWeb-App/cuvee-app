@@ -3133,16 +3133,19 @@ function dosagePill(tipo) {
 }
 
 function priceScale(fascia, prezzo) {
-  const levels = {'media_gamma':2,'premium':3,'alta_gamma':4,'lusso':5};
+  const levels = {'entry':1,'media_gamma':2,'premium':3,'alta_gamma':4,'lusso':5,'gran_lusso':6};
   let n = levels[fascia] || 0;
   if (!n && prezzo) {
-    n = prezzo <= 60 ? 2 : prezzo <= 120 ? 3 : prezzo <= 250 ? 4 : 5;
+    n = prezzo <= 50 ? 1 : prezzo <= 90 ? 2 : prezzo <= 130 ? 3 : prezzo <= 200 ? 4 : prezzo <= 300 ? 5 : 6;
   }
   if (!n) return '';
-  const symbols = Array.from({length:5}, (_,i) =>
-    '<span style="font-size:14px;font-weight:' + (i<n?'700':'400') + ';color:' + (i<n?'var(--gold)':'var(--border-2)') + ';line-height:1;">€</span>'
+  const euroSymbols = Array.from({length:5}, (_,i) =>
+    '<span style="font-size:14px;font-weight:' + (i<Math.min(n,5)?'700':'400') + ';color:' + (i<Math.min(n,5)?'var(--gold)':'var(--border-2)') + ';line-height:1;">€</span>'
   ).join('');
-  return '<div class="price-scale">' + symbols + '</div>';
+  const luxBadge = n === 6
+    ? '<span style="font-size:12px;color:var(--gold);margin-left:3px;" title="Gran Lusso"><i class="ti ti-crown" style="font-size:13px;vertical-align:middle;"></i></span>'
+    : '';
+  return '<div class="price-scale" style="display:flex;align-items:center;">' + euroSymbols + luxBadge + '</div>';
 }
 
 async function loadAndRenderBottiglie() {
