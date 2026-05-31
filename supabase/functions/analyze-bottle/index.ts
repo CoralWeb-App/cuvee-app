@@ -16,12 +16,29 @@ const json = (data: unknown, status = 200) =>
 
 const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
 
+// Deriva fascia_prezzo dal prezzo_min (allineato ai breakpoint JS)
+const fasciaFromPrezzo = (p: number | null): string | null => {
+  if (!p) return null
+  if (p <= 50)  return 'entry'
+  if (p <= 90)  return 'media_gamma'
+  if (p <= 130) return 'premium'
+  if (p <= 200) return 'alta_gamma'
+  if (p <= 300) return 'lusso'
+  return 'gran_lusso'
+}
+
 // Genera slug URL-safe da una stringa
 const makeSlug = (s: string) => (s || '')
   .toLowerCase()
   .replace(/[àáâã]/g,'a').replace(/[èéêë]/g,'e').replace(/[ìíîï]/g,'i')
   .replace(/[òóôõö]/g,'o').replace(/[ùúûü]/g,'u').replace(/[ñ]/g,'n')
   .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
+
+// ── Prezzi API (USD per token) — aggiornare se Anthropic cambia tariffe ──
+const PRICE_HAIKU_IN   = 1.00  / 1_000_000  // $1.00 / MTok  input
+const PRICE_HAIKU_OUT  = 5.00  / 1_000_000  // $5.00 / MTok  output
+const PRICE_SONNET_IN  = 3.00  / 1_000_000  // $3.00 / MTok  input
+const PRICE_SONNET_OUT = 15.00 / 1_000_000  // $15.00 / MTok output
 
 const SYSTEM_PROMPT =
   'Sei un maestro sommelier con 30 anni di esperienza in Champagne e conoscenza enciclopedica di ogni maison, cuvee speciale e annata. ' +
@@ -98,6 +115,8 @@ const USER_PROMPT =
   '  "malolattica": "completa" o "parziale" o "assente" o null,\n' +
   '  "maturazione_mesi": integer o null,\n' +
   '  "produzione_bottiglie": integer o null,\n' +
+  '  "prezzo_min": integer prezzo minimo medio mercato italiano in euro (es. 45) o null,\n' +
+  '  "prezzo_max": integer prezzo massimo medio mercato italiano in euro (es. 65) o null,\n' +
   '  "not_champagne_type": "tipo bevanda/prodotto se NOT champagne, o null"\n' +
   '}'
 
@@ -158,6 +177,14 @@ serve(async (req) => {
     const imgSource  = { type: 'base64' as const, media_type: media_type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: image_base64 }
     const _dbErrors: string[] = []
 
+    // ── Token counters ───────────────────────────────────────────
+    let haikuInTok  = 0  // quick-check haiku tokens
+    let haikuOutTok = 0
+    let sonnetInTok  = 0  // full-analysis sonnet tokens (0 if cache hit or fallback)
+    let sonnetOutTok = 0
+    let haikuFbInTok  = 0  // haiku fallback tokens (when sonnet fails)
+    let haikuFbOutTok = 0
+
     // ════════════════════════════════════════════════════════════
     // STAGE 1 — Quick pre-check con Haiku (economico)
     //   Identifica solo maison+cuvee senza analisi completa.
@@ -180,6 +207,10 @@ serve(async (req) => {
           { type: 'text',  text: QUICK_PROMPT },
         ]}],
       })
+      // Traccia token usage haiku quick-check
+      haikuInTok  = qMsg.usage?.input_tokens  ?? 0
+      haikuOutTok = qMsg.usage?.output_tokens ?? 0
+
       const qText = qMsg.content[0].type === 'text' ? qMsg.content[0].text : ''
       const m = qText.match(/\{[\s\S]*\}/)
       if (m) quick = JSON.parse(m[0])
@@ -217,7 +248,7 @@ serve(async (req) => {
 
     // ════════════════════════════════════════════════════════════
     // STAGE 3a — DB HIT: bottiglia già nel catalogo
-    //   → Upload foto se mancante, salva scan, rispondi con dati DB.
+    //   → scan_type = 'haiku_only', costo = solo haiku quick-check
     //   → Nessuna chiamata a Sonnet: risparmio garantito!
     // ════════════════════════════════════════════════════════════
     if (matchedBottle) {
@@ -247,21 +278,33 @@ serve(async (req) => {
         } catch(e) { console.error('photo exception (cache hit):', e) }
       }
 
-      // Salva record scansione
+      // Costo: solo haiku quick-check
+      const costUsd = parseFloat(
+        (haikuInTok * PRICE_HAIKU_IN + haikuOutTok * PRICE_HAIKU_OUT).toFixed(6)
+      )
+
+      // Salva record scansione con tracking completo
       const { data: scan } = await userSupa
         .from('bottle_scans')
         .insert({
-          user_id:           user.id,
-          is_champagne:      true,
-          detected_maison:   quick.maison ?? null,
-          detected_cuvee:    quick.cuvee  ?? null,
-          detected_annata:   quick.annata ?? null,
-          detected_dosage:   mb.dosaggio_tipo ?? null,
-          detected_tipo:     mb.tipo ?? null,
-          confidence:        quick.confidence ?? 0,
-          matched_bottle_id: mb.id,
-          new_bottle_id:     null,
-          result_json:       { ...quick, from_cache: true },
+          user_id:              user.id,
+          is_champagne:         true,
+          detected_maison:      quick.maison ?? null,
+          detected_cuvee:       quick.cuvee  ?? null,
+          detected_annata:      quick.annata ?? null,
+          detected_dosage:      mb.dosaggio_tipo ?? null,
+          detected_tipo:        mb.tipo ?? null,
+          confidence:           quick.confidence ?? 0,
+          matched_bottle_id:    mb.id,
+          new_bottle_id:        null,
+          result_json:          { ...quick, from_cache: true },
+          // ── Tracking costi ──
+          scan_type:            'haiku_only',
+          haiku_input_tokens:   haikuInTok,
+          haiku_output_tokens:  haikuOutTok,
+          sonnet_input_tokens:  null,
+          sonnet_output_tokens: null,
+          cost_usd:             costUsd,
         })
         .select('id')
         .single()
@@ -307,9 +350,12 @@ serve(async (req) => {
 
     // ════════════════════════════════════════════════════════════
     // STAGE 3b — DB MISS: bottiglia non in catalogo
-    //   → Analisi completa con Sonnet (comportamento originale)
+    //   → Analisi completa con Sonnet (scan_type = 'sonnet_full')
+    //   → Fallback a Haiku se Sonnet non disponibile (scan_type = 'haiku_fallback')
     // ════════════════════════════════════════════════════════════
     let rawText = ''
+    let scanType = 'sonnet_full'
+
     try {
       const aiMsg = await anthropic.messages.create({
         model:      'claude-sonnet-4-5-20251001',
@@ -320,6 +366,9 @@ serve(async (req) => {
           { type: 'text',  text: USER_PROMPT },
         ]}],
       })
+      // Traccia token usage sonnet
+      sonnetInTok  = aiMsg.usage?.input_tokens  ?? 0
+      sonnetOutTok = aiMsg.usage?.output_tokens ?? 0
       rawText = aiMsg.content[0].type === 'text' ? aiMsg.content[0].text : ''
     } catch (aiErr: any) {
       console.error('Sonnet error, trying haiku:', JSON.stringify(aiErr))
@@ -333,6 +382,10 @@ serve(async (req) => {
             { type: 'text',  text: USER_PROMPT },
           ]}],
         })
+        // Fallback: usa slot haiku (prezzi haiku, non sonnet)
+        haikuFbInTok  = fallbackMsg.usage?.input_tokens  ?? 0
+        haikuFbOutTok = fallbackMsg.usage?.output_tokens ?? 0
+        scanType = 'haiku_fallback'
         rawText = fallbackMsg.content[0].type === 'text' ? fallbackMsg.content[0].text : ''
       } catch (fallbackErr: any) {
         console.error('Haiku fallback error:', JSON.stringify(fallbackErr))
@@ -406,6 +459,9 @@ serve(async (req) => {
             maturazione_mesi:     ai.maturazione_mesi ?? null,
             produzione_bottiglie: ai.produzione_bottiglie ?? null,
             score_medio:          ai.punteggio ?? null,
+            prezzo_min:           ai.prezzo_min ?? null,
+            prezzo_max:           ai.prezzo_max ?? null,
+            fascia_prezzo:        fasciaFromPrezzo((ai.prezzo_min as number | null) ?? null),
             source:               'scan',
             is_published:         true,
             needs_review:         true,
@@ -446,7 +502,7 @@ serve(async (req) => {
 
     // ── Upload foto (bottiglia nuova) ────────────────────────────
     let uploadedPhotoUrl: string | null = null
-    const bottleId = newBottleId  // matchedBottle è null qui (siamo nel DB MISS path)
+    const bottleId = newBottleId
 
     if (ai.is_champagne && bottleId && image_base64) {
       try {
@@ -479,7 +535,14 @@ serve(async (req) => {
       }
     }
 
-    // ── Salva record scansione ───────────────────────────────────
+    // ── Costo totale scansione completa ──────────────────────────
+    const costUsd = parseFloat((
+      haikuInTok    * PRICE_HAIKU_IN   + haikuOutTok    * PRICE_HAIKU_OUT +
+      sonnetInTok   * PRICE_SONNET_IN  + sonnetOutTok   * PRICE_SONNET_OUT +
+      haikuFbInTok  * PRICE_HAIKU_IN   + haikuFbOutTok  * PRICE_HAIKU_OUT
+    ).toFixed(6))
+
+    // ── Salva record scansione con tracking completo ─────────────
     const { data: scan } = await userSupa
       .from('bottle_scans')
       .insert({
@@ -495,6 +558,13 @@ serve(async (req) => {
         matched_bottle_id:  null,
         new_bottle_id:      newBottleId,
         result_json:        { ...ai, from_cache: false },
+        // ── Tracking costi ──
+        scan_type:            scanType,
+        haiku_input_tokens:   haikuInTok  + haikuFbInTok,
+        haiku_output_tokens:  haikuOutTok + haikuFbOutTok,
+        sonnet_input_tokens:  sonnetInTok  > 0 ? sonnetInTok  : null,
+        sonnet_output_tokens: sonnetOutTok > 0 ? sonnetOutTok : null,
+        cost_usd:             costUsd,
       })
       .select('id')
       .single()
@@ -515,6 +585,9 @@ serve(async (req) => {
       maturazione_mesi:     ai.maturazione_mesi     ?? null,
       produzione_bottiglie: ai.produzione_bottiglie ?? null,
       dosaggio_gl:          null,
+      prezzo_min:           (ai.prezzo_min as number | null) ?? null,
+      prezzo_max:           (ai.prezzo_max as number | null) ?? null,
+      fascia_prezzo:        fasciaFromPrezzo((ai.prezzo_min as number | null) ?? null),
     }
 
     // ── Risposta ─────────────────────────────────────────────────
