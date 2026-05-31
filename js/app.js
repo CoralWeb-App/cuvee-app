@@ -3133,10 +3133,13 @@ function dosagePill(tipo) {
 }
 
 function priceScale(fascia, prezzo) {
-  const levels = {'entry':1,'media_gamma':2,'premium':3,'alta_gamma':4,'lusso':5,'gran_lusso':6};
-  let n = levels[fascia] || 0;
-  if (!n && prezzo) {
+  // prezzo_min è sempre fonte di verità se disponibile
+  let n = 0;
+  if (prezzo) {
     n = prezzo <= 50 ? 1 : prezzo <= 90 ? 2 : prezzo <= 130 ? 3 : prezzo <= 200 ? 4 : prezzo <= 300 ? 5 : 6;
+  } else {
+    const levels = {'entry':1,'media_gamma':2,'premium':3,'alta_gamma':4,'lusso':5,'gran_lusso':6};
+    n = levels[fascia] || 0;
   }
   if (!n) return '';
   const euroSymbols = Array.from({length:5}, (_,i) =>
