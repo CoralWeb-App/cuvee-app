@@ -134,8 +134,10 @@ const USER_PROMPT =
   '  "provenienza_uve": "zona/village o null",\n' +
   '  "vinificazione": "breve descrizione o null",\n' +
   '  "malolattica": "completa" o "parziale" o "assente" o null,\n' +
+  '  "dosaggio_gl": numero decimale grammi/litro tipici per questa cuvee (es. Brut Nature=0, Extra Brut=4, Brut=9, Sec=25) o null,\n' +
   '  "maturazione_mesi": integer o null,\n' +
   '  "produzione_bottiglie": integer o null,\n' +
+  '  "descrizione": "max 180 caratteri italiano, tono elegante, descrive stile e identità della cuvee, o null",\n' +
   '  "prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, arrotondato a 5, o null,\n' +
   '  "prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, arrotondato a 5, o null,\n' +
   '  "not_champagne_type": "tipo bevanda/prodotto se NOT champagne, o null"\n' +
@@ -515,7 +517,9 @@ serve(async (req) => {
             annata:               ai.is_sa ? null : (ai.annata ?? null),
             is_millesimato:       !(ai.is_sa ?? true),
             dosaggio_tipo:        ai.dosage ?? null,
+            dosaggio_gl:          ai.dosaggio_gl ?? null,
             tipo:                 ai.tipo ? (ai.tipo as string).replace(/ /g, '_') : null,
+            descrizione:          ai.descrizione ?? null,
             note_degustazione:    ai.note_degustazione ?? null,
             abbinamento:          ai.abbinamento ?? null,
             finestra_da:          ai.finestra_da ?? null,
@@ -654,7 +658,8 @@ serve(async (req) => {
       malolattica:          ai.malolattica          ?? null,
       maturazione_mesi:     ai.maturazione_mesi     ?? null,
       produzione_bottiglie: ai.produzione_bottiglie ?? null,
-      dosaggio_gl:          null,
+      dosaggio_gl:          (ai.dosaggio_gl as number | null) ?? null,
+      descrizione:          ai.descrizione          ?? null,
       assemblaggio:         ai.assemblaggio         ?? null,
       prezzo_min:           (ai.prezzo_min as number | null) ?? null,
       prezzo_max:           (ai.prezzo_max as number | null) ?? null,
