@@ -3945,10 +3945,10 @@ function _renderScanResult(result, photoDataUrl) {
     // ── Assemblaggio ──
     + (function(){
         if (!assemblaggio || !Array.isArray(assemblaggio) || !assemblaggio.length) return '';
-        const anni    = assemblaggio.filter((x:any) => x.anno).sort((a:any,b:any) => b.anno - a.anno);
-        const riserve = assemblaggio.filter((x:any) => x.tipo === 'riserva');
+        const anni    = assemblaggio.filter(x => x.anno).sort((a,b) => b.anno - a.anno);
+        const riserve = assemblaggio.filter(x => x.tipo === 'riserva');
         if (!anni.length && !riserve.length) return '';
-        const bars = assemblaggio.map((x:any) => {
+        const bars = assemblaggio.map(x => {
           const isRis  = x.tipo === 'riserva';
           const label  = isRis ? (x.label || 'Vins de réserve') : String(x.anno);
           const bg     = isRis ? 'var(--border-2)' : 'var(--gold)';
