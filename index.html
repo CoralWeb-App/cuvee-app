@@ -1282,15 +1282,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="filter-bar">
     <div class="filter-row" id="bott-letter-filters"></div>
-    <div class="filter-row" id="bott-filters" style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
-      <div class="f-btn on"  data-filter="tutti"           onclick="toggleBottFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn"     data-filter="blanc_de_blancs" onclick="toggleBottFilter(this,'blanc_de_blancs')">Blanc de Blancs</div>
-      <div class="f-btn"     data-filter="blanc_de_noirs"  onclick="toggleBottFilter(this,'blanc_de_noirs')">Blanc de Noirs</div>
-      <div class="f-btn"     data-filter="rose"            onclick="toggleBottFilter(this,'rose')">Rosé</div>
-      <div class="f-btn"     data-filter="assemblage"      onclick="toggleBottFilter(this,'assemblage')">Assemblage</div>
-      <div class="f-btn"     data-filter="nature"          onclick="toggleBottFilter(this,'nature')">Brut Nature</div>
-      <div class="f-btn"     data-filter="prestige"        onclick="toggleBottFilter(this,'prestige')">In Evidenza</div>
-    </div>
     <div class="filter-row" id="bott-price-filters" style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
       <div class="f-btn on" data-price="tutti"       onclick="toggleBottPriceFilter(this,'tutti')">Tutti</div>
       <div class="f-btn"    data-price="entry"        onclick="toggleBottPriceFilter(this,'entry')">€</div>
@@ -2273,6 +2264,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=105"></script>
+<script src="js/app.js?v=106"></script>
 </body>
 </html>
