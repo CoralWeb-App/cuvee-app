@@ -102,10 +102,14 @@ function buildAllColsForm(row, { skip = [], fullRow = [], textareaCols = [] } = 
 }
 
 // Collects all [data-col] inputs inside modal-body into an update object
+// Colonne generate o readonly che non vanno mai nell'UPDATE
+const GENERATED_COLS = new Set(['nome_norm','id','created_at','updated_at'])
+
 function collectDataCols() {
   const updates = {}
   document.querySelectorAll('#modal-body [data-col]').forEach(el => {
     const col = el.dataset.col
+    if (GENERATED_COLS.has(col)) return   // mai aggiornare colonne generate
     const val = el.value
     if (val === 'true')  { updates[col] = true;  return }
     if (val === 'false') { updates[col] = false; return }
@@ -786,7 +790,7 @@ async function viewApprovazioneDetail(id) {
     const fotoCol  = b.foto_url !== undefined ? 'foto_url' : 'photo_url'
     const fotoUrl  = b.foto_url ?? b.photo_url ?? null
 
-    const CUSTOM = ['id','nome','maison_id','tipo','is_millesimato','dosaggio_gl','needs_review','created_at','updated_at']
+    const CUSTOM = ['id','nome','nome_norm','maison_id','tipo','is_millesimato','dosaggio_gl','needs_review','created_at','updated_at']
     const FULL   = ['descrizione','vitigni','note','note_degustazione','photo_url']
     const TA     = ['descrizione','note','note_degustazione']
 
