@@ -3132,10 +3132,13 @@ function dosagePill(tipo) {
   return '<span class="dosage-pill" style="background:' + s.bg + ';color:' + s.c + ';">' + tipo + '</span>';
 }
 
-function priceScale(fascia) {
-  if (!fascia) return '';
+function priceScale(fascia, prezzo) {
   const levels = {'media_gamma':2,'premium':3,'alta_gamma':4,'lusso':5};
-  const n = levels[fascia] || 0;
+  let n = levels[fascia] || 0;
+  if (!n && prezzo) {
+    n = prezzo <= 45 ? 2 : prezzo <= 100 ? 3 : prezzo <= 200 ? 4 : 5;
+  }
+  if (!n) return '';
   const symbols = Array.from({length:5}, (_,i) =>
     '<span style="font-size:14px;font-weight:' + (i<n?'700':'400') + ';color:' + (i<n?'var(--gold)':'var(--border-2)') + ';line-height:1;">€</span>'
   ).join('');
@@ -3249,8 +3252,8 @@ function renderBottiglie() {
         '<div class="bott-card-footer">' +
           '<div class="bott-card-info">' +
             (b.score_medio ? scoreRingCard(b.score_medio) : '') +
-            (b.fascia_prezzo ? '<div style="display:flex;flex-direction:column;gap:2px;">' +
-              priceScale(b.fascia_prezzo) +
+            ((b.fascia_prezzo || b.prezzo_min) ? '<div style="display:flex;flex-direction:column;gap:2px;">' +
+              priceScale(b.fascia_prezzo, b.prezzo_min) +
               (b.prezzo_min ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-4);">da ' + b.prezzo_min + '€</span>' : '') +
             '</div>' : '') +
           '</div>' +
@@ -3456,7 +3459,7 @@ async function openBottigliaDetail(bottId) {
   if (badgesEl) {
     let bdg = '';
     if (b.dosaggio_tipo) bdg += dosagePill(b.dosaggio_tipo) + ' ';
-    if (b.fascia_prezzo) bdg += priceScale(b.fascia_prezzo);
+    if (b.fascia_prezzo || b.prezzo_min) bdg += priceScale(b.fascia_prezzo, b.prezzo_min);
     if (b.prezzo_min && b.prezzo_max) bdg += '<span style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-left:6px;">da ' + b.prezzo_min + '€</span>';
     badgesEl.innerHTML = bdg;
   }
