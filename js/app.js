@@ -3134,7 +3134,7 @@ function dosagePill(tipo) {
 
 function priceScale(fascia) {
   if (!fascia) return '';
-  const levels = {'€':1,'€€':2,'€€€':3,'€€€€':4};
+  const levels = {'media_gamma':2,'premium':3,'alta_gamma':4,'lusso':5};
   const n = levels[fascia] || 0;
   const symbols = Array.from({length:5}, (_,i) =>
     '<span style="font-size:14px;font-weight:' + (i<n?'700':'400') + ';color:' + (i<n?'var(--gold)':'var(--border-2)') + ';line-height:1;">€</span>'
