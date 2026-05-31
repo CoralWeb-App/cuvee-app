@@ -77,6 +77,15 @@ const SYSTEM_PROMPT =
   '- Krug Grande Cuvee -> cuvee: "Grande Cuvee"\n' +
   '- Taittinger Comtes de Champagne -> cuvee: "Comtes de Champagne"\n' +
   '- Perrier-Jouet Belle Epoque -> cuvee: "Belle Epoque"\n\n' +
+  '=== REGOLA ASSOLUTA #4: LEGGERE IL NOME MAISON CON PRECISIONE ASSOLUTA ===\n' +
+  'Leggi il nome del produttore LETTERA PER LETTERA dall etichetta. Non confondere mai:\n' +
+  '- "Henri GIRAUD" (Ay Grand Cru, bottiglia scura, MV series) ≠ "HENRIOT" (Reims, etichetta bianca)\n' +
+  '- "Perrier-JOUET" (Belle Epoque) ≠ "Laurent-PERRIER" (Tours-sur-Marne)\n' +
+  '- "GOSSET" ≠ "GONET" ≠ "GOSSE"\n' +
+  '- "BILLECART-SALMON" ≠ altri nomi simili\n' +
+  '- "BOLLINGER" ≠ "BOLIEU" ≠ altri\n' +
+  'Se l etichetta dice "HENRI GIRAUD" -> maison: "Henri Giraud". MAI "Henriot".\n' +
+  'In caso di dubbio sul nome esatto, rileggi l etichetta prima di rispondere.\n\n' +
   'Per campi tecnici usa la tua conoscenza enciclopedica anche se non visibili sull etichetta.'
 
 const USER_PROMPT =
@@ -403,6 +412,70 @@ serve(async (req) => {
     // ── Auto-aggiunta al catalogo (Champagne non trovato) ────────
     let newBottleId: string | null = null
 
+    // ── Secondo controllo DB con i dati accurati di Sonnet ──────
+    // Il quick-check Haiku può sbagliare il nome maison (es. "Henriot" invece di "Henri Giraud").
+    // Dopo Sonnet rifacciamo la ricerca con il nome corretto prima di creare una bottiglia nuova.
+    if (ai.is_champagne && ai.maison && ai.cuvee) {
+      const sMaison = norm(ai.maison as string)
+      const sCuvee  = norm(ai.cuvee  as string)
+      const { data: allBottles2 } = await adminSupa
+        .from('bottiglie')
+        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, maison(id, nome, slug)')
+        .eq('is_published', true)
+        .eq('needs_review', false)
+      if (allBottles2) {
+        const found2 = (allBottles2 as any[]).find(b => {
+          const bNome   = norm(b.nome || '')
+          const bMaison = norm(b.maison?.nome || '')
+          return (bMaison.includes(sMaison) || sMaison.includes(bMaison)) &&
+                 (bNome.includes(sCuvee)    || sCuvee.includes(bNome))
+        })
+        if (found2) {
+          // Trovata! Sonnet ha corretto Haiku — restituiamo come cache hit
+          const mb2 = found2 as any
+          const costUsd2 = parseFloat((
+            haikuInTok * PRICE_HAIKU_IN + haikuOutTok * PRICE_HAIKU_OUT +
+            sonnetInTok * PRICE_SONNET_IN + sonnetOutTok * PRICE_SONNET_OUT
+          ).toFixed(6))
+          await userSupa.from('bottle_scans').insert({
+            user_id: user.id, is_champagne: true,
+            detected_maison: ai.maison ?? null, detected_cuvee: ai.cuvee ?? null,
+            detected_annata: ai.annata ?? null, detected_dosage: mb2.dosaggio_tipo ?? null,
+            detected_tipo: mb2.tipo ?? null, confidence: (ai.confidence as number) ?? 0,
+            matched_bottle_id: mb2.id, new_bottle_id: null,
+            result_json: { ...ai, from_cache: true, sonnet_corrected_haiku: true },
+            scan_type: 'sonnet_corrected',
+            haiku_input_tokens: haikuInTok, haiku_output_tokens: haikuOutTok,
+            sonnet_input_tokens: sonnetInTok, sonnet_output_tokens: sonnetOutTok,
+            cost_usd: costUsd2,
+          })
+          return json({
+            scan_id: null, is_bottle: true, is_champagne: true,
+            confidence: ai.confidence ?? 90, not_champagne_type: null,
+            maison: ai.maison ?? mb2.maison?.nome ?? null,
+            cuvee:  ai.cuvee  ?? mb2.nome ?? null,
+            annata: ai.annata ?? mb2.annata ?? null,
+            is_sa:  ai.is_sa  ?? !mb2.is_millesimato,
+            dosage: mb2.dosaggio_tipo ?? null, tipo: mb2.tipo ?? null,
+            prestige: ai.prestige ?? false, is_in_catalog: true,
+            matched_bottle: found2, matched_bottle_id: mb2.id, new_bottle_id: null,
+            bottle_has_photo: !!mb2.foto_url, uploaded_photo_url: null, from_cache: true,
+            score_medio: mb2.score_medio ?? null, note_degustazione: mb2.note_degustazione ?? null,
+            abbinamento: mb2.abbinamento ?? null, finestra_da: mb2.finestra_da ?? null,
+            finestra_a: mb2.finestra_a ?? null, pct_chardonnay: mb2.pct_chardonnay ?? null,
+            pct_pinot_noir: mb2.pct_pinot_noir ?? null, pct_meunier: mb2.pct_meunier ?? null,
+            provenienza_uve: mb2.provenienza_uve ?? null, vinificazione: mb2.vinificazione ?? null,
+            malolattica: mb2.malolattica ?? null, maturazione_mesi: mb2.maturazione_mesi ?? null,
+            produzione_bottiglie: mb2.produzione_bottiglie ?? null, dosaggio_gl: mb2.dosaggio_gl ?? null,
+            assemblaggio: mb2.assemblaggio ?? null,
+            prezzo_min: mb2.prezzo_min ?? null, prezzo_max: mb2.prezzo_max ?? null,
+            fascia_prezzo: mb2.fascia_prezzo ?? fasciaFromPrezzo(mb2.prezzo_min ?? null),
+          })
+        }
+      }
+    }
+
+    // ── Auto-aggiunta al catalogo (bottiglia genuinamente nuova) ─
     if (ai.is_champagne && ai.maison && ai.cuvee) {
       let maisonId: string | null = null
 
