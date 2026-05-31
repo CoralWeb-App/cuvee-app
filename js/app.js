@@ -917,9 +917,10 @@ async function signOut() {
   currentMaisonFilter = 'tutti';
   currentMaisonLetter = 'tutti';
   currentMaisonSearch = '';
-  currentBottFilters  = new Set();
-  currentBottLetter   = 'tutti';
-  currentBottSearch   = '';
+  currentBottFilters     = new Set();
+  currentBottLetter      = 'tutti';
+  currentBottSearch      = '';
+  currentBottPriceFilter = 'tutti';
   // Svuota stack navigazione
   stack.length = 0;
   // Nascondi bottom nav
@@ -3078,9 +3079,10 @@ async function loadDetailBottles(maisonId) {
 
 // ═══ BOTTIGLIE — Lista completa ═══
 let allBottiglie = [];
-let currentBottFilters = new Set();   // multi-select
+let currentBottFilters = new Set();   // multi-select tipo
 let currentBottSearch = '';
 let currentBottLetter = 'tutti';
+let currentBottPriceFilter = 'tutti';
 let currentBottiglia = null;
 let wishlistIds = new Set();
 
@@ -3218,6 +3220,24 @@ function renderBottiglie() {
   }
 
   if (currentBottLetter !== 'tutti') filtered = filtered.filter(b => bottInitial(b.nome) === currentBottLetter);
+
+  // Filtro per fascia prezzo
+  if (currentBottPriceFilter !== 'tutti') {
+    filtered = filtered.filter(b => {
+      const p = b.prezzo_min;
+      if (!p) return false;
+      switch (currentBottPriceFilter) {
+        case 'entry':       return p <= 50;
+        case 'media_gamma': return p > 50  && p <= 90;
+        case 'premium':     return p > 90  && p <= 130;
+        case 'alta_gamma':  return p > 130 && p <= 200;
+        case 'lusso':       return p > 200 && p <= 300;
+        case 'gran_lusso':  return p > 300;
+        default: return true;
+      }
+    });
+  }
+
   if (currentBottSearch) {
     const q = normalizeStr(currentBottSearch);
     const tipoLabelB = {'nv':'sans année','millesimato':'millésimé','prestige':'prestige cuvée','blanc_de_blancs':'blanc de blancs','blanc_de_noirs':'blanc de noirs','rose':'rosé','nature':'brut nature'};
@@ -3279,20 +3299,24 @@ function toggleBottFilter(el, filter) {
   if (filter === 'tutti') {
     currentBottFilters.clear();
   } else {
-    // millesimato e nv sono mutuamente esclusivi
-    if (filter === 'millesimato') currentBottFilters.delete('nv');
-    if (filter === 'nv') currentBottFilters.delete('millesimato');
     if (currentBottFilters.has(filter)) {
       currentBottFilters.delete(filter);
     } else {
       currentBottFilters.add(filter);
     }
   }
-  // Aggiorna visual: .on sui filtri attivi, Tutti se nessuno attivo
   document.querySelectorAll('#bott-filters .f-btn').forEach(b => {
     const f = b.dataset.filter;
     const active = f === 'tutti' ? currentBottFilters.size === 0 : currentBottFilters.has(f);
     b.classList.toggle('on', active);
+  });
+  renderBottiglie();
+}
+
+function toggleBottPriceFilter(el, price) {
+  currentBottPriceFilter = price;
+  document.querySelectorAll('#bott-price-filters .f-btn').forEach(b => {
+    b.classList.toggle('on', b.dataset.price === price);
   });
   renderBottiglie();
 }

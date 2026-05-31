@@ -1281,10 +1281,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
   </div>
   <div class="filter-bar">
-    <div class="filter-row" id="bott-filters">
-      <div class="f-btn on"  data-filter="tutti"          onclick="toggleBottFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn"     data-filter="millesimato"    onclick="toggleBottFilter(this,'millesimato')">Millésimé</div>
-      <div class="f-btn"     data-filter="nv"             onclick="toggleBottFilter(this,'nv')">Sans Année</div>
+    <div class="filter-row" id="bott-letter-filters"></div>
+    <div class="filter-row" id="bott-filters" style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
+      <div class="f-btn on"  data-filter="tutti"           onclick="toggleBottFilter(this,'tutti')">Tutti</div>
       <div class="f-btn"     data-filter="blanc_de_blancs" onclick="toggleBottFilter(this,'blanc_de_blancs')">Blanc de Blancs</div>
       <div class="f-btn"     data-filter="blanc_de_noirs"  onclick="toggleBottFilter(this,'blanc_de_noirs')">Blanc de Noirs</div>
       <div class="f-btn"     data-filter="rose"            onclick="toggleBottFilter(this,'rose')">Rosé</div>
@@ -1292,7 +1291,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="f-btn"     data-filter="nature"          onclick="toggleBottFilter(this,'nature')">Brut Nature</div>
       <div class="f-btn"     data-filter="prestige"        onclick="toggleBottFilter(this,'prestige')">In Evidenza</div>
     </div>
-    <div class="filter-row" id="bott-letter-filters" style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px;"></div>
+    <div class="filter-row" id="bott-price-filters" style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
+      <div class="f-btn on" data-price="tutti"       onclick="toggleBottPriceFilter(this,'tutti')">Tutti</div>
+      <div class="f-btn"    data-price="entry"        onclick="toggleBottPriceFilter(this,'entry')">€</div>
+      <div class="f-btn"    data-price="media_gamma"  onclick="toggleBottPriceFilter(this,'media_gamma')">€€</div>
+      <div class="f-btn"    data-price="premium"      onclick="toggleBottPriceFilter(this,'premium')">€€€</div>
+      <div class="f-btn"    data-price="alta_gamma"   onclick="toggleBottPriceFilter(this,'alta_gamma')">€€€€</div>
+      <div class="f-btn"    data-price="lusso"        onclick="toggleBottPriceFilter(this,'lusso')">€€€€€</div>
+      <div class="f-btn"    data-price="gran_lusso"   onclick="toggleBottPriceFilter(this,'gran_lusso')">€€€€€<span style="-webkit-text-stroke:0.5px currentColor;font-weight:700;">€</span></div>
+    </div>
   </div>
   <div class="scroll">
     <div id="bott-loading" style="padding:20px 14px;">
@@ -2266,6 +2273,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=104"></script>
+<script src="js/app.js?v=105"></script>
 </body>
 </html>
