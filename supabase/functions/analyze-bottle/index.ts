@@ -14,7 +14,36 @@ const json = (data: unknown, status = 200) =>
     headers: { ...cors, 'Content-Type': 'application/json' },
   })
 
-const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+// norm: converte accenti (é→e, è→e, à→a, ç→c …) poi rimuove non-alfanumerici
+// Senza questo, 'Frères' → 'frres' e 'Freres' → 'freres' non si trovavano mai
+const norm = (s: string) => (s || '')
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[̀-ͯ]/g, '')   // rimuove segni diacritici: é→e, è→e, à→a, ç→c…
+  .replace(/[^a-z0-9]/g, '')         // rimuove spazi, trattini, apostrofi ecc.
+
+// Parole significative (≥2 char, escluse preposizioni francesi)
+const STOP = new Set(['de','du','des','le','la','les','et','en','au','aux','sur','un','une'])
+const sigWords = (s: string): string[] =>
+  (norm(s).match(/[a-z0-9]{2,}/g) || []).filter(w => !STOP.has(w))
+
+// Match maison: prima strict (includes), poi word-overlap come fallback
+const maisonMatch = (db: string, ai: string): boolean => {
+  const dbn = norm(db), ain = norm(ai)
+  if (!dbn || !ain) return false
+  if (dbn.includes(ain) || ain.includes(dbn)) return true
+  // Word overlap: tutte le parole significative del nome più corto appaiono nel più lungo
+  const dbW = sigWords(db), aiW = sigWords(ai)
+  const [shorter, longer] = dbW.length <= aiW.length ? [dbW, aiW] : [aiW, dbW]
+  if (shorter.length === 0) return false
+  return shorter.every(w => longer.some(lw => lw.includes(w) || w.includes(lw)))
+}
+
+// Match cuvée: strict includes (bidirezionale)
+const cuveeMatch = (db: string, ai: string): boolean => {
+  const dbn = norm(db), ain = norm(ai)
+  return !!dbn && !!ain && (dbn.includes(ain) || ain.includes(dbn))
+}
 
 // Deriva fascia_prezzo dal prezzo_min (allineato ai breakpoint JS)
 const fasciaFromPrezzo = (p: number | null): string | null => {
@@ -256,10 +285,8 @@ serve(async (req) => {
 
       if (bottles) {
         const found = (bottles as any[]).find(b => {
-          const bNome   = norm(b.nome || '')
-          const bMaison = norm(b.maison?.nome || '')
-          return (bMaison.includes(qMaison) || qMaison.includes(bMaison)) &&
-                 (bNome.includes(qCuvee)    || qCuvee.includes(bNome))
+          return maisonMatch(b.maison?.nome || '', quick.maison as string) &&
+                 cuveeMatch(b.nome || '', quick.cuvee as string)
         })
         if (found) { matchedBottle = found; bottleHasPhoto = !!found.foto_url }
       }
