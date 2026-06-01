@@ -1679,9 +1679,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div id="carnet-count-label" style="font-family:var(--sans);font-size:14px;color:var(--ink-4);margin-top:1px;">Le tue note di degustazione</div>
     </div>
     <div class="topbar-icons">
-      <button id="carnet-search-btn" onclick="toggleCarnetSearch()" style="width:36px;height:36px;border-radius:50%;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
-        <i class="ti ti-search" style="font-size:22px;color:var(--ink-3);"></i>
-      </button>
       <button onclick="quickNewNote()" style="position:relative;width:36px;height:36px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);flex-shrink:0;">
         <i class="ti ti-notebook" style="font-size:17px;color:#C8A03A;"></i>
         <span style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>
@@ -1689,11 +1686,11 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div>
     </div>
   </div>
-  <!-- SEARCH (hidden by default, toggle on icon tap) -->
-  <div id="carnet-search-bar" class="carnet-search-bar" style="display:none;">
+  <!-- SEARCH — sempre visibile -->
+  <div id="carnet-search-bar" class="carnet-search-bar">
     <i class="ti ti-search"></i>
     <input id="carnet-search" type="text" placeholder="Cerca tra le tue degustazioni…" oninput="filterCarnet()"/>
-    <i class="ti ti-x" id="carnet-search-clear" style="cursor:pointer;font-size:16px;color:var(--ink-5);" onclick="closeCarnetSearch()"></i>
+    <i class="ti ti-x" id="carnet-search-clear" style="display:none;cursor:pointer;font-size:16px;color:var(--ink-5);" onclick="clearCarnetSearch()"></i>
   </div>
   <div class="carnet-filter-row">
     <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
@@ -2258,6 +2255,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=112"></script>
+<script src="js/app.js?v=113"></script>
 </body>
 </html>

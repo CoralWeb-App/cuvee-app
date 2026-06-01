@@ -25,12 +25,11 @@ function go(id){
     activeTypeFilter = 'tutti';
     const si = document.getElementById('carnet-search');
     if(si) si.value = '';
+    const clr = document.getElementById('carnet-search-clear');
+    if(clr) clr.style.display = 'none';
     document.querySelectorAll('.calice-btn').forEach(b => b.classList.remove('on'));
     const allBtn = document.getElementById('cf-all');
     if(allBtn) allBtn.classList.add('on');
-    document.querySelectorAll('#carnet-type-filters .f-btn').forEach(b => b.classList.remove('on'));
-    const allTypeBtn = document.querySelector('#carnet-type-filters .f-btn');
-    if(allTypeBtn) allTypeBtn.classList.add('on');
     updateCarnetUI();
   }
   if(id==='v-maison') loadAndRenderMaison();
@@ -2243,35 +2242,11 @@ function filterCarnet() {
 
 function clearCarnetSearch() {
   const input = document.getElementById('carnet-search');
-  if (input) input.value = '';
+  if (input) { input.value = ''; input.focus(); }
   activeSearchQuery = '';
+  const clr = document.getElementById('carnet-search-clear');
+  if (clr) clr.style.display = 'none';
   renderCarnetNotes(allCarnetNotes);
-}
-
-function toggleCarnetSearch() {
-  const bar = document.getElementById('carnet-search-bar');
-  const btn = document.getElementById('carnet-search-btn');
-  if (!bar) return;
-  const isOpen = bar.style.display !== 'none';
-  if (isOpen) {
-    // close
-    bar.style.display = 'none';
-    if (btn) btn.querySelector('i').className = 'ti ti-search';
-    clearCarnetSearch();
-  } else {
-    // open
-    bar.style.display = 'flex';
-    if (btn) btn.querySelector('i').className = 'ti ti-search ti-search-active';
-    setTimeout(() => document.getElementById('carnet-search')?.focus(), 80);
-  }
-}
-
-function closeCarnetSearch() {
-  const bar = document.getElementById('carnet-search-bar');
-  const btn = document.getElementById('carnet-search-btn');
-  if (bar) bar.style.display = 'none';
-  if (btn) btn.querySelector('i').className = 'ti ti-search';
-  clearCarnetSearch();
 }
 
 // Menu contestuale nota
