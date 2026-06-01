@@ -541,6 +541,19 @@ function addPhoto(input) {
   }
   processNext();
 }
+// Apre il picker impostando multiple solo se ci sono ≥2 slot liberi
+function openPhotoPicker() {
+  const remaining = 3 - (_existingPhotoUrls.length + _pendingPhotos.length);
+  if (remaining <= 0) return;
+  const inp = document.getElementById('photo-input');
+  if (!inp) return;
+  if (remaining >= 2) {
+    inp.setAttribute('multiple', '');
+  } else {
+    inp.removeAttribute('multiple');
+  }
+  inp.click();
+}
 function renderPhotoStrip() {
   const emptyEl = document.getElementById('photo-empty');
   const stripEl = document.getElementById('photo-strip');
@@ -567,8 +580,9 @@ function renderPhotoStrip() {
     '</div>';
   });
   if (allCount < 3) {
-    html += '<div class="photo-add-btn" onclick="document.getElementById(\'photo-input\').click()">' +
-      '<i class="ti ti-camera-plus"></i><span>Aggiungi</span></div>';
+    const remaining = 3 - allCount;
+    html += '<div class="photo-add-btn" onclick="openPhotoPicker()">' +
+      '<i class="ti ti-camera-plus"></i><span>Aggiungi' + (remaining < 3 ? ' ('+(remaining)+')' : '') + '</span></div>';
   }
   stripEl.innerHTML = html;
 }

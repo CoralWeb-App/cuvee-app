@@ -1699,8 +1699,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
       <i class="ti ti-glass-full"></i> Tutti
     </button>
-    <button class="calice-btn" id="cf-6" onclick="setCaliceFilter(6)" style="color:#E05252;">
-      <i class="ti ti-heart-filled"></i> Fantastico
+    <button class="calice-btn" id="cf-6" onclick="setCaliceFilter(6)">
+      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-heart-filled" style="color:#E05252;"></i>
     </button>
     <button class="calice-btn" id="cf-5" onclick="setCaliceFilter(5)">
       <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
@@ -1797,8 +1797,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <span class="photo-scan-sub">Riconosce maison, cuvée, annata e dosage</span>
         </button>
         <div class="photo-empty-or">oppure</div>
-        <button class="photo-gallery-btn" onclick="document.getElementById('photo-input').click()">
-          <i class="ti ti-photo"></i> Scegli dalla galleria
+        <button class="photo-gallery-btn" onclick="openPhotoPicker()">
+          <i class="ti ti-photo"></i> Scegli dalla galleria (max 3)
         </button>
       </div>
       <!-- thumbnail strip (shown when ≥1 photo) -->
@@ -2270,6 +2270,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=109"></script>
+<script src="js/app.js?v=110"></script>
 </body>
 </html>
