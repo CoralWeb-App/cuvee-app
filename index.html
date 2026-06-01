@@ -1699,6 +1699,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
       <i class="ti ti-glass-full"></i> Tutti
     </button>
+    <button class="calice-btn" id="cf-6" onclick="setCaliceFilter(6)" style="color:#E05252;">
+      <i class="ti ti-heart-filled"></i> Fantastico
+    </button>
     <button class="calice-btn" id="cf-5" onclick="setCaliceFilter(5)">
       <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
     </button>
@@ -1800,7 +1803,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
       <!-- thumbnail strip (shown when ≥1 photo) -->
       <div id="photo-strip" class="photo-strip-wrap" style="display:none;"></div>
-      <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="addPhoto(this)"/>
+      <input type="file" id="photo-input" accept="image/*" multiple style="display:none;" onchange="addPhoto(this)"/>
     </div>
 
     <!-- BOTTIGLIA -->
@@ -1852,6 +1855,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <i class="ti ti-glass-full rating-star" onclick="setRating(3)"></i>
         <i class="ti ti-glass-full rating-star" onclick="setRating(4)"></i>
         <i class="ti ti-glass-full rating-star" onclick="setRating(5)"></i>
+        <span style="width:1px;height:22px;background:var(--border-2);margin:0 6px;display:inline-block;vertical-align:middle;flex-shrink:0;"></span>
+        <i class="ti ti-heart rating-heart" id="rating-heart" onclick="toggleFavoriteRating()" style="color:var(--ink-4);opacity:0.25;flex-shrink:0;"></i>
+        <span id="rating-top-label" style="display:none;font-family:var(--sans);font-size:12px;color:#E05252;font-weight:700;margin-left:5px;letter-spacing:.2px;vertical-align:middle;">Fantastico!</span>
       </div>
       <div style="font-family:var(--sans);font-size:14px;color:var(--ink-5);margin-top:8px;" id="rating-label">Tocca per valutare *</div>
     </div>
@@ -2264,6 +2270,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=108"></script>
+<script src="js/app.js?v=109"></script>
 </body>
 </html>

@@ -300,12 +300,7 @@ function checkAndNewNote(){
     if (el) el.value = '';
   });
   document.querySelectorAll('.aromi-pill').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.rating-star').forEach(s => {
-    s.style.opacity = '0.25';
-    s.className = 'ti ti-glass-full rating-star';
-  });
-  const lbl = document.getElementById('rating-label');
-  if (lbl) lbl.textContent = 'Tocca per valutare *';
+  setRating(0);
   resetPhotoStrip();
   const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
   if (title) title.textContent = 'Nuova degustazione';
@@ -333,12 +328,7 @@ function openNewNoteFromBottiglia(bottId) {
     if (el) el.value = '';
   });
   document.querySelectorAll('.aromi-pill').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.rating-star').forEach(s => {
-    s.style.opacity = '0.25';
-    s.className = 'ti ti-glass-full rating-star';
-  });
-  const lbl = document.getElementById('rating-label');
-  if (lbl) lbl.textContent = 'Tocca per valutare *';
+  setRating(0);
 
   // Pre-compila con i dati del catalogo
   const maisonEl = document.getElementById('note-maison');
@@ -411,14 +401,33 @@ function initAllSliders(defaultVal) {
 
 function setRating(n){
   currentRating=n;
-  const labels=['','Deludente','Nella media','Buono','Ottimo','Eccellente — da ricordare!'];
+  const labels=['Tocca per valutare *','Deludente','Nella media','Buono','Ottimo','Eccellente — da ricordare!','Fantastico — il mio preferito!'];
+  const glassN = Math.min(n, 5);
   document.querySelectorAll('.rating-star').forEach((s,i)=>{
-    s.className='ti ti-glass-full rating-star' + (i<n?' on':'');
+    s.className='ti ti-glass-full rating-star' + (i<glassN?' on':'');
     s.style.color='var(--gold)';
-    s.style.opacity=i<n?'1':'0.25';
+    s.style.opacity=i<glassN?'1':'0.25';
   });
+  // Cuore Fantastico (6° livello)
+  const heart = document.getElementById('rating-heart');
+  const heartLbl = document.getElementById('rating-top-label');
+  if (heart) {
+    if (n >= 6) {
+      heart.className = 'ti ti-heart-filled rating-heart on';
+      heart.style.color = '#E05252';
+      heart.style.opacity = '1';
+    } else {
+      heart.className = 'ti ti-heart rating-heart';
+      heart.style.color = 'var(--ink-4)';
+      heart.style.opacity = '0.25';
+    }
+  }
+  if (heartLbl) heartLbl.style.display = n >= 6 ? 'inline' : 'none';
   const lbl=document.getElementById('rating-label');
-  if(lbl)lbl.textContent=labels[n]||'';
+  if(lbl)lbl.textContent=n===0?'Tocca per valutare *':(labels[n]||'');
+}
+function toggleFavoriteRating(){
+  setRating(currentRating === 6 ? 5 : 6);
 }
 function togAroma(el){el.classList.toggle('on');}
 function previewPhoto(input){
@@ -485,40 +494,52 @@ function previewPhoto(input){
 function waitForCompression(input){ return Promise.resolve(); }
 
 /* ── Multi-photo strip ─────────────────────────────────────── */
-function addPhoto(input) {
-  if (!input.files || !input.files[0]) return;
-  const allCount = _existingPhotoUrls.length + _pendingPhotos.length;
-  if (allCount >= 3) { input.value=''; return; }
-  const file = input.files[0];
-  input.value = ''; // reset so same file can be re-selected
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const img = new Image();
-    img.onload = function() {
-      const MAX = 900;
-      let w = img.width, h = img.height;
-      if (w > h) { if (w > MAX) { h = Math.round(h*MAX/w); w = MAX; } }
-      else       { if (h > MAX) { w = Math.round(w*MAX/h); h = MAX; } }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      let dataUrl = canvas.toDataURL('image/webp', 0.78);
-      let mimeType = 'image/webp', ext = 'webp';
-      if (!dataUrl.startsWith('data:image/webp')) {
-        dataUrl = canvas.toDataURL('image/jpeg', 0.78);
-        mimeType = 'image/jpeg'; ext = 'jpg';
-      }
-      const base64 = dataUrl.split(',')[1];
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
-      const blob = new Blob([bytes],{type:mimeType});
-      _pendingPhotos.push({id:Date.now()+Math.random(), dataUrl, blob, ext});
-      renderPhotoStrip();
+function _compressAndAddPhoto(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const MAX = 900;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h = Math.round(h*MAX/w); w = MAX; } }
+        else       { if (h > MAX) { w = Math.round(w*MAX/h); h = MAX; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        let dataUrl = canvas.toDataURL('image/webp', 0.78);
+        let mimeType = 'image/webp', ext = 'webp';
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+          mimeType = 'image/jpeg'; ext = 'jpg';
+        }
+        const base64 = dataUrl.split(',')[1];
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+        const blob = new Blob([bytes],{type:mimeType});
+        _pendingPhotos.push({id:Date.now()+Math.random(), dataUrl, blob, ext});
+        renderPhotoStrip();
+        resolve();
+      };
+      img.src = e.target.result;
     };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
+  });
+}
+function addPhoto(input) {
+  if (!input.files || !input.files.length) return;
+  const files = Array.from(input.files);
+  input.value = ''; // reset so same files can be re-selected
+  // Processo sequenzialmente: ogni foto aspetta la precedente (evita race condition sul conteggio)
+  let idx = 0;
+  function processNext() {
+    if (idx >= files.length) return;
+    const allCount = _existingPhotoUrls.length + _pendingPhotos.length;
+    if (allCount >= 3) return; // limite 3 foto raggiunto
+    _compressAndAddPhoto(files[idx++]).then(processNext);
+  }
+  processNext();
 }
 function renderPhotoStrip() {
   const emptyEl = document.getElementById('photo-empty');
@@ -1201,7 +1222,8 @@ async function loadCarnetNotes() {
       .from('carnet_notes')
       .select('*')
       .eq('user_id', currentUser.id)
-      .order('data_degustazione', { ascending: false });
+      .order('data_degustazione', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
   } catch(e) {
@@ -1443,9 +1465,12 @@ function openNoteDetail(note) {
     ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})
     : '';
 
+  const noteRating = note.rating || 0;
   const glasses = Array.from({length:5},(_,i) =>
-    '<i class="ti ti-glass-full" style="font-size:20px;color:var(--gold);opacity:'+(i<(note.rating||0)?'1':'0.18')+'"></i>'
-  ).join('');
+    '<i class="ti ti-glass-full" style="font-size:20px;color:var(--gold);opacity:'+(i<Math.min(noteRating,5)?'1':'0.18')+'"></i>'
+  ).join('') + (noteRating >= 6
+    ? '<i class="ti ti-heart-filled" style="font-size:20px;color:#E05252;margin-left:5px;"></i><span style="font-family:var(--sans);font-size:12px;color:#E05252;font-weight:700;margin-left:4px;letter-spacing:.2px;">Fantastico!</span>'
+    : '');
 
   // Helper: card-section with title
   const sec = (icon,title,body) =>
@@ -1978,14 +2003,8 @@ function openEditNote(note) {
     }
   });
 
-  // Set rating
-  document.querySelectorAll('.rating-star').forEach((s, i) => {
-    s.style.opacity = i < currentRating ? '1' : '0.25';
-    s.className = 'ti ti-glass-full rating-star' + (i < currentRating ? ' on' : '');
-  });
-  const lbl = document.getElementById('rating-label');
-  const labels = ['', 'Deludente', 'Nella media', 'Buono', 'Ottimo', 'Eccellente — da ricordare!'];
-  if (lbl) lbl.textContent = labels[currentRating] || '';
+  // Set rating (handles 1-5 glasses + 6=Fantastico cuore)
+  setRating(currentRating);
 
   // Set tipo chip
   _noteTypes = Array.isArray(note.tipo) ? [...note.tipo] : (note.tipo ? [note.tipo] : []);
@@ -2174,9 +2193,10 @@ function renderCarnetNotes(notes) {
   listEl.innerHTML = '<div class="carnet-grid">' + filtered.map((note) => {
     const tipi = inferTipoNota(note);
     const tipoLabel = tipi.filter(t => t !== 'non_so').map(t => _tipoShort[t] || t).join(' · ');
+    const r = note.rating || 0;
     const glasses = Array.from({length:5}, (_,i) =>
-      '<i class="ti ti-glass-full" style="opacity:'+(i<(note.rating||0)?'1':'0.18')+'"></i>'
-    ).join('');
+      '<i class="ti ti-glass-full" style="opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"></i>'
+    ).join('') + (r >= 6 ? '<i class="ti ti-heart-filled" style="color:#E05252;font-size:13px;margin-left:3px;opacity:1;"></i>' : '');
     const date = note.data_degustazione
       ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short'})
       : '';
