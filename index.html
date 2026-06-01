@@ -1782,8 +1782,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <span class="photo-scan-sub">Riconosce maison, cuvée, annata e dosage</span>
         </button>
         <div class="photo-empty-or">oppure</div>
-        <button class="photo-gallery-btn" onclick="openPhotoPicker()">
-          <i class="ti ti-photo"></i> Scegli dalla galleria (max 3)
+        <button class="photo-gallery-btn" onclick="document.getElementById('photo-input').click()">
+          <i class="ti ti-photo"></i> Scegli dalla galleria
         </button>
       </div>
       <!-- thumbnail strip (shown when ≥1 photo) -->
@@ -2255,6 +2255,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=113"></script>
+<script src="js/app.js?v=114"></script>
 </body>
 </html>
