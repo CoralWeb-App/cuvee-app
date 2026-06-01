@@ -1686,48 +1686,34 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div>
     </div>
   </div>
-  <!-- PILL TOGGLE (stato chiuso) -->
-  <div id="carnet-filter-toggle" class="carnet-filter-toggle" onclick="openCarnetFilterPanel()">
-    <i class="ti ti-search" style="font-size:16px;color:var(--gold);flex-shrink:0;"></i>
-    <span style="flex:1;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Cerca degustazione</span>
-    <span id="carnet-filter-dot" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;"></span>
-    <i class="ti ti-adjustments-horizontal" style="font-size:16px;color:var(--ink-4);flex-shrink:0;"></i>
+  <!-- SEARCH — sempre visibile -->
+  <div id="carnet-search-bar" class="carnet-search-bar">
+    <i class="ti ti-search"></i>
+    <input id="carnet-search" type="text" placeholder="Cerca tra le tue degustazioni…" oninput="filterCarnet()"/>
+    <i class="ti ti-x" id="carnet-search-clear" style="display:none;cursor:pointer;font-size:16px;color:var(--ink-5);" onclick="clearCarnetSearch()"></i>
   </div>
-  <!-- PANNELLO FILTRI (stato aperto) -->
-  <div id="carnet-filter-panel" style="display:none;">
-    <div id="carnet-search-bar" class="carnet-search-bar" style="margin-bottom:0;border-radius:var(--radius-md) var(--radius-md) 0 0;">
-      <i class="ti ti-search"></i>
-      <input id="carnet-search" type="text" placeholder="Cerca tra le tue degustazioni…" oninput="filterCarnet()"/>
-      <i class="ti ti-x" id="carnet-search-clear" style="display:none;cursor:pointer;font-size:16px;color:var(--ink-5);" onclick="clearCarnetSearch()"></i>
-    </div>
-    <div style="display:flex;align-items:center;background:var(--white);border:1px solid var(--border-2);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);margin:0 14px;padding-right:6px;">
-      <div class="carnet-filter-row" style="flex:1;min-width:0;padding:8px 0 8px 10px;margin:0;">
-        <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
-          <i class="ti ti-glass-full"></i> Tutti
-        </button>
-        <button class="calice-btn" id="cf-6" onclick="setCaliceFilter(6)">
-          <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-heart-filled" style="color:#E05252;"></i>
-        </button>
-        <button class="calice-btn" id="cf-5" onclick="setCaliceFilter(5)">
-          <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
-        </button>
-        <button class="calice-btn" id="cf-4" onclick="setCaliceFilter(4)">
-          <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
-        </button>
-        <button class="calice-btn" id="cf-3" onclick="setCaliceFilter(3)">
-          <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
-        </button>
-        <button class="calice-btn" id="cf-2" onclick="setCaliceFilter(2)">
-          <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
-        </button>
-        <button class="calice-btn" id="cf-1" onclick="setCaliceFilter(1)">
-          <i class="ti ti-glass-full"></i>
-        </button>
-      </div>
-      <button onclick="closeCarnetFilterPanel()" style="width:30px;height:30px;border-radius:50%;background:var(--ivory-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-left:4px;">
-        <i class="ti ti-x" style="font-size:14px;color:var(--ink-3);"></i>
-      </button>
-    </div>
+  <div class="carnet-filter-row">
+    <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
+      <i class="ti ti-glass-full"></i> Tutti
+    </button>
+    <button class="calice-btn" id="cf-6" onclick="setCaliceFilter(6)">
+      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-heart-filled" style="color:#E05252;"></i>
+    </button>
+    <button class="calice-btn" id="cf-5" onclick="setCaliceFilter(5)">
+      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
+    </button>
+    <button class="calice-btn" id="cf-4" onclick="setCaliceFilter(4)">
+      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
+    </button>
+    <button class="calice-btn" id="cf-3" onclick="setCaliceFilter(3)">
+      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
+    </button>
+    <button class="calice-btn" id="cf-2" onclick="setCaliceFilter(2)">
+      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
+    </button>
+    <button class="calice-btn" id="cf-1" onclick="setCaliceFilter(1)">
+      <i class="ti ti-glass-full"></i>
+    </button>
   </div>
   <div class="scroll" id="carnet-list-scroll" style="background:var(--ivory-2);">
 
@@ -2269,6 +2255,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=118"></script>
+<script src="js/app.js?v=117"></script>
 </body>
 </html>
