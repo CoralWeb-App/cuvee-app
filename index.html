@@ -1718,18 +1718,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <i class="ti ti-glass-full"></i>
     </button>
   </div>
-  <div class="filter-bar" style="border-bottom:1px solid var(--border);">
-    <div class="filter-row" id="carnet-type-filters">
-      <div class="f-btn on" onclick="setCarnetTypeFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn" onclick="setCarnetTypeFilter(this,'prestige')">✦ Prestige</div>
-      <div class="f-btn" onclick="setCarnetTypeFilter(this,'nv')">Sans Année</div>
-      <div class="f-btn" onclick="setCarnetTypeFilter(this,'millesimato')">Millésimé</div>
-      <div class="f-btn" onclick="setCarnetTypeFilter(this,'rose')">Rosé</div>
-      <div class="f-btn" onclick="setCarnetTypeFilter(this,'blanc_de_blancs')">Blanc de Blancs</div>
-      <div class="f-btn" onclick="setCarnetTypeFilter(this,'blanc_de_noirs')">Blanc de Noirs</div>
-      <div class="f-btn" onclick="setCarnetTypeFilter(this,'nature')">Brut Nature</div>
-    </div>
-  </div>
   <div class="scroll" id="carnet-list-scroll" style="background:var(--ivory-2);">
 
     <!-- Note caricate dinamicamente dal DB -->
@@ -2270,6 +2258,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=110"></script>
+<script src="js/app.js?v=111"></script>
 </body>
 </html>
