@@ -494,39 +494,55 @@ function waitForCompression(input){ return Promise.resolve(); }
 
 /* ── Multi-photo strip ─────────────────────────────────────── */
 function addPhoto(input) {
-  if (!input.files || !input.files[0]) return;
-  const allCount = _existingPhotoUrls.length + _pendingPhotos.length;
-  if (allCount >= 3) { input.value=''; return; }
-  const file = input.files[0];
-  input.value = ''; // reset so same file can be re-selected
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const img = new Image();
-    img.onload = function() {
-      const MAX = 900;
-      let w = img.width, h = img.height;
-      if (w > h) { if (w > MAX) { h = Math.round(h*MAX/w); w = MAX; } }
-      else       { if (h > MAX) { w = Math.round(w*MAX/h); h = MAX; } }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      let dataUrl = canvas.toDataURL('image/webp', 0.78);
-      let mimeType = 'image/webp', ext = 'webp';
-      if (!dataUrl.startsWith('data:image/webp')) {
-        dataUrl = canvas.toDataURL('image/jpeg', 0.78);
-        mimeType = 'image/jpeg'; ext = 'jpg';
-      }
-      const base64 = dataUrl.split(',')[1];
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
-      const blob = new Blob([bytes],{type:mimeType});
-      _pendingPhotos.push({id:Date.now()+Math.random(), dataUrl, blob, ext});
-      renderPhotoStrip();
+  if (!input.files || !input.files.length) return;
+  // IMPORTANTE: cattura i File PRIMA di resettare input.value
+  // (su mobile input.value='' svuota input.files)
+  const files = Array.from(input.files);
+  input.value = '';
+
+  const slots = 3 - (_existingPhotoUrls.length + _pendingPhotos.length);
+  if (slots <= 0) return;
+
+  // Processa in sequenza: ogni foto aspetta la precedente (conteggio sempre aggiornato)
+  let idx = 0;
+  function processNext() {
+    if (idx >= files.length) return;
+    if ((_existingPhotoUrls.length + _pendingPhotos.length) >= 3) {
+      if (files.length > slots) showToast('Aggiunte ' + slots + ' foto — limite di 3 raggiunto');
+      return;
+    }
+    const file = files[idx++];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const MAX = 900;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h = Math.round(h*MAX/w); w = MAX; } }
+        else       { if (h > MAX) { w = Math.round(w*MAX/h); h = MAX; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        let dataUrl = canvas.toDataURL('image/webp', 0.78);
+        let mimeType = 'image/webp', ext = 'webp';
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+          mimeType = 'image/jpeg'; ext = 'jpg';
+        }
+        const base64 = dataUrl.split(',')[1];
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+        const blob = new Blob([bytes],{type:mimeType});
+        _pendingPhotos.push({id:Date.now()+Math.random(), dataUrl, blob, ext});
+        renderPhotoStrip();
+        processNext(); // foto successiva solo dopo che questa è pronta
+      };
+      img.src = e.target.result;
     };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
+  }
+  processNext();
 }
 function renderPhotoStrip() {
   const emptyEl = document.getElementById('photo-empty');
