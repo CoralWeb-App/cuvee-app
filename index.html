@@ -1855,28 +1855,28 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <span class="slider-label"><i class="ti ti-droplet"></i> Acidité</span>
           <span class="slider-val" id="val-acidite">5</span>
         </div>
-        <input type="range" min="0" max="10" value="5" oninput="updSlider(this,'acidite','val-acidite')">
+        <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'acidite','val-acidite')">
       </div>
       <div class="slider-wrap slider-eff">
         <div class="slider-label-row">
           <span class="slider-label"><i class="ti ti-wind"></i> Effervescence</span>
           <span class="slider-val" id="val-eff">5</span>
         </div>
-        <input type="range" min="0" max="10" value="5" oninput="updSlider(this,'eff','val-eff')">
+        <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'eff','val-eff')">
       </div>
       <div class="slider-wrap slider-comp">
         <div class="slider-label-row">
           <span class="slider-label"><i class="ti ti-sparkles"></i> Complexité aromatique</span>
           <span class="slider-val" id="val-comp">5</span>
         </div>
-        <input type="range" min="0" max="10" value="5" oninput="updSlider(this,'comp','val-comp')">
+        <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'comp','val-comp')">
       </div>
       <div class="slider-wrap slider-lung" style="padding-bottom:2px;">
         <div class="slider-label-row">
           <span class="slider-label"><i class="ti ti-arrow-right"></i> Longueur en bouche</span>
           <span class="slider-val" id="val-lung">5</span>
         </div>
-        <input type="range" min="0" max="10" value="5" oninput="updSlider(this,'lung','val-lung')">
+        <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'lung','val-lung')">
       </div>
     </div>
 
@@ -2255,6 +2255,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=116"></script>
+<script src="js/app.js?v=117"></script>
 </body>
 </html>

@@ -370,22 +370,32 @@ const _sliderColors = {
   comp:    ['#C8962A','#F5EDD5'],
   lung:    ['#4A8A5A','#DFF0E4']
 };
+let _activeSliders = new Set(); // slider toccati dall'utente
+
 function updSlider(el, key, displayId) {
   const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
   const pct = (val - min) / (max - min);
-  // Correct for physical thumb width so gradient stop aligns with thumb centre
-  const thumbW = 28; // iOS Safari default range thumb ~28px
+  const thumbW = 28;
   const trackW = el.offsetWidth > 0 ? el.offsetWidth : 340;
   const adj = ((pct * (trackW - thumbW)) + thumbW * 0.5) / trackW * 100;
   const [fill, empty] = _sliderColors[key] || ['#888','#ddd'];
   el.style.background = `linear-gradient(to right,${fill} ${adj.toFixed(1)}%,${empty} ${adj.toFixed(1)}%)`;
   if (displayId) document.getElementById(displayId).textContent = el.value;
 }
+// Chiamata dall'oninput dell'utente: attiva lo slider + aggiorna visuale
+function touchSlider(el, key, displayId) {
+  _activeSliders.add(key);
+  const wrap = el.closest('.slider-wrap');
+  if (wrap) wrap.classList.add('slider-active');
+  updSlider(el, key, displayId);
+}
 function initAllSliders(defaultVal) {
   const map = [
     ['val-acidite','acidite'], ['val-eff','eff'],
     ['val-comp','comp'],       ['val-lung','lung']
   ];
+  // Nuova nota (defaultVal=5): resetta tutto, slider disattivati
+  if (defaultVal != null) _activeSliders = new Set();
   map.forEach(([displayId, key]) => {
     const display = document.getElementById(displayId);
     if (!display) return;
@@ -393,7 +403,13 @@ function initAllSliders(defaultVal) {
     if (!wrap) return;
     const inp = wrap.querySelector('input[type=range]');
     if (!inp) return;
-    if (defaultVal != null) inp.value = defaultVal;
+    if (defaultVal != null) {
+      inp.value = defaultVal;
+      wrap.classList.remove('slider-active'); // dim: non ancora toccato
+    } else {
+      // Edit mode: attiva visualmente solo gli slider già popolati
+      if (_activeSliders.has(key)) wrap.classList.add('slider-active');
+    }
     updSlider(inp, key, displayId);
   });
 }
@@ -645,10 +661,10 @@ async function saveNote(editId = null){
     rating: currentRating || null,
     note_libere: document.getElementById('note-text')?.value?.trim() || '',
     prezzo_pagato: document.getElementById('note-prezzo')?.value ? parseFloat(document.getElementById('note-prezzo').value) : null,
-    acidite: parseInt(document.getElementById('val-acidite')?.textContent) || null,
-    effervescence: parseInt(document.getElementById('val-eff')?.textContent) || null,
-    complexite: parseInt(document.getElementById('val-comp')?.textContent) || null,
-    longueur: parseInt(document.getElementById('val-lung')?.textContent) || null,
+    acidite:      _activeSliders.has('acidite') ? (parseInt(document.getElementById('val-acidite')?.textContent) || null) : null,
+    effervescence:_activeSliders.has('eff')     ? (parseInt(document.getElementById('val-eff')?.textContent)     || null) : null,
+    complexite:   _activeSliders.has('comp')    ? (parseInt(document.getElementById('val-comp')?.textContent)    || null) : null,
+    longueur:     _activeSliders.has('lung')    ? (parseInt(document.getElementById('val-lung')?.textContent)    || null) : null,
     aromi: Array.from(document.querySelectorAll('.aromi-pill.on')).map(el => el.textContent),
     data_degustazione: new Date().toISOString().split('T')[0],
     tipo: _noteTypes.length ? _noteTypes : null
@@ -1989,20 +2005,27 @@ function openEditNote(note) {
     if (el) el.value = val || '';
   });
 
-  // Set sliders
+  // Set sliders — attiva solo quelli con valore salvato
+  _activeSliders = new Set();
   const sliders = {
-    'val-acidite': note.acidite,
-    'val-eff': note.effervescence,
-    'val-comp': note.complexite,
-    'val-lung': note.longueur
+    'val-acidite': { val: note.acidite,       key: 'acidite' },
+    'val-eff':     { val: note.effervescence,  key: 'eff'     },
+    'val-comp':    { val: note.complexite,     key: 'comp'    },
+    'val-lung':    { val: note.longueur,       key: 'lung'    }
   };
-  Object.entries(sliders).forEach(([id, val]) => {
+  Object.entries(sliders).forEach(([id, {val, key}]) => {
     const el = document.getElementById(id);
     if (el && val != null) el.textContent = val;
     const wrap = el?.closest('.slider-wrap');
     if (wrap) {
       const input = wrap.querySelector('input[type=range]');
-      if (input && val != null) input.value = val;
+      if (input && val != null) {
+        input.value = val;
+        _activeSliders.add(key);
+        wrap.classList.add('slider-active');
+      } else {
+        wrap.classList.remove('slider-active');
+      }
     }
   });
 
