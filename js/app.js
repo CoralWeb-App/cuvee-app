@@ -528,31 +528,17 @@ function _compressAndAddPhoto(file) {
   });
 }
 function addPhoto(input) {
-  if (!input.files || !input.files.length) return;
-  const files = Array.from(input.files);
-  input.value = ''; // reset so same files can be re-selected
-  // Processo sequenzialmente: ogni foto aspetta la precedente (evita race condition sul conteggio)
-  let idx = 0;
-  function processNext() {
-    if (idx >= files.length) return;
-    const allCount = _existingPhotoUrls.length + _pendingPhotos.length;
-    if (allCount >= 3) return; // limite 3 foto raggiunto
-    _compressAndAddPhoto(files[idx++]).then(processNext);
-  }
-  processNext();
+  if (!input.files || !input.files[0]) return;
+  const allCount = _existingPhotoUrls.length + _pendingPhotos.length;
+  if (allCount >= 3) { input.value = ''; return; }
+  input.value = '';
+  _compressAndAddPhoto(input.files[0]);
 }
-// Apre il picker impostando multiple solo se ci sono ≥2 slot liberi
+// Apre il picker solo se ci sono slot liberi
 function openPhotoPicker() {
   const remaining = 3 - (_existingPhotoUrls.length + _pendingPhotos.length);
   if (remaining <= 0) return;
-  const inp = document.getElementById('photo-input');
-  if (!inp) return;
-  if (remaining >= 2) {
-    inp.setAttribute('multiple', '');
-  } else {
-    inp.removeAttribute('multiple');
-  }
-  inp.click();
+  document.getElementById('photo-input')?.click();
 }
 function renderPhotoStrip() {
   const emptyEl = document.getElementById('photo-empty');
