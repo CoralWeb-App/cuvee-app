@@ -766,6 +766,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 /* search icon active state */
 .ti-search-active{color:var(--gold) !important;}
 @keyframes slideDown{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+#v-carnet{background:var(--ivory-2);}
 .carnet-filter-row{display:flex;gap:7px;padding:10px 14px 0;overflow-x:auto;}
 .carnet-filter-row::-webkit-scrollbar{display:none;}
 .calice-btn{display:flex;align-items:center;gap:2px;background:var(--white);border:1.5px solid var(--border);border-radius:20px;padding:7px 11px;cursor:pointer;font-family:var(--sans);font-size:13px;color:var(--ink-4);transition:all .2s;white-space:nowrap;flex-shrink:0;}
