@@ -508,7 +508,7 @@ function addPhoto(input) {
   function processNext() {
     if (idx >= files.length) return;
     if ((_existingPhotoUrls.length + _pendingPhotos.length) >= 3) {
-      if (files.length > slots) showToast('Aggiunte ' + slots + ' foto — limite di 3 raggiunto');
+      if (files.length > slots) showAppToast('Aggiunte ' + slots + ' foto su ' + files.length + ' selezionate — max 3');
       return;
     }
     const file = files[idx++];
@@ -2572,6 +2572,17 @@ async function confirmCancelPremium() {
 // activateTestPremium and deactivatePremium defined above
 
 
+
+function showAppToast(msg, duration) {
+  const existing = document.getElementById('app-toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.id = 'app-toast';
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(30,18,8,.92);color:#fff;font-family:var(--sans);font-size:14px;padding:11px 20px;border-radius:20px;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.28);pointer-events:none;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.remove(); }, duration || 3000);
+}
 
 function showNoteError(msg) {
   // Remove existing error if any
