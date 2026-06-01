@@ -30,6 +30,12 @@ function go(id){
     document.querySelectorAll('.calice-btn').forEach(b => b.classList.remove('on'));
     const allBtn = document.getElementById('cf-all');
     if(allBtn) allBtn.classList.add('on');
+    // Chiudi pannello filtri, mostra pill
+    const panel = document.getElementById('carnet-filter-panel');
+    const toggle = document.getElementById('carnet-filter-toggle');
+    if(panel) panel.style.display = 'none';
+    if(toggle) toggle.style.display = 'flex';
+    _updateCarnetFilterDot();
     updateCarnetUI();
   }
   if(id==='v-maison') loadAndRenderMaison();
@@ -2248,6 +2254,30 @@ function renderCarnetNotes(notes) {
   }).join('')+'</div>';
 }
 
+// Apre il pannello filtri (nasconde pill)
+function openCarnetFilterPanel() {
+  const panel = document.getElementById('carnet-filter-panel');
+  const toggle = document.getElementById('carnet-filter-toggle');
+  if (panel) panel.style.display = 'block';
+  if (toggle) toggle.style.display = 'none';
+  setTimeout(() => document.getElementById('carnet-search')?.focus(), 120);
+}
+// Chiude il pannello filtri (mostra pill)
+function closeCarnetFilterPanel() {
+  const panel = document.getElementById('carnet-filter-panel');
+  const toggle = document.getElementById('carnet-filter-toggle');
+  if (panel) panel.style.display = 'none';
+  if (toggle) toggle.style.display = 'flex';
+  _updateCarnetFilterDot();
+}
+// Aggiorna pallino indicatore sul pill
+function _updateCarnetFilterDot() {
+  const dot = document.getElementById('carnet-filter-dot');
+  if (!dot) return;
+  const hasFilter = activeCaliceFilter > 0 || activeSearchQuery.length > 0;
+  dot.style.display = hasFilter ? 'inline-block' : 'none';
+}
+
 // Filtro calici
 function setCaliceFilter(rating) {
   activeCaliceFilter = rating;
@@ -2274,6 +2304,7 @@ function clearCarnetSearch() {
   const clr = document.getElementById('carnet-search-clear');
   if (clr) clr.style.display = 'none';
   renderCarnetNotes(allCarnetNotes);
+  _updateCarnetFilterDot();
 }
 
 // Menu contestuale nota
