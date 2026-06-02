@@ -3937,9 +3937,9 @@ function _renderScanResult(result, photoDataUrl) {
   }
 
   const catalogBtn = result.is_in_catalog && result.matched_bottle_id
-    ? '<div style="padding:0 14px 14px;">'
-      + '<button class="btn-outline" style="width:100%;" onclick="go(\'v-bottiglia-detail\');loadBottiglia(\'' + result.matched_bottle_id + '\')">'
-      + '<i class="ti ti-external-link"></i> Vedi scheda completa</button></div>'
+    ? '<div style="padding:0 14px 10px;">'
+      + '<button class="btn-outline" style="width:100%;display:flex;align-items:center;justify-content:center;gap:7px;" onclick="openBottigliaFromScan()">'
+      + '<i class="ti ti-book-2" style="font-size:16px;"></i> Vedi scheda completa</button></div>'
     : '';
 
   container.innerHTML =
@@ -3957,8 +3957,10 @@ function _renderScanResult(result, photoDataUrl) {
         + scoreSmHtml
       + '</div>'
     + '</div>'
+    // ── Pulsante scheda completa (solo se bottiglia in catalogo) ──
+    + (catalogBtn ? catalogBtn : '')
     // ── "L'hai assaggiata?" card unificata ──
-    + '<div style="margin:16px 14px 4px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px 20px;text-align:center;">'
+    + '<div style="margin:' + (catalogBtn ? '0' : '16px') + ' 14px 4px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px 20px;text-align:center;">'
       + '<div style="font-family:var(--serif);font-size:20px;color:var(--ink-2);font-style:italic;font-weight:600;margin-bottom:14px;">L\'hai assaggiata?</div>'
       + '<button onclick="addToCarnetFromScan()" style="position:relative;width:100%;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:13px 20px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;">'
         + '<span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>'
@@ -4033,8 +4035,7 @@ function _renderScanResult(result, photoDataUrl) {
       })()
     // ── Finestra ──
     + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
-    // ── Scheda completa ──
-    + (catalogBtn ? '<div style="margin-top:4px;">' + catalogBtn + '</div>' : '')
+    // (catalogBtn già mostrato in cima, dopo foto+nome)
     // ── Debug: sorgente risultato ──
     + (function() {
         const fromCache = result.from_cache === true;
@@ -4180,6 +4181,13 @@ function _buildNonChampagneHTML(result, photoDataUrl) {
       : '')
     + schedaHtml
     + '<div style="height:30px;"></div>';
+}
+
+// Apre la scheda completa della bottiglia trovata in DB durante una scansione
+function openBottigliaFromScan() {
+  if (!_scanResult || !_scanResult.matched_bottle) return;
+  currentBottiglia = _scanResult.matched_bottle;
+  openBottigliaDetail(currentBottiglia.id);
 }
 
 // Pre-compila il form carnet dai dati scan e ci va direttamente
