@@ -310,8 +310,16 @@ serve(async (req) => {
 
       if (bottles) {
         const found = (bottles as any[]).find(b => {
-          return maisonMatch(b.maison?.nome || '', quick.maison as string) &&
-                 cuveeMatch(b.nome || '', quick.cuvee as string)
+          if (!maisonMatch(b.maison?.nome || '', quick.maison as string)) return false
+          if (!cuveeMatch(b.nome || '', quick.cuvee as string)) return false
+          // Annata check: se DB ha annata e Haiku ha letto annata, devono coincidere.
+          // Evita match su bottiglie millesimate dell'anno sbagliato.
+          if (b.is_millesimato && b.annata && quick.annata) {
+            if (String(b.annata) !== String(quick.annata)) return false
+          }
+          // Se DB è sans-année ma Haiku identifica un'annata specifica → no match
+          if (!b.is_millesimato && !quick.is_sa && quick.annata) return false
+          return true
         })
         if (found) { matchedBottle = found; bottleHasPhoto = !!found.foto_url }
       }
