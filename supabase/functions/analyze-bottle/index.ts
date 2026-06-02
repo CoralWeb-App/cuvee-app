@@ -22,27 +22,48 @@ const norm = (s: string) => (s || '')
   .replace(/[̀-ͯ]/g, '')   // rimuove segni diacritici: é→e, è→e, à→a, ç→c…
   .replace(/[^a-z0-9]/g, '')         // rimuove spazi, trattini, apostrofi ecc.
 
-// Parole significative (≥2 char, escluse preposizioni francesi)
+// Estrae parole preservando i confini PRIMA di normalizzare
+// (es. 'Mémoire de Vignes 20' → ['memoire','vignes','20'], non 'memoiredevignes20')
 const STOP = new Set(['de','du','des','le','la','les','et','en','au','aux','sur','un','une'])
 const sigWords = (s: string): string[] =>
-  (norm(s).match(/[a-z0-9]{2,}/g) || []).filter(w => !STOP.has(w))
+  ((s || '').match(/[a-zA-ZÀ-ÿ0-9]+/g) || [])
+    .map(w => norm(w))
+    .filter(w => w.length >= 2 && !STOP.has(w))
 
 // Match maison: prima strict (includes), poi word-overlap come fallback
 const maisonMatch = (db: string, ai: string): boolean => {
   const dbn = norm(db), ain = norm(ai)
   if (!dbn || !ain) return false
   if (dbn.includes(ain) || ain.includes(dbn)) return true
-  // Word overlap: tutte le parole significative del nome più corto appaiono nel più lungo
   const dbW = sigWords(db), aiW = sigWords(ai)
   const [shorter, longer] = dbW.length <= aiW.length ? [dbW, aiW] : [aiW, dbW]
   if (shorter.length === 0) return false
   return shorter.every(w => longer.some(lw => lw.includes(w) || w.includes(lw)))
 }
 
-// Match cuvée: strict includes (bidirezionale)
+// Parole significative per cuvée — esclude termini generici champagne
+const STOP_C = new Set([
+  'de','du','des','le','la','les','et','en','au','aux','sur','un','une',
+  'brut','extra','champagne','blanc','noirs','blancs','rose','nature','sec','demi','grand','cru'
+])
+const cuveeWords = (s: string): string[] =>
+  ((s || '').match(/[a-zA-ZÀ-ÿ0-9]+/g) || [])
+    .map(w => norm(w))
+    .filter(w => w.length >= 2 && !STOP_C.has(w))
+
+// Match cuvée: prima substring intera, poi word-level overlap
+// Gestisce: 'MV20' ↔ 'Mémoire de Vignes 20', 'R.D.' ↔ 'RD', ecc.
 const cuveeMatch = (db: string, ai: string): boolean => {
   const dbn = norm(db), ain = norm(ai)
-  return !!dbn && !!ain && (dbn.includes(ain) || ain.includes(dbn))
+  if (!dbn || !ain) return false
+  // 1. Inclusione stringa intera (bidirezionale)
+  if (dbn.includes(ain) || ain.includes(dbn)) return true
+  // 2. Word-level overlap: ogni parola significativa del termine più corto
+  //    deve apparire come sottostringa in almeno una parola dell'altro termine
+  const dbW = cuveeWords(db), aiW = cuveeWords(ai)
+  if (dbW.length === 0 || aiW.length === 0) return false
+  const [shorter, longer] = dbW.length <= aiW.length ? [dbW, aiW] : [aiW, dbW]
+  return shorter.every(w => longer.some(lw => lw.includes(w) || w.includes(lw)))
 }
 
 // Deriva fascia_prezzo dal prezzo_min (allineato ai breakpoint JS)
@@ -281,7 +302,8 @@ serve(async (req) => {
         .from('bottiglie')
         .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, maison(id, nome, slug)')
         .eq('is_published', true)
-        .eq('needs_review', false)
+        // needs_review NON filtrata: una bottiglia in catalogo va trovata
+        // anche se ancora in attesa di revisione admin
 
       if (bottles) {
         const found = (bottles as any[]).find(b => {
