@@ -3936,11 +3936,32 @@ function _renderScanResult(result, photoDataUrl) {
       + '</div>';
   }
 
-  const catalogBtn = result.is_in_catalog && result.matched_bottle_id
-    ? '<div style="padding:0 14px 10px;">'
-      + '<button class="btn-outline" style="width:100%;display:flex;align-items:center;justify-content:center;gap:7px;" onclick="openBottigliaFromScan()">'
-      + '<i class="ti ti-book-2" style="font-size:16px;"></i> Vedi scheda completa</button></div>'
-    : '';
+  // ── Card azioni: due card se in catalogo, una sola se non in catalogo ──
+  const actionCards = result.is_in_catalog && result.matched_bottle_id
+    // Bottiglia in catalogo → due card affiancate
+    ? '<div style="margin:16px 14px 4px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+        // Card: Scheda completa
+        + '<div onclick="openBottigliaFromScan()" style="background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 12px 18px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;">'
+          + '<i class="ti ti-book-2" style="font-size:26px;color:var(--gold);display:block;margin-bottom:10px;"></i>'
+          + '<div style="font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px;">Scheda completa</div>'
+          + '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-4);line-height:1.5;">Note, abbinamenti<br>e storia</div>'
+        + '</div>'
+        // Card: Aggiungi al Carnet
+        + '<div onclick="addToCarnetFromScan()" style="position:relative;background:#1E1208;border-radius:var(--radius-lg);padding:16px 12px 18px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;">'
+          + '<span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>'
+          + '<i class="ti ti-notebook" style="font-size:26px;color:#C8A03A;display:block;margin-bottom:10px;"></i>'
+          + '<div style="font-family:var(--sans);font-size:13px;font-weight:600;color:#C8A03A;margin-bottom:4px;">Carnet</div>'
+          + '<div style="font-family:var(--sans);font-size:11px;color:rgba(200,160,58,.55);line-height:1.5;">Aggiungi<br>l\'assaggio</div>'
+        + '</div>'
+      + '</div>'
+    // Bottiglia non in catalogo → card "L'hai assaggiata?" classica
+    : '<div style="margin:16px 14px 4px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px 20px;text-align:center;">'
+        + '<div style="font-family:var(--serif);font-size:20px;color:var(--ink-2);font-style:italic;font-weight:600;margin-bottom:14px;">L\'hai assaggiata?</div>'
+        + '<button onclick="addToCarnetFromScan()" style="position:relative;width:100%;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:13px 20px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;">'
+          + '<span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>'
+          + '<i class="ti ti-notebook" style="font-size:17px;"></i> Aggiungi al Carnet'
+        + '</button>'
+      + '</div>';
 
   container.innerHTML =
     // ── Layout: foto verticale sx + info dx ──
@@ -3957,16 +3978,8 @@ function _renderScanResult(result, photoDataUrl) {
         + scoreSmHtml
       + '</div>'
     + '</div>'
-    // ── Pulsante scheda completa (solo se bottiglia in catalogo) ──
-    + (catalogBtn ? catalogBtn : '')
-    // ── "L'hai assaggiata?" card unificata ──
-    + '<div style="margin:' + (catalogBtn ? '0' : '16px') + ' 14px 4px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px 20px;text-align:center;">'
-      + '<div style="font-family:var(--serif);font-size:20px;color:var(--ink-2);font-style:italic;font-weight:600;margin-bottom:14px;">L\'hai assaggiata?</div>'
-      + '<button onclick="addToCarnetFromScan()" style="position:relative;width:100%;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:13px 20px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;">'
-        + '<span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>'
-        + '<i class="ti ti-notebook" style="font-size:17px;"></i> Aggiungi al Carnet'
-      + '</button>'
-    + '</div>'
+    // ── Card azioni (scheda completa + carnet, o solo carnet) ──
+    + actionCards
     // ── Note di degustazione ──
     + (noteDeg ? '<div class="form-section" style="margin:14px 14px 0;">'
         + '<div class="form-section-title"><i class="ti ti-notes"></i> Note di degustazione</div>'
@@ -4035,7 +4048,6 @@ function _renderScanResult(result, photoDataUrl) {
       })()
     // ── Finestra ──
     + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
-    // (catalogBtn già mostrato in cima, dopo foto+nome)
     // ── Debug: sorgente risultato ──
     + (function() {
         const fromCache = result.from_cache === true;
