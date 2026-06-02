@@ -356,16 +356,17 @@ serve(async (req) => {
         .single()
 
       // Risposta identica alla scansione reale — l'utente non vede differenza
+      // DB HIT: i dati del catalogo hanno sempre priorità su Haiku (nomi completi e corretti)
       return json({
         scan_id:            scan?.id,
         is_bottle:          true,
         is_champagne:       true,
         confidence:         quick.confidence ?? 90,
         not_champagne_type: null,
-        maison:             quick.maison  ?? mb.maison?.nome ?? null,
-        cuvee:              quick.cuvee   ?? mb.nome ?? null,
-        annata:             quick.annata  ?? mb.annata ?? null,
-        is_sa:              quick.is_sa   ?? !mb.is_millesimato,
+        maison:             mb.maison?.nome ?? quick.maison ?? null,
+        cuvee:              mb.nome         ?? quick.cuvee  ?? null,
+        annata:             mb.annata       !== undefined ? (mb.annata ?? null) : (quick.annata ?? null),
+        is_sa:              !mb.is_millesimato,
         dosage:             mb.dosaggio_tipo ?? null,
         tipo:               mb.tipo ?? null,
         prestige:           false,
