@@ -259,16 +259,22 @@ serve(async (req) => {
     // ════════════════════════════════════════════════════════════
     const QUICK_PROMPT =
       'Guarda questa immagine. Rispondi SOLO con JSON valido, zero testo extra:\n' +
-      '{"is_bottle":true/false,"is_champagne":true/false,' +
-      '"maison":"nome produttore o null","cuvee":"nome cuvee SENZA maison e SENZA annata o null",' +
-      '"annata":"anno es.2018 o null","is_sa":true/false,' +
-      '"confidence":0-100,"not_champagne_type":"tipo se non champagne o null"}'
+      '{\n' +
+      '  "is_bottle": true se vedi una bottiglia, false altrimenti,\n' +
+      '  "is_champagne": true se è Champagne AOC francese,\n' +
+      '  "maison": "nome ESATTO del produttore come scritto sull etichetta (es. Krug, Henri Giraud, Moët & Chandon, Jacques Selosse) o null",\n' +
+      '  "cuvee": "nome ESATTO della cuvée come scritto sull etichetta SENZA maison e SENZA annata. Includi codici alfanumerici (es. MV20, MV16, RD, R.D., P2, P3, VO, V.O., Clos du Mesnil, Grande Cuvée 173ème, Belle Epoque, Cristal, Blanc de Blancs). NON scrivere denominazioni territoriali (Grand Cru, Premier Cru, Aÿ, Reims ecc.) a meno che non siano parte del nome cuvée. o null",\n' +
+      '  "annata": "anno es.2018 o null se sans année",\n' +
+      '  "is_sa": true se sans année/non-vintage, false se ha annata,\n' +
+      '  "confidence": 0-100,\n' +
+      '  "not_champagne_type": "tipo bevanda se non è champagne o null"\n' +
+      '}'
 
     let quick: Record<string, unknown> = { is_bottle: true, is_champagne: false, confidence: 0 }
     try {
       const qMsg = await anthropic.messages.create({
         model:      'claude-haiku-4-5-20251001',
-        max_tokens: 250,
+        max_tokens: 350,
         messages: [{ role: 'user', content: [
           { type: 'image', source: imgSource },
           { type: 'text',  text: QUICK_PROMPT },
@@ -458,95 +464,6 @@ serve(async (req) => {
     } catch {
       console.error('JSON parse error, raw:', rawText.substring(0, 500))
       ai = { is_champagne: false, confidence: 0 }
-    }
-
-    // ── Secondo controllo DB con risultato Sonnet (più preciso di Haiku) ─────
-    // Haiku può fallire su nomi tecnici (es. 'MV20', 'R.D.', 'P2') restituendo
-    // cuvee:null o un valore diverso → il lookup Stage 2 viene saltato.
-    // Sonnet riconosce correttamente: se trova la bottiglia ora evitiamo duplicati.
-    if (!matchedBottle && ai.is_champagne && ai.maison && ai.cuvee) {
-      const { data: bottles2 } = await adminSupa
-        .from('bottiglie')
-        .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, maison(id, nome, slug)')
-        .eq('is_published', true)
-        .eq('needs_review', false)
-
-      if (bottles2) {
-        const sonnetFound = (bottles2 as any[]).find(b =>
-          maisonMatch(b.maison?.nome || '', ai.maison as string) &&
-          cuveeMatch(b.nome || '', ai.cuvee as string)
-        )
-        if (sonnetFound) {
-          matchedBottle = sonnetFound
-          bottleHasPhoto = !!sonnetFound.foto_url
-
-          // Upload foto se mancante
-          if (!bottleHasPhoto && image_base64) {
-            try {
-              const imageBytes  = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
-              const storagePath = 'bottles/' + sonnetFound.id + '.jpg'
-              const { error: upErr } = await adminSupa.storage
-                .from('champagne-photos')
-                .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
-              if (!upErr) {
-                const { data: urlData } = adminSupa.storage.from('champagne-photos').getPublicUrl(storagePath)
-                await adminSupa.from('bottiglie').update({ foto_url: urlData.publicUrl }).eq('id', sonnetFound.id)
-              }
-            } catch(e) { console.error('photo upload (sonnet cache hit):', e) }
-          }
-
-          const costUsd2 = parseFloat((
-            haikuInTok * PRICE_HAIKU_IN + haikuOutTok * PRICE_HAIKU_OUT +
-            sonnetInTok * PRICE_SONNET_IN + sonnetOutTok * PRICE_SONNET_OUT
-          ).toFixed(6))
-
-          const mb2 = sonnetFound as any
-          const { data: scan2 } = await userSupa
-            .from('bottle_scans')
-            .insert({
-              user_id: user.id, is_champagne: true,
-              detected_maison: ai.maison ?? null, detected_cuvee: ai.cuvee ?? null,
-              detected_annata: ai.annata ?? null, detected_dosage: mb2.dosaggio_tipo ?? null,
-              detected_tipo: mb2.tipo ?? null, confidence: ai.confidence ?? 90,
-              matched_bottle_id: mb2.id, new_bottle_id: null,
-              result_json: { ...ai, from_cache: true, cache_via: 'sonnet' },
-              scan_type: 'sonnet_full', haiku_input_tokens: haikuInTok,
-              haiku_output_tokens: haikuOutTok, sonnet_input_tokens: sonnetInTok,
-              sonnet_output_tokens: sonnetOutTok, cost_usd: costUsd2,
-            })
-            .select('id').single()
-
-          return json({
-            scan_id: scan2?.id, is_bottle: true, is_champagne: true,
-            confidence: (ai.confidence as number) ?? 90, not_champagne_type: null,
-            maison: mb2.maison?.nome ?? ai.maison ?? null,
-            cuvee:  mb2.nome        ?? ai.cuvee  ?? null,
-            annata: mb2.annata      !== undefined ? (mb2.annata ?? null) : (ai.annata ?? null),
-            is_sa: !mb2.is_millesimato, dosage: mb2.dosaggio_tipo ?? null,
-            tipo: mb2.tipo ?? null, prestige: false,
-            is_in_catalog: true, matched_bottle: matchedBottle,
-            matched_bottle_id: mb2.id, new_bottle_id: null,
-            bottle_has_photo: bottleHasPhoto, from_cache: true,
-            score_medio: mb2.score_medio ?? null,
-            note_degustazione: mb2.note_degustazione ?? null,
-            abbinamento: mb2.abbinamento ?? null,
-            finestra_da: mb2.finestra_da ?? null, finestra_a: mb2.finestra_a ?? null,
-            pct_chardonnay: mb2.pct_chardonnay ?? null,
-            pct_pinot_noir: mb2.pct_pinot_noir ?? null,
-            pct_meunier: mb2.pct_meunier ?? null,
-            provenienza_uve: mb2.provenienza_uve ?? null,
-            vinificazione: mb2.vinificazione ?? null,
-            malolattica: mb2.malolattica ?? null,
-            maturazione_mesi: mb2.maturazione_mesi ?? null,
-            produzione_bottiglie: mb2.produzione_bottiglie ?? null,
-            dosaggio_gl: mb2.dosaggio_gl ?? null,
-            assemblaggio: mb2.assemblaggio ?? null,
-            prezzo_min: mb2.prezzo_min ?? null,
-            prezzo_max: mb2.prezzo_max ?? null,
-            fascia_prezzo: mb2.fascia_prezzo ?? fasciaFromPrezzo(mb2.prezzo_min ?? null),
-          })
-        }
-      }
     }
 
     // ── Auto-aggiunta al catalogo (bottiglia genuinamente nuova) ─
