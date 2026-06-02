@@ -4184,24 +4184,10 @@ function _buildNonChampagneHTML(result, photoDataUrl) {
 }
 
 // Apre la scheda completa della bottiglia trovata in DB durante una scansione
-// Recupera tutti i campi dal DB (matched_bottle ha solo un sottoinsieme)
-async function openBottigliaFromScan() {
+// Delega a openSavedBottiglia che: fetch completo → aggiorna allBottiglie → apre dettaglio
+function openBottigliaFromScan() {
   if (!_scanResult || !_scanResult.matched_bottle_id) return;
-  const bottId = _scanResult.matched_bottle_id;
-  // Controlla se già caricata in allBottiglie (navigazione catalogo precedente)
-  let b = (allBottiglie || []).find(x => x.id === bottId);
-  if (!b) {
-    // Fetch completo dal DB con tutti i campi
-    const { data } = await supa
-      .from('bottiglie')
-      .select('*, maison:maison_id(id, nome, slug)')
-      .eq('id', bottId)
-      .single();
-    b = data;
-  }
-  if (!b) return;
-  currentBottiglia = b;
-  openBottigliaDetail(b.id);
+  openSavedBottiglia(_scanResult.matched_bottle_id);
 }
 
 // Pre-compila il form carnet dai dati scan e ci va direttamente
