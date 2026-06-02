@@ -3950,8 +3950,8 @@ function _renderScanResult(result, photoDataUrl) {
         + '<div onclick="addToCarnetFromScan()" style="position:relative;background:#1E1208;border-radius:var(--radius-lg);padding:16px 12px 18px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;">'
           + '<span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>'
           + '<i class="ti ti-notebook" style="font-size:26px;color:#C8A03A;display:block;margin-bottom:10px;"></i>'
-          + '<div style="font-family:var(--sans);font-size:13px;font-weight:600;color:#C8A03A;margin-bottom:4px;">Carnet</div>'
-          + '<div style="font-family:var(--sans);font-size:11px;color:rgba(200,160,58,.55);line-height:1.5;">Aggiungi<br>l\'assaggio</div>'
+          + '<div style="font-family:var(--sans);font-size:13px;font-weight:600;color:#C8A03A;margin-bottom:4px;">Aggiungi al Carnet</div>'
+          + '<div style="font-family:var(--sans);font-size:11px;color:rgba(200,160,58,.55);line-height:1.5;">Salva note<br>e degustazione</div>'
         + '</div>'
       + '</div>'
     // Bottiglia non in catalogo → card "L'hai assaggiata?" classica
