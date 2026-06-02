@@ -465,15 +465,18 @@ serve(async (req) => {
     if (ai.is_champagne && ai.maison && ai.cuvee) {
       let maisonId: string | null = null
 
-      const { data: existingMaison } = await adminSupa
+      // Usa maisonMatch per trovare la maison corretta — NON split(' ')[0] + ILIKE
+      // che causava "Henri Giraud" → "Henriot" (primo match alfabetico con 'Henri')
+      const { data: allMaisons } = await adminSupa
         .from('maison')
-        .select('id')
-        .ilike('nome', `%${(ai.maison as string).split(' ')[0]}%`)
-        .limit(1)
-        .maybeSingle()
+        .select('id, nome')
 
-      if (existingMaison) {
-        maisonId = existingMaison.id
+      const matchedMaison = (allMaisons || []).find(
+        (m: any) => maisonMatch(m.nome || '', ai.maison as string)
+      )
+
+      if (matchedMaison) {
+        maisonId = (matchedMaison as any).id
       } else {
         const { data: newMaison, error: maisonErr } = await adminSupa
           .from('maison')
