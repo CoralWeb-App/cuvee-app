@@ -22,13 +22,11 @@ const norm = (s: string) => (s || '')
   .replace(/[̀-ͯ]/g, '')   // rimuove segni diacritici: é→e, è→e, à→a, ç→c…
   .replace(/[^a-z0-9]/g, '')         // rimuove spazi, trattini, apostrofi ecc.
 
-// Estrae parole preservando i confini PRIMA di normalizzare
-// (es. 'Mémoire de Vignes 20' → ['memoire','vignes','20'], non 'memoiredevignes20')
+// Parole significative per maison (norm intera prima — più sicuro contro falsi positivi)
+// es. 'Henri Giraud' → 'henrigiraud' (1 token): evita che 'Henriot' ⊃ 'henri' faccia match
 const STOP = new Set(['de','du','des','le','la','les','et','en','au','aux','sur','un','une'])
 const sigWords = (s: string): string[] =>
-  ((s || '').match(/[a-zA-ZÀ-ÿ0-9]+/g) || [])
-    .map(w => norm(w))
-    .filter(w => w.length >= 2 && !STOP.has(w))
+  (norm(s).match(/[a-z0-9]{2,}/g) || []).filter(w => !STOP.has(w))
 
 // Match maison: prima strict (includes), poi word-overlap come fallback
 const maisonMatch = (db: string, ai: string): boolean => {
@@ -302,8 +300,7 @@ serve(async (req) => {
         .from('bottiglie')
         .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, maison(id, nome, slug)')
         .eq('is_published', true)
-        // needs_review NON filtrata: una bottiglia in catalogo va trovata
-        // anche se ancora in attesa di revisione admin
+        .eq('needs_review', false)
 
       if (bottles) {
         const found = (bottles as any[]).find(b => {
