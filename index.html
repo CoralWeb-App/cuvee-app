@@ -2081,7 +2081,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ STORICO SCANSIONI ═══ -->
 <div class="view" id="v-scan-history">
   <div class="topbar">
-    <button class="back-btn" onclick="go('v-home')"><i class="ti ti-arrow-left"></i>Home</button>
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i><span id="scan-history-back-label">Home</span></button>
     <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Scansioni</div>
     <div style="width:60px;"></div>
   </div>
