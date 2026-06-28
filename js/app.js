@@ -2659,9 +2659,9 @@ function showNoteError(msg) {
   err.style.cssText = 'background:#FCEBEB;color:#E24B4A;border:1px solid #F09595;border-radius:10px;padding:11px 14px;font-family:var(--sans);font-size:15px;margin:0 18px 12px;display:flex;align-items:center;gap:8px;';
   err.innerHTML = '<i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0;"></i>' + msg;
 
-  // Insert before save button
-  const saveBtn = document.getElementById('save-note-btn');
-  if (saveBtn) saveBtn.parentElement.insertBefore(err, saveBtn);
+  // Inserisce prima del fondo del form
+  const anchor = document.getElementById('note-form-bottom');
+  if (anchor) anchor.parentElement.insertBefore(err, anchor);
 
   // Scroll to it
   err.scrollIntoView({ behavior: 'smooth', block: 'center' });
