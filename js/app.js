@@ -300,7 +300,7 @@ function checkAndNewNote(){
   });
   const _dateDegEl = document.getElementById('note-data-deg');
   if (_dateDegEl) _dateDegEl.value = new Date().toISOString().split('T')[0];
-  document.querySelectorAll('.aromi-pill').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('#aromi-grid .aromi-pill').forEach(p => p.classList.remove('on'));
   setRating(0);
   resetPhotoStrip();
   const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
@@ -330,7 +330,7 @@ function openNewNoteFromBottiglia(bottId) {
   });
   const _dateDegElB = document.getElementById('note-data-deg');
   if (_dateDegElB) _dateDegElB.value = new Date().toISOString().split('T')[0];
-  document.querySelectorAll('.aromi-pill').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('#aromi-grid .aromi-pill').forEach(p => p.classList.remove('on'));
   setRating(0);
 
   // Pre-compila con i dati del catalogo
@@ -670,7 +670,7 @@ async function saveNote(editId = null){
     complexite:   _activeSliders.has('comp')    ? (parseInt(document.getElementById('val-comp')?.textContent)    || null) : null,
     longueur:     _activeSliders.has('lung')    ? (parseInt(document.getElementById('val-lung')?.textContent)    || null) : null,
     aromi: (() => {
-      const selected = Array.from(document.querySelectorAll('.aromi-pill.on')).map(el => el.textContent);
+      const selected = Array.from(document.querySelectorAll('#aromi-grid .aromi-pill.on')).map(el => el.textContent);
       const customRaw = document.getElementById('note-aromi-custom')?.value?.trim() || '';
       const custom = customRaw ? customRaw.split(',').map(a => a.trim()).filter(Boolean) : [];
       return [...selected, ...custom];
@@ -2049,7 +2049,7 @@ function openEditNote(note) {
 
   // Set aromi predefiniti
   const _PREDEF_AROMI = new Set(['Agrumi','Mela verde','Pera','Pêche blanche','Frutta rossa','Fiori bianchi','Brioche','Pane tostato','Nocciola tostata','Burro','Miele','Vaniglia','Spezie','Cioccolato','Frutta secca','Gesso · minéralité','Tabacco','Fungo']);
-  document.querySelectorAll('.aromi-pill').forEach(pill => {
+  document.querySelectorAll('#aromi-grid .aromi-pill').forEach(pill => {
     pill.classList.toggle('on', (note.aromi || []).includes(pill.textContent));
   });
   // Aromi custom (non in lista predefinita)
