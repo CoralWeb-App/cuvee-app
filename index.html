@@ -1775,7 +1775,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- FOTO -->
     <div class="form-section">
-      <div class="form-section-title"><i class="ti ti-camera"></i> Foto della bottiglia <span class="sec-opt">opzionale</span></div>
+      <div class="form-section-title"><i class="ti ti-camera"></i> Foto della bottiglia</div>
       <!-- empty state -->
       <div id="photo-empty" class="photo-empty-wrap">
         <button class="photo-scan-btn" onclick="startScan('carnet')">
@@ -1816,7 +1816,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;">
         <div class="input-wrap" style="min-width:0;">
-          <label class="input-label">Sboccatura <span style="font-size:12px;color:var(--ink-5);font-weight:400;">· opz.</span></label>
+          <label class="input-label">Sboccatura</label>
           <input class="input-field" id="note-sboccatura" type="text" placeholder="es. 03/2025"/>
         </div>
         <div class="input-wrap" style="min-width:0;">
@@ -1825,7 +1825,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
       </div>
       <div class="input-wrap" style="margin-top:2px;">
-        <label class="input-label">Tipologia <span style="font-size:15px;color:var(--ink-5);font-weight:400;">· opzionale</span></label>
+        <label class="input-label">Tipologia</label>
         <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;" id="tipo-chips">
           <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'nv')">Sans Année</button>
           <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'millesimato')">Millésimé</button>
@@ -1838,7 +1838,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
       </div>
       <div class="input-wrap" style="margin-bottom:0;">
-        <label class="input-label">Occasione / Luogo <span style="font-size:15px;color:var(--ink-5);font-weight:400;">· opzionale</span></label>
+        <label class="input-label">Occasione / Luogo</label>
         <input class="input-field" id="note-luogo" type="text" placeholder="es. Cena con amici, Roma · gennaio 2026"/>
       </div>
     </div>
@@ -1861,7 +1861,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- PARAMETRI SENSORIALI -->
     <div class="form-section">
-      <div class="form-section-title"><i class="ti ti-adjustments-horizontal"></i> Parametri sensoriali <span class="sec-opt">opzionale</span></div>
+      <div class="form-section-title"><i class="ti ti-adjustments-horizontal"></i> Parametri sensoriali</div>
       <div class="slider-wrap slider-acidite">
         <div class="slider-label-row">
           <span class="slider-label"><i class="ti ti-droplet"></i> Acidité</span>
@@ -1894,7 +1894,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- AROMI -->
     <div class="form-section">
-      <div class="form-section-title"><i class="ti ti-leaf"></i> Aromi percepiti <span class="sec-opt">opzionale</span></div>
+      <div class="form-section-title"><i class="ti ti-leaf"></i> Aromi percepiti</div>
       <div id="aromi-grid">
         <div style="font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#4A8A5A;background:#EDF7EE;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:8px;">Fruttati &amp; Floreali</div>
         <div class="aromi-grid" style="margin-bottom:12px;">
@@ -1927,7 +1927,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <span class="aromi-pill" onclick="togAroma(this)">Tabacco</span>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:14px;">
-          <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:7px;">Non trovi quello che cerchi? Scrivilo qui:</div>
+          <div style="font-family:var(--sans);font-size:14px;color:var(--gold);text-decoration:underline;text-underline-offset:3px;margin-bottom:7px;cursor:default;">+ Aggiungi un aroma</div>
           <input class="input-field" id="note-aromi-custom" type="text" placeholder="es. pompelmo rosa, eucalipto, mandorla…" style="font-size:14px;"/>
           <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);margin-top:6px;">Separa più aromi con una virgola</div>
         </div>
@@ -1936,13 +1936,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- NOTE LIBERE -->
     <div class="form-section">
-      <div class="form-section-title"><i class="ti ti-pencil"></i> Note di degustazione <span class="sec-opt">opzionale</span></div>
+      <div class="form-section-title"><i class="ti ti-pencil"></i> Note di degustazione</div>
       <textarea class="note-textarea" id="note-text" placeholder="Descrivi questo Champagne come vuoi — naso, bocca, finale, emozioni, abbinamenti…"></textarea>
     </div>
 
     <!-- PREZZO PAGATO -->
     <div class="form-section">
-      <div class="form-section-title"><i class="ti ti-tag"></i> Prezzo pagato <span class="sec-opt">opzionale</span></div>
+      <div class="form-section-title"><i class="ti ti-tag"></i> Prezzo pagato</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-family:var(--sans);font-size:22px;color:var(--ink-4);font-weight:300;">€</span>
         <input class="input-field" id="note-prezzo" type="number" placeholder="es. 85" style="font-size:20px;font-weight:500;flex:1;"/>
