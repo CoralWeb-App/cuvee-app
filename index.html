@@ -2102,8 +2102,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Scansioni</div>
     <div style="width:60px;"></div>
   </div>
+  <div style="padding:10px 14px 4px;background:var(--ivory);">
+    <div style="display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:0 12px;">
+      <i class="ti ti-search" style="font-size:16px;color:var(--ink-4);flex-shrink:0;"></i>
+      <input type="text" id="scan-history-search" placeholder="Cerca maison o cuvée…" oninput="filterScanHistory(this.value)"
+        style="flex:1;border:none;background:transparent;font-family:var(--sans);font-size:15px;color:var(--ink);padding:11px 0;outline:none;">
+    </div>
+  </div>
   <div class="scroll">
-    <div id="scan-history-list" style="padding:14px 14px 32px;"></div>
+    <div id="scan-history-list" style="padding:10px 14px 32px;"></div>
   </div>
 </div>
 
@@ -2262,7 +2269,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <i class="ti ti-arrow-left" style="font-size:22px;color:var(--ink-4);"></i>
     </div>
     <div style="flex:1;font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:500;">Scansione</div>
-    <div style="width:36px;"></div>
+    <div id="scan-result-delete-btn" onclick="deleteScanFromHistoryAndGoBack()" style="display:none;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-trash" style="font-size:20px;color:var(--ink-4);"></i>
+    </div>
+    <div id="scan-result-topbar-spacer" style="width:36px;"></div>
   </div>
   <div class="scroll" id="scan-result-content"></div>
 </div>
