@@ -770,11 +770,12 @@ async function saveNote(editId = null){
     }
     result = data;
   } else {
-    result = await saveCarnetNote(nota);
+    result = await saveCarnetNote({ ...nota, scan_result_json: window._pendingScanResult || null });
   }
 
   if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
   if (result) {
+    window._pendingScanResult = null;
     const wasEdit = !!editId;
     currentEditId = null;
     currentRating = 0;
@@ -1840,10 +1841,69 @@ function openNoteDetail(note) {
     html += sec('ti-info-circle','Dettagli', body);
   }
 
+  // ── ANALISI SCANSIONE ───────────────────────────────────────
+  if (note.scan_result_json) {
+    const sr = note.scan_result_json;
+    const b2 = sr.matched_bottle || {};
+    const score = sr.score_medio ?? b2.score_medio ?? null;
+    const noteDeg = sr.note_degustazione || b2.note_degustazione || '';
+    const abbinamento = sr.abbinamento || b2.abbinamento || '';
+    const pctPN  = sr.pct_pinot_noir   ?? b2.pct_pinot_noir   ?? null;
+    const pctCH  = sr.pct_chardonnay   ?? b2.pct_chardonnay   ?? null;
+    const pctPM  = sr.pct_meunier      ?? b2.pct_meunier      ?? null;
+
+    const scoreTag = score
+      ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+score+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
+      : '';
+    const catalogBadge = sr.is_in_catalog
+      ? '<span style="font-size:10px;background:#EDF7EE;color:#2A7A3A;border:0.5px solid #B8DDB8;border-radius:4px;padding:2px 6px;font-family:var(--sans);">✓ Catalogo</span>'
+      : '<span style="font-size:10px;background:#EEF2FF;color:#4A5AB8;border:0.5px solid #C0C8F0;border-radius:4px;padding:2px 6px;font-family:var(--sans);">✦ AI</span>';
+
+    const vitigniParts = [];
+    if (pctPN) vitigniParts.push('Pinot Noir '+pctPN+'%');
+    if (pctCH) vitigniParts.push('Chardonnay '+pctCH+'%');
+    if (pctPM) vitigniParts.push('Meunier '+pctPM+'%');
+    const vitigni = vitigniParts.join(' · ');
+
+    let innerHtml = '';
+    if (noteDeg) innerHtml +=
+      '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.75;border-left:3px solid var(--gold-border);padding-left:12px;margin-bottom:14px;">&ldquo;'+noteDeg+'&rdquo;</div>';
+    if (vitigni) innerHtml +=
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><i class="ti ti-plant-2" style="font-size:15px;color:var(--gold);flex-shrink:0;"></i><span style="font-family:var(--sans);font-size:13px;color:var(--ink-3);">'+vitigni+'</span></div>';
+    if (abbinamento) innerHtml +=
+      '<div style="display:flex;align-items:flex-start;gap:8px;"><i class="ti ti-tools-kitchen-2" style="font-size:15px;color:var(--gold);margin-top:2px;flex-shrink:0;"></i><div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.65;">'+abbinamento+'</div></div>';
+    if (!innerHtml) innerHtml = '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-5);">Nessun dato aggiuntivo disponibile.</div>';
+
+    html +=
+      '<div style="margin:12px 14px 4px;background:var(--white);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);overflow:hidden;">' +
+        '<div onclick="toggleScanAnalysis()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+          '<div style="display:flex;align-items:center;gap:12px;">' +
+            '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<i class="ti ti-scan" style="font-size:16px;color:#8BA8E0;"></i>' +
+            '</div>' +
+            '<div>' +
+              '<div style="font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;">Rivedi l\'analisi scansione</div>' +
+              '<div style="display:flex;align-items:center;gap:6px;">'+catalogBadge+(scoreTag ? '<span style="color:var(--ink-5);font-size:10px;">·</span>'+scoreTag : '')+'</div>' +
+            '</div>' +
+          '</div>' +
+          '<i id="scan-analysis-chevron" class="ti ti-chevron-right" style="font-size:18px;color:var(--ink-4);transition:transform .25s;flex-shrink:0;"></i>' +
+        '</div>' +
+        '<div id="scan-analysis-body" style="display:none;padding:0 16px 16px;">'+innerHtml+'</div>' +
+      '</div>';
+  }
+
   container.innerHTML = html;
   go('v-carnet-detail');
 }
 
+function toggleScanAnalysis() {
+  const body = document.getElementById('scan-analysis-body');
+  const chevron = document.getElementById('scan-analysis-chevron');
+  if (!body) return;
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  if (chevron) chevron.style.transform = open ? '' : 'rotate(90deg)';
+}
 
 
 // ═══ COLLEZIONI — Salvati e Wishlist ═══
@@ -4535,6 +4595,7 @@ function _fillCarnetFromScan(result, photoDataUrl) {
 function addToCarnetFromScan(result) {
   result = result || _scanResult;
   if (!result) return;
+  window._pendingScanResult = result;
   _fillCarnetFromScan(result, _scanPhotoDataUrl);
 }
 
