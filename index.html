@@ -158,7 +158,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div id="home-search-results" style="display:none;padding:8px 14px 20px;"></div>
     <div id="home-main-content">
-    <div class="section-label">Esplora</div>
 
     <!-- CARNET — dark premium -->
     <div onclick="go('v-carnet')" style="margin:0 18px 12px;background:#1E1208;border:1px solid #3A2814;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
@@ -199,10 +198,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
         <i class="ti ti-chevron-right" style="font-size:19px;color:#8BA8E0;flex-shrink:0;"></i>
       </div>
-      <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        <span id="home-scan-count" style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.08);border:0.5px solid rgba(100,150,220,.3);color:#8BA8E0;border-radius:20px;padding:4px 11px;">Storico</span>
-        <span style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.08);border:0.5px solid rgba(100,150,220,.3);color:#8BA8E0;border-radius:20px;padding:4px 11px;">Analisi AI</span>
-        <span style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.08);border:0.5px solid rgba(100,150,220,.3);color:#8BA8E0;border-radius:20px;padding:4px 11px;">Aggiungi al Carnet</span>
+      <div style="margin-top:10px;">
+        <span id="home-scan-count" style="font-family:var(--sans);font-size:12px;color:#6A80AA;"></span>
       </div>
     </div>
 

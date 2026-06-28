@@ -15,6 +15,7 @@ let bottigliaFilter       = ''
 let bottigliaStatusFilter = ''
 let bottigliaSort         = 'nome'
 let bottigliaLetterFilter = ''
+let bottigliaFotoFilter   = false
 let maisonSearch       = ''
 let maisonTipoFilter   = ''
 let maisonStatusFilter = ''
@@ -1098,6 +1099,7 @@ async function renderBottiglie() {
     else if (bottigliaFilter)              query = query.eq('tipo', bottigliaFilter)
     if (bottigliaStatusFilter === 'online')  query = query.eq('is_published', true)
     if (bottigliaStatusFilter === 'offline') query = query.eq('is_published', false)
+    if (bottigliaFotoFilter) query = query.not('foto_url', 'is', null)
     if (bottigliaLetterFilter) query = query.ilike('nome_norm', `${bottigliaLetterFilter}%`)
 
     // ── Ordinamento ──────────────────────────────────
@@ -1202,6 +1204,12 @@ function filterBottigliaSort(sort, btn) {
   bottigliaSort = sort
   document.querySelectorAll('#view-bottiglie .adm-filter-sort').forEach(b => b.classList.remove('active'))
   btn.classList.add('active')
+  bottigliaPage = 1; renderBottiglie()
+}
+
+function filterBottigliaFoto(btn) {
+  bottigliaFotoFilter = !bottigliaFotoFilter
+  btn.classList.toggle('active', bottigliaFotoFilter)
   bottigliaPage = 1; renderBottiglie()
 }
 
