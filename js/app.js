@@ -797,9 +797,45 @@ async function saveNote(editId = null){
 }
 // ═══ STORICO SCANSIONI ═══
 
+async function _compressDataUrl(dataUrl, maxW = 900, quality = 0.78) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 async function saveScanToHistory(result, photoDataUrl) {
   if (!currentUser) return;
   const b = result.matched_bottle || {};
+
+  // Carica foto utente su scan-photos (compressa)
+  let fotoUrl = null;
+  if (photoDataUrl && photoDataUrl.startsWith('data:')) {
+    try {
+      const compressed = await _compressDataUrl(photoDataUrl, 900, 0.78);
+      const res  = await fetch(compressed);
+      const blob = await res.blob();
+      const path = `${currentUser.id}/${Date.now()}.jpg`;
+      const { error: upErr } = await supa.storage
+        .from('scan-photos')
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+      if (!upErr) {
+        const { data: urlData } = supa.storage.from('scan-photos').getPublicUrl(path);
+        fotoUrl = urlData?.publicUrl || null;
+      }
+    } catch(e) { console.log('scan photo upload error:', e); }
+  }
+
   const record = {
     user_id:          currentUser.id,
     maison_nome:      result.maison || b.maison?.nome || null,
@@ -808,7 +844,7 @@ async function saveScanToHistory(result, photoDataUrl) {
     dosage_testo:     result.dosage || b.dosaggio_tipo || null,
     is_in_catalog:    result.is_in_catalog || false,
     matched_bottle_id:result.matched_bottle_id || null,
-    foto_url:         b.foto_url || result.uploaded_photo_url || result._uploadedPhotoUrl || null,
+    foto_url:         fotoUrl,
     score_medio:      result.score_medio ?? b.score_medio ?? null,
     note_degustazione:result.note_degustazione || b.note_degustazione || null,
     result_json:      result
@@ -900,6 +936,7 @@ function openScanFromHistory(idx) {
   const s = _scanHistoryCache && _scanHistoryCache[idx];
   if (!s || !s.result_json) return;
   _scanResult = s.result_json;
+  // Usa la foto utente salvata (già URL pubblico nel bucket scan-photos)
   _scanPhotoDataUrl = s.foto_url || null;
   _showScanResultPage(s.result_json, s.foto_url || null);
 }
@@ -4001,7 +4038,7 @@ function _renderScanResult(result, photoDataUrl) {
   const cuveeTitle = cuvee + (!result.is_sa && annata ? ' ' + annata : '');
   const dosage = result.dosage || b.dosaggio_tipo || null;
   const tipo   = result.tipo   || b.tipo          || null;
-  const photo  = b.foto_url || result.uploaded_photo_url || photoDataUrl || '';
+  const photo  = photoDataUrl || b.foto_url || result.uploaded_photo_url || '';
   const score  = result.score_medio != null ? result.score_medio : (b.score_medio ?? null);
   const noteDeg    = result.note_degustazione || b.note_degustazione || '';
   const abbinamento = result.abbinamento || b.abbinamento || '';
