@@ -1250,6 +1250,10 @@ async function loadUserProfile() {
       const el = document.getElementById('profile-wish-count');
       if (el) el.textContent = items.length + (items.length === 1 ? ' salvato' : ' salvati');
     }).catch(() => {});
+    supa.from('scan_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).then(({ count }) => {
+      const el = document.getElementById('profile-scan-count');
+      if (el) el.textContent = count ? count + (count === 1 ? ' scansione' : ' scansioni') : '';
+    }).catch(() => {});
 
   } catch(e) {
     console.log('Profile load error:', e);
