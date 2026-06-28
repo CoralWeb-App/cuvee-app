@@ -187,6 +187,25 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
     </div>
 
+    <!-- SCANSIONI — storico scan -->
+    <div onclick="go('v-scan-history')" style="margin:0 18px 12px;background:linear-gradient(135deg,#1A1F2E,#252B3D);border:1px solid #323A52;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:15px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(100,150,220,.35);box-shadow:0 2px 12px rgba(15,20,40,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="ti ti-scan" style="font-size:24px;color:#8BA8E0;"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:var(--serif);font-size:22px;color:#D4E0F4;font-weight:500;margin-bottom:5px;">Storico scansioni</div>
+          <div style="font-family:var(--sans);font-size:14px;color:#8A9AC0;line-height:1.55;">Ritrova ogni bottiglia scansionata — analisi, scheda e note.</div>
+        </div>
+        <i class="ti ti-chevron-right" style="font-size:19px;color:#8BA8E0;flex-shrink:0;"></i>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <span id="home-scan-count" style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.08);border:0.5px solid rgba(100,150,220,.3);color:#8BA8E0;border-radius:20px;padding:4px 11px;">Storico</span>
+        <span style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.08);border:0.5px solid rgba(100,150,220,.3);color:#8BA8E0;border-radius:20px;padding:4px 11px;">Analisi AI</span>
+        <span style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.08);border:0.5px solid rgba(100,150,220,.3);color:#8BA8E0;border-radius:20px;padding:4px 11px;">Aggiungi al Carnet</span>
+      </div>
+    </div>
+
     <!-- BENTO: Guida wide + Produttori + Champagne -->
     <div style="padding:0 18px;display:flex;flex-direction:column;gap:10px;">
 
@@ -2075,6 +2094,18 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+
+<!-- ═══ STORICO SCANSIONI ═══ -->
+<div class="view" id="v-scan-history">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('v-home')"><i class="ti ti-arrow-left"></i>Home</button>
+    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Scansioni</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="scroll">
+    <div id="scan-history-list" style="padding:14px 14px 32px;"></div>
+  </div>
+</div>
 
 <!-- ═══ NOTE CONTEXT MENU ═══ -->
 <div id="note-menu-overlay" class="note-menu-overlay" style="display:none;" onclick="closeNoteMenu()">
