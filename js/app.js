@@ -940,7 +940,7 @@ async function updateHomeScanCount() {
       .from('scan_history')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', currentUser.id);
-    el.textContent = count ? count + (count === 1 ? ' scansione' : ' scansioni') : 'Storico';
+    el.textContent = count ? count + (count === 1 ? ' scansione' : ' scansioni') : '';
   } catch(e) {}
 }
 
