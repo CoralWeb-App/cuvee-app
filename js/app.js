@@ -853,6 +853,65 @@ async function saveScanToHistory(result, photoDataUrl) {
 }
 
 let _scanHistoryCache = null;
+let _currentHistoryIdx = null;
+
+function _normalizeSearch(str) {
+  return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function _buildScanHistoryCard(s, idx) {
+  const date = s.created_at
+    ? new Date(s.created_at).toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' })
+    : '';
+  const photo = s.foto_url
+    ? '<img src="'+s.foto_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
+    : '<i class="ti ti-bottle" style="font-size:28px;color:rgba(139,168,224,.3);"></i>';
+  const annata = s.annata && s.annata !== 'SA' ? s.annata : (s.annata === 'SA' ? 'S.A.' : '');
+  const badge = s.is_in_catalog
+    ? '<span style="font-family:var(--sans);font-size:10px;background:#EDF7EE;color:#2A7A3A;border:0.5px solid #B8DDB8;border-radius:4px;padding:2px 6px;">✓ Catalogo</span>'
+    : '<span style="font-family:var(--sans);font-size:10px;background:#EEF2FF;color:#4A5AB8;border:0.5px solid #C0C8F0;border-radius:4px;padding:2px 6px;">✦ AI</span>';
+  const scoreHtml = s.score_medio
+    ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+s.score_medio+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
+    : '';
+  return '<div onclick="openScanFromHistory('+idx+')" style="display:flex;gap:0;background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+    '<div style="width:90px;flex-shrink:0;background:linear-gradient(150deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;overflow:hidden;">' +
+      photo +
+    '</div>' +
+    '<div style="flex:1;padding:13px 14px;min-width:0;">' +
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">' +
+        '<div style="font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.maison_nome||'')+'</div>' +
+        (scoreHtml ? '<div style="flex-shrink:0;">'+scoreHtml+'</div>' : '') +
+      '</div>' +
+      '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.cuvee_nome||'')+(annata ? ' '+annata : '')+'</div>' +
+      '<div style="display:flex;align-items:center;gap:6px;">' +
+        badge +
+        (s.dosage_testo ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">· '+s.dosage_testo+'</span>' : '') +
+      '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">' +
+        '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+date+'</div>' +
+        '<button onclick="event.stopPropagation();deleteScanFromHistory('+idx+')" style="background:none;border:none;padding:2px 0 2px 8px;cursor:pointer;color:var(--ink-5);display:flex;align-items:center;line-height:1;" aria-label="Elimina"><i class="ti ti-trash" style="font-size:15px;"></i></button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function filterScanHistory(q) {
+  const listEl = document.getElementById('scan-history-list');
+  if (!listEl || !_scanHistoryCache) return;
+  const norm = _normalizeSearch(q);
+  if (!norm) {
+    listEl.innerHTML = _scanHistoryCache.map((s, i) => _buildScanHistoryCard(s, i)).join('');
+    return;
+  }
+  const filtered = _scanHistoryCache
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => _normalizeSearch(s.maison_nome).includes(norm) || _normalizeSearch(s.cuvee_nome).includes(norm));
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 20px;font-family:var(--sans);font-size:14px;color:var(--ink-4);">Nessun risultato per «'+q+'»</div>';
+    return;
+  }
+  listEl.innerHTML = filtered.map(({ s, i }) => _buildScanHistoryCard(s, i)).join('');
+}
 
 async function loadScanHistory() {
   if (!currentUser) return [];
@@ -887,6 +946,8 @@ async function updateHomeScanCount() {
 async function renderScanHistoryUI() {
   const listEl = document.getElementById('scan-history-list');
   if (!listEl) return;
+  const searchEl = document.getElementById('scan-history-search');
+  if (searchEl) searchEl.value = '';
   listEl.innerHTML = '<div style="text-align:center;padding:40px 0;font-family:var(--sans);font-size:14px;color:var(--ink-4);">Caricamento…</div>';
   const scans = await loadScanHistory();
   if (!scans.length) {
@@ -898,50 +959,33 @@ async function renderScanHistoryUI() {
       '</div>';
     return;
   }
-  listEl.innerHTML = scans.map((s, i) => {
-    const date = s.created_at
-      ? new Date(s.created_at).toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' })
-      : '';
-    const photo = s.foto_url
-      ? '<img src="'+s.foto_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
-      : '<i class="ti ti-bottle" style="font-size:28px;color:rgba(139,168,224,.3);"></i>';
-    const annata = s.annata && s.annata !== 'SA' ? s.annata : (s.annata === 'SA' ? 'S.A.' : '');
-    const badge = s.is_in_catalog
-      ? '<span style="font-family:var(--sans);font-size:10px;background:#EDF7EE;color:#2A7A3A;border:0.5px solid #B8DDB8;border-radius:4px;padding:2px 6px;">✓ Catalogo</span>'
-      : '<span style="font-family:var(--sans);font-size:10px;background:#EEF2FF;color:#4A5AB8;border:0.5px solid #C0C8F0;border-radius:4px;padding:2px 6px;">✦ AI</span>';
-    const scoreHtml = s.score_medio
-      ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+s.score_medio+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
-      : '';
-    return '<div onclick="openScanFromHistory('+i+')" style="display:flex;gap:0;background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
-      '<div style="width:90px;flex-shrink:0;background:linear-gradient(150deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;overflow:hidden;">' +
-        photo +
-      '</div>' +
-      '<div style="flex:1;padding:13px 14px;min-width:0;">' +
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">' +
-          '<div style="font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+( s.maison_nome||'')+'</div>' +
-          (scoreHtml ? '<div style="flex-shrink:0;">'+scoreHtml+'</div>' : '') +
-        '</div>' +
-        '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.cuvee_nome||'')+(annata ? ' '+annata : '')+'</div>' +
-        '<div style="display:flex;align-items:center;gap:6px;">' +
-          badge +
-          (s.dosage_testo ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">· '+s.dosage_testo+'</span>' : '') +
-        '</div>' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">' +
-          '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+date+'</div>' +
-          '<button onclick="event.stopPropagation();deleteScanFromHistory('+i+')" style="background:none;border:none;padding:2px 0 2px 8px;cursor:pointer;color:var(--ink-5);display:flex;align-items:center;line-height:1;" aria-label="Elimina"><i class="ti ti-trash" style="font-size:15px;"></i></button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+  listEl.innerHTML = scans.map((s, i) => _buildScanHistoryCard(s, i)).join('');
 }
 
 function openScanFromHistory(idx) {
   const s = _scanHistoryCache && _scanHistoryCache[idx];
   if (!s || !s.result_json) return;
   _scanResult = s.result_json;
-  // Usa la foto utente salvata (già URL pubblico nel bucket scan-photos)
   _scanPhotoDataUrl = s.foto_url || null;
   _showScanResultPage(s.result_json, s.foto_url || null);
+  // Mostra cestino nel topbar (dopo _showScanResultPage che lo nasconde)
+  _currentHistoryIdx = idx;
+  const btn = document.getElementById('scan-result-delete-btn');
+  const spacer = document.getElementById('scan-result-topbar-spacer');
+  if (btn) btn.style.display = 'flex';
+  if (spacer) spacer.style.display = 'none';
+}
+
+async function _deleteScanRecord(s) {
+  if (s.foto_url) {
+    const marker = '/scan-photos/';
+    const mIdx = s.foto_url.indexOf(marker);
+    if (mIdx !== -1) {
+      const storagePath = s.foto_url.slice(mIdx + marker.length);
+      await supa.storage.from('scan-photos').remove([storagePath]);
+    }
+  }
+  await supa.from('scan_history').delete().eq('id', s.id).eq('user_id', currentUser.id);
 }
 
 async function deleteScanFromHistory(idx) {
@@ -949,19 +993,26 @@ async function deleteScanFromHistory(idx) {
   if (!s) return;
   if (!confirm('Eliminare questa scansione?')) return;
   try {
-    if (s.foto_url) {
-      const marker = '/scan-photos/';
-      const mIdx = s.foto_url.indexOf(marker);
-      if (mIdx !== -1) {
-        const storagePath = s.foto_url.slice(mIdx + marker.length);
-        await supa.storage.from('scan-photos').remove([storagePath]);
-      }
-    }
-    await supa.from('scan_history').delete().eq('id', s.id).eq('user_id', currentUser.id);
+    await _deleteScanRecord(s);
     await renderScanHistoryUI();
     updateHomeScanCount();
   } catch(e) {
     console.error('deleteScanFromHistory error:', e);
+  }
+}
+
+async function deleteScanFromHistoryAndGoBack() {
+  if (_currentHistoryIdx === null) return;
+  const s = _scanHistoryCache && _scanHistoryCache[_currentHistoryIdx];
+  if (!s) return;
+  if (!confirm('Eliminare questa scansione?')) return;
+  try {
+    await _deleteScanRecord(s);
+    _currentHistoryIdx = null;
+    updateHomeScanCount();
+    go('v-scan-history'); // triggers renderScanHistoryUI which resets the button
+  } catch(e) {
+    console.error('deleteScanFromHistoryAndGoBack error:', e);
   }
 }
 
@@ -4036,6 +4087,12 @@ function closeScanLimitModal() {
 // Mostra la pagina risultato scansione
 function _showScanResultPage(result, photoDataUrl) {
   _renderScanResult(result, photoDataUrl);
+  // Nasconde il cestino (visibile solo se aperto dallo storico)
+  _currentHistoryIdx = null;
+  const btn = document.getElementById('scan-result-delete-btn');
+  const spacer = document.getElementById('scan-result-topbar-spacer');
+  if (btn) btn.style.display = 'none';
+  if (spacer) spacer.style.display = '';
   go('v-scan-result');
 }
 
