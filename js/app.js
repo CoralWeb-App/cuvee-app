@@ -19,7 +19,13 @@ function go(id){
   if(scrl)scrl.scrollTo(0,0);
   // Load dynamic data when entering certain views
   if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); }
-  if(id==='v-scan-history') renderScanHistoryUI();
+  if(id==='v-scan-history') {
+    const backLabels = { 'v-home':'Home', 'v-profile':'Il mio profilo' };
+    const prevId = cur ? cur.id : 'v-home';
+    const lbl = document.getElementById('scan-history-back-label');
+    if(lbl) lbl.textContent = backLabels[prevId] || 'Indietro';
+    renderScanHistoryUI();
+  }
   if(id==='v-carnet'){
     activeCaliceFilter = 0;
     activeSearchQuery = '';
