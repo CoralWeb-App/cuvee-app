@@ -294,10 +294,12 @@ function checkAndNewNote(){
   _noteTypes = [];
   _syncTipoChips();
   // Reset form
-  ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo'].forEach(id => {
+  ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo','note-sboccatura','note-aromi-custom'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  const _dateDegEl = document.getElementById('note-data-deg');
+  if (_dateDegEl) _dateDegEl.value = new Date().toISOString().split('T')[0];
   document.querySelectorAll('.aromi-pill').forEach(p => p.classList.remove('on'));
   setRating(0);
   resetPhotoStrip();
@@ -322,10 +324,12 @@ function openNewNoteFromBottiglia(bottId) {
   currentRating = 0;
   _noteTypes = [];
   _syncTipoChips();
-  ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo'].forEach(id => {
+  ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo','note-sboccatura','note-aromi-custom'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  const _dateDegElB = document.getElementById('note-data-deg');
+  if (_dateDegElB) _dateDegElB.value = new Date().toISOString().split('T')[0];
   document.querySelectorAll('.aromi-pill').forEach(p => p.classList.remove('on'));
   setRating(0);
 
@@ -665,8 +669,14 @@ async function saveNote(editId = null){
     effervescence:_activeSliders.has('eff')     ? (parseInt(document.getElementById('val-eff')?.textContent)     || null) : null,
     complexite:   _activeSliders.has('comp')    ? (parseInt(document.getElementById('val-comp')?.textContent)    || null) : null,
     longueur:     _activeSliders.has('lung')    ? (parseInt(document.getElementById('val-lung')?.textContent)    || null) : null,
-    aromi: Array.from(document.querySelectorAll('.aromi-pill.on')).map(el => el.textContent),
-    data_degustazione: new Date().toISOString().split('T')[0],
+    aromi: (() => {
+      const selected = Array.from(document.querySelectorAll('.aromi-pill.on')).map(el => el.textContent);
+      const customRaw = document.getElementById('note-aromi-custom')?.value?.trim() || '';
+      const custom = customRaw ? customRaw.split(',').map(a => a.trim()).filter(Boolean) : [];
+      return [...selected, ...custom];
+    })(),
+    sboccatura: document.getElementById('note-sboccatura')?.value?.trim() || null,
+    data_degustazione: document.getElementById('note-data-deg')?.value || new Date().toISOString().split('T')[0],
     tipo: _noteTypes.length ? _noteTypes : null
   };
 
@@ -1580,8 +1590,9 @@ function openNoteDetail(note) {
 
   // ── DETTAGLI ────────────────────────────────────────────────
   const detRows = [];
-  if (note.luogo)         detRows.push({icon:'ti-map-pin', label:'Luogo',        val: note.luogo});
-  if (note.prezzo_pagato) detRows.push({icon:'ti-coin',    label:'Prezzo pagato',val: '€ '+note.prezzo_pagato});
+  if (note.sboccatura)    detRows.push({icon:'ti-calendar-check', label:'Sboccatura',    val: note.sboccatura});
+  if (note.luogo)         detRows.push({icon:'ti-map-pin',        label:'Luogo',         val: note.luogo});
+  if (note.prezzo_pagato) detRows.push({icon:'ti-coin',           label:'Prezzo pagato', val: '€ '+note.prezzo_pagato});
 
   if (detRows.length > 0) {
     let body = '';
@@ -2036,10 +2047,21 @@ function openEditNote(note) {
   _noteTypes = Array.isArray(note.tipo) ? [...note.tipo] : (note.tipo ? [note.tipo] : []);
   _syncTipoChips();
 
-  // Set aromi
+  // Set aromi predefiniti
+  const _PREDEF_AROMI = new Set(['Agrumi','Mela verde','Pera','Pêche blanche','Frutta rossa','Fiori bianchi','Brioche','Pane tostato','Nocciola tostata','Burro','Miele','Vaniglia','Spezie','Cioccolato','Frutta secca','Gesso · minéralité','Tabacco','Fungo']);
   document.querySelectorAll('.aromi-pill').forEach(pill => {
     pill.classList.toggle('on', (note.aromi || []).includes(pill.textContent));
   });
+  // Aromi custom (non in lista predefinita)
+  const _customAromiEdit = (note.aromi || []).filter(a => !_PREDEF_AROMI.has(a));
+  const _customAromiInput = document.getElementById('note-aromi-custom');
+  if (_customAromiInput) _customAromiInput.value = _customAromiEdit.join(', ');
+  // Sboccatura
+  const _sboccEdit = document.getElementById('note-sboccatura');
+  if (_sboccEdit) _sboccEdit.value = note.sboccatura || '';
+  // Data degustazione
+  const _dataDegEdit = document.getElementById('note-data-deg');
+  if (_dataDegEdit) _dataDegEdit.value = note.data_degustazione || new Date().toISOString().split('T')[0];
 
   // Load existing photos into strip
   _pendingPhotos = [];
@@ -4218,6 +4240,13 @@ function _fillCarnetFromScan(result, photoDataUrl) {
     const el = document.getElementById(id);
     if (el && val) el.value = val;
   });
+  // Reset sboccatura, aromi custom, imposta data a oggi
+  const _sbocc = document.getElementById('note-sboccatura');
+  if (_sbocc) _sbocc.value = '';
+  const _cust = document.getElementById('note-aromi-custom');
+  if (_cust) _cust.value = '';
+  const _dateFill = document.getElementById('note-data-deg');
+  if (_dateFill) _dateFill.value = new Date().toISOString().split('T')[0];
 
   // Tipo chips — mappa AI tipo → chip value
   const tipoMap = {

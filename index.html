@@ -1812,6 +1812,16 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <input class="input-field" id="note-dosage" type="text" placeholder="es. Brut, Extra Brut"/>
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;">
+        <div class="input-wrap">
+          <label class="input-label">Sboccatura <span style="font-size:12px;color:var(--ink-5);font-weight:400;">· opz.</span></label>
+          <input class="input-field" id="note-sboccatura" type="text" placeholder="es. 03/2025"/>
+        </div>
+        <div class="input-wrap">
+          <label class="input-label">Data degustazione</label>
+          <input class="input-field" id="note-data-deg" type="date" style="color:var(--ink);"/>
+        </div>
+      </div>
       <div class="input-wrap" style="margin-top:2px;">
         <label class="input-label">Tipologia <span style="font-size:15px;color:var(--ink-5);font-weight:400;">· opzionale</span></label>
         <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;" id="tipo-chips">
@@ -1896,23 +1906,28 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div style="font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#B8922A;background:#FBF3E0;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:8px;">Tostati &amp; Lattici</div>
         <div class="aromi-grid" style="margin-bottom:12px;">
           <span class="aromi-pill" onclick="togAroma(this)">Brioche</span>
-          <span class="aromi-pill" onclick="togAroma(this)">Pane tostato</span>
-          <span class="aromi-pill" onclick="togAroma(this)">Nocciola tostata</span>
           <span class="aromi-pill" onclick="togAroma(this)">Burro</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Nocciola tostata</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Pane tostato</span>
         </div>
         <div style="font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#9B7DC8;background:#F0EAF8;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:8px;">Dolci &amp; Speziati</div>
         <div class="aromi-grid" style="margin-bottom:12px;">
-          <span class="aromi-pill" onclick="togAroma(this)">Miele</span>
-          <span class="aromi-pill" onclick="togAroma(this)">Vaniglia</span>
-          <span class="aromi-pill" onclick="togAroma(this)">Spezie</span>
           <span class="aromi-pill" onclick="togAroma(this)">Cioccolato</span>
           <span class="aromi-pill" onclick="togAroma(this)">Frutta secca</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Miele</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Spezie</span>
+          <span class="aromi-pill" onclick="togAroma(this)">Vaniglia</span>
         </div>
         <div style="font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#5A7A8A;background:#E8EFF2;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:8px;">Complessi &amp; Minerali</div>
-        <div class="aromi-grid">
+        <div class="aromi-grid" style="margin-bottom:14px;">
+          <span class="aromi-pill" onclick="togAroma(this)">Fungo</span>
           <span class="aromi-pill" onclick="togAroma(this)">Gesso · minéralité</span>
           <span class="aromi-pill" onclick="togAroma(this)">Tabacco</span>
-          <span class="aromi-pill" onclick="togAroma(this)">Fungo</span>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:14px;">
+          <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-bottom:7px;">Non trovi quello che cerchi? Scrivilo qui:</div>
+          <input class="input-field" id="note-aromi-custom" type="text" placeholder="es. pompelmo rosa, eucalipto, mandorla…" style="font-size:14px;"/>
+          <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);margin-top:6px;">Separa più aromi con una virgola</div>
         </div>
       </div>
     </div>
