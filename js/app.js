@@ -1843,35 +1843,137 @@ function openNoteDetail(note) {
 
   // ── ANALISI SCANSIONE ───────────────────────────────────────
   if (note.scan_result_json) {
-    const sr = note.scan_result_json;
-    const b2 = sr.matched_bottle || {};
-    const score = sr.score_medio ?? b2.score_medio ?? null;
-    const noteDeg = sr.note_degustazione || b2.note_degustazione || '';
-    const abbinamento = sr.abbinamento || b2.abbinamento || '';
-    const pctPN  = sr.pct_pinot_noir   ?? b2.pct_pinot_noir   ?? null;
-    const pctCH  = sr.pct_chardonnay   ?? b2.pct_chardonnay   ?? null;
-    const pctPM  = sr.pct_meunier      ?? b2.pct_meunier      ?? null;
+    const sr  = note.scan_result_json;
+    const b2  = sr.matched_bottle || {};
+    const score          = sr.score_medio          ?? b2.score_medio          ?? null;
+    const noteDeg        = sr.note_degustazione    || b2.note_degustazione    || '';
+    const abbinamento    = sr.abbinamento          || b2.abbinamento          || '';
+    const finestra_da    = sr.finestra_da          || b2.finestra_da          || null;
+    const finestra_a     = sr.finestra_a           || b2.finestra_a           || null;
+    const pctPN          = sr.pct_pinot_noir       ?? b2.pct_pinot_noir       ?? null;
+    const pctCH          = sr.pct_chardonnay       ?? b2.pct_chardonnay       ?? null;
+    const pctPM          = sr.pct_meunier          ?? b2.pct_meunier          ?? null;
+    const provenienzaUve = sr.provenienza_uve      ?? b2.provenienza_uve      ?? null;
+    const vinificazione  = sr.vinificazione        ?? b2.vinificazione        ?? null;
+    const malolattica    = sr.malolattica          ?? b2.malolattica          ?? null;
+    const maturazioneMesi= sr.maturazione_mesi     ?? b2.maturazione_mesi     ?? null;
+    const prodBottiglie  = sr.produzione_bottiglie ?? b2.produzione_bottiglie ?? null;
+    const dosaggioGl     = sr.dosaggio_gl          ?? b2.dosaggio_gl          ?? null;
+    const dosage         = sr.dosage               || b2.dosaggio_tipo        || null;
+    const prezzoMin      = sr.prezzo_min           ?? b2.prezzo_min           ?? null;
+    const prezzoMax      = sr.prezzo_max           ?? b2.prezzo_max           ?? null;
+    const fascia         = sr.fascia_prezzo        ?? b2.fascia_prezzo        ?? null;
+    const assemblaggio   = sr.assemblaggio         ?? b2.assemblaggio         ?? null;
 
     const scoreTag = score
       ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+score+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
       : '';
-    const catalogBadge = sr.is_in_catalog
-      ? '<span style="font-size:10px;background:#EDF7EE;color:#2A7A3A;border:0.5px solid #B8DDB8;border-radius:4px;padding:2px 6px;font-family:var(--sans);">✓ Catalogo</span>'
-      : '<span style="font-size:10px;background:#EEF2FF;color:#4A5AB8;border:0.5px solid #C0C8F0;border-radius:4px;padding:2px 6px;font-family:var(--sans);">✦ AI</span>';
 
-    const vitigniParts = [];
-    if (pctPN) vitigniParts.push('Pinot Noir '+pctPN+'%');
-    if (pctCH) vitigniParts.push('Chardonnay '+pctCH+'%');
-    if (pctPM) vitigniParts.push('Meunier '+pctPM+'%');
-    const vitigni = vitigniParts.join(' · ');
-
+    // ── Sezioni corpo ──
     let innerHtml = '';
+
+    // Note degustazione
     if (noteDeg) innerHtml +=
-      '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.75;border-left:3px solid var(--gold-border);padding-left:12px;margin-bottom:14px;">&ldquo;'+noteDeg+'&rdquo;</div>';
-    if (vitigni) innerHtml +=
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><i class="ti ti-plant-2" style="font-size:15px;color:var(--gold);flex-shrink:0;"></i><span style="font-family:var(--sans);font-size:13px;color:var(--ink-3);">'+vitigni+'</span></div>';
+      '<div style="margin-bottom:16px;">' +
+        '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;"><i class="ti ti-notes" style="margin-right:5px;"></i>Note di degustazione</div>' +
+        '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.75;border-left:3px solid var(--gold-border);padding-left:12px;">'+noteDeg+'</div>' +
+      '</div>';
+
+    // Abbinamento
     if (abbinamento) innerHtml +=
-      '<div style="display:flex;align-items:flex-start;gap:8px;"><i class="ti ti-tools-kitchen-2" style="font-size:15px;color:var(--gold);margin-top:2px;flex-shrink:0;"></i><div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.65;">'+abbinamento+'</div></div>';
+      '<div style="margin-bottom:16px;">' +
+        '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;"><i class="ti ti-chef-hat" style="margin-right:5px;"></i>Abbinamento</div>' +
+        '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;">'+abbinamento+'</div>' +
+      '</div>';
+
+    // Assemblaggio (anni + %)
+    if (assemblaggio && Array.isArray(assemblaggio) && assemblaggio.length) {
+      const bars = assemblaggio.map(x => {
+        const isRis = x.tipo === 'riserva';
+        const label = isRis ? (x.label || 'Vins de réserve') : String(x.anno);
+        const bg    = isRis ? 'var(--border-2)' : 'var(--gold)';
+        const pct   = x.perc || 0;
+        return '<div style="margin-bottom:7px;">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+            '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-3);">'+label+'</span>' +
+            '<span style="font-family:var(--sans);font-size:12px;font-weight:600;color:var(--gold);">'+pct+'%</span>' +
+          '</div>' +
+          '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">' +
+            '<div style="height:100%;width:'+pct+'%;background:'+bg+';border-radius:3px;"></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      innerHtml +=
+        '<div style="margin-bottom:16px;">' +
+          '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i>Assemblaggio</div>' +
+          bars +
+        '</div>';
+    }
+
+    // Scheda tecnica
+    (function() {
+      const uvaggi = [
+        pctCH ? pctCH+'% Chardonnay' : null,
+        pctPN ? pctPN+'% Pinot Noir'  : null,
+        pctPM ? pctPM+'% Meunier'     : null,
+      ].filter(Boolean).join(' · ');
+      const dosageLabel = dosaggioGl != null
+        ? dosaggioGl+' g/l'+(dosage ? ' — '+dosage : '')
+        : (dosage || null);
+      const rows = [
+        { l:'Uvaggi',                  v: uvaggi || null },
+        { l:'Dosaggio',                v: dosageLabel },
+        { l:'Provenienza uve',         v: provenienzaUve },
+        { l:'Vinificazione',           v: vinificazione },
+        { l:'Malolattica',             v: malolattica },
+        { l:'Maturazione sui lieviti', v: maturazioneMesi ? maturazioneMesi+' mesi' : null },
+        { l:'Produzione',              v: prodBottiglie ? prodBottiglie.toLocaleString('it')+' bott.' : null },
+      ].filter(r => r.v);
+      if (!rows.length) return;
+      innerHtml +=
+        '<div style="margin-bottom:16px;">' +
+          '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;"><i class="ti ti-list-details" style="margin-right:5px;"></i>Scheda tecnica</div>' +
+          rows.map(r =>
+            '<div class="detail-row"><span class="detail-row-label">'+r.l+'</span><span class="detail-row-value">'+r.v+'</span></div>'
+          ).join('') +
+        '</div>';
+    })();
+
+    // Finestra di degustazione
+    if (finestra_da || finestra_a) {
+      const now  = new Date().getFullYear();
+      const from = finestra_da || now;
+      const to   = finestra_a  || (now + 8);
+      const span = to - from;
+      const pct  = span > 0 ? Math.round((Math.min(Math.max(now - from, 0), span) / span) * 100) : 0;
+      innerHtml +=
+        '<div style="margin-bottom:16px;">' +
+          '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;"><i class="ti ti-calendar-time" style="margin-right:5px;"></i>Finestra di degustazione</div>' +
+          '<div style="display:flex;align-items:center;gap:10px;">' +
+            '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">'+from+'</span>' +
+            '<div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden;">' +
+              '<div style="height:100%;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:4px;width:'+pct+'%;"></div>' +
+            '</div>' +
+            '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">'+to+'</span>' +
+          '</div>' +
+        '</div>';
+    }
+
+    // Prezzo
+    if (prezzoMin || fascia) {
+      innerHtml +=
+        '<div>' +
+          priceScale(fascia, prezzoMin) +
+          (prezzoMin
+            ? '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-top:3px;">' +
+                'da <b style="color:var(--gold);">'+prezzoMin+'€</b>' +
+                (prezzoMax ? ' – <b style="color:var(--gold);">'+prezzoMax+'€</b>' : '') +
+                ' <span style="font-size:11px;">(Italia, 75cl)</span>' +
+              '</div>'
+            : '') +
+        '</div>';
+    }
+
     if (!innerHtml) innerHtml = '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-5);">Nessun dato aggiuntivo disponibile.</div>';
 
     html +=
@@ -1882,8 +1984,8 @@ function openNoteDetail(note) {
               '<i class="ti ti-scan" style="font-size:16px;color:#8BA8E0;"></i>' +
             '</div>' +
             '<div>' +
-              '<div style="font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;">Rivedi l\'analisi scansione</div>' +
-              '<div style="display:flex;align-items:center;gap:6px;">'+catalogBadge+(scoreTag ? '<span style="color:var(--ink-5);font-size:10px;">·</span>'+scoreTag : '')+'</div>' +
+              '<div style="font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);">Rivedi l\'analisi scansione</div>' +
+              (scoreTag ? '<div style="margin-top:2px;">'+scoreTag+'</div>' : '') +
             '</div>' +
           '</div>' +
           '<i id="scan-analysis-chevron" class="ti ti-chevron-right" style="font-size:18px;color:var(--ink-4);transition:transform .25s;flex-shrink:0;"></i>' +
