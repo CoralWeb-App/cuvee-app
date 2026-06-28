@@ -787,7 +787,16 @@ async function saveNote(editId = null){
       window._carnetNotes = allCarnetNotes;
     }
     if (wasEdit) {
-      openNoteDetail(result); // torna al dettaglio con i dati aggiornati
+      // Pulisce lo stack: rimuove v-carnet-new e v-carnet-detail in cima
+      // così "indietro" dal dettaglio porta al carnet, non al form di modifica
+      for (let i = stack.length - 1; i >= 0; i--) {
+        if (stack[i] === 'v-carnet-new' || stack[i] === 'v-carnet-detail') {
+          stack.splice(i, 1);
+        } else { break; }
+      }
+      openNoteDetail(result); // go() dentro qui pusha v-carnet-new → lo rimuoviamo subito
+      const _pos = stack.lastIndexOf('v-carnet-new');
+      if (_pos !== -1) stack.splice(_pos, 1);
     } else {
       updateCarnetUI().catch(() => {});
       go('v-carnet');
