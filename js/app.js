@@ -926,7 +926,10 @@ async function renderScanHistoryUI() {
           badge +
           (s.dosage_testo ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">· '+s.dosage_testo+'</span>' : '') +
         '</div>' +
-        '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);margin-top:6px;">'+date+'</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">' +
+          '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+date+'</div>' +
+          '<button onclick="event.stopPropagation();deleteScanFromHistory('+i+')" style="background:none;border:none;padding:2px 0 2px 8px;cursor:pointer;color:var(--ink-5);display:flex;align-items:center;line-height:1;" aria-label="Elimina"><i class="ti ti-trash" style="font-size:15px;"></i></button>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -939,6 +942,27 @@ function openScanFromHistory(idx) {
   // Usa la foto utente salvata (già URL pubblico nel bucket scan-photos)
   _scanPhotoDataUrl = s.foto_url || null;
   _showScanResultPage(s.result_json, s.foto_url || null);
+}
+
+async function deleteScanFromHistory(idx) {
+  const s = _scanHistoryCache && _scanHistoryCache[idx];
+  if (!s) return;
+  if (!confirm('Eliminare questa scansione?')) return;
+  try {
+    if (s.foto_url) {
+      const marker = '/scan-photos/';
+      const mIdx = s.foto_url.indexOf(marker);
+      if (mIdx !== -1) {
+        const storagePath = s.foto_url.slice(mIdx + marker.length);
+        await supa.storage.from('scan-photos').remove([storagePath]);
+      }
+    }
+    await supa.from('scan_history').delete().eq('id', s.id).eq('user_id', currentUser.id);
+    await renderScanHistoryUI();
+    updateHomeScanCount();
+  } catch(e) {
+    console.error('deleteScanFromHistory error:', e);
+  }
 }
 
 // PWA manifest
