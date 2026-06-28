@@ -509,6 +509,26 @@ serve(async (req) => {
           (ai.maison as string) + '-' + (ai.cuvee as string) +
           (!ai.is_sa && ai.annata ? '-' + ai.annata : '')
         )
+
+        // Dedup: se esiste già una bottiglia con needs_review=true per questa maison+cuvée, non inserirne un'altra
+        const { data: pendingBottles } = await adminSupa
+          .from('bottiglie')
+          .select('id, nome, annata, is_millesimato')
+          .eq('maison_id', maisonId)
+          .eq('needs_review', true)
+
+        const existingPending = (pendingBottles || []).find((pb: any) => {
+          if (!cuveeMatch(pb.nome || '', ai.cuvee as string)) return false
+          // Per millesimati: annata deve coincidere
+          if (pb.is_millesimato && pb.annata && !ai.is_sa && ai.annata) {
+            if (String(pb.annata) !== String(ai.annata)) return false
+          }
+          return true
+        })
+
+        if (existingPending) {
+          newBottleId = (existingPending as any).id
+        } else {
         const { data: nb, error: bottErr } = await adminSupa
           .from('bottiglie')
           .insert({
@@ -589,6 +609,7 @@ serve(async (req) => {
         } else {
           newBottleId = nb?.id ?? null
         }
+        } // end else (no existingPending)
       }
     }
 
