@@ -774,13 +774,24 @@ async function saveNote(editId = null){
 
   if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
   if (result) {
-    // Reset form
+    const wasEdit = !!editId;
     currentEditId = null;
     currentRating = 0;
     const hiddenIdReset = document.getElementById('edit-note-id');
     if (hiddenIdReset) hiddenIdReset.value = '';
     resetPhotoStrip();
-    go('v-carnet');
+    // Aggiorna la cache locale
+    if (Array.isArray(allCarnetNotes)) {
+      const idx = allCarnetNotes.findIndex(n => n.id === result.id);
+      if (idx !== -1) allCarnetNotes[idx] = result;
+      window._carnetNotes = allCarnetNotes;
+    }
+    if (wasEdit) {
+      openNoteDetail(result); // torna al dettaglio con i dati aggiornati
+    } else {
+      updateCarnetUI().catch(() => {});
+      go('v-carnet');
+    }
   }
 }
 // PWA manifest
