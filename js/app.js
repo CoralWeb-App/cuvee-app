@@ -5,7 +5,7 @@ function go(id){
   const protectedViews = ['v-home','v-guida','v-maison','v-carnet','v-profile',
     'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
     'v-bottiglie','v-bottiglia-detail',
-    'v-subscription','v-paywall',
+    'v-subscription','v-paywall','v-scan-history',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
@@ -18,7 +18,8 @@ function go(id){
   const scrl=document.querySelector('#'+id+' .scroll');
   if(scrl)scrl.scrollTo(0,0);
   // Load dynamic data when entering certain views
-  if(id==='v-home') updatePremiumUI();
+  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); }
+  if(id==='v-scan-history') renderScanHistoryUI();
   if(id==='v-carnet'){
     activeCaliceFilter = 0;
     activeSearchQuery = '';
@@ -47,7 +48,7 @@ function updateBottomNav(id){
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 
   const map = {
-    'bn-home':       ['v-home'],
+    'bn-home':       ['v-home','v-scan-history'],
     'bn-produttori': ['v-maison','v-detail'],
     'bn-scan':       ['v-scan-result'],
     'bn-champagne':  ['v-bottiglie','v-bottiglia-detail'],
@@ -794,6 +795,115 @@ async function saveNote(editId = null){
     }
   }
 }
+// ═══ STORICO SCANSIONI ═══
+
+async function saveScanToHistory(result, photoDataUrl) {
+  if (!currentUser) return;
+  const b = result.matched_bottle || {};
+  const record = {
+    user_id:          currentUser.id,
+    maison_nome:      result.maison || b.maison?.nome || null,
+    cuvee_nome:       result.cuvee  || b.nome         || null,
+    annata:           result.is_sa ? 'SA' : (result.annata || b.annata || null),
+    dosage_testo:     result.dosage || b.dosaggio_tipo || null,
+    is_in_catalog:    result.is_in_catalog || false,
+    matched_bottle_id:result.matched_bottle_id || null,
+    foto_url:         b.foto_url || result.uploaded_photo_url || result._uploadedPhotoUrl || null,
+    score_medio:      result.score_medio ?? b.score_medio ?? null,
+    note_degustazione:result.note_degustazione || b.note_degustazione || null,
+    result_json:      result
+  };
+  await supa.from('scan_history').insert(record);
+}
+
+let _scanHistoryCache = null;
+
+async function loadScanHistory() {
+  if (!currentUser) return [];
+  try {
+    const { data, error } = await supa
+      .from('scan_history')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    _scanHistoryCache = data || [];
+    return _scanHistoryCache;
+  } catch(e) {
+    console.log('loadScanHistory error:', e);
+    return [];
+  }
+}
+
+async function updateHomeScanCount() {
+  const el = document.getElementById('home-scan-count');
+  if (!el || !currentUser) return;
+  try {
+    const { count } = await supa
+      .from('scan_history')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', currentUser.id);
+    el.textContent = count ? count + (count === 1 ? ' scansione' : ' scansioni') : 'Storico';
+  } catch(e) {}
+}
+
+async function renderScanHistoryUI() {
+  const listEl = document.getElementById('scan-history-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:40px 0;font-family:var(--sans);font-size:14px;color:var(--ink-4);">Caricamento…</div>';
+  const scans = await loadScanHistory();
+  if (!scans.length) {
+    listEl.innerHTML =
+      '<div style="text-align:center;padding:60px 20px;">' +
+        '<i class="ti ti-scan" style="font-size:48px;color:var(--ink-5);display:block;margin-bottom:16px;"></i>' +
+        '<div style="font-family:var(--serif);font-size:20px;color:var(--ink-3);margin-bottom:8px;">Nessuna scansione</div>' +
+        '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-5);line-height:1.6;">Scansiona una bottiglia con la fotocamera<br>e la troverai qui.</div>' +
+      '</div>';
+    return;
+  }
+  listEl.innerHTML = scans.map((s, i) => {
+    const date = s.created_at
+      ? new Date(s.created_at).toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' })
+      : '';
+    const photo = s.foto_url
+      ? '<img src="'+s.foto_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
+      : '<i class="ti ti-bottle" style="font-size:28px;color:rgba(139,168,224,.3);"></i>';
+    const annata = s.annata && s.annata !== 'SA' ? s.annata : (s.annata === 'SA' ? 'S.A.' : '');
+    const badge = s.is_in_catalog
+      ? '<span style="font-family:var(--sans);font-size:10px;background:#EDF7EE;color:#2A7A3A;border:0.5px solid #B8DDB8;border-radius:4px;padding:2px 6px;">✓ Catalogo</span>'
+      : '<span style="font-family:var(--sans);font-size:10px;background:#EEF2FF;color:#4A5AB8;border:0.5px solid #C0C8F0;border-radius:4px;padding:2px 6px;">✦ AI</span>';
+    const scoreHtml = s.score_medio
+      ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+s.score_medio+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
+      : '';
+    return '<div onclick="openScanFromHistory('+i+')" style="display:flex;gap:0;background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+      '<div style="width:90px;flex-shrink:0;background:linear-gradient(150deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;overflow:hidden;">' +
+        photo +
+      '</div>' +
+      '<div style="flex:1;padding:13px 14px;min-width:0;">' +
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">' +
+          '<div style="font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+( s.maison_nome||'')+'</div>' +
+          (scoreHtml ? '<div style="flex-shrink:0;">'+scoreHtml+'</div>' : '') +
+        '</div>' +
+        '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.cuvee_nome||'')+(annata ? ' '+annata : '')+'</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+          badge +
+          (s.dosage_testo ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">· '+s.dosage_testo+'</span>' : '') +
+        '</div>' +
+        '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);margin-top:6px;">'+date+'</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openScanFromHistory(idx) {
+  const s = _scanHistoryCache && _scanHistoryCache[idx];
+  if (!s || !s.result_json) return;
+  _scanResult = s.result_json;
+  _scanPhotoDataUrl = s.foto_url || null;
+  _showScanResultPage(s.result_json, s.foto_url || null);
+}
+
 // PWA manifest
 const manifest={name:'Cuvée — Guida allo Champagne',short_name:'Cuvée',description:'La guida italiana allo Champagne',start_url:'/',display:'standalone',background_color:'#faf8f5',theme_color:'#faf8f5',orientation:'portrait',icons:[{src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" fill="%23faf8f5" rx="40"/><ellipse cx="96" cy="72" rx="32" ry="52" stroke="%23b8922a" stroke-width="4" fill="none"/><line x1="96" y1="124" x2="96" y2="155" stroke="%23b8922a" stroke-width="4"/><line x1="68" y1="155" x2="124" y2="155" stroke="%23b8922a" stroke-width="4"/></svg>',sizes:'192x192',type:'image/svg+xml'}]};
 const mblob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
@@ -3808,9 +3918,13 @@ async function _processScan(file, mode) {
     }
 
     _scanResult = result;
-    // Log debug errors from Edge Function (DB insert / storage)
     if (result._debug) console.warn('scan _debug:', result._debug);
     _showScanLoading(false);
+
+    // Salva nello storico (solo scansioni champagne valide)
+    if (currentUser && result.is_champagne !== false && result.is_bottle !== false) {
+      saveScanToHistory(result, dataUrl).catch(() => {});
+    }
 
     if (mode === 'carnet') {
       _fillCarnetFromScan(result, dataUrl);
