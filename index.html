@@ -1463,6 +1463,21 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
       </div>
     </div>
+    <div class="section-label">Le mie scansioni</div>
+    <div style="padding:0 18px 16px;">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+        <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="go('v-scan-history')">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="ti ti-scan" style="font-size:20px;color:var(--ink-3);"></i>
+            <span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Storico scansioni</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-family:var(--sans);font-size:14px;color:var(--ink-4);" id="profile-scan-count"></span>
+            <i class="ti ti-chevron-right" style="font-size:17px;color:var(--ink-5);"></i>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="section-label">Impostazioni</div>
     <div style="padding:0 18px 20px;">
       <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
