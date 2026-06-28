@@ -114,6 +114,11 @@ function collectDataCols() {
     if (val === 'true')  { updates[col] = true;  return }
     if (val === 'false') { updates[col] = false; return }
     if (el.type === 'number') { updates[col] = val === '' ? null : parseFloat(val); return }
+    if (el.dataset.type === 'json') {
+      if (!val.trim()) { updates[col] = null; return }
+      try { updates[col] = JSON.parse(val) } catch(e) { updates[col] = val }
+      return
+    }
     updates[col] = val === '' ? null : val
   })
   return updates
@@ -787,53 +792,203 @@ async function viewApprovazioneDetail(id) {
       `<option value="${m.id}" ${m.id === b.maison_id ? 'selected' : ''}>${esc(m.nome)}</option>`
     ).join('')
 
-    const fotoCol  = b.foto_url !== undefined ? 'foto_url' : 'photo_url'
-    const fotoUrl  = b.foto_url ?? b.photo_url ?? null
+    const fotoCol = b.foto_url !== undefined ? 'foto_url' : 'photo_url'
+    const fotoUrl = b.foto_url ?? b.photo_url ?? null
 
-    const CUSTOM = ['id','nome','nome_norm','maison_id','tipo','is_millesimato','dosaggio_gl','needs_review','created_at','updated_at']
-    const FULL   = ['descrizione','vitigni','note','note_degustazione','photo_url']
-    const TA     = ['descrizione','note','note_degustazione']
-
-    const extraFields = buildAllColsForm(b, { skip: CUSTOM, fullRow: FULL, textareaCols: TA })
+    const assemblaggioJson = b.assemblaggio
+      ? JSON.stringify(b.assemblaggio, null, 2)
+      : ''
+    const viniBaseJson = b.vini_base
+      ? (typeof b.vini_base === 'object' ? JSON.stringify(b.vini_base, null, 2) : b.vini_base)
+      : ''
 
     const html = `
       <div class="adm-edit-form">
-        <div class="adm-edit-grid">
-          <div class="adm-form-field" style="grid-column:1/-1">
-            <label class="adm-form-label">NOME BOTTIGLIA</label>
-            <input class="adm-form-input" type="text" data-col="nome" value="${esc(b.nome ?? '')}">
+
+        <!-- ═══ IDENTITÀ ════════════════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-id-badge-2"></i> Identità</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Nome Bottiglia</label>
+                <input class="adm-form-input" type="text" data-col="nome" value="${esc(b.nome ?? '')}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Maison</label>
+                <select class="adm-form-input" data-col="maison_id">
+                  <option value="">— Seleziona —</option>
+                  ${maisonOptions}
+                </select>
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Tipo</label>
+                <select class="adm-form-input" data-col="tipo">
+                  <option value="">—</option>
+                  <option value="assemblage"      ${b.tipo==='assemblage'      ?'selected':''}>Assemblage</option>
+                  <option value="blanc_de_blancs" ${b.tipo==='blanc_de_blancs' ?'selected':''}>Blanc de Blancs</option>
+                  <option value="blanc_de_noirs"  ${b.tipo==='blanc_de_noirs'  ?'selected':''}>Blanc de Noirs</option>
+                  <option value="rose"            ${b.tipo==='rose'            ?'selected':''}>Rosé</option>
+                </select>
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Millésimé</label>
+                <select class="adm-form-input" data-col="is_millesimato">
+                  <option value="false" ${!b.is_millesimato?'selected':''}>Sans Année (S.A.)</option>
+                  <option value="true"  ${b.is_millesimato ?'selected':''}>Millésimé</option>
+                </select>
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Annata</label>
+                <input class="adm-form-input" type="number" min="1900" max="2100" data-col="annata" value="${b.annata ?? b.anno ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Slug</label>
+                <input class="adm-form-input" type="text" data-col="slug" value="${esc(b.slug ?? '')}">
+              </div>
+            </div>
           </div>
-          <div class="adm-form-field">
-            <label class="adm-form-label">MAISON</label>
-            <select class="adm-form-input" data-col="maison_id">
-              <option value="">— Seleziona —</option>
-              ${maisonOptions}
-            </select>
-          </div>
-          <div class="adm-form-field">
-            <label class="adm-form-label">TIPO</label>
-            <select class="adm-form-input" data-col="tipo">
-              <option value="">—</option>
-              <option value="assemblage"      ${b.tipo==='assemblage'?'selected':''}>Assemblage</option>
-              <option value="blanc_de_blancs" ${b.tipo==='blanc_de_blancs'?'selected':''}>Blanc de Blancs</option>
-              <option value="blanc_de_noirs"  ${b.tipo==='blanc_de_noirs'?'selected':''}>Blanc de Noirs</option>
-              <option value="rose"            ${b.tipo==='rose'?'selected':''}>Rosé</option>
-            </select>
-          </div>
-          <div class="adm-form-field">
-            <label class="adm-form-label">MILLÉSIMÉ</label>
-            <select class="adm-form-input" data-col="is_millesimato">
-              <option value="false" ${!b.is_millesimato?'selected':''}>Sans Année (S.A.)</option>
-              <option value="true"  ${b.is_millesimato?'selected':''}>Millésimé</option>
-            </select>
-          </div>
-          <div class="adm-form-field">
-            <label class="adm-form-label">DOSAGGIO (g/L)</label>
-            <input class="adm-form-input" type="number" step="0.1" min="0" data-col="dosaggio_gl" value="${b.dosaggio_gl ?? ''}">
-          </div>
-          ${extraFields}
-          ${photoPreviewField(fotoUrl, fotoCol, b.id)}
         </div>
+
+        <!-- ═══ CARATTERISTICHE ══════════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-list-details"></i> Caratteristiche</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field">
+                <label class="adm-form-label">Dosaggio (g/L)</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" data-col="dosaggio_gl" value="${b.dosaggio_gl ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Dosaggio Tipo</label>
+                <input class="adm-form-input" type="text" data-col="dosaggio_tipo" value="${esc(b.dosaggio_tipo ?? '')}" placeholder="es. Brut, Extra Brut…">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Score Medio</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" max="100" data-col="score_medio" value="${b.score_medio ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Note Punteggio</label>
+                <input class="adm-form-input" type="text" data-col="score_note" value="${esc(b.score_note ?? '')}" placeholder="es. RP 95, WS 93">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Prezzo Min (€)</label>
+                <input class="adm-form-input" type="number" step="0.01" data-col="prezzo_min" value="${b.prezzo_min ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Prezzo Max (€)</label>
+                <input class="adm-form-input" type="number" step="0.01" data-col="prezzo_max" value="${b.prezzo_max ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Fascia Prezzo</label>
+                <select class="adm-form-input" data-col="fascia_prezzo">
+                  <option value="">—</option>
+                  ${['entry','mid','premium','prestige','ultra'].map(f =>
+                    `<option value="${f}" ${b.fascia_prezzo===f?'selected':''}>${f}</option>`
+                  ).join('')}
+                </select>
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Finestra Da (anno)</label>
+                <input class="adm-form-input" type="number" min="1990" max="2100" data-col="finestra_da" value="${b.finestra_da ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Finestra A (anno)</label>
+                <input class="adm-form-input" type="number" min="1990" max="2100" data-col="finestra_a" value="${b.finestra_a ?? ''}">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ UVAGGI & ASSEMBLAGGIO ════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-plant-2"></i> Uvaggi & Assemblaggio</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field">
+                <label class="adm-form-label">% Pinot Noir</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" max="100" data-col="pct_pinot_noir" value="${b.pct_pinot_noir ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">% Chardonnay</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" max="100" data-col="pct_chardonnay" value="${b.pct_chardonnay ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">% Meunier</label>
+                <input class="adm-form-input" type="number" step="0.1" min="0" max="100" data-col="pct_meunier" value="${b.pct_meunier ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Provenienza Uve</label>
+                <input class="adm-form-input" type="text" data-col="provenienza_uve" value="${esc(b.provenienza_uve ?? '')}">
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Assemblaggio (JSON) <span style="font-weight:400;color:var(--text-3)">— es. [{"anno":2020,"perc":65},{"tipo":"riserva","perc":35}]</span></label>
+                <textarea class="adm-form-input adm-mono" rows="4" style="resize:vertical;font-family:monospace;font-size:12px" data-col="assemblaggio" data-type="json">${esc(assemblaggioJson)}</textarea>
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Vini di Base / Note (JSON o testo)</label>
+                <textarea class="adm-form-input" rows="2" style="resize:vertical" data-col="vini_base" data-type="json">${esc(viniBaseJson)}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PRODUZIONE ═══════════════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-tools"></i> Produzione</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Vinificazione</label>
+                <input class="adm-form-input" type="text" data-col="vinificazione" value="${esc(b.vinificazione ?? '')}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Malolattica</label>
+                <input class="adm-form-input" type="text" data-col="malolattica" value="${esc(b.malolattica ?? '')}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Maturazione (mesi)</label>
+                <input class="adm-form-input" type="number" data-col="maturazione_mesi" value="${b.maturazione_mesi ?? ''}">
+              </div>
+              <div class="adm-form-field">
+                <label class="adm-form-label">Produzione (bottiglie)</label>
+                <input class="adm-form-input" type="number" data-col="produzione_bottiglie" value="${b.produzione_bottiglie ?? ''}">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ NOTE & DEGUSTAZIONE ══════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-notes"></i> Note & Degustazione</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Note Vigneto</label>
+                <textarea class="adm-form-input" rows="2" style="resize:vertical" data-col="note_vigneto">${esc(b.note_vigneto ?? '')}</textarea>
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Note Degustazione</label>
+                <textarea class="adm-form-input" rows="4" style="resize:vertical" data-col="note_degustazione">${esc(b.note_degustazione ?? '')}</textarea>
+              </div>
+              <div class="adm-form-field" style="grid-column:1/-1">
+                <label class="adm-form-label">Abbinamento</label>
+                <textarea class="adm-form-input" rows="2" style="resize:vertical" data-col="abbinamento">${esc(b.abbinamento ?? '')}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ FOTO ═══════════════════════════════════════ -->
+        <div class="adm-edit-card">
+          <div class="adm-edit-card-title"><i class="ti ti-photo"></i> Foto</div>
+          <div class="adm-edit-card-body">
+            <div class="adm-edit-grid">
+              ${photoPreviewField(fotoUrl, fotoCol, b.id)}
+            </div>
+          </div>
+        </div>
+
         <div class="adm-edit-meta">
           <code class="adm-code" style="font-size:10px">${b.id}</code>
           <span style="color:var(--text-3);font-size:11px">Rilevata: ${fmtDate(b.created_at)}</span>
