@@ -1405,44 +1405,6 @@ async function uploadAvatar(input) {
   input.value = '';
 }
 
-async function updateCarnetUI() {
-  if (!currentUser) return;
-  const notes = await loadCarnetNotes();
-  const emptyEl = document.getElementById('carnet-empty');
-  const listEl = document.getElementById('carnet-notes-list');
-  const premBanner = document.getElementById('carnet-premium-banner');
-  const countEl = document.getElementById('carnet-note-count');
-
-  if (!listEl) return;
-
-  if (notes.length === 0) {
-    if (emptyEl) emptyEl.style.display = 'block';
-    listEl.style.display = 'none';
-    // Mostra banner premium anche a 0 note per utenti free
-    const isPremEmpty = currentUser?.profile?.is_premium;
-    if (premBanner) premBanner.style.display = !isPremEmpty ? 'block' : 'none';
-    return;
-  }
-
-  // Hide empty state, show list
-  if (emptyEl) emptyEl.style.display = 'none';
-  listEl.style.display = 'block';
-
-  // Render notes
-  // Store notes globally for detail access
-  // Rendering handled by renderCarnetNotes()
-
-  // Show premium banner if at limit and not premium
-  const isPrem = currentUser?.profile?.is_premium;
-  if (!isPrem && notes.length >= 3) {
-    if (premBanner) premBanner.style.display = 'block';
-    if (countEl) countEl.textContent = notes.length;
-  }
-
-  // Update profile counts
-  // fav/wish counts updated separately via loadSalvati/loadWishlist
-}
-
 // ═══════════════════════════════════════════════════════════
 //  DATABASE — Caricamento dati reali
 // ═══════════════════════════════════════════════════════════
@@ -2611,6 +2573,12 @@ function renderCarnetNotes(notes) {
   const listEl = document.getElementById('carnet-notes-list');
   if (!listEl) return;
 
+  // Le prime 3 note (ordine cronologico già applicato da loadCarnetNotes) restano
+  // libere; se l'utente non è premium, le successive vengono offuscate e bloccate,
+  // anche se erano state inserite mentre l'account era premium.
+  const premium = isPremium();
+  notes.forEach((n, i) => { n._locked = !premium && i >= 3; });
+
   // Apply filters
   let filtered = notes;
   if (activeCaliceFilter > 0) {
@@ -2644,6 +2612,7 @@ function renderCarnetNotes(notes) {
   const _tipoShort = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',nature:'Brut Nature',prestige:'Prestige'};
 
   listEl.innerHTML = '<div class="carnet-grid">' + filtered.map((note) => {
+    const isLocked = !!note._locked;
     const tipi = inferTipoNota(note);
     const tipoLabel = tipi.filter(t => t !== 'non_so').map(t => _tipoShort[t] || t).join(' · ');
     const r = note.rating || 0;
@@ -2655,21 +2624,22 @@ function renderCarnetNotes(notes) {
       : '';
     const origIdx = allCarnetNotes.findIndex(n => n.id === note.id);
 
-    return '<div class="carnet-note-card" data-idx="'+origIdx+'" onclick="openNoteDetail(window._carnetNotes[this.dataset.idx])">'+
+    return '<div class="carnet-note-card' + (isLocked ? ' locked' : '') + '" data-idx="'+origIdx+'" onclick="' + (isLocked ? "go('v-paywall')" : "openNoteDetail(window._carnetNotes[this.dataset.idx])") + '">'+
       '<div class="cnc-img">'+
         (note.foto_url
           ? '<img src="'+note.foto_url+'" style="width:100%;height:100%;object-fit:cover;"/>'
           : '<div class="cnc-img-ph"><i class="ti ti-bottle"></i></div>')+
-        (tipoLabel ? '<span class="cnc-tipo">'+tipoLabel+'</span>' : '')+
-        (note.annata ? '<span class="cnc-annata">'+note.annata+'</span>' : '')+
+        (!isLocked && tipoLabel ? '<span class="cnc-tipo">'+tipoLabel+'</span>' : '')+
+        (!isLocked && note.annata ? '<span class="cnc-annata">'+note.annata+'</span>' : '')+
+        (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '')+
       '</div>'+
       '<div class="cnc-body">'+
         '<div class="cnc-maison">'+(note.maison_nome||'&nbsp;')+'</div>'+
         '<div class="cnc-cuvee">'+(note.cuvee_nome||'')+'</div>'+
-        '<div class="cnc-footer">'+
+        (!isLocked ? '<div class="cnc-footer">'+
           '<div class="cnc-glasses">'+glasses+'</div>'+
           '<div class="cnc-date">'+date+'</div>'+
-        '</div>'+
+        '</div>' : '')+
       '</div>'+
     '</div>';
   }).join('')+'</div>';
