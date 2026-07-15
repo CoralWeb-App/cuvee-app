@@ -4424,7 +4424,7 @@ function _renderScanResult(result, photoDataUrl) {
   container.innerHTML =
     // ── Layout: foto verticale sx + info dx ──
     '<div style="display:flex;gap:14px;padding:16px 14px 0;align-items:flex-start;">'
-      + '<div style="width:40%;max-width:150px;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;flex-shrink:0;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="width:40%;max-width:150px;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;flex-shrink:0;display:flex;align-items:center;justify-content:center;' + (photo ? 'cursor:pointer;' : '') + '"' + (photo ? " onclick=\"openLightbox(['" + photo + "'],0)\"" : '') + '>'
         + photoHtml
       + '</div>'
       + '<div style="flex:1;min-width:0;">'
@@ -4527,7 +4527,7 @@ function _renderScanResult(result, photoDataUrl) {
 // HTML per scan non valido (non è una bottiglia)
 function _buildInvalidScanHTML(photoDataUrl) {
   const photoHtml = photoDataUrl
-    ? '<div style="width:100px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;opacity:.5;">'
+    ? '<div style="width:100px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;opacity:.5;cursor:pointer;" onclick="openLightbox([\'' + photoDataUrl + '\'],0)">'
         + '<img src="' + photoDataUrl + '" style="width:100%;height:100%;object-fit:cover;">'
       + '</div>'
     : '';
@@ -4575,7 +4575,7 @@ function _buildNonChampagneHTML(result, photoDataUrl) {
   const prodBottiglie   = result.produzione_bottiglie ?? null;
 
   const photoHtml = photoDataUrl
-    ? '<div style="width:110px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;">'
+    ? '<div style="width:110px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="openLightbox([\'' + photoDataUrl + '\'],0)">'
         + '<img src="' + photoDataUrl + '" style="width:100%;height:100%;object-fit:cover;">'
       + '</div>'
     : '<div style="width:110px;flex-shrink:0;border-radius:12px;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;">'
