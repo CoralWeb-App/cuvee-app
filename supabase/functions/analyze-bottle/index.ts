@@ -40,9 +40,13 @@ const maisonMatch = (db: string, ai: string): boolean => {
 }
 
 // Parole significative per cuvée — esclude termini generici champagne
+// 'cuvee' è incluso apposta: da solo non basta a distinguere una bottiglia
+// (es. "La Cuvée" non deve matchare "Alexandra Grande Cuvée Rosé" solo perché
+// condividono quella parola).
 const STOP_C = new Set([
   'de','du','des','le','la','les','et','en','au','aux','sur','un','une',
-  'brut','extra','champagne','blanc','noirs','blancs','rose','nature','sec','demi','grand','cru'
+  'brut','extra','champagne','blanc','noirs','blancs','rose','nature','sec','demi','grand','cru',
+  'cuvee'
 ])
 const cuveeWords = (s: string): string[] =>
   ((s || '').match(/[a-zA-ZÀ-ÿ0-9]+/g) || [])
@@ -62,6 +66,55 @@ const cuveeMatch = (db: string, ai: string): boolean => {
   if (dbW.length === 0 || aiW.length === 0) return false
   const [shorter, longer] = dbW.length <= aiW.length ? [dbW, aiW] : [aiW, dbW]
   return shorter.every(w => longer.some(lw => lw.includes(w) || w.includes(lw)))
+}
+
+// Match esatto sul nome cuvée (solo inclusione stringa intera, nessun word-overlap).
+// Usato per dare sempre priorità a un match certo quando ne esiste uno tra i candidati.
+const cuveeExactMatch = (db: string, ai: string): boolean => {
+  const dbn = norm(db), ain = norm(ai)
+  if (!dbn || !ain) return false
+  return dbn === ain || dbn.includes(ain) || ain.includes(dbn)
+}
+
+// Trova un match SICURO nel catalogo — non indovina mai tra più candidati validi.
+// Regola: se esiste un solo match esatto, vince sempre quello anche se altri
+// candidati soddisfano solo il confronto approssimativo. Se ci sono più match
+// esatti, o nessun esatto e più di un match approssimativo, il risultato è
+// ambiguo → ritorna null piuttosto che scegliere a caso (meglio "non trovata"
+// che "trovata quella sbagliata").
+const findConfidentMatch = (
+  bottles: any[],
+  maisonName: string,
+  cuveeName: string,
+  annata: unknown,
+  isSa: unknown
+): any | null => {
+  const candidates = bottles.filter(b => {
+    const maisonNome = b.maison?.nome ?? b.nome_maison ?? ''
+    if (!maisonMatch(maisonNome, maisonName)) return false
+    if (!cuveeMatch(b.nome || '', cuveeName)) return false
+    // DB ha un'annata specifica e la scansione pure: devono coincidere
+    if (b.is_millesimato && b.annata && annata) {
+      if (String(b.annata) !== String(annata)) return false
+    }
+    // DB è sans-année ma la scansione rileva un'annata specifica → no match
+    if (!b.is_millesimato && !isSa && annata) return false
+    // DB è millesimato ma la scansione dice chiaramente sans-année → no match
+    // (guardia simmetrica, prima mancante: evitava match errati solo in un verso)
+    if (b.is_millesimato && isSa) return false
+    return true
+  })
+
+  if (candidates.length === 0) return null
+
+  const exact = candidates.filter(b => cuveeExactMatch(b.nome || '', cuveeName))
+  if (exact.length === 1) return exact[0]
+  if (exact.length > 1) return null // ambiguo anche tra match esatti: non indovinare
+
+  // Nessun match esatto: un solo candidato approssimativo è accettabile,
+  // più di uno significa che non siamo sicuri di quale sia quello giusto.
+  if (candidates.length === 1) return candidates[0]
+  return null
 }
 
 // Deriva fascia_prezzo dal prezzo_min (allineato ai breakpoint JS)
@@ -299,9 +352,6 @@ serve(async (req) => {
     let bottleHasPhoto = false
 
     if (quick.is_champagne && quick.maison && quick.cuvee) {
-      const qMaison = norm(quick.maison as string)
-      const qCuvee  = norm(quick.cuvee  as string)
-
       const { data: bottles } = await adminSupa
         .from('bottiglie')
         .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, maison(id, nome, slug)')
@@ -309,18 +359,7 @@ serve(async (req) => {
         .eq('needs_review', false)
 
       if (bottles) {
-        const found = (bottles as any[]).find(b => {
-          if (!maisonMatch(b.maison?.nome || '', quick.maison as string)) return false
-          if (!cuveeMatch(b.nome || '', quick.cuvee as string)) return false
-          // Annata check: se DB ha annata e Haiku ha letto annata, devono coincidere.
-          // Evita match su bottiglie millesimate dell'anno sbagliato.
-          if (b.is_millesimato && b.annata && quick.annata) {
-            if (String(b.annata) !== String(quick.annata)) return false
-          }
-          // Se DB è sans-année ma Haiku identifica un'annata specifica → no match
-          if (!b.is_millesimato && !quick.is_sa && quick.annata) return false
-          return true
-        })
+        const found = findConfidentMatch(bottles as any[], quick.maison as string, quick.cuvee as string, quick.annata, quick.is_sa)
         if (found) { matchedBottle = found; bottleHasPhoto = !!found.foto_url }
       }
     }
@@ -491,6 +530,119 @@ serve(async (req) => {
 
       if (matchedMaison) {
         maisonId = (matchedMaison as any).id
+
+        // ── Ricontrolla il catalogo GIÀ PUBBLICATO prima di creare un doppione ──
+        // Il quick-check haiku non aveva trovato nulla, ma Sonnet potrebbe aver
+        // letto l'etichetta con più precisione. Se ora c'è un match sicuro,
+        // aggiorniamo quella bottiglia (come una cache hit) invece di crearne
+        // una nuova in attesa di revisione — evita doppioni e foto attaccate
+        // alla bottiglia sbagliata.
+        const { data: publishedBottles } = await adminSupa
+          .from('bottiglie')
+          .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio')
+          .eq('maison_id', maisonId)
+          .eq('is_published', true)
+          .eq('needs_review', false)
+
+        const catalogMatch = publishedBottles
+          ? findConfidentMatch(publishedBottles as any[], ai.maison as string, ai.cuvee as string, ai.annata, ai.is_sa)
+          : null
+
+        if (catalogMatch) {
+          const mb = catalogMatch as any
+          let uploadedPhotoUrlCm: string | null = null
+
+          if (!mb.foto_url && image_base64) {
+            try {
+              const { data: buckets } = await adminSupa.storage.listBuckets()
+              const bucketExists = (buckets || []).some((b: any) => b.name === 'champagne-photos')
+              if (!bucketExists) {
+                await adminSupa.storage.createBucket('champagne-photos', { public: true })
+              }
+              const imageBytes  = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
+              const storagePath = 'bottles/' + mb.id + '.jpg'
+              const { error: uploadErr } = await adminSupa.storage
+                .from('champagne-photos')
+                .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
+              if (!uploadErr) {
+                const { data: urlData } = adminSupa.storage.from('champagne-photos').getPublicUrl(storagePath)
+                uploadedPhotoUrlCm = urlData.publicUrl
+                await adminSupa.from('bottiglie').update({ foto_url: uploadedPhotoUrlCm }).eq('id', mb.id)
+              } else {
+                console.error('photo upload (sonnet catalog match):', JSON.stringify(uploadErr))
+              }
+            } catch(e) { console.error('photo exception (sonnet catalog match):', e) }
+          }
+
+          const costUsdCm = parseFloat((
+            haikuInTok  * PRICE_HAIKU_IN  + haikuOutTok  * PRICE_HAIKU_OUT +
+            sonnetInTok * PRICE_SONNET_IN + sonnetOutTok * PRICE_SONNET_OUT
+          ).toFixed(6))
+
+          const { data: scanCm } = await userSupa
+            .from('bottle_scans')
+            .insert({
+              user_id:              user.id,
+              is_champagne:         true,
+              detected_maison:      ai.maison ?? null,
+              detected_cuvee:       ai.cuvee  ?? null,
+              detected_annata:      ai.annata ?? null,
+              detected_dosage:      mb.dosaggio_tipo ?? null,
+              detected_tipo:        mb.tipo ?? null,
+              confidence:           ai.confidence ?? 0,
+              matched_bottle_id:    mb.id,
+              new_bottle_id:        null,
+              result_json:          { ...ai, from_cache: false, matched_after_sonnet: true },
+              scan_type:            'sonnet_full',
+              haiku_input_tokens:   haikuInTok,
+              haiku_output_tokens:  haikuOutTok,
+              sonnet_input_tokens:  sonnetInTok  > 0 ? sonnetInTok  : null,
+              sonnet_output_tokens: sonnetOutTok > 0 ? sonnetOutTok : null,
+              cost_usd:             costUsdCm,
+            })
+            .select('id')
+            .single()
+
+          return json({
+            scan_id:            scanCm?.id,
+            is_bottle:          true,
+            is_champagne:       true,
+            confidence:         ai.confidence ?? 90,
+            not_champagne_type: null,
+            maison:             (matchedMaison as any).nome ?? ai.maison ?? null,
+            cuvee:              mb.nome ?? ai.cuvee ?? null,
+            annata:             mb.annata !== undefined ? (mb.annata ?? null) : (ai.annata ?? null),
+            is_sa:              !mb.is_millesimato,
+            dosage:             mb.dosaggio_tipo ?? null,
+            tipo:               mb.tipo ?? null,
+            prestige:           false,
+            is_in_catalog:      true,
+            matched_bottle:     catalogMatch,
+            matched_bottle_id:  mb.id,
+            new_bottle_id:      null,
+            bottle_has_photo:   !!mb.foto_url,
+            uploaded_photo_url: uploadedPhotoUrlCm,
+            from_cache:         false,
+            score_medio:          mb.score_medio          ?? null,
+            note_degustazione:    mb.note_degustazione     ?? null,
+            abbinamento:          mb.abbinamento           ?? null,
+            finestra_da:          mb.finestra_da           ?? null,
+            finestra_a:           mb.finestra_a            ?? null,
+            pct_chardonnay:       mb.pct_chardonnay        ?? null,
+            pct_pinot_noir:       mb.pct_pinot_noir        ?? null,
+            pct_meunier:          mb.pct_meunier           ?? null,
+            provenienza_uve:      mb.provenienza_uve       ?? null,
+            vinificazione:        mb.vinificazione         ?? null,
+            malolattica:          mb.malolattica           ?? null,
+            maturazione_mesi:     mb.maturazione_mesi      ?? null,
+            produzione_bottiglie: mb.produzione_bottiglie  ?? null,
+            dosaggio_gl:          mb.dosaggio_gl           ?? null,
+            assemblaggio:         mb.assemblaggio          ?? null,
+            prezzo_min:           mb.prezzo_min            ?? null,
+            prezzo_max:           mb.prezzo_max            ?? null,
+            fascia_prezzo:        mb.fascia_prezzo         ?? fasciaFromPrezzo(mb.prezzo_min ?? null),
+          })
+        }
       } else {
         const { data: newMaison, error: maisonErr } = await adminSupa
           .from('maison')
