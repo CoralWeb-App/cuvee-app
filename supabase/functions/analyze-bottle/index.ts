@@ -282,11 +282,11 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .gte('created_at', monthStart.toISOString())
 
-      if ((count ?? 0) >= 5) {
+      if ((count ?? 0) >= 3) {
         return json({
           error: 'rate_limit',
           scans_used: count,
-          message: 'Hai usato le 5 scansioni mensili gratuite. Passa a Premium per scansioni illimitate.',
+          message: 'Hai usato le 3 scansioni mensili gratuite. Passa a Premium per scansioni illimitate.',
         }, 429)
       }
     }

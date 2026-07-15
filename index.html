@@ -2289,12 +2289,24 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="scan-load-sub">Il sommelier AI sta leggendo l'etichetta</div>
 </div>
 
+<!-- ═══ SCAN REMAINING MODAL (preventivo, prima di ogni scansione free) ═══ -->
+<div id="scan-remaining-modal">
+  <div class="scan-limit-inner">
+    <div class="scan-limit-emoji">📸</div>
+    <div class="scan-limit-title"><strong id="scan-remaining-count">3</strong> scansioni gratuite rimaste</div>
+    <div class="scan-limit-desc">Questo mese hai ancora <strong id="scan-remaining-count-2">3</strong> scansioni gratuite disponibili. Con <strong>Cuvée Premium</strong> hai scansioni illimitate, tutti i giorni del mese.</div>
+    <div class="scan-limit-sep"></div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="_confirmScanFromModal()">Scansiona ora</button>
+    <button class="scan-limit-skip" onclick="closeScanRemainingModal();go('v-paywall');">Scopri Premium →</button>
+  </div>
+</div>
+
 <!-- ═══ SCAN LIMIT MODAL ═══ -->
 <div id="scan-limit-modal">
   <div class="scan-limit-inner">
     <div class="scan-limit-emoji">🥂</div>
-    <div class="scan-limit-title">Scansioni del mese terminate</div>
-    <div class="scan-limit-desc">Hai usato le <strong>5 scansioni gratuite</strong> di questo mese. Si rinnovano il 1° del mese prossimo.</div>
+    <div class="scan-limit-title">Scansioni gratuite terminate</div>
+    <div class="scan-limit-desc">Hai usato le <strong>3 scansioni gratuite</strong> di questo mese. Si rinnovano il 1° del mese prossimo.</div>
     <div class="scan-limit-sep"></div>
     <div class="scan-limit-label">Con <strong>Cuvée Premium</strong> hai:</div>
     <div class="scan-limit-features">

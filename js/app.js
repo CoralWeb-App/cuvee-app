@@ -4145,12 +4145,68 @@ let _scanPhotoDataUrl = null;
 let _scanResult       = null;
 
 // Avvia la scansione (mode: 'explore' = pagina risultato | 'carnet' = compila form)
-function startScan(mode) {
+const FREE_SCANS_PER_MONTH = 3;
+let _pendingScanMode = 'explore';
+
+async function startScan(mode) {
   if (!currentUser) { go('v-login'); return; }
+  _pendingScanMode = mode || 'explore';
+
+  if (!isPremium()) {
+    const remaining = await _getScansRemainingThisMonth();
+    if (remaining <= 0) {
+      _showScanLimitModal();
+      return;
+    }
+    _showScanRemainingModal(remaining);
+    return;
+  }
+  _openScanInput(_pendingScanMode);
+}
+
+function _openScanInput(mode) {
   const input = document.getElementById('scan-input');
   if (!input) return;
   input.setAttribute('data-scan-mode', mode || 'explore');
   input.click();
+}
+
+// Conta le scansioni già fatte questo mese e ritorna quante ne restano (min 0).
+// In caso di errore di rete non blocchiamo l'utente: il vero limite è comunque
+// applicato lato server nella edge function.
+async function _getScansRemainingThisMonth() {
+  if (!currentUser) return FREE_SCANS_PER_MONTH;
+  try {
+    const monthStart = new Date();
+    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+    const { count } = await supa
+      .from('bottle_scans')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', currentUser.id)
+      .gte('created_at', monthStart.toISOString());
+    return Math.max(0, FREE_SCANS_PER_MONTH - (count || 0));
+  } catch(e) {
+    console.log('scan count error:', e);
+    return FREE_SCANS_PER_MONTH;
+  }
+}
+
+function _showScanRemainingModal(remaining) {
+  const modal = document.getElementById('scan-remaining-modal');
+  if (!modal) { _openScanInput(_pendingScanMode); return; }
+  const c1 = document.getElementById('scan-remaining-count');
+  const c2 = document.getElementById('scan-remaining-count-2');
+  if (c1) c1.textContent = remaining;
+  if (c2) c2.textContent = remaining;
+  modal.classList.add('on');
+}
+function closeScanRemainingModal() {
+  const modal = document.getElementById('scan-remaining-modal');
+  if (modal) modal.classList.remove('on');
+}
+function _confirmScanFromModal() {
+  closeScanRemainingModal();
+  _openScanInput(_pendingScanMode);
 }
 
 // Handler del file input
