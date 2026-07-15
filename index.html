@@ -2093,7 +2093,29 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
   </div>
   <div class="scroll">
-    <div id="scan-history-list" style="padding:10px 14px 32px;"></div>
+    <div id="scan-history-list" style="padding:10px 14px 10px;"></div>
+    <div id="scan-history-premium-banner" style="display:none;padding:10px 14px 20px;">
+      <div onclick="go('v-paywall')" style="background:var(--ivory-2);border:1.5px solid var(--gold-border);border-radius:var(--radius-lg);padding:18px 17px;cursor:pointer;position:relative;overflow:hidden;">
+        <!-- Cerchio decorativo -->
+        <div style="position:absolute;right:-16px;top:-16px;width:80px;height:80px;border-radius:50%;background:rgba(184,146,42,.08);pointer-events:none;"></div>
+        <div style="display:flex;align-items:flex-start;gap:13px;">
+          <div style="width:46px;height:46px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-scan" style="font-size:22px;color:#C8A03A;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;margin-bottom:4px;">Scansioni illimitate</div>
+            <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.55;margin-bottom:10px;">Hai già fatto <strong id="scan-history-count" style="color:#8a6a1e;">3</strong> scansioni gratuite. Con Premium puoi scansionare tutte le bottiglie che vuoi — senza limiti.</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span style="font-family:var(--sans);font-size:12px;background:var(--white);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:3px 10px;">Da 3,99€/mese</span>
+                <span style="font-family:var(--sans);font-size:12px;background:var(--white);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:3px 10px;">Disdici quando vuoi</span>
+              </div>
+              <span style="font-family:var(--sans);font-size:14px;color:var(--gold);font-weight:600;">→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

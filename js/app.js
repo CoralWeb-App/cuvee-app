@@ -964,7 +964,9 @@ async function renderScanHistoryUI() {
   if (!listEl) return;
   const searchEl = document.getElementById('scan-history-search');
   if (searchEl) searchEl.value = '';
+  const premBanner = document.getElementById('scan-history-premium-banner');
   listEl.innerHTML = '<div style="text-align:center;padding:40px 0;font-family:var(--sans);font-size:14px;color:var(--ink-4);">Caricamento…</div>';
+  if (premBanner) premBanner.style.display = 'none';
   const scans = await loadScanHistory();
   if (!scans.length) {
     listEl.innerHTML =
@@ -976,6 +978,7 @@ async function renderScanHistoryUI() {
     return;
   }
   listEl.innerHTML = scans.map((s, i) => _buildScanHistoryCard(s, i)).join('');
+  if (premBanner) premBanner.style.display = (!isPremium() && scans.length >= 3) ? 'block' : 'none';
 }
 
 function openScanFromHistory(idx) {
