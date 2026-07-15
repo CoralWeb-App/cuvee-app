@@ -3497,7 +3497,6 @@ async function loadDetailBottles(maisonId) {
       .eq('maison_id', maisonId)
       .eq('is_published', true)
       .eq('needs_review', false)
-      .order('is_featured', { ascending: false })
       .order('nome', { ascending: true });
 
     const subtitleEl = document.getElementById('detail-cuvee-subtitle');
@@ -3509,27 +3508,28 @@ async function loadDetailBottles(maisonId) {
     }
     if (subtitleEl) subtitleEl.textContent = bottles.length + (bottles.length === 1 ? ' cuvée nel catalogo' : ' cuvée nel catalogo');
     const premium = isPremium();
-    const visible = premium ? bottles : bottles.slice(0, 2);
-    const locked = premium ? [] : bottles.slice(2);
+    const lockedCount = premium ? 0 : Math.max(0, bottles.length - 2);
     const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
-    listEl.innerHTML = visible.map(b => {
+    listEl.innerHTML = bottles.map((b, i) => {
+      const isLocked = !premium && i >= 2;
       const tipo = tipoLabel[b.tipo] || b.tipo || '';
       const meta = [tipo, b.dosaggio_tipo].filter(Boolean).join(' · ');
       const prezzo = b.prezzo_min ? 'da ' + b.prezzo_min + '€' : (b.fascia_prezzo || '');
-      return '<div class="bottle-row" onclick="openBottigliaDetail(\'' + b.id + '\')" style="cursor:pointer;">' +
+      return '<div class="bottle-row" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '" style="cursor:pointer;">' +
         '<div class="bottle-ph"><i class="ti ti-bottle"></i></div>' +
         '<div class="bottle-info">' +
           '<div class="bottle-name">' + b.nome + '</div>' +
           '<div class="bottle-type">' + meta + '</div>' +
-          (prezzo ? '<div class="bottle-price" style="font-family:var(--sans);font-size:13px;color:var(--gold);margin-top:2px;">' + prezzo + '</div>' : '') +
+          (isLocked ? '<div class="lock-pill"><i class="ti ti-lock"></i><span>Premium</span></div>' :
+            (prezzo ? '<div class="bottle-price" style="font-family:var(--sans);font-size:13px;color:var(--gold);margin-top:2px;">' + prezzo + '</div>' : '')) +
         '</div>' +
-        (b.score_medio ? '<div style="font-family:var(--serif);font-size:18px;color:var(--gold);font-weight:600;flex-shrink:0;">' + b.score_medio + '</div>' : '') +
+        (!isLocked && b.score_medio ? '<div style="font-family:var(--serif);font-size:18px;color:var(--gold);font-weight:600;flex-shrink:0;">' + b.score_medio + '</div>' : '') +
       '</div>';
     }).join('');
     if (lockEl) {
-      if (locked.length > 0) {
+      if (lockedCount > 0) {
         lockEl.style.display = 'flex';
-        lockEl.querySelector('p').innerHTML = '<strong>' + locked.length + ' cuvées</strong> disponibili con Piano Premium.';
+        lockEl.querySelector('p').innerHTML = '<strong>' + lockedCount + ' cuvées</strong> disponibili con Piano Premium.';
       } else {
         lockEl.style.display = 'none';
       }
@@ -3622,12 +3622,13 @@ async function loadAndRenderBottiglie() {
   try {
     const { data, error } = await supa
       .from('bottiglie')
-      .select('*, maison(nome, slug)')
+      .select('*, maison(nome, slug, is_free)')
       .eq('is_published', true)
       .eq('needs_review', false)
       .order('nome', { ascending: true });
     if (error) throw error;
     allBottiglie = data || [];
+    computeBottiglieLocks();
     if (currentUser) {
       const { data: wish } = await supa.from('wishlist').select('bottiglia_id').eq('user_id', currentUser.id);
       wishlistIds = new Set((wish || []).map(w => w.bottiglia_id));
@@ -3643,9 +3644,26 @@ async function loadAndRenderBottiglie() {
   }
 }
 
+// Calcola quali bottiglie sono libere: prime 2 in ordine alfabetico per ogni maison,
+// oppure tutte bloccate se la maison stessa è premium.
+function computeBottiglieLocks() {
+  const byMaison = {};
+  allBottiglie.forEach(b => {
+    const mid = b.maison_id;
+    if (!byMaison[mid]) byMaison[mid] = [];
+    byMaison[mid].push(b);
+  });
+  Object.values(byMaison).forEach(group => {
+    group.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+    const maisonLocked = group[0]?.maison?.is_free === false;
+    group.forEach((b, i) => { b._locked = maisonLocked || i >= 2; });
+  });
+}
+
 function renderBottiglie() {
   const listEl = document.getElementById('bott-list');
   if (!listEl) return;
+  const premium = isPremium();
   const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
   let filtered = allBottiglie;
 
@@ -3725,10 +3743,12 @@ function renderBottiglie() {
     return;
   }
   listEl.innerHTML = filtered.map(b => {
+    const isLocked = !!b._locked && !premium;
     const tipo = tipoLabel[b.tipo] || b.tipo || '';
-    return '<div class="bott-card" onclick="openBottigliaDetail(\'' + b.id + '\')">' +
+    return '<div class="bott-card" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
       '<div class="bott-card-img" style="min-height:88px;">' +
         (b.foto_url ? '<img src="' + b.foto_url + '"/>' : '<i class="ti ti-bottle"></i>') +
+        (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
       '</div>' +
       '<div class="bott-card-body">' +
         '<div class="bott-card-maison">' + (b.maison?.nome || '') + '</div>' +
@@ -3739,16 +3759,16 @@ function renderBottiglie() {
         '</div>' +
         '<div class="bott-card-footer">' +
           '<div class="bott-card-info">' +
-            (b.score_medio ? scoreRingCard(b.score_medio) : '') +
-            ((b.fascia_prezzo || b.prezzo_min) ? '<div style="display:flex;flex-direction:column;gap:2px;">' +
+            (!isLocked && b.score_medio ? scoreRingCard(b.score_medio) : '') +
+            (!isLocked && (b.fascia_prezzo || b.prezzo_min) ? '<div style="display:flex;flex-direction:column;gap:2px;">' +
               priceScale(b.fascia_prezzo, b.prezzo_min) +
               (b.prezzo_min ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-4);">da ' + b.prezzo_min + '€</span>' : '') +
             '</div>' : '') +
           '</div>' +
-          '<button class="bott-card-add" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
+          (!isLocked ? '<button class="bott-card-add" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
             '<span class="bott-card-add-badge">+</span>' +
             '<i class="ti ti-notebook"></i>' +
-          '</button>' +
+          '</button>' : '') +
         '</div>' +
       '</div>' +
     '</div>';
@@ -3907,9 +3927,27 @@ function bottDetailPhotoClick() {
   if (window._bottDetailPhotoUrl) openLightbox([window._bottDetailPhotoUrl], 0);
 }
 
+// Verifica sempre lato server la posizione alfabetica reale tra le bottiglie
+// della stessa maison, indipendentemente da quali dati sono già in cache lato client.
+async function isBottigliaLocked(b) {
+  if (isPremium()) return false;
+  const { data } = await supa
+    .from('bottiglie')
+    .select('id, nome, maison(is_free)')
+    .eq('maison_id', b.maison_id)
+    .eq('is_published', true)
+    .eq('needs_review', false)
+    .order('nome', { ascending: true });
+  if (!data || !data.length) return false;
+  if (data[0].maison?.is_free === false) return true;
+  const idx = data.findIndex(x => x.id === b.id);
+  return idx === -1 ? false : idx >= 2;
+}
+
 async function openBottigliaDetail(bottId) {
   const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
   if (!b) return;
+  if (await isBottigliaLocked(b)) { go('v-paywall'); return; }
   currentBottiglia = b;
   const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
 

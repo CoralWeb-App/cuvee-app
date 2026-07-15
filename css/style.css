@@ -375,6 +375,9 @@ html,body{
 .maison-card-ph .img-badge{position:absolute;top:9px;right:10px;background:rgba(255,255,255,.92);border-radius:20px;padding:3px 9px;font-family:var(--sans);font-size:13px;color:#8a6a1e;border:0.5px solid var(--gold-border);}
 .maison-card-ph .lock-over{position:absolute;top:9px;left:10px;background:rgba(245,239,228,.95);border-radius:20px;padding:3px 9px;font-family:var(--sans);font-size:13px;color:#8a6a1e;display:flex;align-items:center;gap:3px;}
 .maison-card-ph .lock-over i{font-size:13px;}
+.bott-card-img .lock-over{position:absolute;top:6px;left:6px;background:rgba(245,239,228,.95);border-radius:20px;padding:2px 7px;font-family:var(--sans);font-size:11px;color:#8a6a1e;display:flex;align-items:center;gap:3px;}
+.bott-card-img .lock-over i{font-size:11px;}
+.bottle-row .lock-pill{margin-top:3px;}
 .maison-card.locked{opacity:.55;}
 .maison-body{padding:12px 14px 14px;}
 .maison-header-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
