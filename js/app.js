@@ -867,6 +867,7 @@ function _normalizeSearch(str) {
 }
 
 function _buildScanHistoryCard(s, idx) {
+  const isLocked = !!s._locked;
   const date = s.created_at
     ? new Date(s.created_at).toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' })
     : '';
@@ -880,24 +881,27 @@ function _buildScanHistoryCard(s, idx) {
   const scoreHtml = s.score_medio
     ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+s.score_medio+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
     : '';
-  return '<div onclick="openScanFromHistory('+idx+')" style="display:flex;gap:0;background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
-    '<div style="width:90px;flex-shrink:0;background:linear-gradient(150deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;overflow:hidden;">' +
+  return '<div class="scan-history-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openScanFromHistory("+idx+")") + '" style="display:flex;gap:0;background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+    '<div class="scan-history-photo" style="width:90px;flex-shrink:0;background:linear-gradient(150deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">' +
       photo +
+      (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
     '</div>' +
     '<div style="flex:1;padding:13px 14px;min-width:0;">' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">' +
         '<div style="font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.maison_nome||'')+'</div>' +
-        (scoreHtml ? '<div style="flex-shrink:0;">'+scoreHtml+'</div>' : '') +
+        (!isLocked && scoreHtml ? '<div style="flex-shrink:0;">'+scoreHtml+'</div>' : '') +
       '</div>' +
       '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.cuvee_nome||'')+(annata ? ' '+annata : '')+'</div>' +
-      '<div style="display:flex;align-items:center;gap:6px;">' +
-        badge +
-        (s.dosage_testo ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">· '+s.dosage_testo+'</span>' : '') +
-      '</div>' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">' +
-        '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+date+'</div>' +
-        '<button onclick="event.stopPropagation();deleteScanFromHistory('+idx+')" style="background:none;border:none;padding:2px 0 2px 8px;cursor:pointer;color:var(--ink-5);display:flex;align-items:center;line-height:1;" aria-label="Elimina"><i class="ti ti-trash" style="font-size:15px;"></i></button>' +
-      '</div>' +
+      (isLocked ? '' :
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+          badge +
+          (s.dosage_testo ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">· '+s.dosage_testo+'</span>' : '') +
+        '</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">' +
+          '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+date+'</div>' +
+          '<button onclick="event.stopPropagation();deleteScanFromHistory('+idx+')" style="background:none;border:none;padding:2px 0 2px 8px;cursor:pointer;color:var(--ink-5);display:flex;align-items:center;line-height:1;" aria-label="Elimina"><i class="ti ti-trash" style="font-size:15px;"></i></button>' +
+        '</div>'
+      ) +
     '</div>' +
   '</div>';
 }
@@ -931,6 +935,11 @@ async function loadScanHistory() {
       .limit(50);
     if (error) throw error;
     _scanHistoryCache = data || [];
+    // Le prime 3 scansioni (piu recenti) restano libere; se l'utente non e
+    // premium, le successive vengono offuscate anche se erano state fatte
+    // durante un periodo premium.
+    const premium = isPremium();
+    _scanHistoryCache.forEach((s, i) => { s._locked = !premium && i >= 3; });
     return _scanHistoryCache;
   } catch(e) {
     console.log('loadScanHistory error:', e);
@@ -972,6 +981,7 @@ async function renderScanHistoryUI() {
 function openScanFromHistory(idx) {
   const s = _scanHistoryCache && _scanHistoryCache[idx];
   if (!s || !s.result_json) return;
+  if (s._locked) { go('v-paywall'); return; }
   _scanResult = s.result_json;
   _scanPhotoDataUrl = s.foto_url || null;
   _showScanResultPage(s.result_json, s.foto_url || null);
