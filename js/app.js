@@ -3515,7 +3515,7 @@ async function loadDetailBottles(maisonId) {
       const tipo = tipoLabel[b.tipo] || b.tipo || '';
       const meta = [tipo, b.dosaggio_tipo].filter(Boolean).join(' · ');
       const prezzo = b.prezzo_min ? 'da ' + b.prezzo_min + '€' : (b.fascia_prezzo || '');
-      return '<div class="bottle-row" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '" style="cursor:pointer;">' +
+      return '<div class="bottle-row' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '" style="cursor:pointer;">' +
         '<div class="bottle-ph"><i class="ti ti-bottle"></i></div>' +
         '<div class="bottle-info">' +
           '<div class="bottle-name">' + b.nome + '</div>' +
@@ -3745,7 +3745,7 @@ function renderBottiglie() {
   listEl.innerHTML = filtered.map(b => {
     const isLocked = !!b._locked && !premium;
     const tipo = tipoLabel[b.tipo] || b.tipo || '';
-    return '<div class="bott-card" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
+    return '<div class="bott-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
       '<div class="bott-card-img" style="min-height:88px;">' +
         (b.foto_url ? '<img src="' + b.foto_url + '"/>' : '<i class="ti ti-bottle"></i>') +
         (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
