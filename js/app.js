@@ -2562,7 +2562,7 @@ async function updateCarnetUI() {
     document.getElementById('carnet-notes-list').style.display = 'block';
     if (!isPrem && notes.length >= 3) {
       if (premBanner) premBanner.style.display = 'block';
-      if (countEl) countEl.textContent = notes.length;
+      if (countEl) countEl.textContent = 3;
     } else {
       if (premBanner) premBanner.style.display = 'none';
     }
