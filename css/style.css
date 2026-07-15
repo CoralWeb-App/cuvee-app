@@ -379,6 +379,8 @@ html,body{
 .bott-card-img .lock-over i{font-size:11px;}
 .bottle-row .lock-pill{margin-top:3px;}
 .maison-card.locked{opacity:.55;}
+.bott-card.locked{opacity:.55;}
+.bottle-row.locked{opacity:.55;}
 .maison-body{padding:12px 14px 14px;}
 .maison-header-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
 .maison-name{font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:600;line-height:1.2;}
