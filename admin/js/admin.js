@@ -695,7 +695,12 @@ async function loadApprovazioni() {
         <tr class="adm-table-row" style="cursor:pointer" onclick="viewApprovazioneDetail('${b.id}')">
           <td>
             <div class="adm-bottle-cell">
-              <div class="adm-bottle-thumb"><i class="ti ti-bottle"></i></div>
+              <div class="adm-bottle-thumb ${(b.foto_url || b.photo_url) ? 'has-img clickable' : ''}"
+                   ${(b.foto_url || b.photo_url) ? `onclick="event.stopPropagation();openLightbox('${esc(b.foto_url || b.photo_url)}')"` : ''}>
+                ${(b.foto_url || b.photo_url)
+                  ? `<img src="${esc(b.foto_url || b.photo_url)}?t=${Date.now()}" alt="">`
+                  : '<i class="ti ti-bottle"></i>'}
+              </div>
               <div>
                 <div class="adm-bottle-name">${esc(b.nome ?? 'Senza nome')}</div>
                 <div class="adm-bottle-sub">${b.dosaggio_gl ? b.dosaggio_gl + ' g/L' : 'dosaggio n.d.'}</div>
