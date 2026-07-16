@@ -863,7 +863,7 @@ let _scanHistoryCache = null;
 let _currentHistoryIdx = null;
 
 function _normalizeSearch(str) {
-  return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function _buildScanHistoryCard(s, idx) {
@@ -2182,7 +2182,7 @@ let homeSearchCat = 'tutti';
 // Normalizza stringa: rimuove accenti e porta in lowercase
 // "Moët" → "moet", "Bâtonnage" → "batonnage", "Rosé" → "rose"
 function normalizeStr(s) {
-  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 // Usa esattamente la stessa query di loadAndRenderMaison (provata e funzionante)
@@ -2604,10 +2604,10 @@ function renderCarnetNotes(notes) {
     filtered = filtered.filter(n => inferTipoNota(n).includes(activeTypeFilter));
   }
   if (activeSearchQuery) {
-    const q = activeSearchQuery.toLowerCase();
+    const q = normalizeStr(activeSearchQuery);
     filtered = filtered.filter(n =>
-      (n.maison_nome || '').toLowerCase().includes(q) ||
-      (n.cuvee_nome || '').toLowerCase().includes(q)
+      normalizeStr(n.maison_nome).includes(q) ||
+      normalizeStr(n.cuvee_nome).includes(q)
     );
   }
 
