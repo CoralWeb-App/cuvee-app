@@ -875,6 +875,9 @@ function _buildScanHistoryCard(s, idx) {
     ? '<img src="'+s.foto_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
     : '<i class="ti ti-bottle" style="font-size:28px;color:rgba(139,168,224,.3);"></i>';
   const annata = s.annata && s.annata !== 'SA' ? s.annata : (s.annata === 'SA' ? 'S.A.' : '');
+  // Le bottiglie di catalogo hanno spesso l'anno già scritto dentro il nome
+  // (es. "Cristal 2010") — non ripeterlo se il nome finisce già con quell'anno.
+  const cuveeAlreadyHasYear = annata && String(s.cuvee_nome || '').trim().endsWith(String(annata));
   const badge = s.is_in_catalog
     ? '<span style="font-family:var(--sans);font-size:10px;background:#EDF7EE;color:#2A7A3A;border:0.5px solid #B8DDB8;border-radius:4px;padding:2px 6px;">✓ Catalogo</span>'
     : '<span style="font-family:var(--sans);font-size:10px;background:#EEF2FF;color:#4A5AB8;border:0.5px solid #C0C8F0;border-radius:4px;padding:2px 6px;">✦ AI</span>';
@@ -891,7 +894,7 @@ function _buildScanHistoryCard(s, idx) {
         '<div style="font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.maison_nome||'')+'</div>' +
         (!isLocked && scoreHtml ? '<div style="flex-shrink:0;">'+scoreHtml+'</div>' : '') +
       '</div>' +
-      '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.cuvee_nome||'')+(annata ? ' '+annata : '')+'</div>' +
+      '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.cuvee_nome||'')+(annata && !cuveeAlreadyHasYear ? ' '+annata : '')+'</div>' +
       (isLocked ? '' :
         '<div style="display:flex;align-items:center;gap:6px;">' +
           badge +
@@ -4364,8 +4367,11 @@ function _renderScanResult(result, photoDataUrl) {
   const maison = result.maison || b.maison?.nome || '—';
   const cuvee  = result.cuvee  || b.nome         || '—';
   const annata = result.is_sa ? 'Sans Année' : (result.annata || b.annata || null);
-  // Titolo completo: cuvée + annata (per i millesimati l'anno è sempre nel titolo)
-  const cuveeTitle = cuvee + (!result.is_sa && annata ? ' ' + annata : '');
+  // Titolo completo: cuvée + annata (per i millesimati l'anno è sempre nel titolo).
+  // Le bottiglie già in catalogo hanno spesso l'anno scritto dentro il nome stesso
+  // (es. "Cristal 2010") — non aggiungerlo di nuovo se è già alla fine del nome.
+  const cuveeAlreadyHasYear = annata && String(cuvee).trim().endsWith(String(annata));
+  const cuveeTitle = cuvee + (!result.is_sa && annata && !cuveeAlreadyHasYear ? ' ' + annata : '');
   const dosage = result.dosage || b.dosaggio_tipo || null;
   const tipo   = result.tipo   || b.tipo          || null;
   const photo  = photoDataUrl || b.foto_url || result.uploaded_photo_url || '';
