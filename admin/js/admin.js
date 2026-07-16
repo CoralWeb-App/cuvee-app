@@ -61,10 +61,12 @@ function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
 
-// ── SEARCH NORMALIZATION (accents) ───────────────────
-// Normalizes accented chars: Moët→Moet, Bollinger→Bollinger
+// ── SEARCH NORMALIZATION (accents + punteggiatura) ───
+// Normalizes accented chars and strips punctuation/spaces:
+// Moët→moet, "R.D. 2008"→"rd2008", "Egly-Ouriet"→"eglyouriet"
+// così la ricerca funziona anche senza punti/trattini.
 function norm(s) {
-  return String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+  return String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[^a-z0-9]/g, '')
 }
 
 // ── DYNAMIC FORM HELPERS ─────────────────────────────
@@ -1081,59 +1083,103 @@ async function renderBottiglie() {
   if (!tbody) return
   tbody.innerHTML = loadingRow(8)
   try {
-    let query = supa
-      .from('bottiglie')
-      .select('*, maison:maison_id(nome)', { count: 'exact' })
-      .eq('needs_review', false)
+    let data, count
 
     if (bottigliaSearch) {
-      const searchNorm = norm(bottigliaSearch)
-      // Cerca anche per nome maison: pre-query leggera + norm() client-side (accent-insensitive)
-      const { data: allMaisonSearch } = await supa.from('maison').select('id, nome')
-      const maisonIds = (allMaisonSearch || [])
-        .filter(m => norm(m.nome ?? '').includes(searchNorm))
-        .map(m => m.id)
-      if (maisonIds.length > 0) {
-        // OR: nome bottiglia oppure maison corrispondente
-        query = query.or(`nome_norm.ilike.%${searchNorm}%,maison_id.in.(${maisonIds.join(',')})`)
-      } else {
-        query = query.ilike('nome_norm', `%${searchNorm}%`)
+      // Ricerca lato client: la colonna nome_norm è GENERATA dal database e non
+      // rimuove punteggiatura/spazi, quindi "rd 2008" non troverebbe "R.D. 2008"
+      // via ilike. Scarichiamo il set filtrato dagli altri criteri (dataset
+      // piccolo) e confrontiamo con norm() che invece la rimuove.
+      let query = supa
+        .from('bottiglie')
+        .select('*, maison:maison_id(nome)')
+        .eq('needs_review', false)
+
+      if (bottigliaFilter === 'millesimato') query = query.eq('is_millesimato', true)
+      else if (bottigliaFilter)              query = query.eq('tipo', bottigliaFilter)
+      if (bottigliaStatusFilter === 'online')  query = query.eq('is_published', true)
+      if (bottigliaStatusFilter === 'offline') query = query.eq('is_published', false)
+      if (bottigliaFotoFilter) query = query.not('foto_url', 'is', null)
+
+      switch (bottigliaSort) {
+        case 'recente':
+          query = query.order('created_at', { ascending: false })
+          break
+        case 'prezzo_asc':
+          query = query.order('prezzo_min', { ascending: true,  nullsFirst: false })
+          break
+        case 'prezzo_desc':
+          query = query.order('prezzo_max', { ascending: false, nullsFirst: false })
+          break
+        case 'score':
+          query = query.order('score_medio', { ascending: false, nullsFirst: false })
+          break
+        case 'millesimato':
+          query = query
+            .order('is_millesimato', { ascending: false })
+            .order('annata', { ascending: false, nullsFirst: false })
+          break
+        default:
+          query = query.order('nome')
       }
+
+      const { data: all, error } = await query
+      if (error) throw error
+
+      const searchNorm = norm(bottigliaSearch)
+      let filtered = (all || []).filter(b =>
+        norm(b.nome ?? '').includes(searchNorm) ||
+        norm(b.maison?.nome ?? '').includes(searchNorm)
+      )
+      if (bottigliaLetterFilter) {
+        filtered = filtered.filter(b => norm(b.nome ?? '').startsWith(norm(bottigliaLetterFilter)))
+      }
+
+      count = filtered.length
+      data  = filtered.slice((bottigliaPage-1)*PER_PAGE, bottigliaPage*PER_PAGE)
+    } else {
+      let query = supa
+        .from('bottiglie')
+        .select('*, maison:maison_id(nome)', { count: 'exact' })
+        .eq('needs_review', false)
+
+      if (bottigliaFilter === 'millesimato') query = query.eq('is_millesimato', true)
+      else if (bottigliaFilter)              query = query.eq('tipo', bottigliaFilter)
+      if (bottigliaStatusFilter === 'online')  query = query.eq('is_published', true)
+      if (bottigliaStatusFilter === 'offline') query = query.eq('is_published', false)
+      if (bottigliaFotoFilter) query = query.not('foto_url', 'is', null)
+      if (bottigliaLetterFilter) query = query.ilike('nome_norm', `${bottigliaLetterFilter}%`)
+
+      // ── Ordinamento ──────────────────────────────────
+      switch (bottigliaSort) {
+        case 'recente':
+          query = query.order('created_at', { ascending: false })
+          break
+        case 'prezzo_asc':
+          query = query.order('prezzo_min', { ascending: true,  nullsFirst: false })
+          break
+        case 'prezzo_desc':
+          query = query.order('prezzo_max', { ascending: false, nullsFirst: false })
+          break
+        case 'score':
+          query = query.order('score_medio', { ascending: false, nullsFirst: false })
+          break
+        case 'millesimato':
+          query = query
+            .order('is_millesimato', { ascending: false })
+            .order('annata', { ascending: false, nullsFirst: false })
+          break
+        default:
+          query = query.order('nome')
+      }
+
+      query = query.range((bottigliaPage-1)*PER_PAGE, bottigliaPage*PER_PAGE - 1)
+
+      const result = await query
+      if (result.error) throw result.error
+      data  = result.data
+      count = result.count
     }
-    if (bottigliaFilter === 'millesimato') query = query.eq('is_millesimato', true)
-    else if (bottigliaFilter)              query = query.eq('tipo', bottigliaFilter)
-    if (bottigliaStatusFilter === 'online')  query = query.eq('is_published', true)
-    if (bottigliaStatusFilter === 'offline') query = query.eq('is_published', false)
-    if (bottigliaFotoFilter) query = query.not('foto_url', 'is', null)
-    if (bottigliaLetterFilter) query = query.ilike('nome_norm', `${bottigliaLetterFilter}%`)
-
-    // ── Ordinamento ──────────────────────────────────
-    switch (bottigliaSort) {
-      case 'recente':
-        query = query.order('created_at', { ascending: false })
-        break
-      case 'prezzo_asc':
-        query = query.order('prezzo_min', { ascending: true,  nullsFirst: false })
-        break
-      case 'prezzo_desc':
-        query = query.order('prezzo_max', { ascending: false, nullsFirst: false })
-        break
-      case 'score':
-        query = query.order('score_medio', { ascending: false, nullsFirst: false })
-        break
-      case 'millesimato':
-        query = query
-          .order('is_millesimato', { ascending: false })
-          .order('annata', { ascending: false, nullsFirst: false })
-        break
-      default:
-        query = query.order('nome')
-    }
-
-    query = query.range((bottigliaPage-1)*PER_PAGE, bottigliaPage*PER_PAGE - 1)
-
-    const { data, count, error } = await query
-    if (error) throw error
 
     const sub = document.getElementById('bottiglie-subtitle')
     if (sub) sub.textContent = (count ?? 0).toLocaleString('it') + ' bottiglie pubblicate'
