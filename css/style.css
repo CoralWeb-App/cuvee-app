@@ -477,8 +477,13 @@ html,body{
 .feature-list{padding:0 18px;margin-bottom:16px;}
 .feature-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
 .feature-item:last-child{border-bottom:none;}
-.feature-item i{font-size:20px;color:var(--gold);}
+.feature-item i{font-size:20px;color:var(--gold);flex-shrink:0;}
 .feature-item span{font-family:var(--sans);font-size:15px;color:var(--ink-2);}
+.feature-item.highlight{align-items:flex-start;background:var(--ivory-2);border:1px solid var(--gold-border);border-radius:var(--radius-md);padding:14px;margin-bottom:10px;border-bottom:1px solid var(--gold-border);}
+.feature-item.highlight i{font-size:22px;margin-top:2px;}
+.feature-item.highlight > div{display:flex;flex-direction:column;gap:3px;}
+.feature-title{font-family:var(--sans);font-size:15px;font-weight:600;color:var(--ink);}
+.feature-sub{font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.5;}
 
 /* ZONE LIST */
 .zone-list-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin:0 14px 12px;overflow:hidden;cursor:pointer;transition:transform .15s;}
