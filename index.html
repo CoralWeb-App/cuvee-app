@@ -1392,22 +1392,27 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div style="padding:16px 0 8px;">
       <div class="plan-card selected" onclick="selectPlan(this)">
-        <div class="plan-header"><div class="plan-name">Annuale <span class="plan-badge">Miglior prezzo</span></div><div class="plan-price">3,99€ <span>/ mese</span></div></div>
-        <div class="plan-desc">Fatturato 47,99€/anno · risparmi il 33% rispetto al mensile</div>
+        <div class="plan-header"><div class="plan-name">Annuale <span class="plan-badge">Risparmi 33%</span></div><div class="plan-price">3,33€ <span>/ mese</span></div></div>
+        <div class="plan-desc">Fatturato 39,99€/anno · risparmi 20€ rispetto al mensile</div>
       </div>
       <div class="plan-card" onclick="selectPlan(this)">
-        <div class="plan-header"><div class="plan-name">Mensile</div><div class="plan-price">5,99€ <span>/ mese</span></div></div>
+        <div class="plan-header"><div class="plan-name">Mensile</div><div class="plan-price">4,99€ <span>/ mese</span></div></div>
         <div class="plan-desc">Fatturato mensilmente · disdici quando vuoi</div>
       </div>
     </div>
     <div class="feature-list">
-      <div class="feature-item"><i class="ti ti-building"></i><span>400+ produttori completi</span></div>
-      <div class="feature-item"><i class="ti ti-bottle"></i><span>Catalogo completo di tutte le cuvées</span></div>
-      <div class="feature-item"><i class="ti ti-a-b"></i><span>Glossario completo 200+ termini</span></div>
-      <div class="feature-item"><i class="ti ti-calendar"></i><span>Guide des millésimes — dal 2000 ad oggi</span></div>
-      <div class="feature-item"><i class="ti ti-external-link"></i><span>Link acquisto diretto ai partner</span></div>
-      <div class="feature-item"><i class="ti ti-bell"></i><span>Notifiche nuove sorties ed événements</span></div>
-      <div class="feature-item"><i class="ti ti-download"></i><span>Accesso offline ai contenuti</span></div>
+      <div class="feature-item highlight">
+        <i class="ti ti-sparkles"></i>
+        <div>
+          <span class="feature-title">100 scansioni AI sommelier al mese</span>
+          <span class="feature-sub">Non solo voto e prezzo: note di degustazione, abbinamento, dosaggio e finestra di consumo per ogni bottiglia</span>
+        </div>
+      </div>
+      <div class="feature-item"><i class="ti ti-notebook"></i><span>Degustazioni illimitate nel Carnet</span></div>
+      <div class="feature-item"><i class="ti ti-bottle"></i><span>Catalogo Champagne al completo</span></div>
+      <div class="feature-item"><i class="ti ti-building"></i><span>Tutti i produttori sbloccati — Krug, Salon, Selosse e le altre maison prestige</span></div>
+      <div class="feature-item"><i class="ti ti-book-2"></i><span>Glossario tecnico al completo</span></div>
+      <div class="feature-item"><i class="ti ti-history"></i><span>Storico scansioni illimitato</span></div>
     </div>
     <div style="padding:0 18px 8px;">
       <button class="btn-gold" id="subscribe-btn" onclick="activateTestPremium()" style="font-size:17px;">Abbonati ora</button>
