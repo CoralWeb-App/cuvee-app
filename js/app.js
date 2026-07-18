@@ -863,7 +863,7 @@ let _scanHistoryCache = null;
 let _currentHistoryIdx = null;
 
 function _normalizeSearch(str) {
-  return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return String(str ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function _buildScanHistoryCard(s, idx) {
@@ -2182,7 +2182,7 @@ let homeSearchCat = 'tutti';
 // Normalizza stringa: rimuove accenti e porta in lowercase
 // "Moët" → "moet", "Bâtonnage" → "batonnage", "Rosé" → "rose"
 function normalizeStr(s) {
-  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 // Ricerca multi-termine: spezza la query in parole e richiede che OGNI parola
