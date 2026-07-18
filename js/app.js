@@ -3680,7 +3680,7 @@ function renderBottiglie() {
     });
   }
 
-  if (currentBottLetter !== 'tutti') filtered = filtered.filter(b => bottInitial(b.nome) === currentBottLetter);
+  if (currentBottLetter !== 'tutti') filtered = filtered.filter(b => bottInitial(b.nome) === currentBottLetter || bottInitial(b.maison?.nome) === currentBottLetter);
 
   // Filtro per fascia prezzo
   if (currentBottPriceFilter !== 'tutti') {

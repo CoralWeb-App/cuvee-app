@@ -1096,11 +1096,14 @@ async function renderBottiglie() {
   try {
     let data, count
 
-    if (bottigliaSearch) {
-      // Ricerca lato client: la colonna nome_norm è GENERATA dal database e non
-      // rimuove punteggiatura/spazi, quindi "rd 2008" non troverebbe "R.D. 2008"
-      // via ilike. Scarichiamo il set filtrato dagli altri criteri (dataset
-      // piccolo) e confrontiamo con norm() che invece la rimuove.
+    if (bottigliaSearch || bottigliaLetterFilter) {
+      // Ricerca/filtro lettera lato client: la colonna nome_norm è GENERATA dal
+      // database e non rimuove punteggiatura/spazi, quindi "rd 2008" non
+      // troverebbe "R.D. 2008" via ilike; inoltre il filtro lettera deve poter
+      // matchare anche l'iniziale della maison (es. "S" per bottiglie Salon
+      // chiamate "Cuvée S..."), cosa che una ilike sulla sola colonna
+      // bottiglie.nome_norm non può fare. Scarichiamo il set filtrato dagli
+      // altri criteri (dataset piccolo) e confrontiamo lato client.
       let query = supa
         .from('bottiglie')
         .select('*, maison:maison_id(nome)')
@@ -1139,7 +1142,8 @@ async function renderBottiglie() {
 
       let filtered = (all || []).filter(b => matchesAllTerms(bottigliaSearch, b.nome, b.maison?.nome))
       if (bottigliaLetterFilter) {
-        filtered = filtered.filter(b => norm(b.nome ?? '').startsWith(norm(bottigliaLetterFilter)))
+        const l = norm(bottigliaLetterFilter)
+        filtered = filtered.filter(b => norm(b.nome ?? '').startsWith(l) || norm(b.maison?.nome ?? '').startsWith(l))
       }
 
       count = filtered.length
@@ -1155,7 +1159,8 @@ async function renderBottiglie() {
       if (bottigliaStatusFilter === 'online')  query = query.eq('is_published', true)
       if (bottigliaStatusFilter === 'offline') query = query.eq('is_published', false)
       if (bottigliaFotoFilter) query = query.not('foto_url', 'is', null)
-      if (bottigliaLetterFilter) query = query.ilike('nome_norm', `${bottigliaLetterFilter}%`)
+      // bottigliaLetterFilter è gestito nel ramo client-side sopra (deve poter
+      // matchare anche l'iniziale della maison, non solo quella della bottiglia)
 
       // ── Ordinamento ──────────────────────────────────
       switch (bottigliaSort) {
