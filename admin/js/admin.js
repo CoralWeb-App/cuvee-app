@@ -69,6 +69,17 @@ function norm(s) {
   return String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[^a-z0-9]/g, '')
 }
 
+// Ricerca multi-termine: spezza la query in parole e richiede che OGNI parola
+// compaia da qualche parte nell'insieme dei campi passati (in qualsiasi ordine,
+// anche a cavallo tra campi diversi — es. "krug 171" trova maison="Krug" +
+// nome="Grande Cuvée 171ème Édition" anche se "krug" non è nel nome bottiglia).
+function matchesAllTerms(query, ...fields) {
+  const terms = String(query ?? '').trim().split(/\s+/).map(norm).filter(Boolean)
+  if (!terms.length) return true
+  const combined = fields.map(f => norm(f ?? '')).join(' ')
+  return terms.every(t => combined.includes(t))
+}
+
 // ── DYNAMIC FORM HELPERS ─────────────────────────────
 // Builds editable fields for ALL columns in a DB row.
 // skip: always hidden | fullRow: force 2-col span | textareaCols: force textarea
@@ -1126,11 +1137,7 @@ async function renderBottiglie() {
       const { data: all, error } = await query
       if (error) throw error
 
-      const searchNorm = norm(bottigliaSearch)
-      let filtered = (all || []).filter(b =>
-        norm(b.nome ?? '').includes(searchNorm) ||
-        norm(b.maison?.nome ?? '').includes(searchNorm)
-      )
+      let filtered = (all || []).filter(b => matchesAllTerms(bottigliaSearch, b.nome, b.maison?.nome))
       if (bottigliaLetterFilter) {
         filtered = filtered.filter(b => norm(b.nome ?? '').startsWith(norm(bottigliaLetterFilter)))
       }
@@ -1658,11 +1665,7 @@ async function loadMaison() {
     let data = all
 
     if (maisonSearch) {
-      const q = norm(maisonSearch)
-      data = data.filter(m =>
-        norm(m.nome ?? '').includes(q)
-        || norm(m.regione ?? m.zona ?? m.region ?? '').includes(q)
-      )
+      data = data.filter(m => matchesAllTerms(maisonSearch, m.nome, m.regione ?? m.zona ?? m.region ?? ''))
     }
 
     // tipo è una stringa ('NM','RM','RC','CM'…) — gruppi come nell'app

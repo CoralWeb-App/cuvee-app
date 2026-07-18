@@ -919,7 +919,7 @@ function filterScanHistory(q) {
   }
   const filtered = _scanHistoryCache
     .map((s, i) => ({ s, i }))
-    .filter(({ s }) => _normalizeSearch(s.maison_nome).includes(norm) || _normalizeSearch(s.cuvee_nome).includes(norm));
+    .filter(({ s }) => matchesAllTerms(q, s.maison_nome, s.cuvee_nome));
   if (!filtered.length) {
     listEl.innerHTML = '<div style="text-align:center;padding:40px 20px;font-family:var(--sans);font-size:14px;color:var(--ink-4);">Nessun risultato per «'+q+'»</div>';
     return;
@@ -2185,6 +2185,17 @@ function normalizeStr(s) {
   return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Ricerca multi-termine: spezza la query in parole e richiede che OGNI parola
+// compaia da qualche parte nell'insieme dei campi passati (in qualsiasi ordine,
+// anche a cavallo tra campi diversi \u2014 es. "krug 171" trova maison="Krug" +
+// nome="Grande Cuv\u00e9e 171\u00e8me \u00c9dition" anche se "krug" non \u00e8 nel nome bottiglia).
+function matchesAllTerms(query, ...fields) {
+  const terms = (query || '').trim().split(/\s+/).map(normalizeStr).filter(Boolean);
+  if (!terms.length) return true;
+  const combined = fields.map(f => normalizeStr(f || '')).join(' ');
+  return terms.every(t => combined.includes(t));
+}
+
 // Usa esattamente la stessa query di loadAndRenderMaison (provata e funzionante)
 async function ensureMaisonLoaded() {
   if (allMaison.length > 0) return;
@@ -2269,7 +2280,6 @@ async function _execHomeSearch(q) {
   const results = document.getElementById('home-search-results');
   results.innerHTML = '<div class="home-search-empty">Ricerca in corso…</div>';
   const cat = homeSearchCat;
-  const ql = normalizeStr(q); // normalizzato: senza accenti, lowercase
 
   // Carica dati in parallelo se non ancora in cache
   const loads = [];
@@ -2283,8 +2293,7 @@ async function _execHomeSearch(q) {
   // — PRODUTTORI: cerca per nome e sede (accent-insensitive) —
   if (cat === 'tutti' || cat === 'produttori') {
     const res = allMaison.filter(m =>
-      normalizeStr(m.nome).includes(ql) ||
-      normalizeStr(m.sede).includes(ql)
+      matchesAllTerms(q, m.nome, m.sede)
     ).slice(0, 6);
     if (res.length > 0) {
       const tipoBadge = { 'NM':'badge-gm','RM':'badge-rm','RC':'badge-rm','CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres' };
@@ -2315,8 +2324,7 @@ async function _execHomeSearch(q) {
   // — CHAMPAGNE: cerca per nome bottiglia E nome produttore (accent-insensitive) —
   if (cat === 'tutti' || cat === 'champagne') {
     const res = allBottiglie.filter(b =>
-      normalizeStr(b.nome).includes(ql) ||
-      normalizeStr(b.maison?.nome).includes(ql)
+      matchesAllTerms(q, b.nome, b.maison?.nome)
     ).slice(0, 8);
     if (res.length > 0) {
       html += '<div class="home-search-section">Champagne</div>';
@@ -2339,8 +2347,7 @@ async function _execHomeSearch(q) {
   // — GLOSSARIO: cerca per termine e definizione (accent-insensitive) —
   if (cat === 'tutti' || cat === 'glossario') {
     const res = allGlossario.filter(t =>
-      normalizeStr(t.termine).includes(ql) ||
-      normalizeStr(t.definizione).includes(ql)
+      matchesAllTerms(q, t.termine, t.definizione)
     ).slice(0, 6);
     if (res.length > 0) {
       const livelloBadge = { base:'badge-rm', avanzato:'badge-pres', premium:'badge-prem' };
@@ -2604,11 +2611,7 @@ function renderCarnetNotes(notes) {
     filtered = filtered.filter(n => inferTipoNota(n).includes(activeTypeFilter));
   }
   if (activeSearchQuery) {
-    const q = normalizeStr(activeSearchQuery);
-    filtered = filtered.filter(n =>
-      normalizeStr(n.maison_nome).includes(q) ||
-      normalizeStr(n.cuvee_nome).includes(q)
-    );
+    filtered = filtered.filter(n => matchesAllTerms(activeSearchQuery, n.maison_nome, n.cuvee_nome));
   }
 
   window._carnetNotes = notes; // keep full array for index access
@@ -3117,13 +3120,7 @@ function renderMaison() {
     const q = normalizeStr(currentMaisonSearch);
     const tipoLabelM = {'NM':'négociant-manipulant','RM':'récoltant-manipulant','RC':'récoltant-coopérateur','CM':'coopérative-manipulant','SR':'société de récoltants','ND':'négociant-distributeur','MA':'marque acheteur'};
     filtered = filtered.filter(m =>
-      normalizeStr(m.nome).includes(q) ||
-      normalizeStr(m.sede_comune).includes(q) ||
-      normalizeStr(m.descrizione).includes(q) ||
-      normalizeStr(m.chef_de_cave).includes(q) ||
-      normalizeStr(m.tipo).includes(q) ||
-      normalizeStr(tipoLabelM[m.tipo]).includes(q) ||
-      normalizeStr(m.zone?.nome).includes(q)
+      matchesAllTerms(currentMaisonSearch, m.nome, m.sede_comune, m.descrizione, m.chef_de_cave, m.tipo, tipoLabelM[m.tipo], m.zone?.nome)
     );
     // Ordina: match nel nome prima, poi gli altri
     filtered.sort((a, b) => {
@@ -3706,12 +3703,7 @@ function renderBottiglie() {
     const q = normalizeStr(currentBottSearch);
     const tipoLabelB = {'nv':'sans année','millesimato':'millésimé','prestige':'prestige cuvée','blanc_de_blancs':'blanc de blancs','blanc_de_noirs':'blanc de noirs','rose':'rosé','nature':'brut nature'};
     filtered = filtered.filter(b =>
-      normalizeStr(b.nome).includes(q) ||
-      normalizeStr(b.maison?.nome).includes(q) ||
-      normalizeStr(b.descrizione).includes(q) ||
-      normalizeStr(b.dosaggio_tipo).includes(q) ||
-      normalizeStr(tipoLabelB[b.tipo]).includes(q) ||
-      (b.annata ? String(b.annata) : '').includes(q)
+      matchesAllTerms(currentBottSearch, b.nome, b.maison?.nome, b.descrizione, b.dosaggio_tipo, tipoLabelB[b.tipo], b.annata)
     );
     // Ordina: match nel nome cuvée o maison prima, poi gli altri campi
     filtered.sort((a, b) => {
