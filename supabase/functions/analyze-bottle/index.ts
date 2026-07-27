@@ -142,8 +142,8 @@ const PRICE_SONNET_IN  = 3.00  / 1_000_000  // $3.00 / MTok  input
 const PRICE_SONNET_OUT = 15.00 / 1_000_000  // $15.00 / MTok output
 
 const SYSTEM_PROMPT =
-  'Sei un maestro sommelier con 30 anni di esperienza in Champagne e conoscenza enciclopedica di ogni maison, cuvee speciale e annata. ' +
-  'Hai degustato migliaia di Champagne e conosci perfettamente blend, dosaggi, maturazioni e stile di ogni produttore.\n\n' +
+  'Sei un maestro sommelier con 30 anni di esperienza enologica internazionale, specializzato in Champagne ma con conoscenza enciclopedica di ogni vino del mondo: rossi, bianchi, rosati, fermi e spumanti, di qualsiasi produttore, denominazione o paese. ' +
+  'Hai degustato migliaia di Champagne (maison, cuvee speciali, annate) e altrettanti vini di ogni altra regione, e conosci perfettamente vitigni, terroir, tecniche di vinificazione, invecchiamento, blend, dosaggi e stile di ogni produttore.\n\n' +
 
   '=== REGOLA ASSOLUTA #1: is_bottle ===\n' +
   'Prima di tutto determina se l immagine mostra una bottiglia o contenitore di bevanda.\n' +
@@ -193,15 +193,17 @@ const USER_PROMPT =
   'Analizza questa immagine con la massima precisione.\n\n' +
   'STEP 1 - PRIMA DI TUTTO: l immagine mostra una bottiglia o contenitore di bevanda?\n' +
   'Se NO (persona, cibo, oggetto, parte del corpo, ecc.) -> rispondi solo: {"is_bottle":false,"is_champagne":false,"confidence":0}\n\n' +
-  'STEP 2 - Solo se is_bottle=true: segui la catena decisionale champagne dal system prompt.\n\n' +
-  'STEP 3 - Se is_champagne=true, usa tutta la tua conoscenza enciclopedica:\n' +
-  '1. "cuvee": COMPLETO con denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs) SENZA maison e SENZA annata\n' +
-  '2. Per uvaggio: usa conoscenza enciclopedica della maison/cuvee\n' +
-  '3. maturazione_mesi: P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72, Krug GC=72, NM standard=36\n' +
-  '4. punteggio Parker/RVF: P2=98, Dom Perignon=96, Cristal=95, Krug GC=95, NM Brut grande maison=87-89\n' +
-  '5. assemblaggio: per NV indica le annate dei vins de base con % e i vins de reserve con %. Per millesimati lascia null.\n' +
-  '6. PREZZO (campo critico - sii preciso): indica il prezzo REALE di vendita al dettaglio in Italia (enoteca/online italiano,\n' +
-  '   bottiglia 75cl). USA questi riferimenti precisi di mercato italiano 2025-2026:\n' +
+  'STEP 2 - Solo se is_bottle=true: segui la catena decisionale champagne dal system prompt per determinare is_champagne.\n\n' +
+  'STEP 3 - IN OGNI CASO, sia che sia Champagne sia che sia qualsiasi altro vino o bevanda alcolica, usa tutta la tua conoscenza enciclopedica per un analisi COMPLETA e approfondita — stesso identico livello di dettaglio indipendentemente dal tipo di bottiglia, MAI un analisi ridotta o superficiale solo perché non è Champagne:\n' +
+  '1. "cuvee": nome COMPLETO dell etichetta/vino SENZA produttore e SENZA annata. Per Champagne includi le denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs).\n' +
+  '2. maturazione_mesi: per Champagne usa P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72, Krug GC=72, NM standard=36. Per qualsiasi altro vino usa la tua conoscenza enologica specifica della denominazione/stile (es. Barolo tradizionale 24-36 mesi legno + affinamento bottiglia, Amarone della Valpolicella 24+ mesi, Brunello di Montalcino minimo 24 mesi + 4 in bottiglia, Bordeaux Grand Cru 18-24 mesi barrique, bianchi freschi 3-6 mesi acciaio).\n' +
+  '3. punteggio: intero 0-100 scala Parker/Wine Spectator/Vinous/RVF, da valorizzare SEMPRE con una valutazione professionale per qualsiasi vino, non solo Champagne (Champagne: P2=98, Dom Perignon=96, Cristal=95, Krug GC=95, NM Brut grande maison=87-89; altri grandi vini secondo qualità e reputazione reale, es. 88-97 per etichette importanti, 85-90 per vini quotidiani).\n' +
+  '4. Campi SOLO Champagne — pct_chardonnay, pct_pinot_noir, pct_meunier, dosage, dosaggio_gl, tipo (blanc de blancs/blanc de noirs/rose/assemblage), assemblaggio: valorizzali sempre se is_champagne=true. Se NON è Champagne lasciali tutti null (non si applicano) e descrivi invece vitigno/blend/percentuali in forma testuale dentro "provenienza_uve" (es. "Nebbiolo in purezza, Barolo DOCG, comune di La Morra" oppure "Cabernet Sauvignon 60%, Merlot 40%, margine sinistra della Gironda").\n' +
+  '5. Campi da valorizzare SEMPRE con la stessa profondità, Champagne o qualsiasi altro vino al mondo: provenienza_uve, vinificazione, malolattica, note_degustazione (200-300 caratteri, colore/aspetto, profumi, gusto), abbinamento (2-3 abbinamenti gastronomici italiani), finestra_da, finestra_a, produzione_bottiglie.\n' +
+  '6. assemblaggio (solo Champagne NV): indica le annate dei vins de base con % e i vins de reserve con %. Per millesimati o vini non Champagne lascia null.\n' +
+  '7. PREZZO (campo critico - sii preciso, SEMPRE valorizzato per qualsiasi vino): indica il prezzo REALE di vendita al dettaglio in Italia\n' +
+  '   (enoteca/online italiano, bottiglia 75cl), in euro, arrotondato a multipli di 5.\n' +
+  '   Per Champagne usa questi riferimenti precisi di mercato italiano 2025-2026:\n' +
   '   - NM entry (Moët Brut, Veuve Clicquot Yellow, Mumm Cordon Rouge): 38-50€\n' +
   '   - NM premium (Bollinger Special Cuvée, Pol Roger Brut, Taittinger Brut): 50-70€\n' +
   '   - Rosé NM grande maison: 55-80€\n' +
@@ -209,37 +211,41 @@ const USER_PROMPT =
   '   - Prestige NM (Dom Pérignon, Cristal, Belle Epoque, Comtes de Champagne): 150-250€\n' +
   '   - Prestige ultra (Krug GC, Dom Pérignon P2, Cristal Rosé): 200-400€\n' +
   '   - Icone (Salon, Krug Clos du Mesnil, Dom Pérignon P3): 400-900€\n' +
-  '   NON usare prezzi francesi o UK. Arrotonda a multipli di 5€.\n\n' +
+  '   Per qualsiasi altro vino usa la tua reale conoscenza di mercato enologico per produttore/denominazione (indicativamente:\n' +
+  '   vini quotidiani/IGT 8-20€, DOC regionali 15-35€, Barolo/Barbaresco base 35-60€, cru importanti 70-150€,\n' +
+  '   Super Tuscan/Bordeaux classificati 40-150€, grandi Borgogna/Bordeaux Grand Cru 100-500€+) — adatta sempre\n' +
+  '   al produttore e all etichetta reali se riconoscibili, non usare mai un valore fisso.\n' +
+  '   NON usare prezzi francesi o UK per lo Champagne.\n\n' +
   'Rispondi SOLO con JSON valido, zero testo extra:\n' +
   '{\n' +
   '  "is_bottle": true se bottiglia/contenitore bevanda, false se altro,\n' +
   '  "is_champagne": boolean (segui catena decisionale obbligatoria),\n' +
   '  "confidence": 0-100,\n' +
   '  "maison": "nome produttore o null",\n' +
-  '  "cuvee": "nome COMPLETO con denominazioni speciali SENZA maison e SENZA annata, o null",\n' +
-  '  "annata": "anno stringa es 2018, o null se sans annee",\n' +
+  '  "cuvee": "nome COMPLETO dell etichetta SENZA produttore e SENZA annata (per Champagne includi denominazioni speciali), o null",\n' +
+  '  "annata": "anno stringa es 2018, o null se sans annee/non-vintage",\n' +
   '  "is_sa": true se sans annee/non-vintage, false se ha annata,\n' +
-  '  "dosage": "Brut Nature" o "Extra Brut" o "Brut" o "Extra Sec" o "Sec" o "Demi-Sec" o "Doux" o null,\n' +
-  '  "tipo": "blanc de blancs" o "blanc de noirs" o "rose" o "assemblage" o null,\n' +
-  '  "prestige": true se cuvee prestige/tete de cuvee,\n' +
-  '  "punteggio": intero 0-100 scala Parker/RVF o null,\n' +
-  '  "note_degustazione": "200-300 caratteri italiano: colore perlage profumi gusto, o null",\n' +
-  '  "abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola, o null",\n' +
+  '  "dosage": "Brut Nature" o "Extra Brut" o "Brut" o "Extra Sec" o "Sec" o "Demi-Sec" o "Doux" o null — SOLO Champagne, null se non è Champagne,\n' +
+  '  "tipo": "blanc de blancs" o "blanc de noirs" o "rose" o "assemblage" o null — SOLO Champagne, null se non è Champagne,\n' +
+  '  "prestige": true se cuvee/etichetta di prestigio (top di gamma del produttore), false altrimenti,\n' +
+  '  "punteggio": intero 0-100 scala Parker/Wine Spectator/Vinous/RVF, SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino,\n' +
+  '  "note_degustazione": "200-300 caratteri italiano: colore/aspetto, profumi, gusto — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino",\n' +
+  '  "abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino",\n' +
   '  "finestra_da": anno intero inizio finestra ottimale o null,\n' +
   '  "finestra_a": anno intero fine finestra o null,\n' +
-  '  "pct_chardonnay": integer 0-100 o null,\n' +
-  '  "pct_pinot_noir": integer 0-100 o null,\n' +
-  '  "pct_meunier": integer 0-100 o null,\n' +
-  '  "assemblaggio": array di oggetti per NV: [{"anno":2021,"perc":65},{"tipo":"riserva","perc":35}] oppure con label [{"tipo":"riserva","label":"reserve perpetuelle","perc":30}], null per millesimati,\n' +
-  '  "provenienza_uve": "zona/village o null",\n' +
-  '  "vinificazione": "breve descrizione o null",\n' +
+  '  "pct_chardonnay": integer 0-100 o null — SOLO Champagne, null se non è Champagne,\n' +
+  '  "pct_pinot_noir": integer 0-100 o null — SOLO Champagne, null se non è Champagne,\n' +
+  '  "pct_meunier": integer 0-100 o null — SOLO Champagne, null se non è Champagne,\n' +
+  '  "assemblaggio": array di oggetti per Champagne NV: [{"anno":2021,"perc":65},{"tipo":"riserva","perc":35}] oppure con label [{"tipo":"riserva","label":"reserve perpetuelle","perc":30}], null per millesimati o vini non Champagne,\n' +
+  '  "provenienza_uve": "zona/village/denominazione — per vini non Champagne includi anche vitigno/blend in forma testuale (es. \'Nebbiolo in purezza, Barolo DOCG, La Morra\'), o null",\n' +
+  '  "vinificazione": "breve descrizione tecnica — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino",\n' +
   '  "malolattica": "completa" o "parziale" o "assente" o null,\n' +
-  '  "dosaggio_gl": numero decimale grammi/litro tipici per questa cuvee (es. Brut Nature=0, Extra Brut=4, Brut=9, Sec=25) o null,\n' +
-  '  "maturazione_mesi": integer o null,\n' +
+  '  "dosaggio_gl": numero decimale grammi/litro tipici per questa cuvee (es. Brut Nature=0, Extra Brut=4, Brut=9, Sec=25) o null — SOLO Champagne, null se non è Champagne,\n' +
+  '  "maturazione_mesi": integer — SEMPRE valorizzato per qualsiasi vino secondo lo stile/denominazione reale, o null solo se non è vino,\n' +
   '  "produzione_bottiglie": integer o null,\n' +
-  '  "prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, arrotondato a 5, o null,\n' +
-  '  "prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, arrotondato a 5, o null,\n' +
-  '  "not_champagne_type": "tipo bevanda/prodotto se NOT champagne, o null"\n' +
+  '  "prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, arrotondato a 5 — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino,\n' +
+  '  "prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, arrotondato a 5 — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino,\n' +
+  '  "not_champagne_type": "denominazione/tipologia del vino/bevanda se NOT champagne (es. \'Barolo DOCG\', \'Franciacorta DOCG\', \'vino rosso fermo\'), o null se è Champagne"\n' +
   '}'
 
 serve(async (req) => {

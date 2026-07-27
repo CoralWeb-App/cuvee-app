@@ -4350,11 +4350,7 @@ function _renderScanResult(result, photoDataUrl) {
     return;
   }
 
-  if (!result.is_champagne) {
-    container.innerHTML = _buildNonChampagneHTML(result, photoDataUrl);
-    return;
-  }
-
+  const isChampagne = result.is_champagne !== false;
   const b      = result.matched_bottle || {};
   const maison = result.maison || b.maison?.nome || '—';
   const cuvee  = result.cuvee  || b.nome         || '—';
@@ -4387,9 +4383,11 @@ function _renderScanResult(result, photoDataUrl) {
   const fascia         = result.fascia_prezzo    ?? b.fascia_prezzo   ?? null;
   const assemblaggio   = result.assemblaggio     ?? b.assemblaggio    ?? null;
 
-  const badge = result.is_in_catalog
-    ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
-    : '<span class="scan-badge scan-badge-ai"><i class="ti ti-sparkles" style="font-size:11px;"></i>Rilevato da scansione</span>';
+  const badge = !isChampagne
+    ? '<span class="scan-badge scan-badge-warning"><i class="ti ti-alert-triangle" style="font-size:11px;"></i>Non è Champagne AOC</span>'
+    : result.is_in_catalog
+      ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
+      : '<span class="scan-badge scan-badge-ai"><i class="ti ti-sparkles" style="font-size:11px;"></i>Rilevato da scansione</span>';
 
   let pills = '';
   if (annata) pills += '<span class="scan-pill scan-pill-gold">' + annata + '</span>';
@@ -4483,8 +4481,12 @@ function _renderScanResult(result, photoDataUrl) {
       + '</div>'
       + '<div style="flex:1;min-width:0;">'
         + badge
-        + '<div style="font-family:var(--sans);font-size:10px;color:var(--ink-4);letter-spacing:1.4px;text-transform:uppercase;margin:7px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + maison + '</div>'
-        + '<div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">' + cuveeTitle + '</div>'
+        + (maison !== '—' ? '<div style="font-family:var(--sans);font-size:10px;color:var(--ink-4);letter-spacing:1.4px;text-transform:uppercase;margin:7px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + maison + '</div>' : '')
+        + (isChampagne
+            ? '<div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">' + cuveeTitle + '</div>'
+            : '<div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:600;font-style:italic;line-height:1.2;margin:3px 0 4px;">Eh eh, t\'abbiamo beccato! 😄</div>'
+              + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.4;margin-bottom:8px;">' + [cuveeTitle !== '—' ? cuveeTitle : null, result.not_champagne_type].filter(Boolean).join(' — ') + '</div>'
+          )
         + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' + pills + '</div>'
         + priceHtml
         + scoreSmHtml
@@ -4610,101 +4612,6 @@ function _buildInvalidScanHTML(photoDataUrl) {
       + '<i class="ti ti-camera"></i> Riprova la scansione'
     + '</button>'
   + '</div><div style="height:30px;"></div>';
-}
-
-// HTML per bottiglia non Champagne
-function _buildNonChampagneHTML(result, photoDataUrl) {
-  const tipo        = result.not_champagne_type || 'Bevanda non identificata';
-  const maison      = result.maison || '';
-  const noteDeg     = result.note_degustazione || '';
-  const abbinamento = result.abbinamento || '';
-  const pctChardonnay = result.pct_chardonnay ?? null;
-  const pctPinotNoir  = result.pct_pinot_noir  ?? null;
-  const pctMeunier    = result.pct_meunier     ?? null;
-  const dosage        = result.dosage || null;
-  const provenienzaUve  = result.provenienza_uve  || null;
-  const vinificazione   = result.vinificazione    || null;
-  const malolattica     = result.malolattica       || null;
-  const maturazioneMesi = result.maturazione_mesi  ?? null;
-  const prodBottiglie   = result.produzione_bottiglie ?? null;
-
-  const photoHtml = photoDataUrl
-    ? '<div style="width:110px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="openLightbox([\'' + photoDataUrl + '\'],0)">'
-        + '<img src="' + photoDataUrl + '" style="width:100%;height:100%;object-fit:cover;">'
-      + '</div>'
-    : '<div style="width:110px;flex-shrink:0;border-radius:12px;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;">'
-        + '<i class="ti ti-bottle" style="font-size:32px;color:rgba(200,160,58,.3);"></i>'
-      + '</div>';
-
-  // ── Scheda tecnica ──
-  const uvaggi = [
-    pctChardonnay ? pctChardonnay + '% Chardonnay' : null,
-    pctPinotNoir  ? pctPinotNoir  + '% Pinot Noir'  : null,
-    pctMeunier    ? pctMeunier    + '% Meunier'      : null,
-  ].filter(Boolean).join(' · ');
-
-  const schedaRows = [
-    { l:'Produttore',              v: maison || null },
-    { l:'Uvaggi',                  v: uvaggi || null },
-    { l:'Dosaggio',                v: dosage },
-    { l:'Provenienza uve',         v: provenienzaUve },
-    { l:'Vinificazione',           v: vinificazione },
-    { l:'Malolattica',             v: malolattica },
-    { l:'Maturazione sui lieviti', v: maturazioneMesi ? maturazioneMesi + ' mesi' : null },
-    { l:'Produzione',              v: prodBottiglie ? prodBottiglie.toLocaleString('it') + ' bott.' : null },
-  ].filter(r => r.v);
-
-  const schedaHtml = schedaRows.length
-    ? '<div class="form-section" style="margin:14px 14px 0;">'
-        + '<div class="form-section-title"><i class="ti ti-list-details"></i> Scheda tecnica</div>'
-        + '<div style="margin-top:8px;">'
-        + schedaRows.map(r =>
-            '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span>'
-            + '<span class="detail-row-value">' + r.v + '</span></div>'
-          ).join('')
-        + '</div></div>'
-    : '';
-
-  return '<div style="padding:16px 14px 0;">'
-    // ── Blocco 1: foto + header compatto ──
-    + '<div style="display:flex;gap:14px;align-items:flex-start;">'
-      + photoHtml
-      + '<div style="flex:1;min-width:0;">'
-        + '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(180,60,40,.10);border:0.5px solid rgba(180,60,40,.3);border-radius:20px;padding:3px 9px;margin-bottom:8px;">'
-          + '<span style="font-family:var(--sans);font-size:11px;font-weight:500;color:#8b2a1a;letter-spacing:.3px;">Non è Champagne AOC</span>'
-        + '</div>'
-        + '<div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:600;font-style:italic;line-height:1.2;margin-bottom:6px;">Eh eh, t\'abbiamo beccato! 😄</div>'
-        + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.5;">' + tipo + '</div>'
-      + '</div>'
-    + '</div>'
-    // ── Blocco 2: card "L'hai assaggiata?" identica a champagne ──
-    + '<div style="margin:16px 14px 4px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px 20px;text-align:center;">'
-      + '<div style="font-family:var(--serif);font-size:20px;color:var(--ink-2);font-style:italic;font-weight:600;margin-bottom:14px;">L\'hai assaggiata?</div>'
-      + '<button onclick="addToCarnetFromScan(_scanResult)" style="position:relative;width:100%;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:13px 20px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;">'
-        + '<span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>'
-        + '<i class="ti ti-notebook" style="font-size:17px;"></i> Aggiungi al Carnet'
-      + '</button>'
-    + '</div>'
-    // ── Blocco 3: dettagli scansione ──
-    + (noteDeg || abbinamento || schedaRows.length
-      ? '<div style="margin:18px 14px 0;padding-bottom:4px;border-top:1px solid var(--border);padding-top:16px;">'
-          + '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px;">Cosa abbiamo trovato</div>'
-        + '</div>'
-      : '')
-    + (noteDeg
-      ? '<div class="form-section" style="margin:0 14px;">'
-          + '<div class="form-section-title"><i class="ti ti-notes"></i> Note di degustazione</div>'
-          + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:8px;">' + noteDeg + '</div>'
-        + '</div>'
-      : '')
-    + (abbinamento
-      ? '<div class="form-section" style="margin:14px 14px 0;">'
-          + '<div class="form-section-title"><i class="ti ti-chef-hat"></i> Abbinamento</div>'
-          + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:8px;">' + abbinamento + '</div>'
-        + '</div>'
-      : '')
-    + schedaHtml
-    + '<div style="height:30px;"></div>';
 }
 
 // Apre la scheda completa della bottiglia trovata in DB durante una scansione
