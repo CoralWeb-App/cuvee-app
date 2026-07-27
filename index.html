@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=69"/>
+<link rel="stylesheet" href="css/style.css?v=70"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -2326,11 +2326,21 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- ═══ SCAN NOT-CHAMPAGNE MODAL (popup prima del risultato) ═══ -->
+<div id="scan-not-champagne-modal">
+  <div class="scan-limit-inner">
+    <div class="scan-limit-emoji">😄</div>
+    <div class="scan-limit-title">Eh eh, t'abbiamo beccato!</div>
+    <div class="scan-limit-desc">Questo non è Champagne AOC, ma <strong id="scan-not-champagne-type">un altro vino</strong>. Nessun problema: ecco comunque l'analisi completa.</div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closeNotChampagneModal()">Guarda il risultato</button>
+  </div>
+</div>
+
 <!-- Hidden inputs for scan & photo -->
 <input type="file" id="scan-input" accept="image/*" capture="environment" style="display:none;" onchange="handleScanFile(this)"/>
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=117"></script>
+<script src="js/app.js?v=118"></script>
 </body>
 </html>
