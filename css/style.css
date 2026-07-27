@@ -921,7 +921,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .scan-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px;margin-bottom:8px;letter-spacing:.3px;}
 .scan-badge-catalog{background:rgba(40,160,70,.10);border:0.5px solid rgba(40,160,70,.3);color:#1a7a3a;}
 .scan-badge-ai{background:rgba(184,146,42,.12);border:0.5px solid rgba(184,146,42,.35);color:#7a5a0a;}
-.scan-badge-warning{background:rgba(180,60,40,.10);border:0.5px solid rgba(180,60,40,.3);color:#8b2a1a;}
 
 /* Scan result — "L'hai assaggiata?" card */
 .scan-assaggiata-card{display:flex;align-items:flex-start;gap:13px;margin:16px 14px 10px;background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:16px 14px;}
@@ -957,6 +956,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #scan-limit-modal.on{display:flex;}
 #scan-remaining-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
 #scan-remaining-modal.on{display:flex;}
+#scan-not-champagne-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+#scan-not-champagne-modal.on{display:flex;}
 .scan-limit-inner{width:100%;max-width:480px;background:var(--ivory);border-radius:24px 24px 0 0;padding:28px 22px 30px;display:flex;flex-direction:column;gap:0;}
 .scan-limit-emoji{font-size:44px;text-align:center;margin-bottom:10px;}
 .scan-limit-title{font-family:var(--serif);font-size:22px;font-weight:500;color:var(--ink);text-align:center;margin-bottom:8px;}

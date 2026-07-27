@@ -4383,11 +4383,9 @@ function _renderScanResult(result, photoDataUrl) {
   const fascia         = result.fascia_prezzo    ?? b.fascia_prezzo   ?? null;
   const assemblaggio   = result.assemblaggio     ?? b.assemblaggio    ?? null;
 
-  const badge = !isChampagne
-    ? '<span class="scan-badge scan-badge-warning"><i class="ti ti-alert-triangle" style="font-size:11px;"></i>Non è Champagne AOC</span>'
-    : result.is_in_catalog
-      ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
-      : '<span class="scan-badge scan-badge-ai"><i class="ti ti-sparkles" style="font-size:11px;"></i>Rilevato da scansione</span>';
+  const badge = result.is_in_catalog
+    ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
+    : '<span class="scan-badge scan-badge-ai"><i class="ti ti-sparkles" style="font-size:11px;"></i>Rilevato da scansione</span>';
 
   let pills = '';
   if (annata) pills += '<span class="scan-pill scan-pill-gold">' + annata + '</span>';
@@ -4481,12 +4479,8 @@ function _renderScanResult(result, photoDataUrl) {
       + '</div>'
       + '<div style="flex:1;min-width:0;">'
         + badge
-        + (maison !== '—' ? '<div style="font-family:var(--sans);font-size:10px;color:var(--ink-4);letter-spacing:1.4px;text-transform:uppercase;margin:7px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + maison + '</div>' : '')
-        + (isChampagne
-            ? '<div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">' + cuveeTitle + '</div>'
-            : '<div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:600;font-style:italic;line-height:1.2;margin:3px 0 4px;">Eh eh, t\'abbiamo beccato! 😄</div>'
-              + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.4;margin-bottom:8px;">' + [cuveeTitle !== '—' ? cuveeTitle : null, result.not_champagne_type].filter(Boolean).join(' — ') + '</div>'
-          )
+        + '<div style="font-family:var(--sans);font-size:10px;color:var(--ink-4);letter-spacing:1.4px;text-transform:uppercase;margin:7px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + maison + '</div>'
+        + '<div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;line-height:1.2;margin-bottom:8px;">' + cuveeTitle + '</div>'
         + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' + pills + '</div>'
         + priceHtml
         + scoreSmHtml
@@ -4578,6 +4572,22 @@ function _renderScanResult(result, photoDataUrl) {
           + '</div>';
       })()
     + '<div style="height:30px;"></div>';
+
+  if (!isChampagne) _showNotChampagneModal(result.not_champagne_type);
+}
+
+// Popup "ti abbiamo beccato" — mostrato sopra il risultato scansione quando
+// la bottiglia non è Champagne, prima di rivelare l'analisi (identica a quella Champagne).
+function _showNotChampagneModal(notChampagneType) {
+  const modal = document.getElementById('scan-not-champagne-modal');
+  if (!modal) return;
+  const typeEl = document.getElementById('scan-not-champagne-type');
+  if (typeEl) typeEl.textContent = notChampagneType || 'un altro vino';
+  modal.classList.add('on');
+}
+function closeNotChampagneModal() {
+  const modal = document.getElementById('scan-not-champagne-modal');
+  if (modal) modal.classList.remove('on');
 }
 
 // HTML per scan non valido (non è una bottiglia)
