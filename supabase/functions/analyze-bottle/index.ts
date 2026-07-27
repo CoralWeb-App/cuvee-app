@@ -193,7 +193,9 @@ const USER_PROMPT =
   'Analizza questa immagine con la massima precisione.\n\n' +
   'STEP 1 - PRIMA DI TUTTO: l immagine mostra una bottiglia o contenitore di bevanda?\n' +
   'Se NO (persona, cibo, oggetto, parte del corpo, ecc.) -> rispondi solo: {"is_bottle":false,"is_champagne":false,"confidence":0}\n\n' +
-  'STEP 2 - Solo se is_bottle=true: segui la catena decisionale champagne dal system prompt per determinare is_champagne.\n\n' +
+  'STEP 2 - Solo se is_bottle=true: segui la catena decisionale champagne dal system prompt per determinare is_champagne. ' +
+  'Determina anche is_wine: true se è vino (fermo o spumante, Champagne o qualsiasi altra denominazione/paese: Barolo, Bordeaux, Prosecco, Franciacorta, Cava, Cremant, Sekt, rosati, vini dolci, ecc — is_champagne=true implica sempre is_wine=true). ' +
+  'is_wine deve essere false per qualsiasi bevanda che NON sia vino: birra, superalcolici/liquori, acqua, bibite, succhi, ecc.\n\n' +
   'STEP 3 - IN OGNI CASO, sia che sia Champagne sia che sia qualsiasi altro vino o bevanda alcolica, usa tutta la tua conoscenza enciclopedica per un analisi COMPLETA e approfondita — stesso identico livello di dettaglio indipendentemente dal tipo di bottiglia, MAI un analisi ridotta o superficiale solo perché non è Champagne:\n' +
   '1. "cuvee": nome COMPLETO dell etichetta/vino SENZA produttore e SENZA annata. Per Champagne includi le denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs).\n' +
   '2. maturazione_mesi: per Champagne usa P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72, Krug GC=72, NM standard=36. Per qualsiasi altro vino usa la tua conoscenza enologica specifica della denominazione/stile (es. Barolo tradizionale 24-36 mesi legno + affinamento bottiglia, Amarone della Valpolicella 24+ mesi, Brunello di Montalcino minimo 24 mesi + 4 in bottiglia, Bordeaux Grand Cru 18-24 mesi barrique, bianchi freschi 3-6 mesi acciaio).\n' +
@@ -220,6 +222,7 @@ const USER_PROMPT =
   '{\n' +
   '  "is_bottle": true se bottiglia/contenitore bevanda, false se altro,\n' +
   '  "is_champagne": boolean (segui catena decisionale obbligatoria),\n' +
+  '  "is_wine": true se è vino (Champagne o qualsiasi altro vino fermo/spumante), false se è birra/superalcolico/acqua/bibita/altro non-vino, null se is_bottle=false,\n' +
   '  "confidence": 0-100,\n' +
   '  "maison": "nome produttore o null",\n' +
   '  "cuvee": "nome COMPLETO dell etichetta SENZA produttore e SENZA annata (per Champagne includi denominazioni speciali), o null",\n' +
@@ -439,6 +442,7 @@ serve(async (req) => {
         scan_id:            scan?.id,
         is_bottle:          true,
         is_champagne:       true,
+        is_wine:            true,
         confidence:         quick.confidence ?? 90,
         not_champagne_type: null,
         maison:             mb.maison?.nome ?? quick.maison ?? null,
@@ -866,6 +870,7 @@ serve(async (req) => {
       scan_id:            scan?.id,
       is_bottle:          ai.is_bottle ?? true,
       is_champagne:       ai.is_champagne,
+      is_wine:            (ai.is_wine as boolean | null) ?? (ai.is_champagne ? true : null),
       confidence:         ai.confidence,
       not_champagne_type: ai.not_champagne_type,
       maison:             ai.maison,

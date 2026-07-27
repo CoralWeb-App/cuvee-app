@@ -4277,8 +4277,9 @@ async function _processScan(file, mode) {
     if (result._debug) console.warn('scan _debug:', result._debug);
     _showScanLoading(false);
 
-    // Salva nello storico (solo scansioni champagne valide)
-    if (currentUser && result.is_champagne !== false && result.is_bottle !== false) {
+    // Salva nello storico qualsiasi scansione di vino valida (Champagne o altro).
+    // Bottiglie non-vino (birra, superalcolici, ecc.) e non-bottiglie restano escluse.
+    if (currentUser && result.is_bottle !== false && result.is_wine !== false) {
       saveScanToHistory(result, dataUrl).catch(() => {});
     }
 
