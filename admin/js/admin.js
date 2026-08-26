@@ -21,6 +21,8 @@ let maisonTipoFilter   = ''
 let maisonStatusFilter = ''
 let maisonSort         = 'nome'
 let maisonLetterFilter = ''
+let glossarioSearch       = ''
+let glossarioLetterFilter = ''
 let searchTimer        = null
 
 const PER_PAGE = 15
@@ -177,7 +179,7 @@ function showView(id) {
   const nav = document.querySelector('[data-view="' + id + '"]')
   if (nav) nav.classList.add('active')
   const titles = { dashboard:'Dashboard', approvazioni:'Coda Approvazioni',
-    bottiglie:'Catalogo Champagne', maison:'Gestione Maison',
+    bottiglie:'Catalogo Champagne', maison:'Gestione Maison', glossario:'Gestione Glossario',
     utenti:'Utenti', abbonamenti:'Abbonamenti Premium', stats:'Statistiche' }
   const el = document.getElementById('adm-header-view')
   if (el) el.textContent = titles[id] || id
@@ -186,6 +188,7 @@ function showView(id) {
   if (id === 'approvazioni') loadApprovazioni()
   if (id === 'bottiglie')    { bottigliaPage = 1; renderBottiglie() }
   if (id === 'maison')       { maisonSearch = ''; maisonTipoFilter = ''; maisonStatusFilter = ''; maisonSort = 'nome'; maisonLetterFilter = ''; loadMaison() }
+  if (id === 'glossario')    { glossarioSearch = ''; glossarioLetterFilter = ''; loadGlossarioAdmin() }
   if (id === 'utenti')       { utentiPage = 1; utentiFilter = 'all'; utentiSearch = ''; renderUtenti() }
   if (id === 'abbonamenti')  loadAbbonamenti()
   if (id === 'stats')        loadStats()
@@ -1810,6 +1813,202 @@ async function deleteMaison(id, nome) {
     if (error) throw error
     showToast('Maison eliminata')
     loadMaison()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+// ══════════════════════════════════════════════════════
+// GLOSSARIO
+// ══════════════════════════════════════════════════════
+async function loadGlossarioAdmin() {
+  const tbody = document.getElementById('glossario-tbody')
+  if (!tbody) return
+  tbody.innerHTML = loadingRow(5)
+  try {
+    const { data: all, error } = await supa
+      .from('glossario')
+      .select('*')
+      .order('lettera')
+      .order('termine')
+    if (error) throw error
+
+    let data = all || []
+    if (glossarioSearch) {
+      data = data.filter(g => matchesAllTerms(glossarioSearch, g.termine, g.definizione, g.categoria))
+    }
+    if (glossarioLetterFilter) {
+      data = data.filter(g => norm(g.termine ?? '').startsWith(glossarioLetterFilter))
+    }
+
+    const isFiltered = !!(glossarioSearch || glossarioLetterFilter)
+    const sub = document.getElementById('glossario-subtitle')
+    if (sub) sub.textContent = (isFiltered ? `${data.length} / ${(all || []).length}` : (all || []).length) + ' termini nel glossario'
+
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div style="padding:32px;text-align:center;color:var(--text-3)">Nessun termine trovato</div></td></tr>`
+      return
+    }
+
+    const livelloClass = { base: 'inactive', avanzato: 'active', premium: 'premium' }
+
+    tbody.innerHTML = data.map(g => `
+      <tr class="adm-table-row" style="cursor:pointer" onclick="editGlossario('${g.id}')">
+        <td>
+          <div class="adm-bottle-name">${esc(g.termine ?? '')}</div>
+          <div class="adm-bottle-sub" style="max-width:440px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.definizione ?? '')}</div>
+        </td>
+        <td>${g.categoria ? `<span class="adm-maison-tag">${esc(g.categoria)}</span>` : '-'}</td>
+        <td>${g.livello ? `<span class="adm-badge ${livelloClass[g.livello] ?? ''}">${esc(g.livello).toUpperCase()}</span>` : '-'}</td>
+        <td>
+          <span class="adm-badge ${g.is_published !== false ? 'active' : 'offline'} adm-status-badge"
+                onclick="event.stopPropagation();toggleGlossarioStatus('${g.id}',${g.is_published !== false})">
+            ${g.is_published !== false ? 'ONLINE' : 'OFFLINE'}
+          </span>
+        </td>
+        <td>
+          <div class="adm-row-actions">
+            <button class="adm-btn adm-btn-edit" onclick="event.stopPropagation();editGlossario('${g.id}')">
+              <i class="ti ti-pencil"></i>
+            </button>
+            <button class="adm-btn adm-btn-reject" onclick="event.stopPropagation();deleteGlossario('${g.id}','${esc(g.termine ?? '')}')">
+              <i class="ti ti-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`).join('')
+  } catch(e) { tbody.innerHTML = errorRow(5, e.message) }
+}
+
+function filterGlossarioLetter(letter, btn) {
+  glossarioLetterFilter = (letter !== '' && letter === glossarioLetterFilter) ? '' : letter
+  document.querySelectorAll('#view-glossario .adm-filter-letter').forEach(b => b.classList.remove('active'))
+  if (!glossarioLetterFilter) {
+    document.querySelector('#view-glossario .adm-filter-letter.all-btn')?.classList.add('active')
+  } else {
+    btn.classList.add('active')
+  }
+  loadGlossarioAdmin()
+}
+
+function searchGlossario(val) {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => { glossarioSearch = val.trim(); loadGlossarioAdmin() }, 400)
+}
+
+async function toggleGlossarioStatus(id, currentlyOnline) {
+  const newStatus = !currentlyOnline
+  try {
+    const { data: upd, error } = await supa.from('glossario')
+      .update({ is_published: newStatus }).eq('id', id).select('id')
+    if (error) throw error
+    if (!upd?.length) throw new Error('Aggiornamento bloccato da RLS')
+    showToast(newStatus ? 'Termine online ✓' : 'Termine portato offline')
+    loadGlossarioAdmin()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+async function deleteGlossario(id, termine) {
+  if (!confirm(`Eliminare "${termine || 'questo termine'}"?`)) return
+  try {
+    const { error } = await supa.from('glossario').delete().eq('id', id)
+    if (error) throw error
+    showToast('Termine eliminato')
+    loadGlossarioAdmin()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+async function editGlossario(id) {
+  openModal('Modifica Termine', loadingHTML(), true)
+  try {
+    const { data: g, error } = await supa.from('glossario').select('*').eq('id', id).single()
+    if (error) throw error
+
+    const SKIP = ['id', 'created_at']
+    const FULL = ['termine', 'definizione']
+    const TA   = ['definizione']
+
+    const fieldsHTML = buildAllColsForm(g, { skip: SKIP, fullRow: FULL, textareaCols: TA })
+
+    const html = `
+      <div class="adm-edit-form">
+        <div class="adm-edit-grid">${fieldsHTML}</div>
+        <div class="adm-edit-meta">
+          <code class="adm-code" style="font-size:10px">${g.id}</code>
+          <span style="color:var(--text-3);font-size:11px">Tutte le colonne della tabella glossario</span>
+        </div>
+        <div class="adm-modal-actions">
+          <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+          <button class="adm-btn adm-btn-primary" onclick="saveGlossario('${id}')">
+            <i class="ti ti-device-floppy"></i> Salva
+          </button>
+        </div>
+      </div>`
+    document.getElementById('modal-body').innerHTML = html
+  } catch(e) { document.getElementById('modal-body').innerHTML = errorHTML(e.message) }
+}
+
+async function saveGlossario(id) {
+  const updates = collectDataCols()
+  try {
+    const { error } = await supa.from('glossario').update(updates).eq('id', id)
+    if (error) throw error
+    closeModal()
+    showToast('Termine aggiornato ✓')
+    loadGlossarioAdmin()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+function openNewGlossarioModal() {
+  const html = `
+    <div class="adm-edit-form">
+      <div class="adm-edit-grid">
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label class="adm-form-label">Termine</label>
+          <input class="adm-form-input" type="text" id="ng-termine" placeholder="es. Dégorgement">
+        </div>
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label class="adm-form-label">Definizione</label>
+          <textarea class="adm-form-input" rows="4" id="ng-definizione" placeholder="Spiegazione del termine..."></textarea>
+        </div>
+        <div class="adm-form-field">
+          <label class="adm-form-label">Categoria</label>
+          <input class="adm-form-input" type="text" id="ng-categoria" placeholder="es. Metodo, Vinificazione, Terroir...">
+        </div>
+        <div class="adm-form-field">
+          <label class="adm-form-label">Livello</label>
+          <select class="adm-form-input" id="ng-livello">
+            <option value="base">Base</option>
+            <option value="avanzato">Avanzato</option>
+            <option value="premium">Premium</option>
+          </select>
+        </div>
+      </div>
+      <div class="adm-modal-actions">
+        <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+        <button class="adm-btn adm-btn-primary" onclick="createGlossario()">
+          <i class="ti ti-plus"></i> Aggiungi
+        </button>
+      </div>
+    </div>`
+  openModal('Nuovo Termine', html)
+}
+
+async function createGlossario() {
+  const termine     = document.getElementById('ng-termine')?.value.trim()
+  const definizione = document.getElementById('ng-definizione')?.value.trim()
+  const categoria   = document.getElementById('ng-categoria')?.value.trim() || null
+  const livello     = document.getElementById('ng-livello')?.value || 'base'
+  if (!termine)     { showToast('Il termine è obbligatorio', 'error'); return }
+  if (!definizione) { showToast('La definizione è obbligatoria', 'error'); return }
+
+  const lettera = norm(termine).charAt(0).toUpperCase() || termine.trim().charAt(0).toUpperCase()
+  try {
+    const { error } = await supa.from('glossario').insert({
+      termine, definizione, categoria, livello, lettera, ordine: 0, is_published: true
+    })
+    if (error) throw error
+    closeModal()
+    showToast('Termine aggiunto ✓')
+    loadGlossarioAdmin()
   } catch(e) { showToast(e.message, 'error') }
 }
 

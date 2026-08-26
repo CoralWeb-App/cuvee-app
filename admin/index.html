@@ -132,6 +132,11 @@
         <span>Maison</span>
       </div>
 
+      <div class="adm-nav-item" data-view="glossario" onclick="showView('glossario')">
+        <i class="ti ti-book-2 adm-nav-icon"></i>
+        <span>Glossario</span>
+      </div>
+
       <div class="adm-nav-section-label">UTENTI</div>
 
       <div class="adm-nav-item" data-view="utenti" onclick="showView('utenti')">
@@ -508,6 +513,76 @@
 
         <div class="adm-maison-grid" id="maison-grid">
           <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento maison...</div>
+        </div>
+      </div>
+
+
+      <!-- ─── VIEW: GLOSSARIO ────────────────────────── -->
+      <div id="view-glossario" class="adm-view">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Gestione Glossario</h1>
+            <p class="adm-view-sub" id="glossario-subtitle">Caricamento...</p>
+          </div>
+          <div class="adm-view-actions">
+            <div class="adm-search-wrap">
+              <i class="ti ti-search adm-search-icon"></i>
+              <input class="adm-search" type="text" placeholder="Cerca termine, definizione…" oninput="searchGlossario(this.value)">
+            </div>
+            <button class="adm-btn adm-btn-primary" onclick="openNewGlossarioModal()">
+              <i class="ti ti-plus"></i> Nuovo termine
+            </button>
+          </div>
+        </div>
+
+        <!-- LETTER FILTER -->
+        <div class="adm-filters-letter" style="margin-top:8px;margin-bottom:14px;">
+          <span class="adm-filters-label" style="margin-right:4px;">A–Z</span>
+          <button class="adm-filter-letter all-btn active" onclick="filterGlossarioLetter('', this)">Tutti</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('a', this)">A</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('b', this)">B</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('c', this)">C</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('d', this)">D</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('e', this)">E</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('f', this)">F</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('g', this)">G</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('h', this)">H</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('i', this)">I</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('j', this)">J</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('k', this)">K</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('l', this)">L</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('m', this)">M</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('n', this)">N</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('o', this)">O</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('p', this)">P</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('q', this)">Q</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('r', this)">R</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('s', this)">S</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('t', this)">T</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('u', this)">U</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('v', this)">V</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('w', this)">W</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('x', this)">X</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('y', this)">Y</button>
+          <button class="adm-filter-letter" onclick="filterGlossarioLetter('z', this)">Z</button>
+        </div>
+
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>TERMINE</th>
+                <th>CATEGORIA</th>
+                <th>LIVELLO</th>
+                <th>STATO</th>
+                <th>AZIONI</th>
+              </tr>
+            </thead>
+            <tbody id="glossario-tbody">
+              <tr><td colspan="5" class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
