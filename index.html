@@ -2492,15 +2492,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="scan-load-sub">Il sommelier sta leggendo l'etichetta</div>
 </div>
 
-<!-- ═══ SCAN REMAINING MODAL (preventivo, prima di ogni scansione free) ═══ -->
+<!-- ═══ SCAN REMAINING MODAL (preventivo, prima della scansione: free ogni volta, premium sotto le 3 rimaste) ═══ -->
 <div id="scan-remaining-modal">
   <div class="scan-limit-inner">
-    <div class="scan-limit-emoji">📸</div>
-    <div class="scan-limit-title"><strong id="scan-remaining-count">3</strong> scansioni gratuite rimaste</div>
-    <div class="scan-limit-desc">Questo mese hai ancora <strong id="scan-remaining-count-2">3</strong> scansioni gratuite disponibili. Con <strong>Cuvée Premium</strong> hai 100 scansioni sommelier al mese.</div>
-    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-emoji" id="scan-remaining-emoji">📸</div>
+    <div class="scan-limit-title"><strong id="scan-remaining-count">3</strong><span id="scan-remaining-suffix"> scansioni gratuite rimaste</span></div>
+    <div class="scan-limit-desc">Questo mese hai ancora <strong id="scan-remaining-count-2">3</strong><span id="scan-remaining-desc-suffix"> scansioni gratuite disponibili. Con <strong>Cuvée Premium</strong> hai 100 scansioni sommelier al mese.</span></div>
+    <div class="scan-limit-sep" id="scan-remaining-sep"></div>
     <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="_confirmScanFromModal()">Scansiona ora</button>
-    <button class="scan-limit-skip" onclick="closeScanRemainingModal();go('v-paywall');">Scopri Premium →</button>
+    <button class="scan-limit-skip" id="scan-remaining-skip-btn" onclick="closeScanRemainingModal();go('v-paywall');">Scopri Premium →</button>
   </div>
 </div>
 
@@ -2540,6 +2540,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=123"></script>
+<script src="js/app.js?v=124"></script>
 </body>
 </html>
