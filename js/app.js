@@ -2771,6 +2771,12 @@ function copyToClipboard(text) {
 // ═══ TEST PREMIUM (rimuovere quando Stripe è attivo) ═══
 async function activateTestPremium() {
   if (!currentUser) { go('v-login'); return; }
+  // Attivazione gratuita riservata agli account admin: finché non è collegato un vero
+  // pagamento (Stripe), nessun utente reale deve poter sbloccare Premium da qui.
+  if (!isAdmin()) {
+    alert('L\'attivazione online non è ancora disponibile. Ci stiamo lavorando — torna presto!');
+    return;
+  }
 
   const btn = document.getElementById('subscribe-btn');
   if (btn) { btn.textContent = 'Attivazione in corso...'; btn.disabled = true; }
@@ -2871,6 +2877,12 @@ function isPremium() {
   return true;
 }
 
+// Controlli di sviluppo/debug (attivazione test premium, badge fonte scansione, ecc.)
+// visibili SOLO per account admin — verifica lato client, l'unica finora presente.
+function isAdmin() {
+  return currentUser?.profile?.is_admin === true;
+}
+
 // Aggiorna tutta l'UI in base allo stato premium
 function updatePremiumUI() {
   const premium = isPremium();
@@ -2929,6 +2941,10 @@ function updatePremiumUI() {
   if (freeBadge) {
     freeBadge.style.display = premium ? 'none' : 'inline-flex';
   }
+
+  // Pannello test attivazione Premium: visibile solo per account admin
+  const testPanel = document.getElementById('test-premium-panel');
+  if (testPanel) testPanel.style.display = isAdmin() ? 'block' : 'none';
 }
 
 
@@ -4560,8 +4576,9 @@ function _renderScanResult(result, photoDataUrl) {
       })()
     // ── Finestra ──
     + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
-    // ── Debug: sorgente risultato ──
+    // ── Debug: sorgente risultato (solo admin) ──
     + (function() {
+        if (!isAdmin()) return '';
         const fromCache = result.from_cache === true;
         const icon  = fromCache ? 'ti-database' : 'ti-sparkles';
         const color = fromCache ? '#22c55e' : '#C8A03A';

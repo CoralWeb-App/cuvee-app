@@ -2222,8 +2222,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     </div>
 
-    <!-- TEST SECTION (rimuovere in produzione) -->
-    <div style="margin:0 18px 16px;background:var(--ivory-3);border:1px dashed var(--border-2);border-radius:var(--radius-md);padding:14px 16px;">
+    <!-- TEST SECTION — solo account admin, nascosta di default finché il profilo non conferma is_admin -->
+    <div id="test-premium-panel" style="display:none;margin:0 18px 16px;background:var(--ivory-3);border:1px dashed var(--border-2);border-radius:var(--radius-md);padding:14px 16px;">
       <div style="font-family:var(--sans);font-size:15px;letter-spacing:1px;color:var(--ink-4);text-transform:uppercase;margin-bottom:10px;">🧪 Modalità test — rimuovere in produzione</div>
       <div style="display:flex;gap:9px;">
         <button onclick="activateTestPremium()" style="flex:1;background:var(--gold);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">Attiva Premium</button>
@@ -2344,6 +2344,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=119"></script>
+<script src="js/app.js?v=120"></script>
 </body>
 </html>
