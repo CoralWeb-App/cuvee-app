@@ -71,6 +71,12 @@ function norm(s) {
   return String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[^a-z0-9]/g, '')
 }
 
+// Genera uno slug URL-safe da un nome (es. "Grande Cuvée 171ème" → "grande-cuvee-171eme")
+function slugify(s) {
+  return String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+}
+
 // Ricerca multi-termine: spezza la query in parole e richiede che OGNI parola
 // compaia da qualche parte nell'insieme dei campi passati (in qualsiasi ordine,
 // anche a cavallo tra campi diversi — es. "krug 171" trova maison="Krug" +
@@ -1333,15 +1339,25 @@ async function toggleMaisonStatus(id, currentlyOnline) {
   } catch(e) { showToast(e.message, 'error') }
 }
 
-async function editBottiglia(id) {
-  openModal('Modifica Bottiglia', loadingHTML(), true)
-  try {
-    const [{ data: b, error }, { data: maisonList }] = await Promise.all([
-      supa.from('bottiglie').select('*').eq('id', id).single(),
-      supa.from('maison').select('id, nome').order('nome')
-    ])
-    if (error) throw error
+// Template per "Nuova bottiglia" — stesse chiavi di una riga reale, valori di
+// default sensati, così il form è identico (stessi campi) sia in modifica che
+// in creazione.
+const BOTTIGLIA_TEMPLATE = {
+  maison_id: null, nome: '', slug: '', tipo: null, is_millesimato: false,
+  dosaggio_gl: null, dosaggio_tipo: '', pct_pinot_noir: null, pct_chardonnay: null, pct_meunier: null,
+  provenienza_uve: '', vini_base: '', vinificazione: '', malolattica: '', maturazione_mesi: null,
+  produzione_bottiglie: null, note_vigneto: '', note_degustazione: '', abbinamento: '',
+  prezzo_min: null, prezzo_max: null, score_medio: null, score_note: '', finestra_da: null, finestra_a: null,
+  stile: '', fascia_prezzo: '', foto_url: null, is_featured: false, is_published: true,
+  assemblaggio: null, annata: null, source: 'manual', needs_review: false,
+  link_millesima: '', link_callmewine: '', link_tannico: '',
+  link_custom1_nome: '', link_custom1_url: '', link_custom2_nome: '', link_custom2_url: ''
+}
 
+// Costruisce le card di campi (Foto → Altre Informazioni) condivise tra
+// modifica e creazione — b è la riga reale in modifica, BOTTIGLIA_TEMPLATE
+// in creazione. Il footer/meta restano a carico del chiamante.
+function _bottigliaFieldsHTML(b, maisonList) {
     const maisonOptions = (maisonList || []).map(m =>
       `<option value="${m.id}" ${m.id === b.maison_id ? 'selected' : ''}>${esc(m.nome)}</option>`
     ).join('')
@@ -1365,15 +1381,13 @@ async function editBottiglia(id) {
     const fotoUrl  = b.foto_url ?? b.photo_url ?? null
     const extraFields = buildAllColsForm(b, { skip: CUSTOM })
 
-    const html = `
-      <div class="adm-edit-form">
-
+    return `
         <!-- ═══ FOTO ═══════════════════════════════════ -->
         <div class="adm-edit-card">
           <div class="adm-edit-card-title"><i class="ti ti-photo"></i> Foto</div>
           <div class="adm-edit-card-body">
             <div class="adm-edit-grid">
-              ${photoPreviewField(fotoUrl, fotoCol, b.id)}
+              ${photoPreviewField(fotoUrl, fotoCol, b.id ?? '')}
             </div>
           </div>
         </div>
@@ -1624,7 +1638,21 @@ async function editBottiglia(id) {
             <div class="adm-edit-grid">${extraFields}</div>
           </div>
         </div>` : ''}
+      `
+}
 
+async function editBottiglia(id) {
+  openModal('Modifica Bottiglia', loadingHTML(), true)
+  try {
+    const [{ data: b, error }, { data: maisonList }] = await Promise.all([
+      supa.from('bottiglie').select('*').eq('id', id).single(),
+      supa.from('maison').select('id, nome').order('nome')
+    ])
+    if (error) throw error
+
+    const html = `
+      <div class="adm-edit-form">
+        ${_bottigliaFieldsHTML(b, maisonList)}
         <div class="adm-edit-meta">
           <code class="adm-code" style="font-size:10px">${b.id}</code>
           <span style="color:var(--text-3);font-size:11px">Aggiunta: ${fmtDate(b.created_at)}</span>
@@ -1638,6 +1666,41 @@ async function editBottiglia(id) {
       </div>`
     document.getElementById('modal-body').innerHTML = html
   } catch(e) { document.getElementById('modal-body').innerHTML = errorHTML(e.message) }
+}
+
+async function openNewBottigliaModal() {
+  openModal('Nuova Bottiglia', loadingHTML(), true)
+  try {
+    const { data: maisonList, error } = await supa.from('maison').select('id, nome').order('nome')
+    if (error) throw error
+
+    const html = `
+      <div class="adm-edit-form">
+        ${_bottigliaFieldsHTML(BOTTIGLIA_TEMPLATE, maisonList)}
+        <div class="adm-modal-actions">
+          <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+          <button class="adm-btn adm-btn-primary" onclick="createBottiglia()">
+            <i class="ti ti-plus"></i> Crea bottiglia
+          </button>
+        </div>
+      </div>`
+    document.getElementById('modal-body').innerHTML = html
+  } catch(e) { document.getElementById('modal-body').innerHTML = errorHTML(e.message) }
+}
+
+async function createBottiglia() {
+  const updates = collectDataCols()
+  if (!updates.nome || !updates.nome.trim())       { showToast('Il nome della bottiglia è obbligatorio', 'error'); return }
+  if (!updates.maison_id)                          { showToast('Seleziona una maison', 'error'); return }
+  if (!updates.slug || !updates.slug.trim()) updates.slug = slugify(updates.nome)
+  try {
+    const { data, error } = await supa.from('bottiglie').insert(updates).select('id').single()
+    if (error) throw error
+    closeModal()
+    showToast('Bottiglia creata ✓')
+    bottigliaPage = 1
+    renderBottiglie()
+  } catch(e) { showToast(e.message, 'error') }
 }
 
 async function saveBottigliaFields(id, closeAfter) {
@@ -1793,6 +1856,54 @@ async function editMaison(id) {
       </div>`
     document.getElementById('modal-body').innerHTML = html
   } catch(e) { document.getElementById('modal-body').innerHTML = errorHTML(e.message) }
+}
+
+// Template per "Nuova maison" — stesse chiavi di una riga reale, così il form
+// (via buildAllColsForm, identico a editMaison) espone tutti i campi.
+const MAISON_TEMPLATE = {
+  nome: '', slug: '', tipo: '', zona_id: null, sede_comune: '', sede_regione: '',
+  sede_indirizzo: '', telefono: '', sito_web: '', anno_fondazione: null,
+  proprieta: '', gruppo: '', direzione: '', chef_de_cave: '',
+  ettari_totali: null, ettari_proprieta: null, ettari_gestione: null, comuni_vigneti: null,
+  pct_pinot_noir: null, pct_chardonnay: null, pct_meunier: null, pct_grand_cru: null, pct_premier_cru: null,
+  tipo_pressa: '', vinificazione: '', malolattica: '', vins_de_reserve: null, liqueur_expedition: null,
+  produzione_bottiglie: null, stock_cantina: null, importatore_italia: '',
+  visita_possibile: false, degustazione_possibile: false, visita_info: null,
+  descrizione: '', filosofia: '', gamma: null, fascia_prezzo: '', nota_editoriale: null,
+  foto_url: null, is_published: true, is_free: false, source: 'manual', needs_review: false
+}
+
+function openNewMaisonModal() {
+  const SKIP = ['id', 'created_at', 'updated_at']
+  const FULL = ['nome', 'descrizione', 'storia', 'bio', 'note', 'indirizzo', 'sito_web', 'website', 'url']
+  const TA   = ['descrizione', 'storia', 'bio', 'note']
+
+  const fieldsHTML = buildAllColsForm(MAISON_TEMPLATE, { skip: SKIP, fullRow: FULL, textareaCols: TA })
+
+  const html = `
+    <div class="adm-edit-form">
+      <div class="adm-edit-grid">${fieldsHTML}</div>
+      <div class="adm-modal-actions">
+        <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+        <button class="adm-btn adm-btn-primary" onclick="createMaison()">
+          <i class="ti ti-plus"></i> Crea maison
+        </button>
+      </div>
+    </div>`
+  openModal('Nuova Maison', html)
+}
+
+async function createMaison() {
+  const updates = collectDataCols()
+  if (!updates.nome || !updates.nome.trim()) { showToast('Il nome della maison è obbligatorio', 'error'); return }
+  if (!updates.slug || !updates.slug.trim()) updates.slug = slugify(updates.nome)
+  try {
+    const { data, error } = await supa.from('maison').insert(updates).select('id').single()
+    if (error) throw error
+    closeModal()
+    showToast('Maison creata ✓')
+    loadMaison()
+  } catch(e) { showToast(e.message, 'error') }
 }
 
 async function saveMaison(id) {
