@@ -878,9 +878,10 @@ function _buildScanHistoryCard(s, idx) {
   // Le bottiglie di catalogo hanno spesso l'anno già scritto dentro il nome
   // (es. "Cristal 2010") — non ripeterlo se il nome finisce già con quell'anno.
   const cuveeAlreadyHasYear = annata && String(s.cuvee_nome || '').trim().endsWith(String(annata));
-  const badge = s.is_in_catalog
+  // Badge fonte scansione (catalogo/AI): nota interna, visibile solo per admin
+  const badge = !isAdmin() ? '' : (s.is_in_catalog
     ? '<span style="font-family:var(--sans);font-size:10px;background:#EDF7EE;color:#2A7A3A;border:0.5px solid #B8DDB8;border-radius:4px;padding:2px 6px;">✓ Catalogo</span>'
-    : '<span style="font-family:var(--sans);font-size:10px;background:#EEF2FF;color:#4A5AB8;border:0.5px solid #C0C8F0;border-radius:4px;padding:2px 6px;">✦ AI</span>';
+    : '<span style="font-family:var(--sans);font-size:10px;background:#EEF2FF;color:#4A5AB8;border:0.5px solid #C0C8F0;border-radius:4px;padding:2px 6px;">✦ AI</span>');
   const scoreHtml = s.score_medio
     ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+s.score_medio+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
     : '';
@@ -896,10 +897,11 @@ function _buildScanHistoryCard(s, idx) {
       '</div>' +
       '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;line-height:1.25;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.cuvee_nome||'')+(annata && !cuveeAlreadyHasYear ? ' '+annata : '')+'</div>' +
       (isLocked ? '' :
+        (badge || s.dosage_testo ?
         '<div style="display:flex;align-items:center;gap:6px;">' +
           badge +
-          (s.dosage_testo ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">· '+s.dosage_testo+'</span>' : '') +
-        '</div>' +
+          (s.dosage_testo ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+(badge ? '· ' : '')+s.dosage_testo+'</span>' : '') +
+        '</div>' : '') +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">' +
           '<div style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">'+date+'</div>' +
           '<button onclick="event.stopPropagation();deleteScanFromHistory('+idx+')" style="background:none;border:none;padding:2px 0 2px 8px;cursor:pointer;color:var(--ink-5);display:flex;align-items:center;line-height:1;" aria-label="Elimina"><i class="ti ti-trash" style="font-size:15px;"></i></button>' +
@@ -4403,9 +4405,10 @@ function _renderScanResult(result, photoDataUrl) {
   const fascia         = result.fascia_prezzo    ?? b.fascia_prezzo   ?? null;
   const assemblaggio   = result.assemblaggio     ?? b.assemblaggio    ?? null;
 
-  const badge = result.is_in_catalog
+  // Badge fonte scansione (catalogo/AI): nota interna, visibile solo per admin
+  const badge = !isAdmin() ? '' : (result.is_in_catalog
     ? '<span class="scan-badge scan-badge-catalog"><i class="ti ti-check" style="font-size:11px;"></i>Nel catalogo Cuvée</span>'
-    : '<span class="scan-badge scan-badge-ai"><i class="ti ti-sparkles" style="font-size:11px;"></i>Rilevato da scansione</span>';
+    : '<span class="scan-badge scan-badge-ai"><i class="ti ti-sparkles" style="font-size:11px;"></i>Rilevato da scansione</span>');
 
   let pills = '';
   if (annata) pills += '<span class="scan-pill scan-pill-gold">' + annata + '</span>';
