@@ -271,6 +271,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="tab" data-tab="zone" onclick="swTab(this,'zone')"><i class="ti ti-map-2"></i><span>Terroirs</span></div>
     <div class="tab" data-tab="dosaggi" onclick="swTab(this,'dosaggi')"><i class="ti ti-droplet-half-2"></i><span>Dosages</span></div>
     <div class="tab" data-tab="service" onclick="swTab(this,'service')"><i class="ti ti-glass-full"></i><span>Service</span></div>
+    <div class="tab" data-tab="formati" onclick="swTab(this,'formati')"><i class="ti ti-bottle"></i><span>Formats</span></div>
   </div>
   <div class="scroll">
 
@@ -1098,6 +1099,182 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
 
     </div><!-- /service -->
+
+    <!-- FORMATI -->
+    <div class="tab-content" id="tc-formati">
+
+      <!-- Intro -->
+      <div style="padding:14px 14px 0;">
+        <div class="section-label" style="padding:0 0 6px;">Dal Piccolo al Melchior</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:14px;">In Champagne ogni formato di bottiglia ha un nome — quasi sempre quello di un sovrano biblico. Non è folklore: il rapporto tra volume di vino e superficie di contatto con l'ossigeno cambia con la dimensione, e questo modifica in modo sostanziale la velocità e l'armonia dell'invecchiamento.</div>
+      </div>
+
+      <div class="appro-fact" style="margin:0 14px 18px;">
+        <i class="ti ti-bulb"></i>
+        <span>Più la bottiglia è grande, più lentamente e armoniosamente evolve lo Champagne — per questo i grandi formati sono tra i pezzi più ricercati dai collezionisti e vengono riservati alle occasioni più importanti.</span>
+      </div>
+
+      <!-- Piccoli formati -->
+      <div class="section-label" style="padding:0 14px 10px;">Piccoli formati</div>
+
+      <div class="detail-expand-card" id="fmt-piccolo">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-piccolo')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Piccolo (Quart)</strong><span>20 cl · circa ¼ di bottiglia</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">Il formato mono-porzione, pensato per una sola coppa. Diffuso soprattutto nella ristorazione, negli hotel e a bordo degli aerei più che sulle tavole degli appassionati — utile, ma marginale rispetto all'esperienza di uno Champagne servito da una bottiglia vera.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-demi">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-demi')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Demi</strong><span>37,5 cl · ½ bottiglia</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">La mezza bottiglia, comoda per un aperitivo in due o per non sprecare una cuvée pregiata quando si è in pochi. Ha però lo svantaggio opposto al magnum: il rapporto vino/ossigeno è meno favorevole, quindi evolve più in fretta e va scelta preferibilmente giovane.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-bouteille">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-bouteille')">
+          <div class="detail-expand-icon" style="background:var(--gold);border-color:var(--gold);"><i class="ti ti-bottle" style="color:#fff;"></i></div>
+          <div class="detail-expand-title"><strong>Bouteille</strong><span>75 cl · il formato di riferimento</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">La bottiglia standard, il riferimento con cui si misurano tutti gli altri formati (da qui "2 bottiglie", "4 bottiglie" ecc.). È anche il formato su cui la stragrande maggioranza delle maison costruisce l'intera curva di affinamento delle proprie cuvée.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grandi formati -->
+      <div class="section-label" style="padding:18px 14px 10px;">Grandi formati · i nomi biblici</div>
+
+      <div class="detail-expand-card" id="fmt-magnum">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-magnum')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Magnum</strong><span>1,5 L · 2 bottiglie</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">Il grande formato per eccellenza, l'unico oltre alla bottiglia standard prodotto in quantità significative da praticamente tutte le maison. Gli intenditori lo considerano spesso il formato ideale in assoluto: abbastanza grande da invecchiare con grazia, abbastanza pratico da essere stappato senza cerimonie.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-jeroboam">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-jeroboam')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Jéroboam</strong><span>3 L · 4 bottiglie</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">Attenzione a non confondersi: in Champagne il Jéroboam vale 4 bottiglie (3 litri), mentre a Bordeaux lo stesso nome indica un formato diverso, da 5 litri. È la prima soglia di "grande bottiglia" che comincia a comparire nelle carte dei ristoranti di alto livello.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-rehoboam">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-rehoboam')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Réhoboam</strong><span>4,5 L · 6 bottiglie</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">Un formato specifico della Champagne, che non ha equivalente nella nomenclatura di Bordeaux. Poco diffuso ma non raro, viene scelto da alcune maison prestigiose per le cuvée di punta destinate a grandi tavolate.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-mathusalem">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-mathusalem')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Mathusalem</strong><span>6 L · 8 bottiglie</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">Otto bottiglie in un solo vetro: già qui il peso e l'ingombro rendono la stappatura un piccolo evento a sé. È generalmente considerato l'ultimo formato "gestibile" senza attrezzatura dedicata al servizio.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-salmanazar">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-salmanazar')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Salmanazar</strong><span>9 L · 12 bottiglie</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">L'equivalente di un'intera cassa da 12 bottiglie racchiusa in un unico contenitore — un pezzo che richiede quasi sempre un supporto dedicato per essere versato in sicurezza.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-balthazar">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-balthazar')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Balthazar</strong><span>12 L · 16 bottiglie</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">Siamo nel territorio dei pezzi da collezione e delle occasioni eccezionali: matrimoni, anniversari importanti, aste di beneficenza. A questo punto la bottiglia è quasi sempre più un oggetto scenico che un vino da stappare davvero.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-nabuchodonosor">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-nabuchodonosor')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Nabuchodonosor</strong><span>15 L · 20 bottiglie</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">Vent'anni... di bottiglie standard in una sola. Il nome viene dal re di Babilonia dell'Antico Testamento — coerente con una bottiglia che pesa, vuota, già più di 20 kg.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-expand-card" id="fmt-melchior">
+        <div class="detail-expand-header" onclick="toggleDetailCard('fmt-melchior')">
+          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-title"><strong>Melchior</strong><span>18 L · 24 bottiglie</span></div>
+          <i class="ti ti-chevron-right detail-expand-chevron"></i>
+        </div>
+        <div class="detail-expand-body">
+          <div style="padding:0 18px 16px;">
+            <p style="font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin:0;">Una cassa intera da 24 bottiglie in un unico contenitore: è il più grande formato che alcune maison producono ancora, seppur in numeri simbolici. Da qui in su si entra nel territorio dei pezzi praticamente unici.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formati eccezionali -->
+      <div class="section-label" style="padding:18px 14px 10px;">Oltre il Melchior — i formati eccezionali</div>
+      <div style="padding:0 14px 4px;">
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">Souverain, Primat (o Goliath) e Melchizédec — rispettivamente attorno ai 26, 27 e 30 litri — esistono, ma sono realizzati su commissione da pochissime maison per eventi irripetibili: non fanno parte del catalogo corrente di nessuna casa e le fonti sulle loro capacità esatte variano. Praticamente mai riempiti direttamente in vigna, quasi sempre svelati una volta sola per la stampa e poi conservati come pezzo unico.</div>
+      </div>
+
+      <div class="appro-fact" style="margin:16px 14px 4px;">
+        <i class="ti ti-bulb"></i>
+        <span>Fino al Jéroboam (e talvolta al Mathusalem) lo Champagne nasce direttamente in quel formato: la presa di spuma avviene già nella grande bottiglia, un processo più lento e delicato da gestire. Oltre quella soglia, quasi sempre il vino viene sboccato in bottiglia standard e travasato sotto pressione di CO₂ nel grande formato — un procedimento chiamato transvasement, dichiarato in etichetta dalle maison più rigorose.</span>
+      </div>
+
+    </div><!-- /formati -->
 
   </div><!-- /scroll -->
   
