@@ -1901,7 +1901,7 @@ async function showUserDetail(userId) {
     const monthStart = new Date()
     monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
 
-    const [{ data: u, error }, { count: scanCount }, { data: monthlyScans, count: monthlyScanCount }] = await Promise.all([
+    const [{ data: u, error }, { count: scanCount }, { data: monthlyScans, count: monthlyScanCount }, { count: carnetCount }] = await Promise.all([
       supa.from('users').select('*').eq('id', userId).single(),
       supa.from('bottle_scans')
         .select('*', { count: 'exact', head: true })
@@ -1909,7 +1909,10 @@ async function showUserDetail(userId) {
       supa.from('bottle_scans')
         .select('cost_usd', { count: 'exact' })
         .eq('user_id', userId)
-        .gte('created_at', monthStart.toISOString())
+        .gte('created_at', monthStart.toISOString()),
+      supa.from('carnet_notes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
     ])
     if (error) throw error
 
@@ -1952,7 +1955,7 @@ async function showUserDetail(userId) {
             <div class="adm-ud-stat-label">Scansioni totali</div>
           </div>
           <div class="adm-ud-stat">
-            <div class="adm-ud-stat-val">-</div>
+            <div class="adm-ud-stat-val">${carnetCount ?? 0}</div>
             <div class="adm-ud-stat-label">Carnet</div>
           </div>
           <div class="adm-ud-stat">
