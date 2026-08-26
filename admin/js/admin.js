@@ -1901,15 +1901,13 @@ async function showUserDetail(userId) {
     const monthStart = new Date()
     monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
 
-    const [{ data: u, error }, { data: scans, count: scanCount }, { count: monthlyScanCount }] = await Promise.all([
+    const [{ data: u, error }, { count: scanCount }, { data: monthlyScans, count: monthlyScanCount }] = await Promise.all([
       supa.from('users').select('*').eq('id', userId).single(),
       supa.from('bottle_scans')
-        .select('id, created_at, is_champagne, is_bottle, bottiglie:matched_bottle_id(nome)', { count: 'exact' })
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5),
-      supa.from('bottle_scans')
         .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId),
+      supa.from('bottle_scans')
+        .select('cost_usd', { count: 'exact' })
         .eq('user_id', userId)
         .gte('created_at', monthStart.toISOString())
     ])
@@ -1924,6 +1922,12 @@ async function showUserDetail(userId) {
     const scansReal     = monthlyScanCount ?? 0
     const scanOverride  = u.scan_override ?? null
     const scansUsed     = scanOverride ?? scansReal
+
+    // Costo AI delle scansioni di questo mese (colonna cost_usd su bottle_scans, in USD)
+    const monthlyCosts = (monthlyScans ?? []).map(s => Number(s.cost_usd) || 0)
+    const totalCostUsd = monthlyCosts.reduce((a, b) => a + b, 0)
+    const avgCostUsd    = monthlyCosts.length ? totalCostUsd / monthlyCosts.length : 0
+    const fmtUsd = (n) => '$' + n.toFixed(n < 0.01 ? 4 : 2)
 
     panel.innerHTML = `
       <div class="adm-ud-inner">
@@ -1973,6 +1977,14 @@ async function showUserDetail(userId) {
             <span class="adm-ud-label">Reali</span>
             <span class="adm-ud-val" style="color:var(--text-3)">${scansReal} (calcolate da bottle_scans)</span>
           </div>` : ''}
+          <div class="adm-ud-row">
+            <span class="adm-ud-label">Costo totale</span>
+            <span class="adm-ud-val">${fmtUsd(totalCostUsd)}</span>
+          </div>
+          <div class="adm-ud-row">
+            <span class="adm-ud-label">Costo medio</span>
+            <span class="adm-ud-val">${monthlyCosts.length ? fmtUsd(avgCostUsd) + ' / scansione' : '-'}</span>
+          </div>
           <button class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;margin-top:6px" onclick="openScanOverrideModal('${u.id}', ${scansReal}, ${scanOverride ?? 'null'}, ${scanLimit})">
             <i class="ti ti-edit"></i> Modifica scansioni usate
           </button>
@@ -2009,23 +2021,6 @@ async function showUserDetail(userId) {
             <span class="adm-ud-label">Note</span>
             <span class="adm-ud-val">${esc(u.premium_notes)}</span>
           </div>` : ''}
-        </div>
-
-        <div class="adm-ud-section">
-          <div class="adm-ud-section-title">ULTIME SCANSIONI</div>
-          ${scans && scans.length
-            ? scans.map(s => `
-              <div class="adm-ud-scan">
-                <div class="adm-feed-dot ${s.is_champagne ? 'gold' : 'amber'}"></div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                    ${esc(s.bottiglie?.nome ?? (s.is_champagne ? 'Champagne' : 'Non champagne'))}
-                  </div>
-                  <div style="font-size:10px;color:var(--text-3);font-family:var(--mono)">${timeAgo(s.created_at)}</div>
-                </div>
-              </div>`).join('')
-            : '<div style="color:var(--text-3);font-size:12px;padding:4px 0">Nessuna scansione</div>'
-          }
         </div>
 
         <div class="adm-ud-actions">
