@@ -3496,10 +3496,13 @@ async function loadDetailBottles(maisonId) {
     listEl.innerHTML = bottles.map((b, i) => {
       const isLocked = !premium && i >= 2;
       const tipo = tipoLabel[b.tipo] || b.tipo || '';
-      const meta = [tipo, b.dosaggio_tipo].filter(Boolean).join(' · ');
+      const meta = [tipo, b.dosaggio_tipo, (b.is_millesimato && b.annata ? b.annata : null)].filter(Boolean).join(' · ');
       const prezzo = b.prezzo_min ? 'da ' + b.prezzo_min + '€' : (b.fascia_prezzo || '');
+      const foto = b.foto_url
+        ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">'
+        : '<i class="ti ti-bottle"></i>';
       return '<div class="bottle-row' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '" style="cursor:pointer;">' +
-        '<div class="bottle-ph"><i class="ti ti-bottle"></i></div>' +
+        '<div class="bottle-ph">' + foto + '</div>' +
         '<div class="bottle-info">' +
           '<div class="bottle-name">' + b.nome + '</div>' +
           '<div class="bottle-type">' + meta + '</div>' +
