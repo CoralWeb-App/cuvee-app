@@ -1649,10 +1649,29 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div class="section-label">Le mie scansioni</div>
     <div style="padding:0 18px 16px;">
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;">
+        <div style="padding:18px 14px;text-align:center;border-right:1px solid var(--border);">
+          <i class="ti ti-scan" style="font-size:22px;color:var(--gold);display:block;margin-bottom:7px;"></i>
+          <div style="font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:600;" id="profile-scans-total">—</div>
+          <div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-top:2px;">Scansioni totali</div>
+        </div>
+        <div style="padding:18px 14px;text-align:center;">
+          <i class="ti ti-calendar-time" style="font-size:22px;color:var(--gold);display:block;margin-bottom:7px;"></i>
+          <div style="font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:600;" id="profile-scans-remaining">—</div>
+          <div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-top:2px;" id="profile-scans-remaining-label">Rimaste questo mese</div>
+        </div>
+      </div>
+
+      <!-- Banner avviso scansioni Premium in esaurimento -->
+      <div id="profile-scan-warning" style="display:none;margin-top:10px;padding:12px 14px;background:#FFF8E7;border:1px solid #F5C842;border-radius:var(--radius-md);align-items:flex-start;gap:9px;">
+        <i class="ti ti-alert-triangle" style="font-size:18px;color:#B8860B;flex-shrink:0;margin-top:1px;"></i>
+        <div style="font-family:var(--sans);font-size:13px;color:#7A5900;line-height:1.55;" id="profile-scan-warning-text"></div>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-top:10px;">
         <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="go('v-scan-history')">
           <div style="display:flex;align-items:center;gap:10px;">
-            <i class="ti ti-scan" style="font-size:20px;color:var(--ink-3);"></i>
+            <i class="ti ti-history" style="font-size:20px;color:var(--ink-3);"></i>
             <span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Storico scansioni</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -2521,6 +2540,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=122"></script>
+<script src="js/app.js?v=123"></script>
 </body>
 </html>

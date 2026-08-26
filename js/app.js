@@ -43,6 +43,7 @@ function go(id){
   if(id==='v-bottiglie') loadAndRenderBottiglie();
   if(id==='v-salvati') updateSalvatiUI();
   if(id==='v-subscription') loadSubscriptionScreen();
+  if(id==='v-profile') updateScanStatsUI().catch(() => {});
   if(id==='v-wishlist') updateWishlistUI();
   // Aggiorna tab attivo nella bottom nav condivisa
   updateBottomNav(id);
@@ -1278,6 +1279,7 @@ async function loadUserProfile() {
       const el = document.getElementById('profile-scan-count');
       if (el) el.textContent = count ? count + (count === 1 ? ' scansione' : ' scansioni') : '';
     }).catch(() => {});
+    updateScanStatsUI().catch(() => {});
 
   } catch(e) {
     console.log('Profile load error:', e);
@@ -4187,32 +4189,77 @@ function _openScanInput(mode) {
   input.click();
 }
 
+// Quante scansioni sono state "usate" questo mese: l'override admin ha sempre
+// priorità sul conteggio reale calcolato da bottle_scans.
+async function _getScansUsedThisMonth() {
+  if (!currentUser) return 0;
+  const override = currentUser.profile?.scan_override;
+  if (override != null) return override;
+  try {
+    const monthStart = new Date();
+    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+    const { count } = await supa
+      .from('bottle_scans')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', currentUser.id)
+      .gte('created_at', monthStart.toISOString());
+    return count || 0;
+  } catch(e) {
+    console.log('scan count error:', e);
+    return 0;
+  }
+}
+
 // Conta le scansioni già fatte questo mese e ritorna quante ne restano (min 0).
 // In caso di errore di rete non blocchiamo l'utente: il vero limite è comunque
 // applicato lato server nella edge function.
 async function _getScansRemainingThisMonth() {
   if (!currentUser) return FREE_SCANS_PER_MONTH;
   try {
-    // Un admin può forzare manualmente il numero di scansioni "usate" questo mese
-    // dalla piattaforma admin — se impostato, ha priorità sul conteggio reale.
-    const override = currentUser.profile?.scan_override;
-    let used;
-    if (override != null) {
-      used = override;
-    } else {
-      const monthStart = new Date();
-      monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-      const { count } = await supa
-        .from('bottle_scans')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', currentUser.id)
-        .gte('created_at', monthStart.toISOString());
-      used = count || 0;
-    }
+    const used = await _getScansUsedThisMonth();
     return Math.max(0, FREE_SCANS_PER_MONTH - used);
   } catch(e) {
     console.log('scan count error:', e);
     return FREE_SCANS_PER_MONTH;
+  }
+}
+
+// Popola i contatori "Scansioni totali" / "Rimaste questo mese" nel profilo
+// e mostra un avviso ai Premium quando stanno per esaurire le 100 mensili.
+async function updateScanStatsUI() {
+  if (!currentUser) return;
+  try {
+    const [{ count: totalCount }, used] = await Promise.all([
+      supa.from('bottle_scans').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id),
+      _getScansUsedThisMonth(),
+    ]);
+
+    const prem = isPremium();
+    const cap = prem ? 100 : FREE_SCANS_PER_MONTH;
+    const remaining = Math.max(0, cap - used);
+
+    const totalEl = document.getElementById('profile-scans-total');
+    if (totalEl) totalEl.textContent = totalCount ?? 0;
+
+    const remEl = document.getElementById('profile-scans-remaining');
+    if (remEl) remEl.textContent = remaining;
+    const remLabelEl = document.getElementById('profile-scans-remaining-label');
+    if (remLabelEl) remLabelEl.textContent = 'Rimaste questo mese (su ' + cap + ')';
+
+    // Avviso solo per Premium in esaurimento — a 0 rimaste interviene già
+    // il modal dedicato al momento della scansione, qui serve solo l'anticipo.
+    const warnEl = document.getElementById('profile-scan-warning');
+    const warnTextEl = document.getElementById('profile-scan-warning-text');
+    if (warnEl) {
+      if (prem && remaining > 0 && remaining <= 3) {
+        if (warnTextEl) warnTextEl.innerHTML = 'Ultime <strong>' + remaining + (remaining === 1 ? ' scansione' : ' scansioni') + '</strong> Premium disponibili questo mese, su 100 totali. Si rinnovano il 1° del mese prossimo.';
+        warnEl.style.display = 'flex';
+      } else {
+        warnEl.style.display = 'none';
+      }
+    }
+  } catch(e) {
+    console.log('updateScanStatsUI error:', e);
   }
 }
 
