@@ -557,7 +557,7 @@ serve(async (req) => {
         // alla bottiglia sbagliata.
         const { data: publishedBottles } = await adminSupa
           .from('bottiglie')
-          .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio')
+          .select('id, nome, tipo, dosaggio_tipo, dosaggio_gl, annata, is_millesimato, foto_url, prezzo_min, prezzo_max, fascia_prezzo, score_medio, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, maison(id, nome, slug)')
           .eq('maison_id', maisonId)
           .eq('is_published', true)
           .eq('needs_review', false)
