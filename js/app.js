@@ -2964,7 +2964,7 @@ async function loadSubscriptionScreen() {
     planEl.textContent = labels[plan] || 'Premium';
   }
   if (priceEl) {
-    const prices = { annual: '3,99€/mese', monthly: '5,99€/mese', test: '—' };
+    const prices = { annual: '4,99€/mese', monthly: '5,99€/mese', test: '—' };
     priceEl.textContent = prices[plan] || '';
   }
 
