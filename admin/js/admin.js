@@ -1898,19 +1898,32 @@ async function showUserDetail(userId) {
   panel.innerHTML = `<div class="adm-ud-loading">${loadingHTML()}</div>`
 
   try {
-    const [{ data: u, error }, { data: scans, count: scanCount }] = await Promise.all([
+    const monthStart = new Date()
+    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+
+    const [{ data: u, error }, { data: scans, count: scanCount }, { count: monthlyScanCount }] = await Promise.all([
       supa.from('users').select('*').eq('id', userId).single(),
       supa.from('bottle_scans')
         .select('id, created_at, is_champagne, is_bottle, bottiglie:matched_bottle_id(nome)', { count: 'exact' })
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(5),
+      supa.from('bottle_scans')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', monthStart.toISOString())
     ])
     if (error) throw error
 
     const prem = isPremiumActive(u)
     const initial = (u.email ?? '?')[0].toUpperCase()
     const displayName = u.display_name ?? u.full_name ?? u.nome ?? null
+
+    // Scansioni mensili: usa l'override manuale se impostato, altrimenti il conteggio reale
+    const scanLimit    = prem ? 100 : 3
+    const scansReal     = monthlyScanCount ?? 0
+    const scanOverride  = u.scan_override ?? null
+    const scansUsed     = scanOverride ?? scansReal
 
     panel.innerHTML = `
       <div class="adm-ud-inner">
@@ -1932,7 +1945,7 @@ async function showUserDetail(userId) {
         <div class="adm-ud-stats">
           <div class="adm-ud-stat">
             <div class="adm-ud-stat-val">${scanCount ?? 0}</div>
-            <div class="adm-ud-stat-label">Scansioni</div>
+            <div class="adm-ud-stat-label">Scansioni totali</div>
           </div>
           <div class="adm-ud-stat">
             <div class="adm-ud-stat-val">-</div>
@@ -1944,6 +1957,25 @@ async function showUserDetail(userId) {
             </div>
             <div class="adm-ud-stat-label">Premium</div>
           </div>
+        </div>
+
+        <div class="adm-ud-section">
+          <div class="adm-ud-section-title">SCANSIONI QUESTO MESE</div>
+          <div class="adm-ud-row" style="align-items:center;margin-bottom:8px">
+            <span class="adm-ud-label">Usate</span>
+            <span class="adm-ud-val" style="font-size:14px;font-weight:600;color:${scansUsed >= scanLimit ? 'var(--red)' : 'var(--text)'}">
+              ${scansUsed} <span style="color:var(--text-3);font-weight:400">/ ${scanLimit}</span>
+              ${scanOverride != null ? ' <span style="color:var(--gold);font-size:10px;font-weight:500">MANUALE</span>' : ''}
+            </span>
+          </div>
+          ${scanOverride != null ? `
+          <div class="adm-ud-row">
+            <span class="adm-ud-label">Reali</span>
+            <span class="adm-ud-val" style="color:var(--text-3)">${scansReal} (calcolate da bottle_scans)</span>
+          </div>` : ''}
+          <button class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;margin-top:6px" onclick="openScanOverrideModal('${u.id}', ${scansReal}, ${scanOverride ?? 'null'}, ${scanLimit})">
+            <i class="ti ti-edit"></i> Modifica scansioni usate
+          </button>
         </div>
 
         <div class="adm-ud-section">
@@ -2046,6 +2078,40 @@ async function revokeUserPremium(userId) {
     showToast('Premium rimosso')
     showUserDetail(userId)
     renderUtenti()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+// ── SCANSIONI MENSILI (override manuale) ──────────────
+function openScanOverrideModal(userId, realCount, currentOverride, limit) {
+  const val = currentOverride != null ? currentOverride : realCount
+  const html = `
+    <div class="adm-edit-form">
+      <div style="margin-bottom:14px;color:var(--text-2);font-family:var(--mono);font-size:12px">
+        Conteggio reale calcolato dalle scansioni di questo mese: <strong style="color:var(--text)">${realCount}</strong> / ${limit}
+      </div>
+      <div class="adm-form-field">
+        <label class="adm-form-label">SCANSIONI USATE (manuale)</label>
+        <input id="so-val" class="adm-form-input" type="number" min="0" step="1" value="${val}">
+      </div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-3)">Svuota il campo per tornare al conteggio reale automatico.</div>
+      <div class="adm-modal-actions">
+        <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+        <button class="adm-btn adm-btn-primary" onclick="saveScanOverride('${userId}')">Salva</button>
+      </div>
+    </div>`
+  openModal('Modifica scansioni mensili', html)
+}
+
+async function saveScanOverride(userId) {
+  const raw = document.getElementById('so-val')?.value
+  const val = (raw === '' || raw === null || raw === undefined) ? null : parseInt(raw, 10)
+  if (val !== null && (isNaN(val) || val < 0)) { showToast('Valore non valido', 'error'); return }
+  try {
+    const { error } = await supa.from('users').update({ scan_override: val }).eq('id', userId)
+    if (error) throw error
+    closeModal()
+    showToast('Scansioni aggiornate ✓')
+    showUserDetail(userId)
   } catch(e) { showToast(e.message, 'error') }
 }
 

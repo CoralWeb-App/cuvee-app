@@ -4171,7 +4171,7 @@ async function startScan(mode) {
   if (!isPremium()) {
     const remaining = await _getScansRemainingThisMonth();
     if (remaining <= 0) {
-      _showScanLimitModal();
+      _showScanLimitModal(false);
       return;
     }
     _showScanRemainingModal(remaining);
@@ -4193,14 +4193,23 @@ function _openScanInput(mode) {
 async function _getScansRemainingThisMonth() {
   if (!currentUser) return FREE_SCANS_PER_MONTH;
   try {
-    const monthStart = new Date();
-    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-    const { count } = await supa
-      .from('bottle_scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', currentUser.id)
-      .gte('created_at', monthStart.toISOString());
-    return Math.max(0, FREE_SCANS_PER_MONTH - (count || 0));
+    // Un admin può forzare manualmente il numero di scansioni "usate" questo mese
+    // dalla piattaforma admin — se impostato, ha priorità sul conteggio reale.
+    const override = currentUser.profile?.scan_override;
+    let used;
+    if (override != null) {
+      used = override;
+    } else {
+      const monthStart = new Date();
+      monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+      const { count } = await supa
+        .from('bottle_scans')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id)
+        .gte('created_at', monthStart.toISOString());
+      used = count || 0;
+    }
+    return Math.max(0, FREE_SCANS_PER_MONTH - used);
   } catch(e) {
     console.log('scan count error:', e);
     return FREE_SCANS_PER_MONTH;
@@ -4285,7 +4294,7 @@ async function _processScan(file, mode) {
     // 4. Gestione rate limit
     if (resp.status === 429) {
       _showScanLoading(false);
-      _showScanLimitModal();
+      _showScanLimitModal(result.scan_limit === 100);
       return;
     }
     if (!resp.ok || result.error) {
@@ -4341,9 +4350,27 @@ function _showScanLoading(show) {
 }
 
 // Modal rate limit — overlay in-app
-function _showScanLimitModal() {
+// isPrem=true quando è un Premium ad aver esaurito le 100 scansioni mensili:
+// in quel caso non ha senso mostrargli il pitch "passa a Premium".
+function _showScanLimitModal(isPrem) {
   const modal = document.getElementById('scan-limit-modal');
-  if (modal) modal.classList.add('on');
+  if (!modal) return;
+  const title = modal.querySelector('.scan-limit-title');
+  const desc  = modal.querySelector('.scan-limit-desc');
+  const sep   = modal.querySelector('.scan-limit-sep');
+  const label = modal.querySelector('.scan-limit-label');
+  const feats = modal.querySelector('.scan-limit-features');
+  const cta   = modal.querySelector('.btn-gold');
+  if (isPrem) {
+    if (title) title.textContent = 'Scansioni del mese terminate';
+    if (desc)  desc.innerHTML = 'Hai usato le <strong>100 scansioni sommelier</strong> incluse in Premium questo mese. Si rinnovano il 1° del mese prossimo.';
+    [sep, label, feats, cta].forEach(el => { if (el) el.style.display = 'none'; });
+  } else {
+    if (title) title.textContent = 'Scansioni gratuite terminate';
+    if (desc)  desc.innerHTML = 'Hai usato le <strong>3 scansioni gratuite</strong> di questo mese. Si rinnovano il 1° del mese prossimo.';
+    [sep, label, feats, cta].forEach(el => { if (el) el.style.display = ''; });
+  }
+  modal.classList.add('on');
 }
 function closeScanLimitModal() {
   const modal = document.getElementById('scan-limit-modal');

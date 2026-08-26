@@ -274,30 +274,38 @@ serve(async (req) => {
     // ── Rate limiting ────────────────────────────────────────────
     const { data: profile } = await adminSupa
       .from('users')
-      .select('is_premium, premium_until')
+      .select('is_premium, premium_until, scan_override')
       .eq('id', user.id)
       .single()
 
     const isPremium = profile?.is_premium === true &&
       (!profile?.premium_until || new Date(profile.premium_until) > new Date())
 
-    if (!isPremium) {
-      const monthStart = new Date()
-      monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+    const SCAN_LIMIT = isPremium ? 100 : 3
 
-      const { count } = await userSupa
-        .from('bottle_scans')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .gte('created_at', monthStart.toISOString())
+    const monthStart = new Date()
+    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
 
-      if ((count ?? 0) >= 3) {
-        return json({
-          error: 'rate_limit',
-          scans_used: count,
-          message: 'Hai usato le 3 scansioni mensili gratuite. Passa a Premium per scansioni illimitate.',
-        }, 429)
-      }
+    const { count } = await userSupa
+      .from('bottle_scans')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', monthStart.toISOString())
+
+    // Un admin può forzare manualmente il numero di scansioni "usate" questo mese
+    // dalla piattaforma admin (campo scan_override su users) — ha priorità sul
+    // conteggio reale calcolato da bottle_scans.
+    const scansUsed = profile?.scan_override ?? (count ?? 0)
+
+    if (scansUsed >= SCAN_LIMIT) {
+      return json({
+        error: 'rate_limit',
+        scans_used: scansUsed,
+        scan_limit: SCAN_LIMIT,
+        message: isPremium
+          ? 'Hai usato le 100 scansioni sommelier di questo mese. Si rinnovano il mese prossimo.'
+          : 'Hai usato le 3 scansioni mensili gratuite. Passa a Premium per 100 scansioni sommelier al mese.',
+      }, 429)
     }
 
     // ── Parse request ────────────────────────────────────────────
