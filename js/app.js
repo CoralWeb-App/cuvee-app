@@ -89,21 +89,31 @@ function goGuida(tab){
   },80);
 }
 const onbData=[
-  {title:'Il mondo dello Champagne, tutto in un posto',sub:'Dalle grandi Maison ai piccoli vigneron — ogni bottiglia racconta una storia unica. Scoprila.',loc:'Côte des Blancs · Francia',img:'Vendemmia manuale · Côte des Blancs',btn:'Continua'},
-  {title:'400+ produttori, ogni cuvée catalogata',sub:"Sfoglia l'archivio più completo d'Italia. Filtra per stile, zona, uvaggio. Trova la bottiglia perfetta.",loc:'Cave · Reims',img:'Cantine di affinamento · Reims',btn:'Continua'},
-  {title:'Impara, esplora, acquista',sub:'Glossario completo, guida al metodo champenoise e link ai migliori rivenditori italiani.',loc:'Degustazione · Épernay',img:'Degustazione professionale · Épernay',btn:'Inizia gratis'},
+  {title:'Il mondo dello Champagne, tutto in un posto',sub:'Dalle grandi Maison ai piccoli vigneron — ogni bottiglia racconta una storia unica. Scoprila.',loc:'Maison & Vigneron',icon:'ti-building',bg:'linear-gradient(135deg,#F5EFE4 0%,#E8D5A3 100%)',iconColor:'#8a6a1e',btn:'Continua'},
+  {title:'Scansiona, scopri',sub:"Inquadra l'etichetta: l'intelligenza artificiale riconosce la bottiglia e ti restituisce analisi, abbinamenti e punteggio in pochi secondi.",loc:'Riconoscimento AI',icon:'ti-scan',bg:'linear-gradient(135deg,#1A1F2E 0%,#252B3D 100%)',iconColor:'#8BA8E0',btn:'Continua'},
+  {title:'Il tuo Carnet de dégustation',sub:'Salva ogni assaggio con note, aromi e punteggio personale. La tua storia di degustazioni, sempre con te.',loc:'Carnet personale',icon:'ti-notebook',bg:'linear-gradient(135deg,#1E1208 0%,#3A2814 100%)',iconColor:'#C8A03A',btn:'Continua'},
+  {title:'Impara ed esplora',sub:'Glossario completo, guida al metodo champenoise, terroir e formati — tutto lo Champagne, spiegato bene.',loc:'Guida & Glossario',icon:'ti-books',bg:'linear-gradient(135deg,#FBF4E4 0%,#F0E2C0 100%)',iconColor:'#8a6a1e',btn:'Inizia gratis'},
 ];
 let onbIdx=0;
-function onbNext(){
-  onbIdx++;
-  if(onbIdx>=onbData.length){go('v-reg');onbIdx=0;return;}
-  const d=onbData[onbIdx];
+function onbApplySlide(d){
   document.getElementById('onb-title').textContent=d.title;
   document.getElementById('onb-sub').textContent=d.sub;
   document.getElementById('onb-loc').textContent=d.loc;
-  document.getElementById('onb-img-label').textContent=d.img;
   document.getElementById('onb-btn').textContent=d.btn;
-  [0,1,2].forEach(i=>document.getElementById('od'+i).classList.toggle('on',i===onbIdx));
+  const ph=document.getElementById('onb-img-ph');
+  const icon=document.getElementById('onb-img-icon');
+  ph.style.background=d.bg;
+  icon.className='ti '+d.icon;
+  icon.style.color=d.iconColor;
+  [0,1,2,3].forEach(i=>document.getElementById('od'+i).classList.toggle('on',i===onbIdx));
+  [document.getElementById('onb-img-wrap'),document.getElementById('onb-title'),document.getElementById('onb-sub'),document.getElementById('onb-loc')].forEach(el=>{
+    el.classList.remove('onb-anim'); void el.offsetWidth; el.classList.add('onb-anim');
+  });
+}
+function onbNext(){
+  onbIdx++;
+  if(onbIdx>=onbData.length){go('v-reg');onbIdx=0;return;}
+  onbApplySlide(onbData[onbIdx]);
 }
 function swTab(el,tab){
   document.querySelectorAll('#v-guida .tab').forEach(t=>t.classList.remove('on'));
