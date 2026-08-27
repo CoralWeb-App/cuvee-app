@@ -3273,27 +3273,19 @@ function renderMaison() {
   _maisonFiltered = filtered;
   maisonShownCount = MAISON_PAGE_SIZE;
   listEl.innerHTML = filtered.slice(0, maisonShownCount).map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join('') + _maisonLoadMoreHTML();
-  _updateMaisonCountLabel();
 }
 
-// Mostra quanti risultati sono a schermo sul totale filtrato — prova visibile
-// che il caricamento a blocchi da 50 sta funzionando (prima mostrava sempre
-// e solo il totale).
-function _updateMaisonCountLabel() {
-  const countEl = document.getElementById('maison-count-label');
-  if (!countEl) return;
-  const shown = Math.min(maisonShownCount, _maisonFiltered.length);
-  countEl.textContent = 'Mostrando ' + shown + ' di ' + _maisonFiltered.length;
-}
-
-// Pulsante "Mostra altri 50", visibile solo se ci sono altri risultati oltre
-// quelli già mostrati. Il wrapper ha una classe dedicata per poterlo trovare
+// Pulsante "Carica altri produttori", visibile solo se ce ne sono altri oltre
+// quelli già mostrati. L'azione (pulsante) e il numero rimanente (didascalia
+// leggera sotto) sono separati apposta — il numero è un dettaglio, non
+// l'invito principale. Il wrapper ha una classe dedicata per poterlo trovare
 // e rimuovere prima di appendere la pagina successiva.
 function _maisonLoadMoreHTML() {
   if (maisonShownCount >= _maisonFiltered.length) return '';
   const remaining = _maisonFiltered.length - maisonShownCount;
-  return '<div class="maison-loadmore-wrap" style="padding:8px 18px 20px;">' +
-    '<button class="btn-outline" style="width:100%;" onclick="_loadMoreMaison()">Mostra altri 50 (' + remaining + ' rimasti)</button>' +
+  return '<div class="maison-loadmore-wrap" style="padding:8px 18px 20px;text-align:center;">' +
+    '<button class="btn-outline" style="width:100%;border:1px solid var(--border-2);color:var(--ink-2);border-radius:var(--radius-md);padding:12px;" onclick="_loadMoreMaison()">Carica altri produttori</button>' +
+    '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-top:9px;">' + remaining + ' rimasti</div>' +
   '</div>';
 }
 
@@ -3334,9 +3326,10 @@ function _maisonCardHTML(m, tipoBadge, tipoCategoria) {
   '</div>';
 }
 
-// Chiamata al click su "Mostra altri 50": aggiunge la pagina successiva in
-// fondo alla lista già mostrata, senza ricostruire le card esistenti, e
-// riposiziona il pulsante (o lo rimuove se non restano altri risultati).
+// Chiamata al click su "Carica altri produttori": aggiunge la pagina
+// successiva in fondo alla lista già mostrata, senza ricostruire le card
+// esistenti, e riposiziona il pulsante (o lo rimuove se non restano altri
+// risultati).
 function _loadMoreMaison() {
   if (maisonShownCount >= _maisonFiltered.length) return;
   const listEl = document.getElementById('maison-list');
@@ -3350,7 +3343,6 @@ function _loadMoreMaison() {
   const next = _maisonFiltered.slice(maisonShownCount, maisonShownCount + MAISON_PAGE_SIZE);
   maisonShownCount += MAISON_PAGE_SIZE;
   listEl.insertAdjacentHTML('beforeend', next.map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join('') + _maisonLoadMoreHTML());
-  _updateMaisonCountLabel();
 }
 
 function setMaisonFilter(el, filter) {
@@ -3890,25 +3882,17 @@ function renderBottiglie() {
   _bottFiltered = filtered;
   bottShownCount = BOTT_PAGE_SIZE;
   listEl.innerHTML = filtered.slice(0, bottShownCount).map(b => _bottCardHTML(b, tipoLabel)).join('') + _bottLoadMoreHTML();
-  _updateBottCountLabel();
 }
 
-// Mostra quanti risultati sono a schermo sul totale filtrato — prova visibile
-// che il caricamento a blocchi da 50 sta funzionando.
-function _updateBottCountLabel() {
-  const countEl = document.getElementById('bott-count-label');
-  if (!countEl) return;
-  const shown = Math.min(bottShownCount, _bottFiltered.length);
-  countEl.textContent = 'Mostrando ' + shown + ' di ' + _bottFiltered.length;
-}
-
-// Pulsante "Mostra altri 50", visibile solo se ci sono altri risultati oltre
-// quelli già mostrati.
+// Pulsante "Carica altri champagne", visibile solo se ce ne sono altri oltre
+// quelli già mostrati. Azione (pulsante) e numero rimanente (didascalia
+// leggera sotto) separati apposta — il numero è un dettaglio, non l'invito.
 function _bottLoadMoreHTML() {
   if (bottShownCount >= _bottFiltered.length) return '';
   const remaining = _bottFiltered.length - bottShownCount;
-  return '<div class="bott-loadmore-wrap" style="padding:8px 18px 20px;">' +
-    '<button class="btn-outline" style="width:100%;" onclick="_loadMoreBottiglie()">Mostra altri 50 (' + remaining + ' rimasti)</button>' +
+  return '<div class="bott-loadmore-wrap" style="padding:8px 18px 20px;text-align:center;">' +
+    '<button class="btn-outline" style="width:100%;border:1px solid var(--border-2);color:var(--ink-2);border-radius:var(--radius-md);padding:12px;" onclick="_loadMoreBottiglie()">Carica altri champagne</button>' +
+    '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-top:9px;">' + remaining + ' rimasti</div>' +
   '</div>';
 }
 
@@ -3946,9 +3930,10 @@ function _bottCardHTML(b, tipoLabel) {
   '</div>';
 }
 
-// Chiamata al click su "Mostra altri 50": aggiunge la pagina successiva in
-// fondo alla lista già mostrata, senza ricostruire le card esistenti, e
-// riposiziona il pulsante (o lo rimuove se non restano altri risultati).
+// Chiamata al click su "Carica altri champagne": aggiunge la pagina
+// successiva in fondo alla lista già mostrata, senza ricostruire le card
+// esistenti, e riposiziona il pulsante (o lo rimuove se non restano altri
+// risultati).
 function _loadMoreBottiglie() {
   if (bottShownCount >= _bottFiltered.length) return;
   const listEl = document.getElementById('bott-list');
@@ -3959,7 +3944,6 @@ function _loadMoreBottiglie() {
   const next = _bottFiltered.slice(bottShownCount, bottShownCount + BOTT_PAGE_SIZE);
   bottShownCount += BOTT_PAGE_SIZE;
   listEl.insertAdjacentHTML('beforeend', next.map(b => _bottCardHTML(b, tipoLabel)).join('') + _bottLoadMoreHTML());
-  _updateBottCountLabel();
 }
 
 function toggleBottFilter(el, filter) {
