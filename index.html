@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=74"/>
+<link rel="stylesheet" href="css/style.css?v=75"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -57,7 +57,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="splash-rule"></div>
     <div class="splash-tagline">La guida italiana allo Champagne</div>
     <div class="splash-dots"><span></span><span></span><span></span></div>
-    <div class="splash-sub">Maison storiche · Scansione sommelier<br>Carnet personale · Glossario completo</div>
+    <div class="splash-sub">Maison storiche · Scansione Sommelier<br>Carnet personale · Glossario completo</div>
   </div>
   <div class="splash-bottom">
     <button class="btn-gold" onclick="go('v-onb')">Entra nell'app</button>
@@ -68,7 +68,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ ONBOARDING ═══ -->
 <div class="view" id="v-onb">
   <button class="onb-back-btn" id="onb-back-btn" onclick="onbPrev()" style="display:none;"><i class="ti ti-chevron-left"></i></button>
-  <button class="skip-btn" onclick="go('v-reg')">Salta</button>
   <div class="onb-img-wrap" id="onb-img-wrap">
     <div class="onb-img-ph" id="onb-img-ph"><i class="ti ti-building" id="onb-img-icon"></i></div>
     <div class="onb-location-badge" id="onb-loc">Maison &amp; Vigneron</div>
@@ -2547,6 +2546,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=127"></script>
+<script src="js/app.js?v=128"></script>
 </body>
 </html>
