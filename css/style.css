@@ -270,7 +270,7 @@ html,body{
 .reg-age-check input{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--gold);}
 .reg-age-check span{font-family:var(--sans);font-size:13.5px;color:var(--ink-2);line-height:1.45;}
 .terms-txt{font-family:var(--sans);font-size:13px;color:var(--ink-5);text-align:center;line-height:1.6;margin-top:14px;}
-.terms-txt a{color:var(--gold);text-decoration:none;}
+.terms-txt a{color:var(--gold);text-decoration:none;cursor:pointer;}
 .login-link{font-family:var(--sans);font-size:15px;color:var(--ink-4);text-align:center;margin-top:12px;cursor:pointer;}
 .login-link span{color:var(--gold);font-weight:500;}
 
@@ -309,6 +309,21 @@ html,body{
   display:flex;align-items:center;justify-content:center;margin-bottom:24px;
 }
 .success-circle i{font-size:34px;color:var(--gold);}
+
+/* ═══════════════════════════════
+   PAGINE LEGALI (Privacy / Termini)
+═══════════════════════════════ */
+.legal-updated{padding:14px 18px 6px;font-family:var(--sans);font-size:12px;color:var(--ink-5);}
+.legal-section{padding:0 18px;margin-bottom:24px;}
+.legal-section-num{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--gold-deep);letter-spacing:.5px;margin-bottom:3px;}
+.legal-section-title{font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;margin-bottom:8px;}
+.legal-section-text{font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.7;margin-bottom:10px;}
+.legal-section-text:last-child{margin-bottom:0;}
+.legal-list{padding-left:20px;margin:0 0 10px;}
+.legal-list li{font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:6px;}
+.legal-list li:last-child{margin-bottom:0;}
+.legal-fill{font-family:var(--mono,monospace);font-size:12px;background:var(--gold-pale);color:var(--gold-deep);border:1px solid var(--gold-border);border-radius:4px;padding:1px 6px;}
+.legal-part{padding:22px 18px 6px;font-family:var(--sans);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-deep);font-weight:700;}
 
 /* ═══════════════════════════════
    HOME
