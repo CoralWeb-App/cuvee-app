@@ -5,7 +5,7 @@ function go(id){
   const protectedViews = ['v-home','v-guida','v-maison','v-carnet','v-profile',
     'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
     'v-bottiglie','v-bottiglia-detail',
-    'v-subscription','v-paywall','v-scan-history',
+    'v-subscription','v-paywall','v-scan-history','v-age-gate',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
@@ -51,7 +51,7 @@ function go(id){
 }
 function updateBottomNav(id){
   // View senza bottom nav (fuori dall'app: splash, onboarding, auth, paywall)
-  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall'];
+  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate'];
   const nav = document.getElementById('shared-bottom-nav');
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 
@@ -1106,13 +1106,26 @@ if('serviceWorker' in navigator){
 let currentUser = null;
 
 // Controlla sessione all avvio
+// Dopo un login (email, riapertura app, Apple, Google) instrada verso l'app
+// solo se l'utente ha già confermato di essere maggiorenne — altrimenti lo
+// blocca su v-age-gate. Vale per ogni percorso di accesso, non solo la
+// registrazione via form, quindi copre anche Apple/Google e gli account
+// creati prima dell'introduzione di questo controllo.
+async function _routeAfterAuth() {
+  try { await loadUserProfile(); } catch(e) { console.log('Profile load:', e); }
+  if (currentUser?.profile?.age_confirmed === true) {
+    go('v-home');
+  } else {
+    go('v-age-gate');
+  }
+}
+
 async function initAuth() {
   try {
     const { data: { session } } = await supa.auth.getSession();
     if (session) {
       currentUser = session.user;
-      loadUserProfile().catch(e => console.log('Init profile load:', e));
-      go('v-home');
+      await _routeAfterAuth();
     }
     // else rimane sulla splash
   } catch(e) {
@@ -1125,14 +1138,27 @@ supa.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session) {
     stopVerifyPolling();
     currentUser = session.user;
-    loadUserProfile().catch(e => console.log('Auth profile load:', e));
-    go('v-home');
+    await _routeAfterAuth();
   } else if (event === 'SIGNED_OUT') {
     stopVerifyPolling();
     currentUser = null;
     go('v-splash');
   }
 });
+
+async function confirmAge18() {
+  if (!currentUser) return;
+  try {
+    await supa.from('users').update({ age_confirmed: true }).eq('id', currentUser.id);
+    if (currentUser.profile) currentUser.profile.age_confirmed = true;
+  } catch(e) { console.log('Age confirm error:', e); }
+  go('v-home');
+}
+
+async function declineAge18() {
+  try { await supa.auth.signOut(); } catch(e) { console.log('Sign out error:', e); }
+  alert('Cuvée è dedicata al mondo dello Champagne ed è riservata a chi ha già compiuto 18 anni. Potrai registrarti quando li avrai compiuti.');
+}
 
 // SIGNUP
 async function signUp() {
@@ -1166,8 +1192,7 @@ async function signUp() {
     // Caso 1: conferma email disabilitata → session attiva subito
     if (data.session) {
       currentUser = data.session.user;
-      loadUserProfile().catch(e => console.log('Profile load:', e));
-      go('v-home');
+      await _routeAfterAuth();
       return;
     }
 
@@ -4768,6 +4793,70 @@ function _showNotChampagneModal(notChampagneType) {
 function closeNotChampagneModal() {
   const modal = document.getElementById('scan-not-champagne-modal');
   if (modal) modal.classList.remove('on');
+}
+
+// ═══ ELIMINAZIONE ACCOUNT ═══
+// Testo del modale differenziato: chi ha un Premium attivo deve sapere che lo
+// perde insieme a tutto il resto, senza rimborso dei giorni/mesi residui.
+const DELETE_ACCOUNT_EDGE_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/delete-account';
+
+function openDeleteAccountModal() {
+  if (!currentUser) return;
+  const desc = document.getElementById('delete-account-desc');
+  const ack  = document.getElementById('delete-account-ack');
+  const btn  = document.getElementById('delete-account-confirm-btn');
+  if (ack) ack.checked = false;
+  if (btn) { btn.disabled = true; btn.classList.remove('ready'); btn.textContent = 'Elimina definitivamente'; }
+  if (desc) {
+    desc.innerHTML = isPremium()
+      ? 'Hai un <strong>abbonamento Premium attivo</strong>: eliminando l\'account lo perderai insieme a tutto il resto — <strong>nessun rimborso</strong> per i giorni o mesi già pagati e non ancora utilizzati. Perderai anche Storico scansioni, Carnet de dégustation e tutte le foto caricate. L\'operazione non può essere annullata.'
+      : 'Perderai per sempre lo Storico scansioni, il Carnet de dégustation e tutte le foto caricate. L\'operazione non può essere annullata.';
+  }
+  const modal = document.getElementById('delete-account-modal');
+  if (modal) modal.classList.add('on');
+}
+function closeDeleteAccountModal() {
+  const modal = document.getElementById('delete-account-modal');
+  if (modal) modal.classList.remove('on');
+}
+function _toggleDeleteAccountBtn() {
+  const ack = document.getElementById('delete-account-ack');
+  const btn = document.getElementById('delete-account-confirm-btn');
+  if (!ack || !btn) return;
+  btn.disabled = !ack.checked;
+  btn.classList.toggle('ready', ack.checked);
+}
+async function confirmDeleteAccount() {
+  const ack = document.getElementById('delete-account-ack');
+  const btn = document.getElementById('delete-account-confirm-btn');
+  if (!ack?.checked || !currentUser) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Eliminazione in corso...';
+
+  try {
+    const { data: sessionData } = await supa.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (!token) throw new Error('Sessione non valida');
+
+    const resp = await fetch(DELETE_ACCOUNT_EDGE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    });
+    const result = await resp.json().catch(() => ({}));
+    if (!resp.ok || result.error) throw new Error(result?.error || 'Errore durante l\'eliminazione');
+
+    closeDeleteAccountModal();
+    currentUser = null;
+    await supa.auth.signOut();
+    go('v-splash');
+    alert('Il tuo account e tutti i tuoi dati sono stati eliminati definitivamente.');
+  } catch(e) {
+    console.log('Delete account error:', e);
+    btn.disabled = false;
+    btn.textContent = 'Elimina definitivamente';
+    alert('Non è stato possibile eliminare l\'account. Riprova tra qualche istante.\n' + (e.message || ''));
+  }
 }
 
 // HTML per scan non valido (non è una bottiglia)
