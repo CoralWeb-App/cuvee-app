@@ -91,7 +91,7 @@ function goGuida(tab){
 }
 const onbData=[
   {title:'Il mondo dello Champagne, tutto in un posto',sub:'Dalle grandi Maison ai piccoli vigneron — ogni bottiglia racconta una storia unica. Scoprila.',loc:'Maison & Vigneron',icon:'ti-building',bg:'linear-gradient(135deg,#F5EFE4 0%,#E8D5A3 100%)',iconColor:'#8a6a1e',btn:'Continua'},
-  {title:'Scansiona, scopri',sub:"Inquadra l'etichetta: l'intelligenza artificiale riconosce la bottiglia e ti restituisce analisi, abbinamenti e punteggio in pochi secondi.",loc:'Riconoscimento AI',icon:'ti-scan',bg:'linear-gradient(135deg,#1A1F2E 0%,#252B3D 100%)',iconColor:'#8BA8E0',btn:'Continua'},
+  {title:'Scansiona, scopri',sub:"Inquadra l'etichetta: riconoscimento immediato e un'analisi da sommelier — profilo, abbinamenti e punteggio, come averne uno al tuo fianco.",loc:'Scansione sommelier',icon:'ti-scan',bg:'linear-gradient(135deg,#1A1F2E 0%,#252B3D 100%)',iconColor:'#8BA8E0',btn:'Continua'},
   {title:'Il tuo Carnet de dégustation',sub:'Salva ogni assaggio con note, aromi e punteggio personale. La tua storia di degustazioni, sempre con te.',loc:'Carnet personale',icon:'ti-notebook',bg:'linear-gradient(135deg,#1E1208 0%,#3A2814 100%)',iconColor:'#C8A03A',btn:'Continua'},
   {title:'Impara ed esplora',sub:'Glossario completo, guida al metodo champenoise, terroir e formati — tutto lo Champagne, spiegato bene.',loc:'Guida & Glossario',icon:'ti-books',bg:'linear-gradient(135deg,#FBF4E4 0%,#F0E2C0 100%)',iconColor:'#8a6a1e',btn:'Inizia gratis'},
 ];
