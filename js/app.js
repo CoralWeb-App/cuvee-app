@@ -1669,6 +1669,13 @@ document.addEventListener('DOMContentLoaded', function() {
   loadHomeCounts();
 });
 
+// Arrotonda per difetto alla decina e aggiunge "+" — mostra un numero
+// approssimativo invece del conteggio esatto (es. 197 → "190+"), usato
+// ovunque in app compaia il totale di produttori/champagne a catalogo.
+function _approxCount(n) {
+  return Math.floor((n || 0) / 10) * 10 + '+';
+}
+
 async function loadHomeCounts() {
   const elP = document.getElementById('home-count-produttori');
   const elC = document.getElementById('home-count-champagne');
@@ -1677,8 +1684,8 @@ async function loadHomeCounts() {
       supa.from('maison').select('id').eq('is_published', true),
       supa.from('bottiglie').select('id').eq('is_published', true)
     ]);
-    if (elP) elP.textContent = (dp?.length || 0) + ' produttori';
-    if (elC) elC.textContent = (dc?.length || 0) + ' cuvée';
+    if (elP) elP.textContent = _approxCount(dp?.length) + ' produttori';
+    if (elC) elC.textContent = _approxCount(dc?.length) + ' cuvée';
   } catch(e) {
     if (elP) elP.textContent = 'Esplora';
     if (elC) elC.textContent = 'Esplora';
@@ -3199,7 +3206,7 @@ async function loadAndRenderMaison() {
       maisonFavorites = new Set((favs || []).map(f => f.maison_id));
     }
 
-    if (countEl) countEl.textContent = allMaison.length + '+ produttori · Champagne';
+    if (countEl) countEl.textContent = _approxCount(allMaison.length) + ' produttori · Champagne';
     if (loadingEl) loadingEl.style.display = 'none';
     if (listEl) listEl.style.display = 'block';
 
@@ -3776,7 +3783,7 @@ async function loadAndRenderBottiglie() {
       const { data: wish } = await supa.from('wishlist').select('bottiglia_id').eq('user_id', currentUser.id);
       wishlistIds = new Set((wish || []).map(w => w.bottiglia_id));
     }
-    if (countEl) countEl.textContent = allBottiglie.length + ' cuvée nel catalogo';
+    if (countEl) countEl.textContent = _approxCount(allBottiglie.length) + ' cuvée nel catalogo';
     if (loadingEl) loadingEl.style.display = 'none';
     if (listEl) listEl.style.display = 'block';
     buildBottLetterFilters();
