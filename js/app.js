@@ -1136,6 +1136,16 @@ async function initAuth() {
 // Ascolta cambiamenti auth
 supa.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session) {
+    // Supabase riemette SIGNED_IN anche solo tornando col focus sulla tab/app
+    // o al refresh automatico del token — non è un nuovo accesso. Se è già
+    // lo stesso utente con profilo già caricato, non rifare tutto da capo:
+    // altrimenti ogni volta si ricarica il profilo (diverse query) e si
+    // strappa l'utente qualunque pagina stesse usando riportandolo in home,
+    // e se il rifiro capita più volte ravvicinato mentre naviga, i caricamenti
+    // si accumulano uno sull'altro rallentando sempre di più l'app.
+    if (currentUser?.id === session.user.id && currentUser.profile) {
+      return; // stesso utente già caricato: non toccare currentUser.profile
+    }
     stopVerifyPolling();
     currentUser = session.user;
     await _routeAfterAuth();
