@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=76"/>
+<link rel="stylesheet" href="css/style.css?v=77"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -89,7 +89,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ REGISTRATION ═══ -->
 <div class="view" id="v-reg">
   <div class="topbar">
-    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Indietro</button>
+    <button class="back-btn" onclick="backToOnboardingEnd()"><i class="ti ti-arrow-left"></i>Indietro</button>
     <div class="topbar-logo">
       <svg width="13" height="19" viewBox="0 0 13 19" fill="none"><ellipse cx="6.5" cy="6.5" rx="4.5" ry="6" stroke="#8a6a1e" stroke-width="1.2"/><line x1="6.5" y1="12.5" x2="6.5" y2="16" stroke="#8a6a1e" stroke-width="1.2"/><line x1="3" y1="16" x2="10" y2="16" stroke="#8a6a1e" stroke-width="1.2"/><circle cx="5" cy="4.5" r=".9" fill="#8a6a1e" opacity=".8"/><circle cx="8" cy="2.5" r=".7" fill="#8a6a1e" opacity=".6"/></svg>
       <span class="topbar-logo-name">CUVÉE</span>
@@ -2177,16 +2177,22 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 <!-- ═══ MAPPA INTERATTIVA ═══ -->
 <div class="view" id="v-login">
-  <div style="height:155px;position:relative;flex-shrink:0;">
-    <div class="img-ph" style="height:100%;"><i class="ti ti-photo" style="font-size:32px;"></i><span>Vigneti Champagne</span></div>
-    <div style="position:absolute;inset:0;background:rgba(250,248,245,.45);display:flex;align-items:flex-end;padding:14px 20px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <svg width="15" height="22" viewBox="0 0 15 22" fill="none"><ellipse cx="7.5" cy="7.5" rx="5.5" ry="7" stroke="#1a1208" stroke-width="1.3"/><line x1="7.5" y1="14.5" x2="7.5" y2="18.5" stroke="#1a1208" stroke-width="1.3"/><line x1="3.5" y1="18.5" x2="11.5" y2="18.5" stroke="#1a1208" stroke-width="1.3"/></svg>
-        <span style="font-family:var(--serif);font-size:19px;color:var(--ink);letter-spacing:3px;font-weight:500;">CUVÉE</span>
-      </div>
-    </div>
+  <button class="onb-back-btn" id="login-back-btn" onclick="backToOnboardingEnd()"><i class="ti ti-chevron-left"></i></button>
+  <div class="login-header">
+    <svg width="32" height="41" viewBox="0 0 56 72" fill="none">
+      <ellipse cx="28" cy="24" rx="12" ry="20" stroke="#b8922a" stroke-width="1.4"/>
+      <ellipse cx="28" cy="24" rx="12" ry="20" stroke="#f5efe4" stroke-width="8"/>
+      <line x1="28" y1="44" x2="28" y2="58" stroke="#b8922a" stroke-width="1.4"/>
+      <line x1="17" y1="58" x2="39" y2="58" stroke="#b8922a" stroke-width="1.4"/>
+      <circle cx="22" cy="16" r="2.4" fill="#b8922a" opacity=".9"/>
+      <circle cx="32" cy="10" r="1.8" fill="#b8922a" opacity=".7"/>
+      <circle cx="26" cy="7" r="1.4" fill="#b8922a" opacity=".55"/>
+      <circle cx="35" cy="22" r="1.6" fill="#b8922a" opacity=".6"/>
+      <circle cx="21" cy="29" r="2" fill="#b8922a" opacity=".75"/>
+    </svg>
+    <div class="login-mark-name">CUVÉE</div>
   </div>
-  <div class="scroll" style="padding:24px 22px 28px;">
+  <div class="scroll" style="padding:8px 22px 28px;">
     <div style="font-family:var(--serif);font-size:26px;color:var(--ink);margin-bottom:5px;font-weight:500;">Bentornato</div>
     <div style="font-family:var(--sans);font-size:var(--fs-sm);color:var(--ink-4);margin-bottom:24px;">Accedi al tuo account Cuvée</div>
     <div class="input-wrap"><label class="input-label">Email</label><input class="input-field" id="login-email" type="email" placeholder="nome@email.com" autocomplete="email"/></div>
@@ -2544,6 +2550,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=129"></script>
+<script src="js/app.js?v=130"></script>
 </body>
 </html>

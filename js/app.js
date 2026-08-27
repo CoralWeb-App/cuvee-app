@@ -128,6 +128,11 @@ function onbGoTo(i){
   onbIdx=i;
   onbApplySlide(onbData[onbIdx]);
 }
+function backToOnboardingEnd(){
+  go('v-onb');
+  onbIdx=onbData.length-1;
+  onbApplySlide(onbData[onbIdx]);
+}
 (function(){
   let touchStartX=0, touchStartY=0;
   document.addEventListener('touchstart', function(e){
