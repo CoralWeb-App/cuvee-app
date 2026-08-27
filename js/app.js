@@ -149,21 +149,6 @@ function backToOnboardingEnd(){
   }, {passive:true});
 })();
 
-// Caricamento a blocchi da 50 per Produttori e Champagne: le liste vengono
-// scaricate tutte insieme (i filtri/lock lato client richiedono l'intero
-// set), ma vengono MOSTRATE 50 alla volta — evita di costruire centinaia di
-// card e caricare tutte le immagini in un colpo solo, che è quello che
-// rallentava/bloccava lo scroll su queste due sezioni.
-(function(){
-  const maisonScroll = document.getElementById('maison-scroll');
-  if (maisonScroll) maisonScroll.addEventListener('scroll', function(){
-    if (this.scrollTop + this.clientHeight >= this.scrollHeight - 400) _loadMoreMaison();
-  }, {passive:true});
-  const bottScroll = document.getElementById('bott-scroll');
-  if (bottScroll) bottScroll.addEventListener('scroll', function(){
-    if (this.scrollTop + this.clientHeight >= this.scrollHeight - 400) _loadMoreBottiglie();
-  }, {passive:true});
-})();
 function swTab(el,tab){
   document.querySelectorAll('#v-guida .tab').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
@@ -3287,7 +3272,7 @@ function renderMaison() {
 
   _maisonFiltered = filtered;
   maisonShownCount = MAISON_PAGE_SIZE;
-  listEl.innerHTML = filtered.slice(0, maisonShownCount).map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join('');
+  listEl.innerHTML = filtered.slice(0, maisonShownCount).map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join('') + _maisonLoadMoreHTML();
   _updateMaisonCountLabel();
 }
 
@@ -3301,8 +3286,19 @@ function _updateMaisonCountLabel() {
   countEl.textContent = 'Mostrando ' + shown + ' di ' + _maisonFiltered.length;
 }
 
+// Pulsante "Mostra altri 50", visibile solo se ci sono altri risultati oltre
+// quelli già mostrati. Il wrapper ha una classe dedicata per poterlo trovare
+// e rimuovere prima di appendere la pagina successiva.
+function _maisonLoadMoreHTML() {
+  if (maisonShownCount >= _maisonFiltered.length) return '';
+  const remaining = _maisonFiltered.length - maisonShownCount;
+  return '<div class="maison-loadmore-wrap" style="padding:8px 18px 20px;">' +
+    '<button class="btn-outline" style="width:100%;" onclick="_loadMoreMaison()">Mostra altri 50 (' + remaining + ' rimasti)</button>' +
+  '</div>';
+}
+
 // Costruisce l'HTML di una singola card maison — condiviso tra render completo
-// (cambio filtro/ricerca) e caricamento incrementale allo scroll (_loadMoreMaison).
+// (cambio filtro/ricerca) e caricamento della pagina successiva (_loadMoreMaison).
 function _maisonCardHTML(m, tipoBadge, tipoCategoria) {
   const premium = isPremium();
   const isLocked = !m.is_free && !premium;
@@ -3338,19 +3334,22 @@ function _maisonCardHTML(m, tipoBadge, tipoCategoria) {
   '</div>';
 }
 
-// Chiamata dallo scroll listener: aggiunge altri MAISON_PAGE_SIZE risultati
-// in fondo alla lista già mostrata, senza ricostruire le card esistenti.
+// Chiamata al click su "Mostra altri 50": aggiunge la pagina successiva in
+// fondo alla lista già mostrata, senza ricostruire le card esistenti, e
+// riposiziona il pulsante (o lo rimuove se non restano altri risultati).
 function _loadMoreMaison() {
   if (maisonShownCount >= _maisonFiltered.length) return;
   const listEl = document.getElementById('maison-list');
   if (!listEl) return;
+  const oldBtn = listEl.querySelector('.maison-loadmore-wrap');
+  if (oldBtn) oldBtn.remove();
   // tipoBadge/tipoCategoria ridefiniti qui: identici a quelli in renderMaison,
   // servono solo per lo stile della card, non dipendono dai filtri attivi.
   const tipoBadge = { 'NM':'badge-gm','RM':'badge-rm','RC':'badge-rm','CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres' };
   const tipoCategoria = { 'NM':'Grande Maison','ND':'Grande Maison','MA':'Grande Maison','RM':'Vigneron','RC':'Vigneron','SR':'Vigneron','CM':'Cooperativa' };
   const next = _maisonFiltered.slice(maisonShownCount, maisonShownCount + MAISON_PAGE_SIZE);
-  listEl.insertAdjacentHTML('beforeend', next.map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join(''));
   maisonShownCount += MAISON_PAGE_SIZE;
+  listEl.insertAdjacentHTML('beforeend', next.map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join('') + _maisonLoadMoreHTML());
   _updateMaisonCountLabel();
 }
 
@@ -3890,7 +3889,7 @@ function renderBottiglie() {
   }
   _bottFiltered = filtered;
   bottShownCount = BOTT_PAGE_SIZE;
-  listEl.innerHTML = filtered.slice(0, bottShownCount).map(b => _bottCardHTML(b, tipoLabel)).join('');
+  listEl.innerHTML = filtered.slice(0, bottShownCount).map(b => _bottCardHTML(b, tipoLabel)).join('') + _bottLoadMoreHTML();
   _updateBottCountLabel();
 }
 
@@ -3903,8 +3902,18 @@ function _updateBottCountLabel() {
   countEl.textContent = 'Mostrando ' + shown + ' di ' + _bottFiltered.length;
 }
 
+// Pulsante "Mostra altri 50", visibile solo se ci sono altri risultati oltre
+// quelli già mostrati.
+function _bottLoadMoreHTML() {
+  if (bottShownCount >= _bottFiltered.length) return '';
+  const remaining = _bottFiltered.length - bottShownCount;
+  return '<div class="bott-loadmore-wrap" style="padding:8px 18px 20px;">' +
+    '<button class="btn-outline" style="width:100%;" onclick="_loadMoreBottiglie()">Mostra altri 50 (' + remaining + ' rimasti)</button>' +
+  '</div>';
+}
+
 // Costruisce l'HTML di una singola card bottiglia — condiviso tra render
-// completo (cambio filtro/ricerca) e caricamento incrementale allo scroll.
+// completo (cambio filtro/ricerca) e caricamento della pagina successiva col pulsante "Mostra altri".
 function _bottCardHTML(b, tipoLabel) {
   const isLocked = !!b._locked && !isPremium();
   const tipo = tipoLabel[b.tipo] || b.tipo || '';
@@ -3937,16 +3946,19 @@ function _bottCardHTML(b, tipoLabel) {
   '</div>';
 }
 
-// Chiamata dallo scroll listener: aggiunge altre BOTT_PAGE_SIZE bottiglie in
-// fondo alla lista già mostrata, senza ricostruire le card esistenti.
+// Chiamata al click su "Mostra altri 50": aggiunge la pagina successiva in
+// fondo alla lista già mostrata, senza ricostruire le card esistenti, e
+// riposiziona il pulsante (o lo rimuove se non restano altri risultati).
 function _loadMoreBottiglie() {
   if (bottShownCount >= _bottFiltered.length) return;
   const listEl = document.getElementById('bott-list');
   if (!listEl) return;
+  const oldBtn = listEl.querySelector('.bott-loadmore-wrap');
+  if (oldBtn) oldBtn.remove();
   const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
   const next = _bottFiltered.slice(bottShownCount, bottShownCount + BOTT_PAGE_SIZE);
-  listEl.insertAdjacentHTML('beforeend', next.map(b => _bottCardHTML(b, tipoLabel)).join(''));
   bottShownCount += BOTT_PAGE_SIZE;
+  listEl.insertAdjacentHTML('beforeend', next.map(b => _bottCardHTML(b, tipoLabel)).join('') + _bottLoadMoreHTML());
   _updateBottCountLabel();
 }
 
