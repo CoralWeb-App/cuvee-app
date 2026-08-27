@@ -3288,6 +3288,17 @@ function renderMaison() {
   _maisonFiltered = filtered;
   maisonShownCount = MAISON_PAGE_SIZE;
   listEl.innerHTML = filtered.slice(0, maisonShownCount).map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join('');
+  _updateMaisonCountLabel();
+}
+
+// Mostra quanti risultati sono a schermo sul totale filtrato — prova visibile
+// che il caricamento a blocchi da 50 sta funzionando (prima mostrava sempre
+// e solo il totale).
+function _updateMaisonCountLabel() {
+  const countEl = document.getElementById('maison-count-label');
+  if (!countEl) return;
+  const shown = Math.min(maisonShownCount, _maisonFiltered.length);
+  countEl.textContent = 'Mostrando ' + shown + ' di ' + _maisonFiltered.length;
 }
 
 // Costruisce l'HTML di una singola card maison — condiviso tra render completo
@@ -3340,6 +3351,7 @@ function _loadMoreMaison() {
   const next = _maisonFiltered.slice(maisonShownCount, maisonShownCount + MAISON_PAGE_SIZE);
   listEl.insertAdjacentHTML('beforeend', next.map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join(''));
   maisonShownCount += MAISON_PAGE_SIZE;
+  _updateMaisonCountLabel();
 }
 
 function setMaisonFilter(el, filter) {
@@ -3879,6 +3891,16 @@ function renderBottiglie() {
   _bottFiltered = filtered;
   bottShownCount = BOTT_PAGE_SIZE;
   listEl.innerHTML = filtered.slice(0, bottShownCount).map(b => _bottCardHTML(b, tipoLabel)).join('');
+  _updateBottCountLabel();
+}
+
+// Mostra quanti risultati sono a schermo sul totale filtrato — prova visibile
+// che il caricamento a blocchi da 50 sta funzionando.
+function _updateBottCountLabel() {
+  const countEl = document.getElementById('bott-count-label');
+  if (!countEl) return;
+  const shown = Math.min(bottShownCount, _bottFiltered.length);
+  countEl.textContent = 'Mostrando ' + shown + ' di ' + _bottFiltered.length;
 }
 
 // Costruisce l'HTML di una singola card bottiglia — condiviso tra render
@@ -3925,6 +3947,7 @@ function _loadMoreBottiglie() {
   const next = _bottFiltered.slice(bottShownCount, bottShownCount + BOTT_PAGE_SIZE);
   listEl.insertAdjacentHTML('beforeend', next.map(b => _bottCardHTML(b, tipoLabel)).join(''));
   bottShownCount += BOTT_PAGE_SIZE;
+  _updateBottCountLabel();
 }
 
 function toggleBottFilter(el, filter) {
