@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=72"/>
+<link rel="stylesheet" href="css/style.css?v=73"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -70,6 +70,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 <!-- ═══ ONBOARDING ═══ -->
 <div class="view" id="v-onb">
+  <button class="onb-back-btn" id="onb-back-btn" onclick="onbPrev()" style="display:none;"><i class="ti ti-chevron-left"></i></button>
   <button class="skip-btn" onclick="go('v-reg')">Salta</button>
   <div class="onb-img-wrap" id="onb-img-wrap">
     <div class="onb-img-ph" id="onb-img-ph"><i class="ti ti-building" id="onb-img-icon"></i></div>
@@ -77,10 +78,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="onb-body">
     <div class="onb-dots">
-      <div class="onb-dot on" id="od0"></div>
-      <div class="onb-dot" id="od1"></div>
-      <div class="onb-dot" id="od2"></div>
-      <div class="onb-dot" id="od3"></div>
+      <div class="onb-dot on" id="od0" onclick="onbGoTo(0)"></div>
+      <div class="onb-dot" id="od1" onclick="onbGoTo(1)"></div>
+      <div class="onb-dot" id="od2" onclick="onbGoTo(2)"></div>
+      <div class="onb-dot" id="od3" onclick="onbGoTo(3)"></div>
     </div>
     <div class="onb-title" id="onb-title">Il mondo dello Champagne, tutto in un posto</div>
     <div class="onb-sub" id="onb-sub">Dalle grandi Maison ai piccoli vigneron — ogni bottiglia racconta una storia unica. Scoprila.</div>
@@ -2549,6 +2550,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=125"></script>
+<script src="js/app.js?v=126"></script>
 </body>
 </html>

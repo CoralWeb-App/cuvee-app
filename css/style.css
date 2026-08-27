@@ -230,10 +230,20 @@ html,body{
   background:rgba(255,255,255,.85);border:1px solid var(--border);
   border-radius:20px;padding:6px 14px;
   font-family:var(--sans);font-size:13px;color:var(--ink-4);cursor:pointer;
+  z-index:2;
+}
+.onb-back-btn{
+  position:absolute;top:calc(env(safe-area-inset-top,44px) + 10px);left:16px;
+  width:32px;height:32px;
+  background:rgba(255,255,255,.85);border:1px solid var(--border);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;color:var(--ink-3);cursor:pointer;
+  z-index:2;
 }
 .onb-body{padding:22px 24px 20px;}
 .onb-dots{display:flex;gap:7px;margin-bottom:16px;}
-.onb-dot{width:6px;height:6px;border-radius:50%;background:var(--border-2);}
+.onb-dot{width:6px;height:6px;border-radius:50%;background:var(--border-2);cursor:pointer;}
 .onb-dot.on{background:var(--gold);width:20px;border-radius:3px;}
 .onb-title{font-family:var(--serif);font-size:26px;color:var(--ink);line-height:1.25;margin-bottom:10px;font-weight:500;}
 .onb-sub{font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.65;margin-bottom:22px;}
