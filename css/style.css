@@ -194,9 +194,8 @@ html,body{
 @keyframes dotPulse{0%,100%{opacity:.4;}50%{opacity:1;}}
 .splash-logo-icon{position:relative;z-index:1;animation:scaleIn .7s cubic-bezier(.34,1.56,.64,1) .3s both;}
 .splash-name{font-family:var(--serif);font-size:34px;letter-spacing:6px;color:var(--ink);font-weight:500;animation:riseUp .5s ease .9s both;}
-.splash-line{display:flex;align-items:center;gap:12px;margin-top:12px;animation:riseUp .5s ease 1.3s both;}
-.splash-line-bar{width:36px;height:1px;background:var(--gold);opacity:.7;}
-.splash-tagline{font-family:var(--sans);font-size:13px;letter-spacing:2.5px;color:#8a6a1e;text-transform:uppercase;}
+.splash-rule{width:36px;height:1px;background:var(--gold);opacity:.7;margin:14px auto 12px;animation:riseUp .5s ease 1.3s both;}
+.splash-tagline{font-family:var(--sans);font-size:13px;letter-spacing:2px;color:#8a6a1e;text-transform:uppercase;text-align:center;animation:riseUp .5s ease 1.5s both;}
 .splash-dots{display:flex;gap:7px;margin-top:32px;animation:riseUp .4s ease 1.8s both;}
 .splash-dots span{width:5px;height:5px;border-radius:50%;background:var(--gold);}
 .splash-dots span:nth-child(1){animation:dotPulse 1.2s ease 2s infinite;}
