@@ -1176,6 +1176,10 @@ async function signUp() {
     showError(errEl, 'Password troppo corta — minimo 8 caratteri');
     return;
   }
+  if (!document.getElementById('reg-age18')?.checked) {
+    showError(errEl, 'Devi confermare di avere almeno 18 anni per registrarti');
+    return;
+  }
 
   btn.textContent = 'Registrazione in corso...';
   btn.disabled = true;
@@ -1247,6 +1251,19 @@ async function signIn() {
     btn.textContent = 'Accedi';
     btn.disabled = false;
   }
+}
+
+// Avvio OAuth dalla schermata di REGISTRAZIONE: a differenza del login, qui
+// stiamo potenzialmente creando un account nuovo, quindi va bloccato con lo
+// stesso controllo del form email — non deve nemmeno partire il redirect
+// se la conferma età non è stata data.
+function attemptOAuthSignup(provider) {
+  if (!document.getElementById('reg-age18')?.checked) {
+    const errEl = document.getElementById('reg-error');
+    showError(errEl, 'Devi confermare di avere almeno 18 anni per registrarti');
+    return;
+  }
+  signInWithProvider(provider);
 }
 
 // SOCIAL LOGIN

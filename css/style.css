@@ -262,6 +262,13 @@ html,body{
 .divider-row{display:flex;align-items:center;gap:12px;margin:16px 0;}
 .div-line{flex:1;height:1px;background:var(--border);}
 .div-txt{font-family:var(--sans);font-size:13px;color:var(--ink-5);letter-spacing:1px;}
+.reg-age-check{
+  display:flex;align-items:flex-start;gap:10px;cursor:pointer;
+  margin-bottom:16px;padding:12px 14px;
+  background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:var(--radius-md);
+}
+.reg-age-check input{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--gold);}
+.reg-age-check span{font-family:var(--sans);font-size:13.5px;color:var(--ink-2);line-height:1.45;}
 .terms-txt{font-family:var(--sans);font-size:13px;color:var(--ink-5);text-align:center;line-height:1.6;margin-top:14px;}
 .terms-txt a{color:var(--gold);text-decoration:none;}
 .login-link{font-family:var(--sans);font-size:15px;color:var(--ink-4);text-align:center;margin-top:12px;cursor:pointer;}
