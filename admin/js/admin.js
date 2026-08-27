@@ -10,6 +10,7 @@ let utentiPage      = 1
 let utentiFilter    = 'all'
 let utentiSearch    = ''
 let bottigliaPage         = 1
+let bottigliaPerPage      = 50
 let bottigliaSearch       = ''
 let bottigliaFilter       = ''
 let bottigliaStatusFilter = ''
@@ -1156,7 +1157,7 @@ async function renderBottiglie() {
       }
 
       count = filtered.length
-      data  = filtered.slice((bottigliaPage-1)*PER_PAGE, bottigliaPage*PER_PAGE)
+      data  = filtered.slice((bottigliaPage-1)*bottigliaPerPage, bottigliaPage*bottigliaPerPage)
     } else {
       let query = supa
         .from('bottiglie')
@@ -1194,7 +1195,7 @@ async function renderBottiglie() {
           query = query.order('nome')
       }
 
-      query = query.range((bottigliaPage-1)*PER_PAGE, bottigliaPage*PER_PAGE - 1)
+      query = query.range((bottigliaPage-1)*bottigliaPerPage, bottigliaPage*bottigliaPerPage - 1)
 
       const result = await query
       if (result.error) throw result.error
@@ -1209,7 +1210,7 @@ async function renderBottiglie() {
       tbody.innerHTML = `<tr><td colspan="8"><div style="padding:32px;text-align:center;color:var(--text-3)">Nessuna bottiglia trovata</div></td></tr>`
     } else {
       tbody.innerHTML = data.map(b => `
-        <tr class="adm-table-row">
+        <tr class="adm-table-row" style="cursor:pointer" onclick="editBottiglia('${b.id}')">
           <td>
             <div class="adm-bottle-cell">
               <div class="adm-bottle-thumb ${(b.foto_url || b.photo_url) ? 'has-img clickable' : ''}"
@@ -1237,10 +1238,10 @@ async function renderBottiglie() {
           </td>
           <td>
             <div class="adm-row-actions">
-              <button class="adm-btn adm-btn-edit" onclick="editBottiglia('${b.id}')">
+              <button class="adm-btn adm-btn-edit" onclick="event.stopPropagation();editBottiglia('${b.id}')">
                 <i class="ti ti-pencil"></i>
               </button>
-              <button class="adm-btn adm-btn-reject" onclick="deleteBottiglia('${b.id}','${esc(b.nome ?? '')}')">
+              <button class="adm-btn adm-btn-reject" onclick="event.stopPropagation();deleteBottiglia('${b.id}','${esc(b.nome ?? '')}')">
                 <i class="ti ti-trash"></i>
               </button>
             </div>
@@ -1248,13 +1249,19 @@ async function renderBottiglie() {
         </tr>`).join('')
     }
 
-    renderPagination('bottiglie-pagination', bottigliaPage, Math.ceil((count??0)/PER_PAGE), 'bottiglieGoToPage')
+    renderPagination('bottiglie-pagination', bottigliaPage, Math.ceil((count??0)/bottigliaPerPage), 'bottiglieGoToPage')
     const fc = document.getElementById('bottiglie-footer-count')
-    if (fc) fc.textContent = `Mostrando ${Math.min((bottigliaPage-1)*PER_PAGE+1, count??0)}–${Math.min(bottigliaPage*PER_PAGE, count??0)} di ${(count??0).toLocaleString('it')}`
+    if (fc) fc.textContent = `Mostrando ${Math.min((bottigliaPage-1)*bottigliaPerPage+1, count??0)}–${Math.min(bottigliaPage*bottigliaPerPage, count??0)} di ${(count??0).toLocaleString('it')}`
   } catch(e) { tbody.innerHTML = errorRow(8, e.message) }
 }
 
 function bottiglieGoToPage(p) { bottigliaPage = p; renderBottiglie() }
+
+function changeBottigliaPerPage(val) {
+  bottigliaPerPage = parseInt(val, 10) || 50
+  bottigliaPage = 1
+  renderBottiglie()
+}
 
 function filterBottiglie(tipo, btn) {
   bottigliaFilter = (tipo === bottigliaFilter) ? '' : tipo

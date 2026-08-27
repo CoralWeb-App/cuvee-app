@@ -432,7 +432,18 @@
         </div>
 
         <div class="adm-table-footer">
-          <span class="adm-table-count" id="bottiglie-footer-count"></span>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <span class="adm-table-count" id="bottiglie-footer-count"></span>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text-3);">
+              Per pagina
+              <select class="adm-form-input" style="width:auto;padding:4px 8px;font-size:11px;" onchange="changeBottigliaPerPage(this.value)">
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+              </select>
+            </label>
+          </div>
           <div class="adm-pagination" id="bottiglie-pagination"></div>
         </div>
       </div>
@@ -964,7 +975,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=13"></script>
+<script src="js/admin.js?v=14"></script>
 
 </body>
 </html>
