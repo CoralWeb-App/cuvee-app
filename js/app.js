@@ -49,8 +49,8 @@ function go(id){
   updateBottomNav(id);
 }
 function updateBottomNav(id){
-  // View senza bottom nav (login, paywall, ecc.)
-  const noNav = ['v-splash','v-paywall'];
+  // View senza bottom nav (fuori dall'app: splash, onboarding, auth, paywall)
+  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall'];
   const nav = document.getElementById('shared-bottom-nav');
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 
