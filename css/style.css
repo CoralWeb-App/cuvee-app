@@ -243,13 +243,6 @@ html,body{
 /* ═══════════════════════════════
    REGISTRATION
 ═══════════════════════════════ */
-#v-reg .reg-hero{height:150px;flex-shrink:0;position:relative;}
-#v-reg .reg-hero .img-ph{height:100%;}
-.reg-hero-over{
-  position:absolute;inset:0;
-  background:rgba(250,248,245,.45);
-  display:flex;align-items:flex-end;padding:14px 20px;
-}
 .input-wrap{margin-bottom:15px;}
 .input-label{
   font-family:var(--sans);font-size:13px;
