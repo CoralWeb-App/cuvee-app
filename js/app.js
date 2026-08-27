@@ -148,6 +148,22 @@ function backToOnboardingEnd(){
     if(dx<0) onbNext(); else onbPrev();
   }, {passive:true});
 })();
+
+// Caricamento a blocchi da 50 per Produttori e Champagne: le liste vengono
+// scaricate tutte insieme (i filtri/lock lato client richiedono l'intero
+// set), ma vengono MOSTRATE 50 alla volta — evita di costruire centinaia di
+// card e caricare tutte le immagini in un colpo solo, che è quello che
+// rallentava/bloccava lo scroll su queste due sezioni.
+(function(){
+  const maisonScroll = document.getElementById('maison-scroll');
+  if (maisonScroll) maisonScroll.addEventListener('scroll', function(){
+    if (this.scrollTop + this.clientHeight >= this.scrollHeight - 400) _loadMoreMaison();
+  }, {passive:true});
+  const bottScroll = document.getElementById('bott-scroll');
+  if (bottScroll) bottScroll.addEventListener('scroll', function(){
+    if (this.scrollTop + this.clientHeight >= this.scrollHeight - 400) _loadMoreBottiglie();
+  }, {passive:true});
+})();
 function swTab(el,tab){
   document.querySelectorAll('#v-guida .tab').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
@@ -3169,6 +3185,9 @@ let currentMaisonLetter = 'tutti';
 let currentMaisonSearch = '';
 let currentMaisonDetail = null;
 let maisonFavorites = new Set();
+const MAISON_PAGE_SIZE = 50;
+let maisonShownCount = MAISON_PAGE_SIZE;
+let _maisonFiltered = [];
 
 async function loadAndRenderMaison() {
   const loadingEl = document.getElementById('maison-loading');
@@ -3266,44 +3285,61 @@ function renderMaison() {
     'CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres'
   };
 
+  _maisonFiltered = filtered;
+  maisonShownCount = MAISON_PAGE_SIZE;
+  listEl.innerHTML = filtered.slice(0, maisonShownCount).map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join('');
+}
+
+// Costruisce l'HTML di una singola card maison — condiviso tra render completo
+// (cambio filtro/ricerca) e caricamento incrementale allo scroll (_loadMoreMaison).
+function _maisonCardHTML(m, tipoBadge, tipoCategoria) {
   const premium = isPremium();
-  const isFav = (id) => maisonFavorites.has(id);
+  const isLocked = !m.is_free && !premium;
+  const badge = tipoBadge[m.tipo] || 'badge-rm';
+  const categoria = tipoCategoria[m.tipo] || null;
+  const label = m.tipo || '—';
+  const fav = maisonFavorites.has(m.id);
 
-  listEl.innerHTML = filtered.map(m => {
-    const isLocked = !m.is_free && !premium;
-    const badge = tipoBadge[m.tipo] || 'badge-rm';
-    const categoria = tipoCategoria[m.tipo] || null;
-    const label = m.tipo || '—';
-    const fav = isFav(m.id);
-    const zonaNome = m.zone?.nome || '';
-    const meta = '';
-
-    return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openMaisonDetail('" + m.id + "')") + '">' +
-      '<div class="img-ph maison-card-ph" style="height:90px;">' +
-        (m.foto_url ? '<img src="' + m.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>' : '<i class="ti ti-photo" style="font-size:22px;"></i>') +
-        (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
-      '</div>' +
-      '<div class="maison-body">' +
-        '<div class="maison-header-row">' +
-          '<div class="maison-name">' + m.nome + '</div>' +
-          '<div style="display:flex;align-items:center;gap:8px;">' +
-            (!isLocked ? '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>' : '') +
-          '</div>' +
-        '</div>' +
-        '<div class="maison-card-zona">' +
-          (m.zone ? '<span class="zona-badge-sm" style="background:' + (m.zone.colore||'#b8922a') + '18;color:' + (m.zone.colore||'#b8922a') + ';border:0.5px solid ' + (m.zone.colore||'#b8922a') + '55;">' + (m.zone.nome||'') + '</span>' : '') +
-          (m.sede_comune ? '<span class="maison-sede">· ' + m.sede_comune + '</span>' : '') +
-          (m.anno_fondazione ? '<span class="maison-sede">· dal ' + m.anno_fondazione + '</span>' : '') +
-        '</div>' +
-        '<div class="badges-row">' +
-          (categoria ? '<span class="badge ' + badge + '">' + categoria + '</span>' : '') +
-          '<span class="badge ' + badge + '" style="opacity:.75;">' + label + '</span>' +
-          (m.certificazioni && m.certificazioni.length ? m.certificazioni.map(c => '<span class="badge badge-bio">' + c + '</span>').join('') : '') +
+  return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openMaisonDetail('" + m.id + "')") + '">' +
+    '<div class="img-ph maison-card-ph" style="height:90px;">' +
+      (m.foto_url ? '<img src="' + m.foto_url + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;"/>' : '<i class="ti ti-photo" style="font-size:22px;"></i>') +
+      (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
+    '</div>' +
+    '<div class="maison-body">' +
+      '<div class="maison-header-row">' +
+        '<div class="maison-name">' + m.nome + '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          (!isLocked ? '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>' : '') +
         '</div>' +
       '</div>' +
-      (m.chef_de_cave ? '<div class="maison-cdc"><i class="ti ti-glass-full maison-cdc-icon"></i><div><div class="maison-cdc-label">Chef de Cave</div><div class="maison-cdc-name">' + m.chef_de_cave + '</div></div></div>' : '') +
-    '</div>';
-  }).join('');
+      '<div class="maison-card-zona">' +
+        (m.zone ? '<span class="zona-badge-sm" style="background:' + (m.zone.colore||'#b8922a') + '18;color:' + (m.zone.colore||'#b8922a') + ';border:0.5px solid ' + (m.zone.colore||'#b8922a') + '55;">' + (m.zone.nome||'') + '</span>' : '') +
+        (m.sede_comune ? '<span class="maison-sede">· ' + m.sede_comune + '</span>' : '') +
+        (m.anno_fondazione ? '<span class="maison-sede">· dal ' + m.anno_fondazione + '</span>' : '') +
+      '</div>' +
+      '<div class="badges-row">' +
+        (categoria ? '<span class="badge ' + badge + '">' + categoria + '</span>' : '') +
+        '<span class="badge ' + badge + '" style="opacity:.75;">' + label + '</span>' +
+        (m.certificazioni && m.certificazioni.length ? m.certificazioni.map(c => '<span class="badge badge-bio">' + c + '</span>').join('') : '') +
+      '</div>' +
+    '</div>' +
+    (m.chef_de_cave ? '<div class="maison-cdc"><i class="ti ti-glass-full maison-cdc-icon"></i><div><div class="maison-cdc-label">Chef de Cave</div><div class="maison-cdc-name">' + m.chef_de_cave + '</div></div></div>' : '') +
+  '</div>';
+}
+
+// Chiamata dallo scroll listener: aggiunge altri MAISON_PAGE_SIZE risultati
+// in fondo alla lista già mostrata, senza ricostruire le card esistenti.
+function _loadMoreMaison() {
+  if (maisonShownCount >= _maisonFiltered.length) return;
+  const listEl = document.getElementById('maison-list');
+  if (!listEl) return;
+  // tipoBadge/tipoCategoria ridefiniti qui: identici a quelli in renderMaison,
+  // servono solo per lo stile della card, non dipendono dai filtri attivi.
+  const tipoBadge = { 'NM':'badge-gm','RM':'badge-rm','RC':'badge-rm','CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres' };
+  const tipoCategoria = { 'NM':'Grande Maison','ND':'Grande Maison','MA':'Grande Maison','RM':'Vigneron','RC':'Vigneron','SR':'Vigneron','CM':'Cooperativa' };
+  const next = _maisonFiltered.slice(maisonShownCount, maisonShownCount + MAISON_PAGE_SIZE);
+  listEl.insertAdjacentHTML('beforeend', next.map(m => _maisonCardHTML(m, tipoBadge, tipoCategoria)).join(''));
+  maisonShownCount += MAISON_PAGE_SIZE;
 }
 
 function setMaisonFilter(el, filter) {
@@ -3645,6 +3681,9 @@ let currentBottSearch = '';
 let currentBottLetter = 'tutti';
 let currentBottPriceFilter = 'tutti';
 let currentBottiglia = null;
+const BOTT_PAGE_SIZE = 50;
+let bottShownCount = BOTT_PAGE_SIZE;
+let _bottFiltered = [];
 let wishlistIds = new Set();
 
 function scoreLabel(s) {
@@ -3764,7 +3803,6 @@ function computeBottiglieLocks() {
 function renderBottiglie() {
   const listEl = document.getElementById('bott-list');
   if (!listEl) return;
-  const premium = isPremium();
   const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
   let filtered = allBottiglie;
 
@@ -3838,37 +3876,55 @@ function renderBottiglie() {
     listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;font-family:var(--sans);font-size:16px;color:var(--ink-4);">Nessuna bottiglia trovata</div>';
     return;
   }
-  listEl.innerHTML = filtered.map(b => {
-    const isLocked = !!b._locked && !premium;
-    const tipo = tipoLabel[b.tipo] || b.tipo || '';
-    return '<div class="bott-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
-      '<div class="bott-card-img" style="min-height:88px;">' +
-        (b.foto_url ? '<img src="' + b.foto_url + '"/>' : '<i class="ti ti-bottle"></i>') +
-        (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
+  _bottFiltered = filtered;
+  bottShownCount = BOTT_PAGE_SIZE;
+  listEl.innerHTML = filtered.slice(0, bottShownCount).map(b => _bottCardHTML(b, tipoLabel)).join('');
+}
+
+// Costruisce l'HTML di una singola card bottiglia — condiviso tra render
+// completo (cambio filtro/ricerca) e caricamento incrementale allo scroll.
+function _bottCardHTML(b, tipoLabel) {
+  const isLocked = !!b._locked && !isPremium();
+  const tipo = tipoLabel[b.tipo] || b.tipo || '';
+  return '<div class="bott-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
+    '<div class="bott-card-img" style="min-height:88px;">' +
+      (b.foto_url ? '<img src="' + b.foto_url + '" loading="lazy"/>' : '<i class="ti ti-bottle"></i>') +
+      (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
+    '</div>' +
+    '<div class="bott-card-body">' +
+      '<div class="bott-card-maison">' + (b.maison?.nome || '') + '</div>' +
+      '<div class="bott-card-nome">' + b.nome + '</div>' +
+      '<div class="bott-card-tipo" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+        (tipo ? '<span>' + tipo + '</span>' : '') +
+        dosagePill(b.dosaggio_tipo) +
       '</div>' +
-      '<div class="bott-card-body">' +
-        '<div class="bott-card-maison">' + (b.maison?.nome || '') + '</div>' +
-        '<div class="bott-card-nome">' + b.nome + '</div>' +
-        '<div class="bott-card-tipo" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-          (tipo ? '<span>' + tipo + '</span>' : '') +
-          dosagePill(b.dosaggio_tipo) +
+      '<div class="bott-card-footer">' +
+        '<div class="bott-card-info">' +
+          (!isLocked && b.score_medio ? scoreRingCard(b.score_medio) : '') +
+          (!isLocked && (b.fascia_prezzo || b.prezzo_min) ? '<div style="display:flex;flex-direction:column;gap:2px;">' +
+            priceScale(b.fascia_prezzo, b.prezzo_min) +
+            (b.prezzo_min ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-4);">da ' + b.prezzo_min + '€</span>' : '') +
+          '</div>' : '') +
         '</div>' +
-        '<div class="bott-card-footer">' +
-          '<div class="bott-card-info">' +
-            (!isLocked && b.score_medio ? scoreRingCard(b.score_medio) : '') +
-            (!isLocked && (b.fascia_prezzo || b.prezzo_min) ? '<div style="display:flex;flex-direction:column;gap:2px;">' +
-              priceScale(b.fascia_prezzo, b.prezzo_min) +
-              (b.prezzo_min ? '<span style="font-family:var(--sans);font-size:11px;color:var(--ink-4);">da ' + b.prezzo_min + '€</span>' : '') +
-            '</div>' : '') +
-          '</div>' +
-          (!isLocked ? '<button class="bott-card-add" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
-            '<span class="bott-card-add-badge">+</span>' +
-            '<i class="ti ti-notebook"></i>' +
-          '</button>' : '') +
-        '</div>' +
+        (!isLocked ? '<button class="bott-card-add" data-id="' + b.id + '" onclick="event.stopPropagation();openNewNoteFromBottiglia(this.dataset.id)">' +
+          '<span class="bott-card-add-badge">+</span>' +
+          '<i class="ti ti-notebook"></i>' +
+        '</button>' : '') +
       '</div>' +
-    '</div>';
-  }).join('');
+    '</div>' +
+  '</div>';
+}
+
+// Chiamata dallo scroll listener: aggiunge altre BOTT_PAGE_SIZE bottiglie in
+// fondo alla lista già mostrata, senza ricostruire le card esistenti.
+function _loadMoreBottiglie() {
+  if (bottShownCount >= _bottFiltered.length) return;
+  const listEl = document.getElementById('bott-list');
+  if (!listEl) return;
+  const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
+  const next = _bottFiltered.slice(bottShownCount, bottShownCount + BOTT_PAGE_SIZE);
+  listEl.insertAdjacentHTML('beforeend', next.map(b => _bottCardHTML(b, tipoLabel)).join(''));
+  bottShownCount += BOTT_PAGE_SIZE;
 }
 
 function toggleBottFilter(el, filter) {
