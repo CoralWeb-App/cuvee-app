@@ -114,7 +114,7 @@ function onbApplySlide(d){
   if(backBtn) backBtn.style.display = onbIdx>0 ? 'flex' : 'none';
 }
 function onbNext(){
-  if(onbIdx>=onbData.length-1){go('v-reg');onbIdx=0;return;}
+  if(onbIdx>=onbData.length-1){go('v-reg');return;}
   onbIdx++;
   onbApplySlide(onbData[onbIdx]);
 }
