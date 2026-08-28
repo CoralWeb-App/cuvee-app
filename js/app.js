@@ -2956,8 +2956,11 @@ async function _loadPaywallOfferingsImpl() {
   if (!window.Capacitor?.isNativePlatform?.() || !RC || !_rcConfigured) return;
   try {
     const { offerings } = await RC.getOfferings();
-    const current = offerings?.current;
-    console.log('RC offerings debug: current=' + !!current + ' pkgCount=' + (current?.availablePackages?.length ?? 'n/a') + ' allKeys=' + Object.keys(offerings?.all || {}).join(','));
+    // "current" a volte non è valorizzato subito lato SDK anche se il
+    // dashboard segna l'offering come corrente — offerings.all.default (o il
+    // primo disponibile) è un fallback affidabile con gli stessi dati.
+    const current = offerings?.current || offerings?.all?.default || Object.values(offerings?.all || {})[0] || null;
+    console.log('RC offerings debug: hasCurrentField=' + !!offerings?.current + ' resolved=' + !!current + ' pkgCount=' + (current?.availablePackages?.length ?? 'n/a') + ' allKeys=' + Object.keys(offerings?.all || {}).join(','));
     if (!current || !current.availablePackages?.length) return;
     _rcOfferings = current;
 
