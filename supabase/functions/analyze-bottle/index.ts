@@ -187,6 +187,26 @@ const SYSTEM_PROMPT =
   '- "BOLLINGER" ≠ "BOLIEU" ≠ altri\n' +
   'Se l etichetta dice "HENRI GIRAUD" -> maison: "Henri Giraud". MAI "Henriot".\n' +
   'In caso di dubbio sul nome esatto, rileggi l etichetta prima di rispondere.\n\n' +
+
+  '=== REGOLA ASSOLUTA #5: PRODUTTORE NON VISIBILE SULL ETICHETTA ===\n' +
+  'Molte cuvee di prestigio non riportano il nome del produttore in modo prominente ' +
+  'sull etichetta frontale (a volte il produttore non compare affatto sul fronte). ' +
+  'In questi casi NON lasciare maison vuoto o nullo, e non confondere mai il nome della ' +
+  'cuvee stessa con quello del produttore: usa la tua conoscenza enciclopedica per risalire ' +
+  'al vero produttore da cuvee/design bottiglia/capsula. Esempi che sbagliano spesso:\n' +
+  '- "Cristal" (bottiglia trasparente, capsula gialla) -> maison: "Louis Roederer", MAI "Cristal"\n' +
+  '- "Comtes de Champagne" -> maison: "Taittinger"\n' +
+  '- "Belle Epoque" (bottiglia dipinta a fiori) -> maison: "Perrier-Jouet"\n' +
+  '- "Grande Cuvee" / "Clos du Mesnil" / "Clos d Ambonnay" -> maison: "Krug"\n' +
+  '- "Cuvee Sir Winston Churchill" -> maison: "Pol Roger"\n' +
+  '- "La Grande Dame" -> maison: "Veuve Clicquot"\n' +
+  '- "Cuvee William Deutz" -> maison: "Deutz"\n' +
+  '- "N.P.U." -> maison: "Bruno Paillard"\n' +
+  '- "Cuvee des Enchanteleurs" -> maison: "Piper-Heidsieck"\n' +
+  '- "Amour de Deutz" -> maison: "Deutz"\n' +
+  'Se dopo aver applicato questa regola resti genuinamente incerto su quale sia il produttore, ' +
+  'e SOLO in quel caso, lascia maison null piuttosto che indovinare un nome sbagliato.\n\n' +
+
   'Per campi tecnici usa la tua conoscenza enciclopedica anche se non visibili sull etichetta.'
 
 const USER_PROMPT =
@@ -332,7 +352,7 @@ serve(async (req) => {
       '{\n' +
       '  "is_bottle": true se vedi una bottiglia, false altrimenti,\n' +
       '  "is_champagne": true se è Champagne AOC francese,\n' +
-      '  "maison": "nome ESATTO del produttore come scritto sull etichetta (es. Krug, Henri Giraud, Moët & Chandon, Jacques Selosse) o null",\n' +
+      '  "maison": "nome ESATTO del produttore come scritto sull etichetta (es. Krug, Henri Giraud, Moët & Chandon, Jacques Selosse). Se il produttore non è scritto sull etichetta (frequente per cuvée di prestigio: Cristal->Louis Roederer, Comtes de Champagne->Taittinger, Belle Epoque->Perrier-Jouët, Grande Cuvée/Clos du Mesnil->Krug, Cuvée Sir Winston Churchill->Pol Roger, La Grande Dame->Veuve Clicquot), deducilo dal nome della cuvée con la tua conoscenza enciclopedica invece di lasciarlo vuoto — non scrivere mai il nome della cuvée al posto del produttore. null solo se davvero non identificabile.",\n' +
       '  "cuvee": "nome ESATTO della cuvée come scritto sull etichetta SENZA maison e SENZA annata. Includi codici alfanumerici (es. MV20, MV16, RD, R.D., P2, P3, VO, V.O., Clos du Mesnil, Grande Cuvée 173ème, Belle Epoque, Cristal, Blanc de Blancs). NON scrivere denominazioni territoriali (Grand Cru, Premier Cru, Aÿ, Reims ecc.) a meno che non siano parte del nome cuvée. o null",\n' +
       '  "annata": "anno es.2018 o null se sans année",\n' +
       '  "is_sa": true se sans année/non-vintage, false se ha annata,\n' +
