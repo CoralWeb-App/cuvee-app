@@ -2943,7 +2943,15 @@ function _rcPackageForType(type) {
 // Aggiorna le due card del paywall con i prezzi reali letti da App Store —
 // se RevenueCat non è disponibile (sito da browser, o SDK non configurato)
 // restano i prezzi statici già scritti nell'HTML.
-async function loadPaywallOfferings() {
+// Tiene traccia della chiamata di rete in corso, così subscribeNow() può
+// aspettarla invece di fallire se l'utente tocca "Abbonati ora" prima che
+// il caricamento (una vera richiesta di rete ad Apple/RevenueCat) finisca.
+let _paywallLoadPromise = null;
+function loadPaywallOfferings() {
+  _paywallLoadPromise = _loadPaywallOfferingsImpl();
+  return _paywallLoadPromise;
+}
+async function _loadPaywallOfferingsImpl() {
   const RC = _rcPlugin();
   if (!window.Capacitor?.isNativePlatform?.() || !RC || !_rcConfigured) return;
   try {
@@ -3013,6 +3021,11 @@ async function subscribeNow() {
   // di sempre — nessun pagamento reale possibile qui.
   if (!isNative || !RC || !_rcConfigured) { return activateTestPremium(); }
 
+  // Se il caricamento dei piani è ancora in corso (rete lenta, o l'utente ha
+  // toccato subito), aspettalo invece di fallire subito.
+  if (!_selectedRcPackage && _paywallLoadPromise) {
+    try { await _paywallLoadPromise; } catch(e) {}
+  }
   if (!_selectedRcPackage) { alert('Seleziona un piano prima di continuare.'); return; }
 
   const btn = document.getElementById('subscribe-btn');
