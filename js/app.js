@@ -2955,7 +2955,10 @@ async function _loadPaywallOfferingsImpl() {
   const RC = _rcPlugin();
   if (!window.Capacitor?.isNativePlatform?.() || !RC || !_rcConfigured) return;
   try {
-    const { offerings } = await RC.getOfferings();
+    const rcResult = await RC.getOfferings();
+    // Il plugin a volte restituisce {offerings:{current,all}} e a volte
+    // l'oggetto offerings direttamente, senza wrapper.
+    const offerings = rcResult?.offerings || rcResult;
     // "current" a volte non è valorizzato subito lato SDK anche se il
     // dashboard segna l'offering come corrente — offerings.all.default (o il
     // primo disponibile) è un fallback affidabile con gli stessi dati.
