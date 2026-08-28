@@ -3009,14 +3009,17 @@ async function _syncPremiumFromCustomerInfo(customerInfo) {
   const ent = customerInfo.entitlements?.active?.[RC_ENTITLEMENT];
   const isPremiumNow = !!ent;
   const premiumUntil = ent?.expirationDate || null;
+  const cancelAtEnd = isPremiumNow && ent?.willRenew === false;
   try {
     await supa.from('users').update({
       is_premium: isPremiumNow,
       premium_until: premiumUntil,
+      cancel_at_period_end: cancelAtEnd,
     }).eq('id', currentUser.id);
     if (currentUser.profile) {
       currentUser.profile.is_premium = isPremiumNow;
       currentUser.profile.premium_until = premiumUntil;
+      currentUser.profile.cancel_at_period_end = cancelAtEnd;
     }
   } catch(e) {
     console.log('sync premium error:', e);
@@ -3327,10 +3330,21 @@ async function deactivateAndRefresh() {
 }
 
 async function confirmCancelPremium() {
+  const isNative = window.Capacitor?.isNativePlatform?.();
+  const platform = window.Capacitor?.getPlatform?.();
+  // Un abbonamento IAP reale non si può disdire con una chiamata dall'app:
+  // Apple/Google richiedono che la disdetta avvenga nella loro schermata di
+  // gestione abbonamenti di sistema. Ce li apre direttamente.
+  if (isNative && platform === 'ios') {
+    window.location.href = 'itms-apps://apps.apple.com/account/subscriptions';
+    return;
+  }
+  if (isNative && platform === 'android') {
+    window.location.href = 'https://play.google.com/store/account/subscriptions';
+    return;
+  }
+  // Sito da browser, senza IAP reale: comportamento di test come sempre.
   if (!confirm('Sei sicuro di voler disdire il Premium?')) return;
-  // TEST MODE: disattiva subito
-  // In produzione con Stripe: imposta cancel_at_period_end=true
-  // e lascia is_premium=true fino a premium_until (l'utente mantiene l'accesso)
   await deactivateAndRefresh();
 }
 
