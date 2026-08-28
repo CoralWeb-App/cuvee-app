@@ -76,6 +76,13 @@ const cuveeExactMatch = (db: string, ai: string): boolean => {
   return dbn === ain || dbn.includes(ain) || ain.includes(dbn)
 }
 
+// "Rosé" è un discriminante assoluto, non un dettaglio stilistico: "Cristal" e
+// "Cristal Rosé" (o Dom Pérignon/Dom Pérignon Rosé, Comtes de Champagne/Comtes
+// de Champagne Rosé, ecc.) sono bottiglie diverse a tutti gli effetti, ma il
+// confronto testuale le vedrebbe combaciare (il nome base è contenuto in
+// quello con Rosé) — trattata come annata/millesimato: se non coincide, mai match.
+const isRose = (s: string): boolean => /rose/.test(norm(s))
+
 // Trova un match SICURO nel catalogo — non indovina mai tra più candidati validi.
 // Regola: se esiste un solo match esatto, vince sempre quello anche se altri
 // candidati soddisfano solo il confronto approssimativo. Se ci sono più match
@@ -93,6 +100,8 @@ const findConfidentMatch = (
     const maisonNome = b.maison?.nome ?? b.nome_maison ?? ''
     if (!maisonMatch(maisonNome, maisonName)) return false
     if (!cuveeMatch(b.nome || '', cuveeName)) return false
+    // Rosé è un discriminante assoluto: mai confondere la versione base con la Rosé
+    if (isRose(b.nome || '') !== isRose(cuveeName)) return false
     // DB ha un'annata specifica e la scansione pure: devono coincidere
     if (b.is_millesimato && b.annata && annata) {
       if (String(b.annata) !== String(annata)) return false
@@ -171,13 +180,19 @@ const SYSTEM_PROMPT =
   '- Qualsiasi acqua minerale, birra, liquore, succo, vino fermo -> NON champagne\n\n' +
 
   '=== REGOLA #3: campo cuvee ===\n' +
-  'Il campo "cuvee" deve contenere il nome COMPLETO con denominazioni speciali, SENZA nome maison e SENZA annata.\n' +
-  '- Dom Perignon P2/Deuxieme Plenitude -> cuvee: "P2"\n' +
-  '- Dom Perignon P3 -> cuvee: "P3"\n' +
-  '- Bollinger R.D. -> cuvee: "R.D."\n' +
-  '- Krug Grande Cuvee -> cuvee: "Grande Cuvee"\n' +
-  '- Taittinger Comtes de Champagne -> cuvee: "Comtes de Champagne"\n' +
-  '- Perrier-Jouet Belle Epoque -> cuvee: "Belle Epoque"\n\n' +
+  'Il campo "cuvee" deve contenere il nome COMPLETO con denominazioni speciali, SENZA nome maison.\n' +
+  'SE la bottiglia è millesimata (ha un annata specifica, is_sa=false): il nome cuvee DEVE terminare ' +
+  'con l anno, esattamente come lo chiamerebbe un sommelier o come è scritto sul catalogo di riferimento ' +
+  '— "Cristal 2013", non "Cristal". "Comtes de Champagne 2012", non "Comtes de Champagne". ' +
+  '"Dom Perignon P2 2004", non solo "P2". L annata va comunque SEMPRE ripetuta anche nel campo separato "annata".\n' +
+  'SE la bottiglia è Sans Année/non-vintage (is_sa=true): nessun anno nel nome, ovviamente.\n' +
+  '- Dom Perignon P2/Deuxieme Plenitude, annata 2004 -> cuvee: "P2 2004"\n' +
+  '- Dom Perignon P3, annata 2000 -> cuvee: "P3 2000"\n' +
+  '- Bollinger R.D., annata 2007 -> cuvee: "R.D. 2007"\n' +
+  '- Krug Grande Cuvee (Sans Année) -> cuvee: "Grande Cuvee" (nessun anno)\n' +
+  '- Taittinger Comtes de Champagne, annata 2012 -> cuvee: "Comtes de Champagne 2012"\n' +
+  '- Perrier-Jouet Belle Epoque, annata 2013 -> cuvee: "Belle Epoque 2013"\n' +
+  '- Louis Roederer Cristal, annata 2013 -> cuvee: "Cristal 2013"\n\n' +
   '=== REGOLA ASSOLUTA #4: LEGGERE IL NOME MAISON CON PRECISIONE ASSOLUTA ===\n' +
   'Leggi il nome del produttore LETTERA PER LETTERA dall etichetta. Non confondere mai:\n' +
   '- "Henri GIRAUD" (Ay Grand Cru, bottiglia scura, MV series) ≠ "HENRIOT" (Reims, etichetta bianca)\n' +
@@ -353,7 +368,7 @@ serve(async (req) => {
       '  "is_bottle": true se vedi una bottiglia, false altrimenti,\n' +
       '  "is_champagne": true se è Champagne AOC francese,\n' +
       '  "maison": "nome ESATTO del produttore come scritto sull etichetta (es. Krug, Henri Giraud, Moët & Chandon, Jacques Selosse). Se il produttore non è scritto sull etichetta (frequente per cuvée di prestigio: Cristal->Louis Roederer, Comtes de Champagne->Taittinger, Belle Epoque->Perrier-Jouët, Grande Cuvée/Clos du Mesnil->Krug, Cuvée Sir Winston Churchill->Pol Roger, La Grande Dame->Veuve Clicquot), deducilo dal nome della cuvée con la tua conoscenza enciclopedica invece di lasciarlo vuoto — non scrivere mai il nome della cuvée al posto del produttore. null solo se davvero non identificabile.",\n' +
-      '  "cuvee": "nome ESATTO della cuvée come scritto sull etichetta SENZA maison e SENZA annata. Includi codici alfanumerici (es. MV20, MV16, RD, R.D., P2, P3, VO, V.O., Clos du Mesnil, Grande Cuvée 173ème, Belle Epoque, Cristal, Blanc de Blancs). NON scrivere denominazioni territoriali (Grand Cru, Premier Cru, Aÿ, Reims ecc.) a meno che non siano parte del nome cuvée. o null",\n' +
+      '  "cuvee": "nome ESATTO della cuvée come scritto sull etichetta SENZA maison. Includi codici alfanumerici (es. MV20, MV16, RD, R.D., P2, P3, VO, V.O., Clos du Mesnil, Grande Cuvée 173ème, Belle Epoque, Cristal, Blanc de Blancs). NON scrivere denominazioni territoriali (Grand Cru, Premier Cru, Aÿ, Reims ecc.) a meno che non siano parte del nome cuvée. SE la bottiglia ha un annata (is_sa=false), l anno va SEMPRE aggiunto alla fine del nome cuvée (es. \'Cristal 2013\', \'Comtes de Champagne 2012\', \'P2 2004\'), non solo nel campo annata separato. Se è Sans Année (is_sa=true) nessun anno nel nome. o null",\n' +
       '  "annata": "anno es.2018 o null se sans année",\n' +
       '  "is_sa": true se sans année/non-vintage, false se ha annata,\n' +
       '  "confidence": 0-100,\n' +
@@ -695,9 +710,15 @@ serve(async (req) => {
       }
 
       if (maisonId) {
+        const cuveeStr = (ai.cuvee as string) || ''
+        const annataStr = ai.annata ? String(ai.annata) : ''
+        // Il nome cuvee dei millesimati include già l'annata (REGOLA #3): la
+        // aggiungiamo allo slug solo se il modello non l'ha ripetuta lì, per
+        // evitare slug tipo "cristal-2013-2013".
+        const needsAnnataSuffix = !ai.is_sa && annataStr && !cuveeStr.includes(annataStr)
         const bottleSlug = makeSlug(
-          (ai.maison as string) + '-' + (ai.cuvee as string) +
-          (!ai.is_sa && ai.annata ? '-' + ai.annata : '')
+          (ai.maison as string) + '-' + cuveeStr +
+          (needsAnnataSuffix ? '-' + annataStr : '')
         )
 
         // Dedup: se esiste già una bottiglia con needs_review=true per questa maison+cuvée, non inserirne un'altra
