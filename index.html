@@ -1821,11 +1821,11 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
     </div>
     <div style="padding:16px 0 8px;">
-      <div class="plan-card selected" onclick="selectPlan(this)">
+      <div class="plan-card selected" data-rc-plan="annual" onclick="selectPlan(this)">
         <div class="plan-header"><div class="plan-name">Annuale <span class="plan-badge">Risparmi 17%</span></div><div class="plan-price">4,99€ <span>/ mese</span></div></div>
         <div class="plan-desc">Fatturato 59,99€/anno · risparmi 12€ rispetto al mensile</div>
       </div>
-      <div class="plan-card" onclick="selectPlan(this)">
+      <div class="plan-card" data-rc-plan="monthly" onclick="selectPlan(this)">
         <div class="plan-header"><div class="plan-name">Mensile</div><div class="plan-price">5,99€ <span>/ mese</span></div></div>
         <div class="plan-desc">Fatturato mensilmente · disdici quando vuoi</div>
       </div>
@@ -1847,8 +1847,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="feature-item"><i class="ti ti-ad-off"></i><span>Nessuna pubblicità</span></div>
     </div>
     <div style="padding:0 18px 8px;">
-      <button class="btn-gold" id="subscribe-btn" onclick="activateTestPremium()" style="font-size:17px;">Abbonati ora</button>
+      <button class="btn-gold" id="subscribe-btn" onclick="subscribeNow()" style="font-size:17px;">Abbonati ora</button>
       <div style="font-family:var(--sans);font-size:13px;color:var(--ink-5);text-align:center;margin-top:8px;">Disdici quando vuoi · rinnovo automatico</div>
+      <div style="font-family:var(--sans);font-size:13px;color:var(--gold);text-align:center;margin-top:14px;cursor:pointer;" onclick="restorePurchases()">Ripristina acquisti</div>
     </div>
     <div style="height:20px;"></div>
   </div>
@@ -2816,6 +2817,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=143"></script>
+<script src="js/app.js?v=144"></script>
 </body>
 </html>

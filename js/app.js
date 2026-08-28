@@ -20,6 +20,7 @@ function go(id){
   // Load dynamic data when entering certain views
   if(id==='v-onb'){ onbIdx=0; onbApplySlide(onbData[0]); }
   if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); }
+  if(id==='v-paywall'){ loadPaywallOfferings(); }
   if(id==='v-scan-history') {
     const backLabels = { 'v-home':'Home', 'v-profile':'Il mio profilo' };
     const prevId = cur ? cur.id : 'v-home';
@@ -279,6 +280,7 @@ document.querySelectorAll('.chips-row .chip').forEach(c=>{
 function selectPlan(el){
   document.querySelectorAll('.plan-card').forEach(p=>p.classList.remove('selected'));
   el.classList.add('selected');
+  if (_rcOfferings) _selectedRcPackage = _rcPackageForType(el.dataset.rcPlan);
 }
 // CARNET
 let currentRating=0;
@@ -1142,7 +1144,8 @@ async function _rcIdentifyUser() {
   const RC = _rcPlugin();
   if (!RC) return;
   try {
-    await RC.logIn({ appUserID: currentUser.id });
+    const result = await RC.logIn({ appUserID: currentUser.id });
+    await _syncPremiumFromCustomerInfo(result.customerInfo);
   } catch(e) {
     console.log('RevenueCat logIn error:', e);
   }
@@ -2922,7 +2925,133 @@ function copyToClipboard(text) {
 
 
 
-// ═══ TEST PREMIUM (rimuovere quando Stripe è attivo) ═══
+// ═══ REVENUECAT: paywall reale (solo dentro l'app nativa) ═══
+const RC_ENTITLEMENT = 'cuvée_pro';
+let _rcOfferings = null;
+let _selectedRcPackage = null;
+
+function _isRcPackageType(pkg, type) {
+  if (!pkg) return false;
+  if (type === 'annual') return pkg.packageType === 'ANNUAL' || pkg.identifier === '$rc_annual';
+  return pkg.packageType === 'MONTHLY' || pkg.identifier === '$rc_monthly';
+}
+function _rcPackageForType(type) {
+  if (!_rcOfferings) return null;
+  return _rcOfferings.availablePackages.find(p => _isRcPackageType(p, type)) || null;
+}
+
+// Aggiorna le due card del paywall con i prezzi reali letti da App Store —
+// se RevenueCat non è disponibile (sito da browser, o SDK non configurato)
+// restano i prezzi statici già scritti nell'HTML.
+async function loadPaywallOfferings() {
+  const RC = _rcPlugin();
+  if (!window.Capacitor?.isNativePlatform?.() || !RC || !_rcConfigured) return;
+  try {
+    const { offerings } = await RC.getOfferings();
+    const current = offerings?.current;
+    if (!current || !current.availablePackages?.length) return;
+    _rcOfferings = current;
+
+    const cards = document.querySelectorAll('#v-paywall .plan-card');
+    const annual = _rcPackageForType('annual');
+    const monthly = _rcPackageForType('monthly');
+
+    if (annual && cards[0]) {
+      cards[0].dataset.rcPlan = 'annual';
+      const perMonth = (annual.product.price / 12).toFixed(2).replace('.', ',');
+      const priceEl = cards[0].querySelector('.plan-price');
+      if (priceEl) priceEl.innerHTML = perMonth + '€ <span>/ mese</span>';
+      const descEl = cards[0].querySelector('.plan-desc');
+      if (descEl) descEl.textContent = 'Fatturato ' + annual.product.priceString + '/anno';
+    }
+    if (monthly && cards[1]) {
+      cards[1].dataset.rcPlan = 'monthly';
+      const priceEl = cards[1].querySelector('.plan-price');
+      if (priceEl) priceEl.innerHTML = monthly.product.priceString + ' <span>/ mese</span>';
+    }
+    const selectedType = document.querySelector('#v-paywall .plan-card.selected')?.dataset.rcPlan || 'annual';
+    _selectedRcPackage = _rcPackageForType(selectedType) || annual || monthly;
+  } catch(e) {
+    console.log('RevenueCat getOfferings error:', e);
+  }
+}
+
+// Aggiorna is_premium/premium_until su Supabase in base allo stato reale
+// dell'entitlement RevenueCat — chiamata dopo un acquisto, un ripristino, e
+// a ogni login/apertura app, così lo stato resta corretto anche se un
+// rinnovo o una disdetta sono avvenuti mentre l'app era chiusa. Non copre
+// in tempo reale gli eventi mentre l'app resta chiusa per giorni: per
+// quello serve ancora un webhook lato server (da collegare più avanti).
+async function _syncPremiumFromCustomerInfo(customerInfo) {
+  if (!currentUser || !customerInfo) return;
+  const ent = customerInfo.entitlements?.active?.[RC_ENTITLEMENT];
+  const isPremiumNow = !!ent;
+  const premiumUntil = ent?.expirationDate || null;
+  try {
+    await supa.from('users').update({
+      is_premium: isPremiumNow,
+      premium_until: premiumUntil,
+    }).eq('id', currentUser.id);
+    if (currentUser.profile) {
+      currentUser.profile.is_premium = isPremiumNow;
+      currentUser.profile.premium_until = premiumUntil;
+    }
+  } catch(e) {
+    console.log('sync premium error:', e);
+  }
+}
+
+async function subscribeNow() {
+  if (!currentUser) { go('v-login'); return; }
+  const RC = _rcPlugin();
+  const isNative = window.Capacitor?.isNativePlatform?.();
+
+  // Fuori dall'app nativa (sito da browser) o SDK non pronto: comportamento
+  // di sempre — nessun pagamento reale possibile qui.
+  if (!isNative || !RC || !_rcConfigured) { return activateTestPremium(); }
+
+  if (!_selectedRcPackage) { alert('Seleziona un piano prima di continuare.'); return; }
+
+  const btn = document.getElementById('subscribe-btn');
+  if (btn) { btn.textContent = 'Acquisto in corso...'; btn.disabled = true; }
+
+  try {
+    const result = await RC.purchasePackage({ aPackage: _selectedRcPackage });
+    await _syncPremiumFromCustomerInfo(result.customerInfo);
+    if (btn) { btn.textContent = 'Premium attivato!'; btn.style.background = '#5DCAA5'; }
+    setTimeout(() => {
+      if (btn) { btn.textContent = 'Abbonati ora'; btn.style.background = ''; btn.disabled = false; }
+      updatePremiumUI();
+      go('v-home');
+    }, 1200);
+  } catch(e) {
+    if (btn) { btn.textContent = 'Abbonati ora'; btn.disabled = false; }
+    if (e?.userCancelled) return; // foglio di acquisto chiuso dall'utente, nessun errore da mostrare
+    console.log('purchase error:', e);
+    alert('Acquisto non riuscito: ' + (e?.message || 'errore sconosciuto') + '. Riprova.');
+  }
+}
+
+// Obbligatorio per la revisione Apple: recupera un abbonamento già attivo
+// (es. dopo aver reinstallato l'app o cambiato dispositivo).
+async function restorePurchases() {
+  const RC = _rcPlugin();
+  if (!window.Capacitor?.isNativePlatform?.() || !RC || !_rcConfigured) {
+    alert('Il ripristino acquisti è disponibile solo nell\'app.');
+    return;
+  }
+  try {
+    const result = await RC.restorePurchases();
+    await _syncPremiumFromCustomerInfo(result.customerInfo);
+    updatePremiumUI();
+    const hasPremium = !!result.customerInfo?.entitlements?.active?.[RC_ENTITLEMENT];
+    alert(hasPremium ? 'Abbonamento ripristinato!' : 'Nessun acquisto da ripristinare per questo account.');
+  } catch(e) {
+    alert('Ripristino non riuscito: ' + (e?.message || 'errore sconosciuto'));
+  }
+}
+
+// ═══ TEST PREMIUM — fallback quando RevenueCat non è disponibile (sito da browser) ═══
 async function activateTestPremium() {
   if (!currentUser) { go('v-login'); return; }
   // Attivazione gratuita riservata agli account admin: finché non è collegato un vero
