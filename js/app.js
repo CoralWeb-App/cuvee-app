@@ -2731,20 +2731,28 @@ async function updateCarnetUI() {
   // Counts
   const emptyEl = document.getElementById('carnet-empty');
   const premBanner = document.getElementById('carnet-premium-banner');
-  const countEl = document.getElementById('carnet-note-count');
+  const msgEl = document.getElementById('carnet-note-msg');
   const isPrem = currentUser?.profile?.is_premium;
   if (notes.length === 0) {
     if (emptyEl) emptyEl.style.display = 'block';
     document.getElementById('carnet-notes-list').style.display = 'none';
-    if (premBanner) premBanner.style.display = 'none';
   } else {
     if (emptyEl) emptyEl.style.display = 'none';
     document.getElementById('carnet-notes-list').style.display = 'block';
-    if (!isPrem && notes.length >= 3) {
-      if (premBanner) premBanner.style.display = 'block';
-      if (countEl) countEl.textContent = 3;
-    } else {
-      if (premBanner) premBanner.style.display = 'none';
+  }
+
+  if (premBanner) {
+    premBanner.style.display = isPrem ? 'none' : 'block';
+    if (!isPrem && msgEl) {
+      const used = Math.min(notes.length, 3);
+      const remaining = 3 - used;
+      if (used === 0) {
+        msgEl.innerHTML = 'Hai <strong style="color:#8a6a1e;">3 note gratuite</strong> disponibili. Con Premium puoi aggiungere tutte le degustazioni che vuoi — senza limiti.';
+      } else if (remaining > 0) {
+        msgEl.innerHTML = 'Ti restano <strong style="color:#8a6a1e;">' + remaining + ' note gratuite</strong>. Con Premium puoi aggiungere tutte le degustazioni che vuoi — senza limiti.';
+      } else {
+        msgEl.innerHTML = 'Hai usato le <strong style="color:#8a6a1e;">3 note gratuite</strong>. Con Premium puoi aggiungere tutte le degustazioni che vuoi — senza limiti.';
+      }
     }
   }
 }
