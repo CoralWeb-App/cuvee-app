@@ -2166,7 +2166,7 @@ async function updateSalvatiUI() {
     }[m.tipo] || m.tipo;
 
     const zoneColor = m.zone?.colore || '#b8922a';
-    const initial = maisonInitial(m.nome) || '?';
+    const initial = maisonMonogram(m.nome);
     return '<div class="maison-card" onclick="openSavedMaison(\'' + m.id + '\')" style="margin:0 14px 12px;">' +
       '<div class="maison-body">' +
       '<div class="maison-header-row">' +
@@ -3307,7 +3307,7 @@ function _maisonCardHTML(m, tipoBadge, tipoCategoria) {
   const label = m.tipo || '—';
   const fav = maisonFavorites.has(m.id);
   const zoneColor = m.zone?.colore || '#b8922a';
-  const initial = maisonInitial(m.nome) || '?';
+  const initial = maisonMonogram(m.nome);
 
   return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openMaisonDetail('" + m.id + "')") + '">' +
     '<div class="maison-body">' +
@@ -3368,6 +3368,19 @@ function maisonInitial(nome) {
   if (!nome) return '';
   const m = nome.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
   return m ? m[0].toUpperCase() : '';
+}
+
+// Iniziali per il monogramma (es. "Dom Pérignon" → "DP", "Bruno Paillard" → "BP").
+// Con una sola lettera, scorrendo la lista in ordine alfabetico si vedono
+// pagine intere con lo stesso monogramma — la seconda parola lo distingue.
+// Un solo nome (es. "Krug") resta a una lettera.
+function maisonMonogram(nome) {
+  if (!nome) return '?';
+  const clean = nome.replace(/^\s*\([^)]*\)\s*/, ''); // via un eventuale prefisso tra parentesi
+  const words = clean.split(/[\s\-]+/).filter(w => /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(w));
+  if (words.length === 0) return maisonInitial(nome) || '?';
+  const letterOf = w => w.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/)[0].toUpperCase();
+  return words.length === 1 ? letterOf(words[0]) : letterOf(words[0]) + letterOf(words[1]);
 }
 
 function buildLetterFilters() {
@@ -3487,7 +3500,7 @@ function openMaisonDetail(maisonId) {
       hero.innerHTML = '<img src="' + m.foto_url + '" style="width:100%;height:200px;object-fit:cover;"/>';
     } else {
       const zoneColor = m.zone?.colore || '#b8922a';
-      const initial = maisonInitial(m.nome) || '?';
+      const initial = maisonMonogram(m.nome);
       hero.className = 'detail-hero-mono';
       hero.style.setProperty('--hero-tint', zoneColor + '14');
       hero.style.color = zoneColor;
