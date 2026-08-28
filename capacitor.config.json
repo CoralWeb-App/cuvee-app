@@ -1,0 +1,9 @@
+{
+  "appId": "com.coralweb.cuvee",
+  "appName": "Cuvée",
+  "webDir": "www",
+  "server": {
+    "url": "https://coralweb-app.github.io/cuvee-app/",
+    "cleartext": false
+  }
+}
