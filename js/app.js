@@ -3652,6 +3652,15 @@ async function loadDetailBottles(maisonId) {
       .eq('needs_review', false)
       .order('nome', { ascending: true });
 
+    // openBottigliaDetail cerca la bottiglia in allBottiglie: se l'utente apre
+    // una cuvée da qui senza mai aver visitato la scheda Champagne, l'array è
+    // vuoto e il tap non fa nulla. Le registriamo qui per renderle sempre trovabili.
+    if (bottles && bottles.length) {
+      const known = new Set(allBottiglie.map(x => x.id));
+      const toAdd = bottles.filter(b => !known.has(b.id));
+      if (toAdd.length) allBottiglie = allBottiglie.concat(toAdd);
+    }
+
     const subtitleEl = document.getElementById('detail-cuvee-subtitle');
     if (!bottles || bottles.length === 0) {
       listEl.innerHTML = '<div style="padding:0 18px 16px;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Catalogo in aggiornamento.</div>';
@@ -3679,7 +3688,7 @@ async function loadDetailBottles(maisonId) {
           (isLocked ? '<div class="lock-pill"><i class="ti ti-lock"></i><span>Premium</span></div>' :
             (prezzo ? '<div class="bottle-price" style="font-family:var(--sans);font-size:13px;color:var(--gold);margin-top:2px;">' + prezzo + '</div>' : '')) +
         '</div>' +
-        (!isLocked && b.score_medio ? '<div style="font-family:var(--serif);font-size:18px;color:var(--gold);font-weight:600;flex-shrink:0;">' + b.score_medio + '</div>' : '') +
+        (!isLocked && b.score_medio ? scoreRingCard(b.score_medio) : '') +
       '</div>';
     }).join('');
     if (lockEl) {
