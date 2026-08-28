@@ -2736,7 +2736,7 @@ async function updateCarnetUI() {
   if (notes.length === 0) {
     if (emptyEl) emptyEl.style.display = 'block';
     document.getElementById('carnet-notes-list').style.display = 'none';
-    if (premBanner) premBanner.style.display = !isPrem ? 'block' : 'none';
+    if (premBanner) premBanner.style.display = 'none';
   } else {
     if (emptyEl) emptyEl.style.display = 'none';
     document.getElementById('carnet-notes-list').style.display = 'block';
