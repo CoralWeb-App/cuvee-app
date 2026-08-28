@@ -2165,16 +2165,17 @@ async function updateSalvatiUI() {
       'negociant': 'Négociant'
     }[m.tipo] || m.tipo;
 
+    const zoneColor = m.zone?.colore || '#b8922a';
+    const initial = maisonInitial(m.nome) || '?';
     return '<div class="maison-card" onclick="openSavedMaison(\'' + m.id + '\')" style="margin:0 14px 12px;">' +
-      '<div class="img-ph maison-card-ph" style="height:80px;">' +
-      (m.foto_url
-        ? '<img src="' + m.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>'
-        : '<i class="ti ti-photo" style="font-size:22px;"></i>'
-      ) +
-      '</div>' +
       '<div class="maison-body">' +
       '<div class="maison-header-row">' +
-      '<div class="maison-name">' + m.nome + '</div>' +
+      '<div class="maison-id">' +
+      (m.foto_url
+        ? '<div class="maison-thumb"><img src="' + m.foto_url + '" loading="lazy"/></div>'
+        : '<div class="maison-monogram" style="color:' + zoneColor + ';background:' + zoneColor + '14;border-color:' + zoneColor + '40;">' + initial + '</div>') +
+      '<div style="min-width:0;"><div class="maison-name">' + m.nome + '</div></div>' +
+      '</div>' +
       '<i class="ti ti-trash" style="font-size:20px;color:#c0a080;cursor:pointer;flex-shrink:0;" data-id="' + item.id + '" onclick="event.stopPropagation();removeFavorite(this.dataset.id)"></i>' +
       '</div>' +
       '<div class="maison-meta">' + [m.sede_comune, m.anno_fondazione ? 'dal ' + m.anno_fondazione : ''].filter(Boolean).join(' · ') + '</div>' +
@@ -3305,21 +3306,24 @@ function _maisonCardHTML(m, tipoBadge, tipoCategoria) {
   const categoria = tipoCategoria[m.tipo] || null;
   const label = m.tipo || '—';
   const fav = maisonFavorites.has(m.id);
+  const zoneColor = m.zone?.colore || '#b8922a';
+  const initial = maisonInitial(m.nome) || '?';
 
   return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openMaisonDetail('" + m.id + "')") + '">' +
-    '<div class="img-ph maison-card-ph" style="height:90px;">' +
-      (m.foto_url ? '<img src="' + m.foto_url + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;"/>' : '<i class="ti ti-photo" style="font-size:22px;"></i>') +
-      (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
-    '</div>' +
     '<div class="maison-body">' +
       '<div class="maison-header-row">' +
-        '<div class="maison-name">' + m.nome + '</div>' +
-        '<div style="display:flex;align-items:center;gap:8px;">' +
-          (!isLocked ? '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>' : '') +
+        '<div class="maison-id">' +
+          (m.foto_url
+            ? '<div class="maison-thumb"><img src="' + m.foto_url + '" loading="lazy"/></div>'
+            : '<div class="maison-monogram" style="color:' + zoneColor + ';background:' + zoneColor + '14;border-color:' + zoneColor + '40;">' + initial + '</div>') +
+          '<div style="min-width:0;"><div class="maison-name">' + m.nome + '</div></div>' +
         '</div>' +
+        (isLocked
+          ? '<span class="maison-lock-pill"><i class="ti ti-lock"></i>Premium</span>'
+          : '<i class="ti ' + (fav ? 'ti-heart-filled' : 'ti-heart') + ' maison-heart" style="' + (fav ? 'color:var(--gold);' : '') + '" data-id="' + m.id + '" onclick="event.stopPropagation();toggleMaisonFavorite(this,this.dataset.id)"></i>') +
       '</div>' +
       '<div class="maison-card-zona">' +
-        (m.zone ? '<span class="zona-badge-sm" style="background:' + (m.zone.colore||'#b8922a') + '18;color:' + (m.zone.colore||'#b8922a') + ';border:0.5px solid ' + (m.zone.colore||'#b8922a') + '55;">' + (m.zone.nome||'') + '</span>' : '') +
+        (m.zone ? '<span class="zona-badge-sm" style="background:' + zoneColor + '18;color:' + zoneColor + ';border:0.5px solid ' + zoneColor + '55;">' + (m.zone.nome||'') + '</span>' : '') +
         (m.sede_comune ? '<span class="maison-sede">· ' + m.sede_comune + '</span>' : '') +
         (m.anno_fondazione ? '<span class="maison-sede">· dal ' + m.anno_fondazione + '</span>' : '') +
       '</div>' +
@@ -3478,11 +3482,16 @@ function openMaisonDetail(maisonId) {
   const hero = document.getElementById('detail-hero');
   if (hero) {
     if (m.foto_url) {
+      hero.className = 'detail-hero-photo';
+      hero.style.color = '';
       hero.innerHTML = '<img src="' + m.foto_url + '" style="width:100%;height:200px;object-fit:cover;"/>';
-      hero.className = '';
     } else {
-      hero.className = 'img-ph detail-hero-ph';
-      hero.innerHTML = '<i class="ti ti-photo" style="font-size:36px;"></i><span>' + m.nome + '</span>';
+      const zoneColor = m.zone?.colore || '#b8922a';
+      const initial = maisonInitial(m.nome) || '?';
+      hero.className = 'detail-hero-mono';
+      hero.style.setProperty('--hero-tint', zoneColor + '14');
+      hero.style.color = zoneColor;
+      hero.innerHTML = '<div class="detail-hero-medallion">' + initial + '</div><div class="detail-hero-rule"></div>';
     }
   }
 
