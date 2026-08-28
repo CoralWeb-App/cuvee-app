@@ -1106,6 +1106,48 @@ if('serviceWorker' in navigator){
 
 let currentUser = null;
 
+// ── RevenueCat (acquisti in-app) ──────────────────────────────────
+// Attivo SOLO dentro l'app nativa iOS/Android: nel sito da browser
+// window.Capacitor non esiste, quindi queste funzioni non fanno nulla —
+// stesso file di codice condiviso tra sito e app.
+const REVENUECAT_API_KEY_IOS = 'appl_QwJMoulDdrgyYiqlItXemDnyFkJ';
+let _rcConfigured = false;
+
+function _rcPlugin() {
+  return window.Capacitor?.Plugins?.Purchases || null;
+}
+
+async function initRevenueCat() {
+  if (_rcConfigured) return;
+  if (!window.Capacitor?.isNativePlatform?.()) return; // solo app nativa
+  const platform = window.Capacitor.getPlatform(); // 'ios' | 'android'
+  const apiKey = platform === 'ios' ? REVENUECAT_API_KEY_IOS : null;
+  if (!apiKey) { console.log('RevenueCat: nessuna API key configurata per ' + platform); return; }
+  const RC = _rcPlugin();
+  if (!RC) { console.log('RevenueCat: plugin non trovato'); return; }
+  try {
+    await RC.configure({ apiKey });
+    _rcConfigured = true;
+    console.log('RevenueCat configurato (' + platform + ')');
+    if (currentUser) await _rcIdentifyUser();
+  } catch(e) {
+    console.log('RevenueCat configure error:', e);
+  }
+}
+
+// Collega l'utente Supabase loggato all'utente RevenueCat, così lo stato
+// Premium risulta legato al suo account e non al singolo dispositivo.
+async function _rcIdentifyUser() {
+  if (!currentUser || !_rcConfigured) return;
+  const RC = _rcPlugin();
+  if (!RC) return;
+  try {
+    await RC.logIn({ appUserID: currentUser.id });
+  } catch(e) {
+    console.log('RevenueCat logIn error:', e);
+  }
+}
+
 // Controlla sessione all avvio
 // Dopo un login (email, riapertura app, Apple, Google) instrada verso l'app
 // solo se l'utente ha già confermato di essere maggiorenne — altrimenti lo
@@ -1114,6 +1156,7 @@ let currentUser = null;
 // creati prima dell'introduzione di questo controllo.
 async function _routeAfterAuth() {
   try { await loadUserProfile(); } catch(e) { console.log('Profile load:', e); }
+  _rcIdentifyUser().catch(e => console.log('RevenueCat identify:', e));
   if (currentUser?.profile?.age_confirmed === true) {
     go('v-home');
   } else {
@@ -1153,6 +1196,8 @@ supa.auth.onAuthStateChange(async (event, session) => {
   } else if (event === 'SIGNED_OUT') {
     stopVerifyPolling();
     currentUser = null;
+    const RC = _rcPlugin();
+    if (RC && _rcConfigured) RC.logOut().catch(e => console.log('RevenueCat logOut:', e));
     go('v-splash');
   }
 });
@@ -1667,6 +1712,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (logoutBtn) logoutBtn.onclick = signOut;
   initAuth();
   loadHomeCounts();
+  initRevenueCat();
 });
 
 // Arrotonda per difetto alla decina e aggiunge "+" — mostra un numero
