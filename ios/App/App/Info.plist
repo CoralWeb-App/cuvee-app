@@ -24,6 +24,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>Cuvée usa la fotocamera per scattare la foto dell'etichetta durante la scansione di una bottiglia.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
