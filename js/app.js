@@ -2949,12 +2949,14 @@ async function loadPaywallOfferings() {
   try {
     const { offerings } = await RC.getOfferings();
     const current = offerings?.current;
+    console.log('RC offerings debug: current=' + !!current + ' pkgCount=' + (current?.availablePackages?.length ?? 'n/a') + ' allKeys=' + Object.keys(offerings?.all || {}).join(','));
     if (!current || !current.availablePackages?.length) return;
     _rcOfferings = current;
 
     const cards = document.querySelectorAll('#v-paywall .plan-card');
     const annual = _rcPackageForType('annual');
     const monthly = _rcPackageForType('monthly');
+    console.log('RC packages debug: annual=' + !!annual + ' monthly=' + !!monthly + ' cards=' + cards.length);
 
     if (annual && cards[0]) {
       cards[0].dataset.rcPlan = 'annual';
@@ -2971,6 +2973,7 @@ async function loadPaywallOfferings() {
     }
     const selectedType = document.querySelector('#v-paywall .plan-card.selected')?.dataset.rcPlan || 'annual';
     _selectedRcPackage = _rcPackageForType(selectedType) || annual || monthly;
+    console.log('RC selection debug: selectedType=' + selectedType + ' selectedPackage=' + !!_selectedRcPackage);
   } catch(e) {
     console.log('RevenueCat getOfferings error:', e);
   }
