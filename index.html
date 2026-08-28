@@ -99,7 +99,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div style="font-family:var(--serif);font-size:26px;color:var(--ink);margin-bottom:4px;font-weight:500;">Crea il tuo account</div>
     <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:22px;">Gratuito · accesso base sempre disponibile</div>
     <div class="input-wrap"><label class="input-label">Nome</label><input class="input-field" id="reg-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name"/></div>
-    <div class="input-wrap"><label class="input-label">Email</label><input class="input-field" id="reg-email" type="email" placeholder="nome@email.com" autocomplete="email"/></div>
+    <div class="input-wrap"><label class="input-label">Email</label><input class="input-field" id="reg-email" type="email" placeholder="nome@email.com" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false"/></div>
     <div class="input-wrap"><label class="input-label">Password</label><input class="input-field" id="reg-password" type="password" placeholder="Minimo 8 caratteri" autocomplete="new-password"/></div>
     <label class="reg-age-check" for="reg-age18">
       <input type="checkbox" id="reg-age18"/>
@@ -2445,7 +2445,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="scroll" style="padding:8px 22px 28px;">
     <div style="font-family:var(--serif);font-size:26px;color:var(--ink);margin-bottom:5px;font-weight:500;">Bentornato</div>
     <div style="font-family:var(--sans);font-size:var(--fs-sm);color:var(--ink-4);margin-bottom:24px;">Accedi al tuo account Cuvée</div>
-    <div class="input-wrap"><label class="input-label">Email</label><input class="input-field" id="login-email" type="email" placeholder="nome@email.com" autocomplete="email"/></div>
+    <div class="input-wrap"><label class="input-label">Email</label><input class="input-field" id="login-email" type="email" placeholder="nome@email.com" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false"/></div>
     <div class="input-wrap"><label class="input-label">Password</label><input class="input-field" id="login-password" type="password" placeholder="La tua password" autocomplete="current-password"/></div>
     <div id="login-error" style="font-family:var(--sans);font-size:14px;color:#E24B4A;margin-bottom:12px;display:none;padding:10px 14px;background:#FCEBEB;border-radius:var(--radius-sm);"></div>
     <button class="btn-gold" id="login-btn" onclick="signIn()">Accedi</button>
