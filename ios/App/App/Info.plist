@@ -30,6 +30,15 @@
 	<string>Cuvée usa la fotocamera per scattare la foto dell'etichetta durante la scansione di una bottiglia.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Cuvée accede alle tue foto per permetterti di scegliere l'immagine di una bottiglia da scansionare dalla galleria.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.705669492478-dkivm7d3mb42ehb0nhmkl7m7f2tq3o1a</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

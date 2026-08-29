@@ -1161,6 +1161,10 @@ async function _rcIdentifyUser() {
 // Attivo SOLO dentro l'app nativa: nel sito da browser resta il vecchio
 // flusso OAuth via redirect di Supabase (signInWithOAuth più sotto).
 const APPLE_BUNDLE_ID = 'com.coralweb.cuvee';
+// Client ID "Web" — usato anche come iOSServerClientId, perché è quello che
+// Supabase verifica come audience del token (non l'iOS Client ID).
+const GOOGLE_WEB_CLIENT_ID = '705669492478-gtr3ebj69g1gcm8i7jbro87on876lees.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID = '705669492478-dkivm7d3mb42ehb0nhmkl7m7f2tq3o1a.apps.googleusercontent.com';
 let _socialLoginConfigured = false;
 
 function _socialLoginPlugin() {
@@ -1173,7 +1177,15 @@ async function initSocialLogin() {
   const SL = _socialLoginPlugin();
   if (!SL) { console.log('SocialLogin: plugin non trovato'); return; }
   try {
-    await SL.initialize({ apple: { clientId: APPLE_BUNDLE_ID } });
+    await SL.initialize({
+      apple: { clientId: APPLE_BUNDLE_ID },
+      google: {
+        webClientId: GOOGLE_WEB_CLIENT_ID,
+        iOSClientId: GOOGLE_IOS_CLIENT_ID,
+        iOSServerClientId: GOOGLE_WEB_CLIENT_ID,
+        mode: 'online',
+      },
+    });
     _socialLoginConfigured = true;
     console.log('SocialLogin configurato');
   } catch(e) {
@@ -1490,7 +1502,26 @@ async function signInWithProvider(provider) {
     return;
   }
 
-  // Web (sito da browser) o Google (ancora da collegare lato nativo): flusso invariato.
+  // Stesso discorso di Apple: dentro l'app nativa Google usa il flusso di
+  // sistema (Credential Manager) invece del redirect OAuth via browser.
+  if (isNative && SL && provider === 'google') {
+    try {
+      const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+      const idToken = res?.result?.idToken;
+      if (!idToken) throw new Error('Nessun token ricevuto da Google');
+      const p = res?.result?.profile;
+      _pendingSocialName = p?.name || [p?.givenName, p?.familyName].filter(Boolean).join(' ').trim();
+      const { error } = await supa.auth.signInWithIdToken({ provider: 'google', token: idToken });
+      if (error) throw error;
+    } catch(e) {
+      if (e?.code === 'USER_CANCELLED') return;
+      console.log('Google sign in error:', e);
+      alert('Errore: ' + (e?.message || 'accesso con Google non riuscito'));
+    }
+    return;
+  }
+
+  // Sito da browser (nessun plugin nativo disponibile): flusso invariato.
   try {
     const { error } = await supa.auth.signInWithOAuth({
       provider,
