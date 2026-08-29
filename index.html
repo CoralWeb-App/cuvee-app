@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=82"/>
+<link rel="stylesheet" href="css/style.css?v=83"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1812,7 +1812,18 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="scroll">
     <div class="paywall-hero">
-      <div class="img-ph" style="height:100%;"><i class="ti ti-photo" style="font-size:30px;"></i><span>Cantina premium</span></div>
+      <div class="paywall-hero-logo">
+        <svg width="54" height="70" viewBox="0 0 56 72" fill="none">
+          <ellipse cx="28" cy="24" rx="12" ry="20" stroke="#e0b34a" stroke-width="1.6"/>
+          <line x1="28" y1="44" x2="28" y2="58" stroke="#e0b34a" stroke-width="1.6"/>
+          <line x1="17" y1="58" x2="39" y2="58" stroke="#e0b34a" stroke-width="1.6"/>
+          <circle cx="22" cy="16" r="2.4" fill="#e0b34a" opacity=".9"/>
+          <circle cx="32" cy="10" r="1.8" fill="#e0b34a" opacity=".7"/>
+          <circle cx="26" cy="7" r="1.4" fill="#e0b34a" opacity=".55"/>
+          <circle cx="35" cy="22" r="1.6" fill="#e0b34a" opacity=".6"/>
+          <circle cx="21" cy="29" r="2" fill="#e0b34a" opacity=".75"/>
+        </svg>
+      </div>
       <div class="paywall-hero-over">
         <div style="text-align:center;">
           <div style="font-family:var(--serif);font-size:28px;color:var(--ink);font-weight:500;">Cuvée Premium</div>
@@ -2664,7 +2675,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <!-- PIANO GRATUITO -->
       <div id="sub-free-active">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
           <div style="width:48px;height:48px;border-radius:12px;background:var(--ivory-3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i class="ti ti-lock" style="font-size:24px;color:var(--ink-4);"></i>
           </div>
@@ -2673,8 +2684,21 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
             <div style="font-family:var(--sans);font-size:14px;color:var(--ink-4);">Accesso base sempre disponibile</div>
           </div>
         </div>
-        <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.65;margin-bottom:20px;">Sblocca 100 scansioni sommelier al mese, il catalogo completo e le degustazioni illimitate nel Carnet.</div>
-        <button class="btn-gold" onclick="go('v-paywall')" style="font-size:17px;margin-bottom:12px;">Abbonati ora</button>
+        <div style="font-family:var(--sans);font-size:12px;letter-spacing:1px;color:var(--ink-4);text-transform:uppercase;margin-bottom:10px;">Con Premium sblocchi</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-sparkles" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>100 scansioni sommelier al mese</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-notebook" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Degustazioni illimitate nel Carnet</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-bottle" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Catalogo Champagne al completo</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-building" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Tutti i produttori sbloccati — Krug, Salon, Selosse e le altre maison prestige</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-book-2" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Glossario tecnico al completo</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-history" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Storico scansioni illimitato</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-ad-off" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Nessuna pubblicità</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+          <span style="font-family:var(--sans);font-size:12px;background:var(--ivory-2);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:3px 10px;">Da 4,99€/mese</span>
+          <span style="font-family:var(--sans);font-size:12px;background:var(--ivory-2);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:3px 10px;">Disdici quando vuoi</span>
+        </div>
+        <button class="btn-gold" onclick="go('v-paywall')" style="font-size:17px;">Passa a Premium</button>
       </div>
 
     </div>
