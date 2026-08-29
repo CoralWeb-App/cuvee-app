@@ -5,5 +5,15 @@
   "server": {
     "url": "https://coralweb-app.github.io/cuvee-app/",
     "cleartext": false
+  },
+  "plugins": {
+    "SocialLogin": {
+      "providers": {
+        "google": true,
+        "apple": true,
+        "facebook": false,
+        "twitter": false
+      }
+    }
   }
 }

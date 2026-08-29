@@ -1151,6 +1151,30 @@ async function _rcIdentifyUser() {
   }
 }
 
+// ── Login social nativo (Apple / Google) ──────────────────────────
+// Attivo SOLO dentro l'app nativa: nel sito da browser resta il vecchio
+// flusso OAuth via redirect di Supabase (signInWithOAuth più sotto).
+const APPLE_BUNDLE_ID = 'com.coralweb.cuvee';
+let _socialLoginConfigured = false;
+
+function _socialLoginPlugin() {
+  return window.Capacitor?.Plugins?.SocialLogin || null;
+}
+
+async function initSocialLogin() {
+  if (_socialLoginConfigured) return;
+  if (!window.Capacitor?.isNativePlatform?.()) return; // solo app nativa
+  const SL = _socialLoginPlugin();
+  if (!SL) { console.log('SocialLogin: plugin non trovato'); return; }
+  try {
+    await SL.initialize({ apple: { clientId: APPLE_BUNDLE_ID } });
+    _socialLoginConfigured = true;
+    console.log('SocialLogin configurato');
+  } catch(e) {
+    console.log('SocialLogin initialize error:', e);
+  }
+}
+
 // Controlla sessione all avvio
 // Dopo un login (email, riapertura app, Apple, Google) instrada verso l'app
 // solo se l'utente ha già confermato di essere maggiorenne — altrimenti lo
@@ -1327,6 +1351,28 @@ function attemptOAuthSignup(provider) {
 
 // SOCIAL LOGIN
 async function signInWithProvider(provider) {
+  const isNative = window.Capacitor?.isNativePlatform?.();
+  const SL = _socialLoginPlugin();
+
+  // Dentro l'app nativa, Apple usa il flusso di sistema (AuthenticationServices)
+  // invece del redirect OAuth via browser, che nella WebView non funziona bene
+  // ed è anche il flusso raccomandato/richiesto da Apple in fase di review.
+  if (isNative && SL && provider === 'apple') {
+    try {
+      const res = await SL.login({ provider: 'apple', options: { scopes: ['email', 'name'] } });
+      const idToken = res?.result?.idToken;
+      if (!idToken) throw new Error('Nessun token ricevuto da Apple');
+      const { error } = await supa.auth.signInWithIdToken({ provider: 'apple', token: idToken });
+      if (error) throw error;
+    } catch(e) {
+      if (e?.code === 'USER_CANCELLED') return;
+      console.log('Apple sign in error:', e);
+      alert('Errore: ' + (e?.message || 'accesso con Apple non riuscito'));
+    }
+    return;
+  }
+
+  // Web (sito da browser) o Google (ancora da collegare lato nativo): flusso invariato.
   try {
     const { error } = await supa.auth.signInWithOAuth({
       provider,
@@ -1716,6 +1762,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initAuth();
   loadHomeCounts();
   initRevenueCat();
+  initSocialLogin();
 });
 
 // Arrotonda per difetto alla decina e aggiunge "+" — mostra un numero
