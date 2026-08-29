@@ -1193,6 +1193,7 @@ let _pendingSocialName = '';
 async function _routeAfterAuth() {
   try { await loadUserProfile(); } catch(e) { console.log('Profile load:', e); }
   _rcIdentifyUser().catch(e => console.log('RevenueCat identify:', e));
+  console.log('ROUTE debug: full_name=' + JSON.stringify(currentUser?.profile?.full_name) + ' age_confirmed=' + currentUser?.profile?.age_confirmed + ' pendingSocialName=' + JSON.stringify(_pendingSocialName));
   if (!currentUser?.profile?.full_name?.trim()) {
     const nameInput = document.getElementById('complete-profile-name');
     if (nameInput) nameInput.value = _pendingSocialName || '';
