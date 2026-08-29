@@ -1508,8 +1508,12 @@ async function signInWithProvider(provider) {
     try {
       // Il token di Google include sempre un nonce: va passato anche a
       // Supabase, altrimenti il controllo nonce fallisce (non basta ometterlo).
+      // forcePrompt:true è necessario perché, se esiste già un accesso Google
+      // precedente sul dispositivo, il plugin lo ripristina silenziosamente
+      // (restorePreviousSignIn) SENZA passare il nonce — il token restituito
+      // avrebbe quindi un nonce diverso (o nessuno), causando un mismatch.
       const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36) + Math.random().toString(36).slice(2);
-      const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'], nonce } });
+      const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'], nonce, forcePrompt: true } });
       const idToken = res?.result?.idToken;
       if (!idToken) throw new Error('Nessun token ricevuto da Google');
       const p = res?.result?.profile;
