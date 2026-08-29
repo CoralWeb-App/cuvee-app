@@ -1512,13 +1512,19 @@ async function signInWithProvider(provider) {
       // precedente sul dispositivo, il plugin lo ripristina silenziosamente
       // (restorePreviousSignIn) SENZA passare il nonce — il token restituito
       // avrebbe quindi un nonce diverso (o nessuno), causando un mismatch.
-      const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36) + Math.random().toString(36).slice(2);
-      const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'], nonce, forcePrompt: true } });
+      // Supabase verifica sha256(nonce grezzo) contro il nonce nel token: a
+      // Google va passato l'hash (il plugin lo inoltra così com'è, senza
+      // hasharlo lui), a Supabase invece va passato il nonce originale — lo
+      // stesso schema che Apple applica già in automatico.
+      const rawNonce = Math.random().toString(36).slice(2) + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const hashedNonce = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawNonce))))
+        .map(b => b.toString(16).padStart(2, '0')).join('');
+      const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'], nonce: hashedNonce, forcePrompt: true } });
       const idToken = res?.result?.idToken;
       if (!idToken) throw new Error('Nessun token ricevuto da Google');
       const p = res?.result?.profile;
       _pendingSocialName = p?.name || [p?.givenName, p?.familyName].filter(Boolean).join(' ').trim();
-      const { error } = await supa.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce });
+      const { error } = await supa.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce: rawNonce });
       if (error) throw error;
     } catch(e) {
       if (e?.code === 'USER_CANCELLED') return;
