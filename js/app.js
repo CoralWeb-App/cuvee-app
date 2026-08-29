@@ -1,5 +1,5 @@
 
-console.log('APP_JS_VERSION: 158');
+console.log('APP_JS_VERSION: ' + (document.currentScript?.src || 'unknown')); // src include ?v=N, sempre aggiornato da solo
 const stack=[];
 function go(id){
   // La registrazione richiede prima la conferma di avere almeno 18 anni,
@@ -1522,6 +1522,10 @@ async function signInWithProvider(provider) {
       const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'], nonce: hashedNonce, forcePrompt: true } });
       const idToken = res?.result?.idToken;
       if (!idToken) throw new Error('Nessun token ricevuto da Google');
+      try {
+        const payload = JSON.parse(atob(idToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+        console.log('GOOGLE nonce debug: rawNonce=' + rawNonce + ' hashedNonce=' + hashedNonce + ' tokenNonce=' + payload.nonce);
+      } catch(e2) { console.log('GOOGLE nonce debug decode error:', e2); }
       const p = res?.result?.profile;
       _pendingSocialName = p?.name || [p?.givenName, p?.familyName].filter(Boolean).join(' ').trim();
       const { error } = await supa.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce: rawNonce });
