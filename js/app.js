@@ -1528,8 +1528,9 @@ async function signInWithProvider(provider) {
       } catch(e2) { console.log('GOOGLE nonce debug decode error:', e2); }
       const p = res?.result?.profile;
       _pendingSocialName = p?.name || [p?.givenName, p?.familyName].filter(Boolean).join(' ').trim();
-      const { error } = await supa.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce: rawNonce });
+      const { data, error } = await supa.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce: rawNonce });
       if (error) throw error;
+      console.log('GOOGLE session debug: userId=' + data?.user?.id + ' email=' + data?.user?.email + ' isNewUser=' + (data?.user?.created_at === data?.user?.last_sign_in_at));
     } catch(e) {
       if (e?.code === 'USER_CANCELLED') return;
       console.log('Google sign in error:', e);
