@@ -1210,12 +1210,27 @@ async function _routeAfterAuth() {
   if (!currentUser?.profile?.full_name?.trim()) {
     const nameInput = document.getElementById('complete-profile-name');
     if (nameInput) nameInput.value = _pendingSocialName || '';
+    const backBtn = document.getElementById('complete-profile-back');
+    if (backBtn) backBtn.style.display = 'none'; // niente da annullare: senza nome non si può entrare
     go('v-complete-profile');
   } else if (currentUser?.profile?.age_confirmed === true) {
     go('v-home');
   } else {
     go('v-age-gate');
   }
+}
+
+// Riapre v-complete-profile per cambiare il nome in un secondo momento
+// (matita accanto al nome nel profilo), a differenza del primo accesso qui
+// si può anche annullare senza salvare nulla.
+let _editingProfileName = false;
+function openEditProfileName() {
+  _editingProfileName = true;
+  const nameInput = document.getElementById('complete-profile-name');
+  if (nameInput) nameInput.value = currentUser?.profile?.full_name || '';
+  const backBtn = document.getElementById('complete-profile-back');
+  if (backBtn) backBtn.style.display = 'flex';
+  go('v-complete-profile');
 }
 
 async function saveProfileName() {
@@ -1231,6 +1246,11 @@ async function saveProfileName() {
   }
   if (currentUser.profile) currentUser.profile.full_name = name;
   updateProfileUI(currentUser.profile); // aggiorna subito nome/avatar in giro per l'app
+  if (_editingProfileName) {
+    _editingProfileName = false;
+    go('v-profile');
+    return;
+  }
   if (currentUser?.profile?.age_confirmed === true) {
     go('v-home');
   } else {
@@ -1583,10 +1603,6 @@ function updateProfileUI(profile) {
   // Nome profilo
   const nameEl = document.getElementById('profile-name');
   if (nameEl) nameEl.textContent = name;
-
-  // Email profilo
-  const emailEl = document.getElementById('profile-email');
-  if (emailEl) emailEl.textContent = email;
 
   // Avatar profilo
   const avatarEl = document.getElementById('profile-avatar');

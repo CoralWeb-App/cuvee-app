@@ -137,8 +137,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
-<!-- ═══ COMPLETA PROFILO (dopo accesso Apple/Google senza nome) ═══ -->
+<!-- ═══ COMPLETA PROFILO (dopo accesso Apple/Google senza nome, o modifica dal profilo) ═══ -->
 <div class="view" id="v-complete-profile">
+  <button class="back-btn" id="complete-profile-back" onclick="goBack()" style="display:none;position:absolute;top:18px;left:18px;z-index:1;"><i class="ti ti-arrow-left"></i></button>
   <div class="agegate-body">
     <div class="agegate-icon"><i class="ti ti-user"></i></div>
     <div class="agegate-title">Come ti chiamiamo?</div>
@@ -1907,8 +1908,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
       <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
       <div>
-        <div style="font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:500;" id="profile-name">—</div>
-        <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-top:2px;" id="profile-email">—</div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div style="font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:500;" id="profile-name">—</div>
+          <i class="ti ti-pencil" onclick="openEditProfileName()" style="font-size:15px;color:var(--ink-4);cursor:pointer;padding:4px;"></i>
+        </div>
         <div id="profile-premium-badge" style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:20px;padding:3px 10px;">
           <i class="ti ti-crown" style="font-size:15px;color:var(--gold);"></i>
           <span style="font-family:var(--sans);font-size:13px;color:#8a6a1e;font-weight:500;">Premium attivo</span>
@@ -2866,6 +2869,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=160"></script>
+<script src="js/app.js?v=161"></script>
 </body>
 </html>
