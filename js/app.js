@@ -1506,12 +1506,15 @@ async function signInWithProvider(provider) {
   // sistema (Credential Manager) invece del redirect OAuth via browser.
   if (isNative && SL && provider === 'google') {
     try {
-      const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+      // Il token di Google include sempre un nonce: va passato anche a
+      // Supabase, altrimenti il controllo nonce fallisce (non basta ometterlo).
+      const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const res = await SL.login({ provider: 'google', options: { scopes: ['email', 'profile'], nonce } });
       const idToken = res?.result?.idToken;
       if (!idToken) throw new Error('Nessun token ricevuto da Google');
       const p = res?.result?.profile;
       _pendingSocialName = p?.name || [p?.givenName, p?.familyName].filter(Boolean).join(' ').trim();
-      const { error } = await supa.auth.signInWithIdToken({ provider: 'google', token: idToken });
+      const { error } = await supa.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce });
       if (error) throw error;
     } catch(e) {
       if (e?.code === 'USER_CANCELLED') return;
