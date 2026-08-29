@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=84"/>
+<link rel="stylesheet" href="css/style.css?v=85"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -123,6 +123,20 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="agegate-sub">Cuvée è dedicata al mondo dello Champagne. Per continuare devi confermare di avere già compiuto 18 anni.</div>
     <button class="btn-gold" onclick="confirmAge18()">Ho almeno 18 anni — Continua</button>
     <button class="btn-outline" onclick="declineAge18()" style="margin-top:10px;">Non ho ancora 18 anni</button>
+  </div>
+</div>
+
+<!-- ═══ COMPLETA PROFILO (dopo accesso Apple/Google senza nome) ═══ -->
+<div class="view" id="v-complete-profile">
+  <div class="agegate-body">
+    <div class="agegate-icon"><i class="ti ti-user"></i></div>
+    <div class="agegate-title">Come ti chiamiamo?</div>
+    <div class="agegate-sub">Il nome che useremo nel tuo profilo e nel Carnet de dégustation.</div>
+    <div class="input-wrap" style="width:100%;text-align:left;">
+      <label class="input-label">Nome</label>
+      <input class="input-field" id="complete-profile-name" type="text" placeholder="Il tuo nome" autocomplete="name" onkeydown="if(event.key==='Enter')saveProfileName()"/>
+    </div>
+    <button class="btn-gold" onclick="saveProfileName()" style="margin-top:6px;">Continua</button>
   </div>
 </div>
 
@@ -2841,6 +2855,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=155"></script>
+<script src="js/app.js?v=156"></script>
 </body>
 </html>

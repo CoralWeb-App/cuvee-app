@@ -5,7 +5,7 @@ function go(id){
   const protectedViews = ['v-home','v-guida','v-maison','v-carnet','v-profile',
     'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
     'v-bottiglie','v-bottiglia-detail',
-    'v-subscription','v-paywall','v-scan-history','v-age-gate',
+    'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
@@ -52,7 +52,7 @@ function go(id){
 }
 function updateBottomNav(id){
   // View senza bottom nav (fuori dall'app: splash, onboarding, auth, paywall)
-  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-privacy','v-terms'];
+  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-complete-profile','v-privacy','v-terms'];
   const nav = document.getElementById('shared-bottom-nav');
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 
@@ -1175,15 +1175,44 @@ async function initSocialLogin() {
   }
 }
 
+// Contiene nome/cognome restituiti da Apple/Google al primo accesso (solo la
+// primissima volta: i provider social non li ripetono ai login successivi),
+// usato per precompilare v-complete-profile subito dopo il routing.
+let _pendingSocialName = '';
+
 // Controlla sessione all avvio
 // Dopo un login (email, riapertura app, Apple, Google) instrada verso l'app
 // solo se l'utente ha già confermato di essere maggiorenne — altrimenti lo
 // blocca su v-age-gate. Vale per ogni percorso di accesso, non solo la
 // registrazione via form, quindi copre anche Apple/Google e gli account
 // creati prima dell'introduzione di questo controllo.
+// Chi arriva da un provider social senza un nome salvato (Apple/Google non lo
+// comunicano sempre, e mai più dopo il primo accesso) passa prima da
+// v-complete-profile: senza un nome vero, avatar e Carnet mostrerebbero solo
+// l'indirizzo email generato dal relay di Apple.
 async function _routeAfterAuth() {
   try { await loadUserProfile(); } catch(e) { console.log('Profile load:', e); }
   _rcIdentifyUser().catch(e => console.log('RevenueCat identify:', e));
+  if (!currentUser?.profile?.full_name?.trim()) {
+    const nameInput = document.getElementById('complete-profile-name');
+    if (nameInput) nameInput.value = _pendingSocialName || '';
+    go('v-complete-profile');
+  } else if (currentUser?.profile?.age_confirmed === true) {
+    go('v-home');
+  } else {
+    go('v-age-gate');
+  }
+}
+
+async function saveProfileName() {
+  if (!currentUser) return;
+  const input = document.getElementById('complete-profile-name');
+  const name = input?.value?.trim();
+  if (!name) { input?.focus(); return; }
+  try {
+    await supa.from('users').update({ full_name: name }).eq('id', currentUser.id);
+    if (currentUser.profile) currentUser.profile.full_name = name;
+  } catch(e) { console.log('Save profile name error:', e); }
   if (currentUser?.profile?.age_confirmed === true) {
     go('v-home');
   } else {
@@ -1362,6 +1391,10 @@ async function signInWithProvider(provider) {
       const res = await SL.login({ provider: 'apple', options: { scopes: ['email', 'name'] } });
       const idToken = res?.result?.idToken;
       if (!idToken) throw new Error('Nessun token ricevuto da Apple');
+      // Apple restituisce nome/cognome solo la primissima volta che l'utente
+      // autorizza questa app — va salvato subito, non arriverà più ai login successivi.
+      const p = res?.result?.profile;
+      _pendingSocialName = [p?.givenName, p?.familyName].filter(Boolean).join(' ').trim();
       const { error } = await supa.auth.signInWithIdToken({ provider: 'apple', token: idToken });
       if (error) throw error;
     } catch(e) {
