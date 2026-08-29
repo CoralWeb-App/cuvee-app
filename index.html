@@ -105,6 +105,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <input type="checkbox" id="reg-age18"/>
       <span>Confermo di avere già compiuto <strong>18 anni</strong>.</span>
     </label>
+    <label class="reg-age-check" for="reg-newsletter">
+      <input type="checkbox" id="reg-newsletter"/>
+      <span>Voglio iscrivermi alla newsletter — novità, guide e offerte su Cuvée.</span>
+    </label>
     <div id="reg-error" style="font-family:var(--sans);font-size:14px;color:#E24B4A;margin-bottom:12px;display:none;padding:10px 14px;background:#FCEBEB;border-radius:var(--radius-sm);"></div>
     <button class="btn-gold" id="reg-btn" onclick="signUp()">Registrati</button>
     <div class="divider-row"><div class="div-line"></div><div class="div-txt">oppure</div><div class="div-line"></div></div>
@@ -2869,6 +2873,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=161"></script>
+<script src="js/app.js?v=162"></script>
 </body>
 </html>

@@ -1204,7 +1204,8 @@ async function _routeAfterAuth() {
   // resta solo una rete di sicurezza per gli account creati prima di questo.
   if (_ageGateOk && currentUser?.profile && currentUser.profile.age_confirmed !== true) {
     currentUser.profile.age_confirmed = true;
-    supa.from('users').update({ age_confirmed: true }).eq('id', currentUser.id)
+    currentUser.profile.newsletter_opt_in = _pendingNewsletterOptIn;
+    supa.from('users').update({ age_confirmed: true, newsletter_opt_in: _pendingNewsletterOptIn }).eq('id', currentUser.id)
       .then(({ error }) => { if (error) console.log('Age confirm sync error:', error); });
   }
   if (!currentUser?.profile?.full_name?.trim()) {
@@ -1321,6 +1322,10 @@ async function declineAge18() {
 // quella di registrazione.
 let _ageGateOk = false;
 let _pendingSocialProvider = null;
+// Checkbox newsletter sul form di registrazione — salvato insieme a
+// age_confirmed sul primo accesso post-signup (solo percorso email: Apple/
+// Google da v-login non passano dal form e restano non iscritti di default).
+let _pendingNewsletterOptIn = false;
 
 function confirmAge18Pre() {
   _ageGateOk = true;
@@ -1348,6 +1353,7 @@ async function signUp() {
   const password = document.getElementById('reg-password')?.value || '';
   const errEl = document.getElementById('reg-error');
   const btn = document.getElementById('reg-btn');
+  _pendingNewsletterOptIn = document.getElementById('reg-newsletter')?.checked || false;
 
   if (!email || !password) {
     showError(errEl, 'Inserisci email e password');
