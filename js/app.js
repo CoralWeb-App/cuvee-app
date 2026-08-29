@@ -1199,6 +1199,14 @@ let _pendingSocialName = '';
 async function _routeAfterAuth() {
   try { await loadUserProfile(); } catch(e) { console.log('Profile load:', e); }
   _rcIdentifyUser().catch(e => console.log('RevenueCat identify:', e));
+  // Chi ha già confermato l'età su v-age-gate-pre (prima della registrazione)
+  // non deve rivederla su v-age-gate: la segniamo qui sul DB, così quella
+  // resta solo una rete di sicurezza per gli account creati prima di questo.
+  if (_ageGateOk && currentUser?.profile && currentUser.profile.age_confirmed !== true) {
+    currentUser.profile.age_confirmed = true;
+    supa.from('users').update({ age_confirmed: true }).eq('id', currentUser.id)
+      .then(({ error }) => { if (error) console.log('Age confirm sync error:', error); });
+  }
   if (!currentUser?.profile?.full_name?.trim()) {
     const nameInput = document.getElementById('complete-profile-name');
     if (nameInput) nameInput.value = _pendingSocialName || '';
