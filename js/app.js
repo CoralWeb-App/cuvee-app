@@ -2,6 +2,11 @@
 console.log('APP_JS_VERSION: 158');
 const stack=[];
 function go(id){
+  // La registrazione richiede prima la conferma di avere almeno 18 anni,
+  // così chi rifiuta non arriva mai al form (nessun account creato da annullare).
+  if(id === 'v-reg' && !_ageGateOk){
+    id = 'v-age-gate-pre';
+  }
   // Viste protette: richiedono login
   const protectedViews = ['v-home','v-guida','v-maison','v-carnet','v-profile',
     'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
@@ -53,7 +58,7 @@ function go(id){
 }
 function updateBottomNav(id){
   // View senza bottom nav (fuori dall'app: splash, onboarding, auth, paywall)
-  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-complete-profile','v-privacy','v-terms'];
+  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-age-gate-pre','v-complete-profile','v-privacy','v-terms'];
   const nav = document.getElementById('shared-bottom-nav');
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 
@@ -1194,7 +1199,6 @@ let _pendingSocialName = '';
 async function _routeAfterAuth() {
   try { await loadUserProfile(); } catch(e) { console.log('Profile load:', e); }
   _rcIdentifyUser().catch(e => console.log('RevenueCat identify:', e));
-  console.log('ROUTE debug: full_name=' + JSON.stringify(currentUser?.profile?.full_name) + ' age_confirmed=' + currentUser?.profile?.age_confirmed + ' pendingSocialName=' + JSON.stringify(_pendingSocialName));
   if (!currentUser?.profile?.full_name?.trim()) {
     const nameInput = document.getElementById('complete-profile-name');
     if (nameInput) nameInput.value = _pendingSocialName || '';
@@ -1211,10 +1215,14 @@ async function saveProfileName() {
   const input = document.getElementById('complete-profile-name');
   const name = input?.value?.trim();
   if (!name) { input?.focus(); return; }
-  try {
-    await supa.from('users').update({ full_name: name }).eq('id', currentUser.id);
-    if (currentUser.profile) currentUser.profile.full_name = name;
-  } catch(e) { console.log('Save profile name error:', e); }
+  const { error } = await supa.from('users').update({ full_name: name }).eq('id', currentUser.id);
+  if (error) {
+    console.log('Save profile name error:', error);
+    alert('Errore nel salvare il nome: ' + error.message);
+    return;
+  }
+  if (currentUser.profile) currentUser.profile.full_name = name;
+  updateProfileUI(currentUser.profile); // aggiorna subito nome/avatar in giro per l'app
   if (currentUser?.profile?.age_confirmed === true) {
     go('v-home');
   } else {
@@ -1272,6 +1280,37 @@ async function confirmAge18() {
 async function declineAge18() {
   try { await supa.auth.signOut(); } catch(e) { console.log('Sign out error:', e); }
   alert('Cuvée è dedicata al mondo dello Champagne ed è riservata a chi ha già compiuto 18 anni. Potrai registrarti quando li avrai compiuti.');
+}
+
+// ── Conferma età PRIMA della registrazione ─────────────────────────
+// v-age-gate (sopra) resta un controllo post-login, utile come rete di
+// sicurezza per account creati prima di questa modifica: ma per le
+// registrazioni nuove va chiesto PRIMA che l'account venga creato davvero,
+// altrimenti chi rifiuta si ritrova comunque con dati salvati su Supabase.
+// go('v-reg') passa sempre da qui finché non si conferma una volta a sessione;
+// _pendingSocialProvider copre anche Apple/Google, che possono creare un
+// account nuovo anche dal pulsante nella schermata di login, non solo da
+// quella di registrazione.
+let _ageGateOk = false;
+let _pendingSocialProvider = null;
+
+function confirmAge18Pre() {
+  _ageGateOk = true;
+  const cb = document.getElementById('reg-age18');
+  if (cb) cb.checked = true;
+  if (_pendingSocialProvider) {
+    const provider = _pendingSocialProvider;
+    _pendingSocialProvider = null;
+    signInWithProvider(provider);
+  } else {
+    go('v-reg');
+  }
+}
+
+function declineAge18Pre() {
+  _pendingSocialProvider = null;
+  alert('Cuvée è dedicata al mondo dello Champagne ed è riservata a chi ha già compiuto 18 anni. Potrai registrarti quando li avrai compiuti.');
+  go('v-splash');
 }
 
 // SIGNUP
@@ -1382,6 +1421,14 @@ function attemptOAuthSignup(provider) {
 
 // SOCIAL LOGIN
 async function signInWithProvider(provider) {
+  // Apple/Google possono creare un account nuovo anche dal pulsante nella
+  // schermata di LOGIN (non solo da quella di registrazione) — quindi anche
+  // qui va chiesta la conferma età prima, non dopo che l'account esiste già.
+  if (!_ageGateOk) {
+    _pendingSocialProvider = provider;
+    go('v-age-gate-pre');
+    return;
+  }
   const isNative = window.Capacitor?.isNativePlatform?.();
   const SL = _socialLoginPlugin();
 

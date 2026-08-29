@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=85"/>
+<link rel="stylesheet" href="css/style.css?v=86"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -123,6 +123,17 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="agegate-sub">Cuvée è dedicata al mondo dello Champagne. Per continuare devi confermare di avere già compiuto 18 anni.</div>
     <button class="btn-gold" onclick="confirmAge18()">Ho almeno 18 anni — Continua</button>
     <button class="btn-outline" onclick="declineAge18()" style="margin-top:10px;">Non ho ancora 18 anni</button>
+  </div>
+</div>
+
+<!-- ═══ CONFERMA ETÀ PRE-REGISTRAZIONE (prima che l'account venga creato) ═══ -->
+<div class="view" id="v-age-gate-pre">
+  <div class="agegate-body">
+    <div class="agegate-icon"><i class="ti ti-bottle"></i></div>
+    <div class="agegate-title">Conferma la tua età</div>
+    <div class="agegate-sub">Cuvée è dedicata al mondo dello Champagne. Per registrarti devi confermare di avere già compiuto 18 anni.</div>
+    <button class="btn-gold" onclick="confirmAge18Pre()">Ho almeno 18 anni — Continua</button>
+    <button class="btn-outline" onclick="declineAge18Pre()" style="margin-top:10px;">Non ho ancora 18 anni</button>
   </div>
 </div>
 
@@ -2855,6 +2866,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=158"></script>
+<script src="js/app.js?v=159"></script>
 </body>
 </html>
