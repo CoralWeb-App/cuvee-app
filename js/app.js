@@ -2733,7 +2733,6 @@ async function updateCarnetUI() {
   const premBanner = document.getElementById('carnet-premium-banner');
   const msgEl = document.getElementById('carnet-note-msg');
   const isPrem = currentUser?.profile?.is_premium;
-  console.log('CARNET banner debug: notesLen=' + notes.length + ' isPrem=' + isPrem + ' hasBanner=' + !!premBanner + ' hasMsgEl=' + !!msgEl);
   if (notes.length === 0) {
     if (emptyEl) emptyEl.style.display = 'block';
     document.getElementById('carnet-notes-list').style.display = 'none';
