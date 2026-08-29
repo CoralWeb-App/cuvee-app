@@ -1,4 +1,5 @@
 
+console.log('APP_JS_VERSION: 158');
 const stack=[];
 function go(id){
   // Viste protette: richiedono login
