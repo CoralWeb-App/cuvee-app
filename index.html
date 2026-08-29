@@ -105,10 +105,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <input type="checkbox" id="reg-age18"/>
       <span>Confermo di avere già compiuto <strong>18 anni</strong>.</span>
     </label>
-    <label class="reg-age-check" for="reg-newsletter">
-      <input type="checkbox" id="reg-newsletter"/>
-      <span>Voglio iscrivermi alla newsletter — novità, guide e offerte su Cuvée.</span>
-    </label>
     <div id="reg-error" style="font-family:var(--sans);font-size:14px;color:#E24B4A;margin-bottom:12px;display:none;padding:10px 14px;background:#FCEBEB;border-radius:var(--radius-sm);"></div>
     <button class="btn-gold" id="reg-btn" onclick="signUp()">Registrati</button>
     <div class="divider-row"><div class="div-line"></div><div class="div-txt">oppure</div><div class="div-line"></div></div>
@@ -136,6 +132,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="agegate-icon"><i class="ti ti-bottle"></i></div>
     <div class="agegate-title">Conferma la tua età</div>
     <div class="agegate-sub">Cuvée è dedicata al mondo dello Champagne. Per registrarti devi confermare di avere già compiuto 18 anni.</div>
+    <label class="reg-age-check" for="pre-newsletter" style="width:100%;">
+      <input type="checkbox" id="pre-newsletter"/>
+      <span>Voglio iscrivermi alla newsletter — novità, guide e offerte su Cuvée.</span>
+    </label>
     <button class="btn-gold" onclick="confirmAge18Pre()">Ho almeno 18 anni — Continua</button>
     <button class="btn-outline" onclick="declineAge18Pre()" style="margin-top:10px;">Non ho ancora 18 anni</button>
   </div>
@@ -2873,6 +2873,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=162"></script>
+<script src="js/app.js?v=163"></script>
 </body>
 </html>

@@ -1322,15 +1322,18 @@ async function declineAge18() {
 // quella di registrazione.
 let _ageGateOk = false;
 let _pendingSocialProvider = null;
-// Checkbox newsletter sul form di registrazione — salvato insieme a
-// age_confirmed sul primo accesso post-signup (solo percorso email: Apple/
-// Google da v-login non passano dal form e restano non iscritti di default).
+// Checkbox newsletter su v-age-gate-pre — non preselezionato (consenso
+// marketing pre-spuntato non è valido secondo il GDPR). Letto qui e non sul
+// form di registrazione perché v-age-gate-pre è l'unico passaggio comune a
+// TUTTI i percorsi di creazione account: email, Apple e Google, sia dalla
+// schermata di registrazione sia da quella di login.
 let _pendingNewsletterOptIn = false;
 
 function confirmAge18Pre() {
   _ageGateOk = true;
   const cb = document.getElementById('reg-age18');
   if (cb) cb.checked = true;
+  _pendingNewsletterOptIn = document.getElementById('pre-newsletter')?.checked || false;
   if (_pendingSocialProvider) {
     const provider = _pendingSocialProvider;
     _pendingSocialProvider = null;
@@ -1353,7 +1356,6 @@ async function signUp() {
   const password = document.getElementById('reg-password')?.value || '';
   const errEl = document.getElementById('reg-error');
   const btn = document.getElementById('reg-btn');
-  _pendingNewsletterOptIn = document.getElementById('reg-newsletter')?.checked || false;
 
   if (!email || !password) {
     showError(errEl, 'Inserisci email e password');
