@@ -42,15 +42,22 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div class="splash-mark">
       <svg class="splash-logo-icon" width="56" height="72" viewBox="0 0 56 72" fill="none">
-        <ellipse cx="28" cy="11" rx="10" ry="2.8" stroke="#b8922a" stroke-width="1.4"/>
-        <path d="M18,11 C11,16 10,24 13,29 C16,38 21,44 28,47 C35,44 40,38 43,29 C46,24 45,16 38,11" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="capGradSplash" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#b8922a" stop-opacity="1"/>
+            <stop offset="50%" stop-color="#b8922a" stop-opacity=".2"/>
+            <stop offset="100%" stop-color="#b8922a" stop-opacity="1"/>
+          </linearGradient>
+        </defs>
+        <path d="M20,9 C17,12 15,16 15,20 C15,25 17,29 19,33 C22,38 25,43 28,47 C31,43 34,38 37,33 C39,29 41,25 41,20 C41,16 39,12 36,9" stroke="#b8922a" stroke-width="1.4" stroke-linejoin="round"/>
+        <line x1="20" y1="9" x2="36" y2="9" stroke="url(#capGradSplash)" stroke-width="1.4"/>
         <line x1="28" y1="47" x2="28" y2="60" stroke="#b8922a" stroke-width="1.4"/>
-        <line x1="16" y1="60" x2="40" y2="60" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
-        <circle cx="24" cy="34" r="2.2" fill="#b8922a" opacity=".85"/>
-        <circle cx="34" cy="24" r="1.6" fill="#b8922a" opacity=".7"/>
-        <circle cx="27" cy="17" r="1.3" fill="#b8922a" opacity=".55"/>
-        <circle cx="37" cy="31" r="1.5" fill="#b8922a" opacity=".6"/>
-        <circle cx="20" cy="39" r="1.8" fill="#b8922a" opacity=".75"/>
+        <line x1="18" y1="60" x2="38" y2="60" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="26" cy="36" r="1.3" fill="#b8922a" opacity=".85"/>
+        <circle cx="31" cy="25" r="1.2" fill="#b8922a" opacity=".7"/>
+        <circle cx="27" cy="14" r=".9" fill="#b8922a" opacity=".55"/>
+        <circle cx="33" cy="29" r="1.1" fill="#b8922a" opacity=".6"/>
+        <circle cx="24" cy="32" r="1.2" fill="#b8922a" opacity=".75"/>
       </svg>
     </div>
     <div class="splash-name">CUVÉE</div>
@@ -91,7 +98,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="topbar">
     <button class="back-btn" onclick="backToOnboardingEnd()"><i class="ti ti-arrow-left"></i>Indietro</button>
     <div class="topbar-logo">
-      <svg width="13" height="19" viewBox="0 0 13 19" fill="none"><ellipse cx="6.5" cy="2" rx="2.7" ry="0.7" stroke="#8a6a1e" stroke-width="1.1"/><path d="M4,2 C1.8,3.4 1.6,6 2.6,7.6 C3.6,10 5,11.6 6.5,12.3 C8,11.6 9.4,10 10.4,7.6 C11.4,6 11.2,3.4 9,2" stroke="#8a6a1e" stroke-width="1.1" stroke-linecap="round"/><line x1="6.5" y1="12.3" x2="6.5" y2="16" stroke="#8a6a1e" stroke-width="1.1"/><line x1="3" y1="16" x2="10" y2="16" stroke="#8a6a1e" stroke-width="1.1" stroke-linecap="round"/><circle cx="5" cy="6" r=".8" fill="#8a6a1e" opacity=".8"/><circle cx="8" cy="4" r=".6" fill="#8a6a1e" opacity=".6"/></svg>
+      <svg width="13" height="19" viewBox="0 0 13 19" fill="none"><path d="M4.3,2 C3.5,2.8 2.9,3.8 2.9,5 C2.9,6.4 3.5,7.6 4.3,8.6 C5.1,9.9 5.8,11 6.5,12.3 C7.2,11 7.9,9.9 8.7,8.6 C9.5,7.6 10.1,6.4 10.1,5 C10.1,3.8 9.5,2.8 8.7,2" stroke="#8a6a1e" stroke-width="1.1" stroke-linejoin="round"/><line x1="4.3" y1="2" x2="8.7" y2="2" stroke="#8a6a1e" stroke-width="1.1" stroke-opacity=".65"/><line x1="6.5" y1="12.3" x2="6.5" y2="16" stroke="#8a6a1e" stroke-width="1.1"/><line x1="3" y1="16" x2="10" y2="16" stroke="#8a6a1e" stroke-width="1.1" stroke-linecap="round"/><circle cx="5.6" cy="7" r=".6" fill="#8a6a1e" opacity=".8"/><circle cx="7.5" cy="4.5" r=".5" fill="#8a6a1e" opacity=".6"/></svg>
       <span class="topbar-logo-name">CUVÉE</span>
     </div>
   </div>
@@ -404,7 +411,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-home">
   <div class="topbar">
     <div class="topbar-logo">
-      <svg width="13" height="19" viewBox="0 0 13 19" fill="none"><ellipse cx="6.5" cy="2" rx="2.7" ry="0.7" stroke="#8a6a1e" stroke-width="1.1"/><path d="M4,2 C1.8,3.4 1.6,6 2.6,7.6 C3.6,10 5,11.6 6.5,12.3 C8,11.6 9.4,10 10.4,7.6 C11.4,6 11.2,3.4 9,2" stroke="#8a6a1e" stroke-width="1.1" stroke-linecap="round"/><line x1="6.5" y1="12.3" x2="6.5" y2="16" stroke="#8a6a1e" stroke-width="1.1"/><line x1="3" y1="16" x2="10" y2="16" stroke="#8a6a1e" stroke-width="1.1" stroke-linecap="round"/><circle cx="5" cy="6" r=".8" fill="#8a6a1e" opacity=".8"/><circle cx="8" cy="4" r=".6" fill="#8a6a1e" opacity=".6"/></svg>
+      <svg width="13" height="19" viewBox="0 0 13 19" fill="none"><path d="M4.3,2 C3.5,2.8 2.9,3.8 2.9,5 C2.9,6.4 3.5,7.6 4.3,8.6 C5.1,9.9 5.8,11 6.5,12.3 C7.2,11 7.9,9.9 8.7,8.6 C9.5,7.6 10.1,6.4 10.1,5 C10.1,3.8 9.5,2.8 8.7,2" stroke="#8a6a1e" stroke-width="1.1" stroke-linejoin="round"/><line x1="4.3" y1="2" x2="8.7" y2="2" stroke="#8a6a1e" stroke-width="1.1" stroke-opacity=".65"/><line x1="6.5" y1="12.3" x2="6.5" y2="16" stroke="#8a6a1e" stroke-width="1.1"/><line x1="3" y1="16" x2="10" y2="16" stroke="#8a6a1e" stroke-width="1.1" stroke-linecap="round"/><circle cx="5.6" cy="7" r=".6" fill="#8a6a1e" opacity=".8"/><circle cx="7.5" cy="4.5" r=".5" fill="#8a6a1e" opacity=".6"/></svg>
       <span class="topbar-logo-name">CUVÉE</span>
     </div>
     <div class="topbar-icons">
@@ -1844,15 +1851,22 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="paywall-hero">
       <div class="paywall-hero-logo">
         <svg width="54" height="70" viewBox="0 0 56 72" fill="none">
-          <ellipse cx="28" cy="11" rx="10" ry="2.8" stroke="#b8922a" stroke-width="1.6"/>
-          <path d="M18,11 C11,16 10,24 13,29 C16,38 21,44 28,47 C35,44 40,38 43,29 C46,24 45,16 38,11" stroke="#b8922a" stroke-width="1.6" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="capGradPaywall" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#b8922a" stop-opacity="1"/>
+              <stop offset="50%" stop-color="#b8922a" stop-opacity=".2"/>
+              <stop offset="100%" stop-color="#b8922a" stop-opacity="1"/>
+            </linearGradient>
+          </defs>
+          <path d="M20,9 C17,12 15,16 15,20 C15,25 17,29 19,33 C22,38 25,43 28,47 C31,43 34,38 37,33 C39,29 41,25 41,20 C41,16 39,12 36,9" stroke="#b8922a" stroke-width="1.6" stroke-linejoin="round"/>
+          <line x1="20" y1="9" x2="36" y2="9" stroke="url(#capGradPaywall)" stroke-width="1.6"/>
           <line x1="28" y1="47" x2="28" y2="60" stroke="#b8922a" stroke-width="1.4"/>
-          <line x1="16" y1="60" x2="40" y2="60" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
-          <circle cx="24" cy="34" r="2.2" fill="#b8922a" opacity=".85"/>
-          <circle cx="34" cy="24" r="1.6" fill="#b8922a" opacity=".7"/>
-          <circle cx="27" cy="17" r="1.3" fill="#b8922a" opacity=".55"/>
-          <circle cx="37" cy="31" r="1.5" fill="#b8922a" opacity=".6"/>
-          <circle cx="20" cy="39" r="1.8" fill="#b8922a" opacity=".75"/>
+          <line x1="18" y1="60" x2="38" y2="60" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="26" cy="36" r="1.3" fill="#b8922a" opacity=".85"/>
+          <circle cx="31" cy="25" r="1.2" fill="#b8922a" opacity=".7"/>
+          <circle cx="27" cy="14" r=".9" fill="#b8922a" opacity=".55"/>
+          <circle cx="33" cy="29" r="1.1" fill="#b8922a" opacity=".6"/>
+          <circle cx="24" cy="32" r="1.2" fill="#b8922a" opacity=".75"/>
         </svg>
       </div>
       <div class="paywall-hero-over">
@@ -2475,15 +2489,22 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <button class="onb-back-btn" id="login-back-btn" onclick="backToOnboardingEnd()"><i class="ti ti-chevron-left"></i></button>
   <div class="login-header">
     <svg width="32" height="41" viewBox="0 0 56 72" fill="none">
-      <ellipse cx="28" cy="11" rx="10" ry="2.8" stroke="#b8922a" stroke-width="1.4"/>
-      <path d="M18,11 C11,16 10,24 13,29 C16,38 21,44 28,47 C35,44 40,38 43,29 C46,24 45,16 38,11" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="capGradLogin" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#b8922a" stop-opacity="1"/>
+          <stop offset="50%" stop-color="#b8922a" stop-opacity=".2"/>
+          <stop offset="100%" stop-color="#b8922a" stop-opacity="1"/>
+        </linearGradient>
+      </defs>
+      <path d="M20,9 C17,12 15,16 15,20 C15,25 17,29 19,33 C22,38 25,43 28,47 C31,43 34,38 37,33 C39,29 41,25 41,20 C41,16 39,12 36,9" stroke="#b8922a" stroke-width="1.4" stroke-linejoin="round"/>
+      <line x1="20" y1="9" x2="36" y2="9" stroke="url(#capGradLogin)" stroke-width="1.4"/>
       <line x1="28" y1="47" x2="28" y2="60" stroke="#b8922a" stroke-width="1.4"/>
-      <line x1="16" y1="60" x2="40" y2="60" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
-      <circle cx="24" cy="34" r="2.2" fill="#b8922a" opacity=".85"/>
-      <circle cx="34" cy="24" r="1.6" fill="#b8922a" opacity=".7"/>
-      <circle cx="27" cy="17" r="1.3" fill="#b8922a" opacity=".55"/>
-      <circle cx="37" cy="31" r="1.5" fill="#b8922a" opacity=".6"/>
-      <circle cx="20" cy="39" r="1.8" fill="#b8922a" opacity=".75"/>
+      <line x1="18" y1="60" x2="38" y2="60" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="26" cy="36" r="1.3" fill="#b8922a" opacity=".85"/>
+      <circle cx="31" cy="25" r="1.2" fill="#b8922a" opacity=".7"/>
+      <circle cx="27" cy="14" r=".9" fill="#b8922a" opacity=".55"/>
+      <circle cx="33" cy="29" r="1.1" fill="#b8922a" opacity=".6"/>
+      <circle cx="24" cy="32" r="1.2" fill="#b8922a" opacity=".75"/>
     </svg>
     <div class="login-mark-name">CUVÉE</div>
   </div>
