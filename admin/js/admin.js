@@ -2156,19 +2156,22 @@ async function loadNotifiche() {
     }
 
     tbody.innerHTML = data.map(n => `
-      <tr class="adm-table-row">
+      <tr class="adm-table-row" style="cursor:pointer" onclick="editNotifica('${n.id}')">
         <td><div class="adm-bottle-name">${esc(n.title)}</div></td>
         <td><div class="adm-bottle-sub" style="max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(n.body)}</div></td>
         <td>${timeAgo(n.created_at)}</td>
         <td>
           <span class="adm-badge ${n.is_active ? 'active' : 'offline'} adm-status-badge"
-                onclick="toggleNotificaStatus('${n.id}',${n.is_active})">
+                onclick="event.stopPropagation();toggleNotificaStatus('${n.id}',${n.is_active})">
             ${n.is_active ? 'ATTIVA' : 'ARCHIVIATA'}
           </span>
         </td>
         <td>
           <div class="adm-row-actions">
-            <button class="adm-btn adm-btn-reject" onclick="deleteNotifica('${n.id}','${esc(n.title).replace(/'/g, "\\'")}')">
+            <button class="adm-btn adm-btn-edit" onclick="event.stopPropagation();editNotifica('${n.id}')">
+              <i class="ti ti-pencil"></i>
+            </button>
+            <button class="adm-btn adm-btn-reject" onclick="event.stopPropagation();deleteNotifica('${n.id}','${esc(n.title).replace(/'/g, "\\'")}')">
               <i class="ti ti-trash"></i>
             </button>
           </div>
@@ -2210,6 +2213,48 @@ async function createNotifica() {
     if (error) throw error
     closeModal()
     showToast('Notifica inviata ✓')
+    loadNotifiche()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+async function editNotifica(id) {
+  openModal('Modifica notifica', loadingHTML())
+  try {
+    const { data: n, error } = await supa.from('notifications').select('*').eq('id', id).single()
+    if (error) throw error
+    const html = `
+      <div class="adm-edit-form">
+        <div class="adm-edit-grid">
+          <div class="adm-form-field" style="grid-column:1/-1">
+            <label class="adm-form-label">Titolo</label>
+            <input class="adm-form-input" type="text" id="nn-title" value="${esc(n.title)}">
+          </div>
+          <div class="adm-form-field" style="grid-column:1/-1">
+            <label class="adm-form-label">Messaggio</label>
+            <textarea class="adm-form-input" rows="5" id="nn-body">${esc(n.body)}</textarea>
+          </div>
+        </div>
+        <div class="adm-modal-actions">
+          <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+          <button class="adm-btn adm-btn-primary" onclick="saveNotifica('${id}')">
+            <i class="ti ti-device-floppy"></i> Salva
+          </button>
+        </div>
+      </div>`
+    document.getElementById('modal-body').innerHTML = html
+  } catch(e) { document.getElementById('modal-body').innerHTML = errorHTML(e.message) }
+}
+
+async function saveNotifica(id) {
+  const title = document.getElementById('nn-title')?.value.trim()
+  const body  = document.getElementById('nn-body')?.value.trim()
+  if (!title) { showToast('Il titolo è obbligatorio', 'error'); return }
+  if (!body)  { showToast('Il messaggio è obbligatorio', 'error'); return }
+  try {
+    const { error } = await supa.from('notifications').update({ title, body }).eq('id', id)
+    if (error) throw error
+    closeModal()
+    showToast('Notifica aggiornata ✓')
     loadNotifiche()
   } catch(e) { showToast(e.message, 'error') }
 }
