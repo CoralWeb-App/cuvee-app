@@ -3448,24 +3448,33 @@ function applyCruPremiumGating(viewId) {
 }
 
 // Notifiche inviate dall'admin (comunicazioni, nuove funzioni, ecc.)
-// Lette/non lette è gestito con un semplice timestamp "notifications_last_seen"
-// sull'utente, confrontato con la data delle notifiche attive — niente tabella di join.
+// Lette/non lette è per-notifica (tabella notification_reads): una notifica
+// risulta letta solo quando l'utente apre proprio quella card, non quando
+// visita semplicemente l'elenco.
+let _notificationsCache = [];
+let _readNotifIds = new Set();
+
+async function _fetchUnreadActiveIds() {
+  const { data: active, error: e1 } = await supa.from('notifications').select('id').eq('is_active', true);
+  if (e1) throw e1;
+  const activeIds = (active || []).map(n => n.id);
+  if (!activeIds.length) return [];
+  const { data: reads, error: e2 } = await supa.from('notification_reads')
+    .select('notification_id').eq('user_id', currentUser.id);
+  if (e2) throw e2;
+  const readSet = new Set((reads || []).map(r => r.notification_id));
+  return activeIds.filter(id => !readSet.has(id));
+}
+
 async function checkUnreadNotifications() {
   if (!currentUser) return;
   const dot = document.getElementById('notif-badge-dot');
   if (!dot) return;
   try {
-    const lastSeen = currentUser.profile?.notifications_last_seen || '1970-01-01T00:00:00Z';
-    const { count, error } = await supa.from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .gt('created_at', lastSeen);
-    if (error) throw error;
-    dot.style.display = (count > 0) ? 'block' : 'none';
+    const unread = await _fetchUnreadActiveIds();
+    dot.classList.toggle('show', unread.length > 0);
   } catch(e) { console.log('checkUnreadNotifications error:', e); }
 }
-
-let _notificationsCache = [];
 
 async function renderNotificationsUI() {
   const listEl = document.getElementById('notifications-list');
@@ -3478,35 +3487,72 @@ async function renderNotificationsUI() {
       .order('created_at', { ascending: false });
     if (error) throw error;
     _notificationsCache = data || [];
-    if (!_notificationsCache.length) {
-      listEl.innerHTML = '<div style="padding:60px 24px;text-align:center;">'
-        + '<i class="ti ti-bell" style="font-size:34px;color:var(--border-2);display:block;margin-bottom:12px;"></i>'
-        + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-4);">Nessuna notifica al momento</div>'
-        + '</div>';
-    } else {
-      listEl.innerHTML = _notificationsCache.map(n => (
-        '<div onclick="openNotificationDetail(\'' + n.id + '\')" style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;cursor:pointer;">'
-        + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;">'
-        + '<div style="font-family:var(--sans);font-size:14.5px;font-weight:600;color:var(--ink);">' + n.title + '</div>'
-        + '<div style="font-family:var(--sans);font-size:11.5px;color:var(--ink-5);white-space:nowrap;flex-shrink:0;padding-top:1px;">' + new Date(n.created_at).toLocaleDateString('it-IT', {day:'numeric', month:'short'}) + '</div>'
-        + '</div>'
-        + '<div style="font-family:var(--sans);font-size:13.5px;color:var(--ink-3);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + n.body + '</div>'
-        + '<div style="font-family:var(--sans);font-size:12px;color:var(--gold);font-weight:600;margin-top:8px;">Leggi tutto <i class="ti ti-chevron-right" style="font-size:11px;"></i></div>'
-        + '</div>'
-      )).join('');
-    }
-    const dot = document.getElementById('notif-badge-dot');
-    if (dot) dot.style.display = 'none';
-    if (currentUser) {
-      const nowIso = new Date().toISOString();
-      if (currentUser.profile) currentUser.profile.notifications_last_seen = nowIso;
-      supa.from('users').update({ notifications_last_seen: nowIso }).eq('id', currentUser.id)
-        .then(({ error }) => { if (error) console.log('mark notifications read error:', error); });
-    }
+    const { data: reads, error: e2 } = await supa.from('notification_reads')
+      .select('notification_id').eq('user_id', currentUser.id);
+    if (e2) throw e2;
+    _readNotifIds = new Set((reads || []).map(r => r.notification_id));
+    renderNotificationsList();
   } catch(e) {
     listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;color:#B4442E;font-family:var(--sans);font-size:13px;">Errore nel caricamento delle notifiche.</div>';
     console.log('renderNotificationsUI error:', e);
   }
+}
+
+// Ridisegna la lista dalla cache locale (nessuna chiamata di rete) — usata
+// dopo aver aperto una card o premuto "Segna tutte come lette".
+function renderNotificationsList() {
+  const listEl = document.getElementById('notifications-list');
+  if (!listEl) return;
+  if (!_notificationsCache.length) {
+    listEl.innerHTML = '<div style="padding:60px 24px;text-align:center;">'
+      + '<i class="ti ti-bell" style="font-size:34px;color:var(--border-2);display:block;margin-bottom:12px;"></i>'
+      + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-4);">Nessuna notifica al momento</div>'
+      + '</div>';
+    return;
+  }
+  const unread = _notificationsCache.filter(n => !_readNotifIds.has(n.id));
+  const read = _notificationsCache.filter(n => _readNotifIds.has(n.id));
+
+  const card = (n, isUnread) => (
+    '<div onclick="openNotificationDetail(\'' + n.id + '\')" style="background:' + (isUnread ? 'var(--white)' : 'var(--ivory-2)') + ';border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;cursor:pointer;">'
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;">'
+    + '<div style="display:flex;align-items:center;gap:7px;min-width:0;">'
+    + (isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:#B4442E;flex-shrink:0;"></span>' : '')
+    + '<div style="font-family:var(--sans);font-size:14.5px;font-weight:' + (isUnread ? '600' : '500') + ';color:' + (isUnread ? 'var(--ink)' : 'var(--ink-3)') + ';">' + n.title + '</div>'
+    + '</div>'
+    + '<div style="font-family:var(--sans);font-size:11.5px;color:var(--ink-5);white-space:nowrap;flex-shrink:0;padding-top:1px;">' + new Date(n.created_at).toLocaleDateString('it-IT', {day:'numeric', month:'short'}) + '</div>'
+    + '</div>'
+    + '<div style="font-family:var(--sans);font-size:13.5px;color:var(--ink-4);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + n.body + '</div>'
+    + '<div style="font-family:var(--sans);font-size:12px;color:' + (isUnread ? 'var(--gold)' : 'var(--ink-5)') + ';font-weight:600;margin-top:8px;">Leggi tutto <i class="ti ti-chevron-right" style="font-size:11px;"></i></div>'
+    + '</div>'
+  );
+
+  let html = '';
+  if (unread.length) {
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+      + '<div class="section-label" style="padding:0;">Da leggere · ' + unread.length + '</div>'
+      + '<button onclick="markAllNotificationsRead()" style="background:none;border:none;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--gold);cursor:pointer;padding:4px 0;">Segna tutte come lette</button>'
+      + '</div>'
+      + unread.map(n => card(n, true)).join('')
+      + (read.length ? '<div style="height:8px;"></div>' : '');
+  }
+  if (read.length) {
+    html += '<div class="section-label" style="padding:0 0 10px;">Lette</div>' + read.map(n => card(n, false)).join('');
+  }
+  listEl.innerHTML = html;
+}
+
+async function markAllNotificationsRead() {
+  if (!currentUser) return;
+  const unreadIds = _notificationsCache.map(n => n.id).filter(id => !_readNotifIds.has(id));
+  if (!unreadIds.length) return;
+  unreadIds.forEach(id => _readNotifIds.add(id));
+  renderNotificationsList();
+  const dot = document.getElementById('notif-badge-dot');
+  if (dot) dot.classList.remove('show');
+  const rows = unreadIds.map(id => ({ user_id: currentUser.id, notification_id: id }));
+  const { error } = await supa.from('notification_reads').upsert(rows, { onConflict: 'user_id,notification_id' });
+  if (error) console.log('markAllNotificationsRead error:', error);
 }
 
 function openNotificationDetail(id) {
@@ -3516,6 +3562,15 @@ function openNotificationDetail(id) {
   document.getElementById('notif-detail-date').textContent = new Date(n.created_at).toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
   document.getElementById('notif-detail-body').textContent = n.body;
   document.getElementById('notification-detail-modal').classList.add('on');
+
+  if (currentUser && !_readNotifIds.has(id)) {
+    _readNotifIds.add(id);
+    renderNotificationsList();
+    const dot = document.getElementById('notif-badge-dot');
+    if (dot && !_notificationsCache.some(x => !_readNotifIds.has(x.id))) dot.classList.remove('show');
+    supa.from('notification_reads').upsert({ user_id: currentUser.id, notification_id: id }, { onConflict: 'user_id,notification_id' })
+      .then(({ error }) => { if (error) console.log('mark notification read error:', error); });
+  }
 }
 function closeNotificationDetailModal() {
   document.getElementById('notification-detail-modal').classList.remove('on');
