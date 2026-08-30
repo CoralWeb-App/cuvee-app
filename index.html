@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=86"/>
+<link rel="stylesheet" href="css/style.css?v=87"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -2833,8 +2833,11 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 <!-- ═══ SCAN REMAINING MODAL (preventivo, prima della scansione: free ogni volta, premium sotto le 3 rimaste) ═══ -->
 <div id="scan-remaining-modal">
-  <div class="scan-limit-inner">
-    <div class="scan-limit-emoji" id="scan-remaining-emoji">📸</div>
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closeScanRemainingModal()" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-scan"></i></div>
     <div class="scan-limit-title"><strong id="scan-remaining-count">3</strong><span id="scan-remaining-suffix"> scansioni gratuite rimaste</span></div>
     <div class="scan-limit-desc">Questo mese hai ancora <strong id="scan-remaining-count-2">3</strong><span id="scan-remaining-desc-suffix"> scansioni gratuite disponibili. Con <strong>Cuvée Premium</strong> hai 100 scansioni sommelier al mese.</span></div>
     <div class="scan-limit-sep" id="scan-remaining-sep"></div>
@@ -2895,6 +2898,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=170"></script>
+<script src="js/app.js?v=171"></script>
 </body>
 </html>

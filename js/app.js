@@ -4918,20 +4918,17 @@ function _showScanRemainingModal(remaining, isPrem) {
   if (c1) c1.textContent = remaining;
   if (c2) c2.textContent = remaining;
 
-  const emoji   = document.getElementById('scan-remaining-emoji');
   const suffix1 = document.getElementById('scan-remaining-suffix');
   const suffix2 = document.getElementById('scan-remaining-desc-suffix');
   const sep     = document.getElementById('scan-remaining-sep');
   const skipBtn = document.getElementById('scan-remaining-skip-btn');
 
   if (isPrem) {
-    if (emoji)   emoji.textContent = '⏳';
     if (suffix1) suffix1.textContent = remaining === 1 ? ' scansione Premium rimasta' : ' scansioni Premium rimaste';
     if (suffix2) suffix2.innerHTML = ' scansioni sommelier disponibili, su <strong>100 totali</strong>. Si rinnovano il 1° del mese prossimo.';
     if (sep)     sep.style.display = 'none';
     if (skipBtn) skipBtn.style.display = 'none';
   } else {
-    if (emoji)   emoji.textContent = '📸';
     if (suffix1) suffix1.textContent = ' scansioni gratuite rimaste';
     if (suffix2) suffix2.innerHTML = ' scansioni gratuite disponibili. Con <strong>Cuvée Premium</strong> hai 100 scansioni sommelier al mese.';
     if (sep)     sep.style.display = '';
