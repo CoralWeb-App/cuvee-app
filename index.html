@@ -396,6 +396,54 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- ═══ DIVENTA PARTNER ═══ -->
+<div class="view" id="v-partner">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Indietro</button>
+    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Diventa Partner</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="scroll">
+    <div style="padding:32px 24px 8px;text-align:center;">
+      <div class="scan-limit-icon-badge" style="width:64px;height:64px;margin-bottom:16px;"><i class="ti ti-building" style="font-size:28px;"></i></div>
+      <div style="font-family:var(--serif);font-size:24px;color:var(--ink);font-weight:500;margin-bottom:10px;">Racconta il tuo Champagne a chi lo ama davvero</div>
+      <div style="font-family:var(--sans);font-size:14.5px;color:var(--ink-3);line-height:1.65;">Cuvée è la guida italiana allo Champagne: ogni giorno migliaia di appassionati la usano per scoprire maison, cuvée, terroir e abbinamenti. Se rappresenti una maison, un'enoteca, un ristorante, un distributore o un brand legato al mondo dello Champagne, scrivici: costruiamo insieme la collaborazione più adatta.</div>
+    </div>
+
+    <div style="padding:28px 18px 6px;display:flex;flex-direction:column;gap:10px;">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;gap:13px;align-items:flex-start;">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ti-shopping-bag" style="font-size:17px;color:var(--gold);"></i></div>
+        <div>
+          <div style="font-family:var(--sans);font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:3px;">Vendita in app</div>
+          <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.55;">Compari nella sezione "Dove acquistare" delle tue etichette in catalogo.</div>
+        </div>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;gap:13px;align-items:flex-start;">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ti-star" style="font-size:17px;color:var(--gold);"></i></div>
+        <div>
+          <div style="font-family:var(--sans);font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:3px;">Contenuti in evidenza</div>
+          <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.55;">Raccontiamo la tua maison con contenuti editoriali dedicati, dentro l'app.</div>
+        </div>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;gap:13px;align-items:flex-start;">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ti-sparkles" style="font-size:17px;color:var(--gold);"></i></div>
+        <div>
+          <div style="font-family:var(--sans);font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:3px;">Altre collaborazioni</div>
+          <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.55;">Hai un'idea diversa? Parliamone: valutiamo ogni proposta caso per caso.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:22px 24px 12px;">
+      <a href="#" onclick="event.preventDefault();location.href='mailto:info@coralweb.it?subject='+encodeURIComponent('Partnership Cuvée App');" class="btn-gold" style="display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;">
+        <i class="ti ti-mail" style="font-size:17px;"></i>Contattaci
+      </a>
+      <div style="text-align:center;font-family:var(--sans);font-size:12.5px;color:var(--ink-5);margin-top:12px;">Si apre la tua app di posta, con l'oggetto già compilato. Ti risponderemo il prima possibile.</div>
+    </div>
+    <div style="height:30px;"></div>
+  </div>
+</div>
+
 <!-- ═══ SUCCESS ═══ -->
 <div class="view" id="v-success">
   <div class="success-circle"><i class="ti ti-check"></i></div>
@@ -1999,6 +2047,11 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer;"><div style="display:flex;align-items:center;gap:10px;"><i class="ti ti-bell" style="font-size:20px;color:var(--ink-3);"></i><span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Notifiche</span></div><i class="ti ti-chevron-right" style="font-size:17px;color:var(--ink-5);"></i></div>
         <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer;"><div style="display:flex;align-items:center;gap:10px;"><i class="ti ti-language" style="font-size:20px;color:var(--ink-3);"></i><span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Lingua</span></div><span style="font-family:var(--sans);font-size:15px;color:var(--ink-4);">Italiano</span></div>
         <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="go('v-subscription')"><div style="display:flex;align-items:center;gap:10px;"><i class="ti ti-crown" style="font-size:20px;color:var(--gold);"></i><span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Il mio abbonamento</span></div><i class="ti ti-chevron-right" style="font-size:17px;color:var(--ink-5);"></i></div>
+      </div>
+    </div>
+    <div style="padding:0 18px 20px;">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+        <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="go('v-partner')"><div style="display:flex;align-items:center;gap:10px;"><i class="ti ti-building" style="font-size:20px;color:var(--ink-3);"></i><span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Diventa Partner</span></div><i class="ti ti-chevron-right" style="font-size:17px;color:var(--ink-5);"></i></div>
       </div>
     </div>
     <div style="padding:0 18px;margin-bottom:8px;"><button class="btn-outline" onclick="signOut()" style="border:1px solid var(--border-2);color:var(--ink-4);border-radius:var(--radius-md);padding:12px;">Esci dall'account</button></div>
