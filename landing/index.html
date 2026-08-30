@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuvée — L'app italiana per riconoscere, scoprire e degustare Champagne</title>
+<meta name="description" content="Cuvée è l'app che riconosce ogni bottiglia di Champagne dalla fotocamera: Maison, cuvée, annata, punteggio e abbinamenti in un secondo. Catalogo completo, Carnet de dégustation e Glossario. Scaricala gratis.">
+<meta name="keywords" content="champagne, app champagne, guida champagne, scansione bottiglia champagne, degustazione champagne, sommelier champagne, catalogo champagne, maison champagne, carnet de dégustation, riconoscimento etichetta vino">
+<meta name="robots" content="index, follow">
+<meta name="author" content="Cuvée">
+<link rel="canonical" href="https://cuvee-app.it/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cuvée">
+<meta property="og:title" content="Cuvée — L'app italiana per riconoscere, scoprire e degustare Champagne">
+<meta property="og:description" content="Inquadra l'etichetta, scopri tutto sulla bottiglia, tieni traccia di ogni degustazione. Il mondo dello Champagne, in un'app.">
+<meta property="og:url" content="https://cuvee-app.it/">
+<meta property="og:image" content="https://cuvee-app.it/og-image.jpg">
+<meta property="og:locale" content="it_IT">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cuvée — L'app italiana per riconoscere, scoprire e degustare Champagne">
+<meta name="twitter:description" content="Inquadra l'etichetta, scopri tutto sulla bottiglia, tieni traccia di ogni degustazione. Il mondo dello Champagne, in un'app.">
+<meta name="twitter:image" content="https://cuvee-app.it/og-image.jpg">
+
+<!-- Structured data (nessun voto/recensione: non ne abbiamo di reali ancora) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MobileApplication",
+  "name": "Cuvée",
+  "operatingSystem": "iOS",
+  "applicationCategory": "LifestyleApplication",
+  "description": "Cuvée è l'app italiana che riconosce le bottiglie di Champagne dalla fotocamera, con catalogo Maison, Carnet de dégustation e Glossario tecnico.",
+  "inLanguage": "it",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR",
+    "category": "Free download, in-app purchases available"
+  }
+}
+</script>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 72'%3E%3Crect width='56' height='72' fill='%231e1208' rx='12'/%3E%3Cellipse cx='28' cy='11' rx='10' ry='2.8' stroke='%23d4a83c' stroke-width='2.4' fill='none'/%3E%3Cpath d='M18,11 C11,16 10,24 13,29 C16,38 21,44 28,47 C35,44 40,38 43,29 C46,24 45,16 38,11' stroke='%23d4a83c' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Cline x1='28' y1='47' x2='28' y2='60' stroke='%23d4a83c' stroke-width='2.4'/%3E%3Cline x1='16' y1='60' x2='40' y2='60' stroke='%23d4a83c' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#1e1208;
+  --ink-soft:#2b1e10;
+  --ivory:#faf8f5;
+  --ivory-2:#f5f0e8;
+  --ivory-3:#efe8da;
+  --paper:#fffdf9;
+  --gold:#b8922a;
+  --gold-bright:#e0b34a;
+  --gold-deep:#8a6a1e;
+  --gold-pale:#f5efe4;
+  --gold-border:#e3d3a4;
+  --text-on-dark:#f3ead8;
+  --text-on-dark-soft:#cdbb96;
+  --text-body:#4a3c26;
+  --text-muted:#8a7a5c;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --max:1180px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;background:var(--ivory);color:var(--text-body);
+  font-family:var(--sans);line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block;}
+a{color:inherit;}
+.container{max-width:var(--max);margin:0 auto;padding:0 28px;}
+@media (max-width:640px){.container{padding:0 20px;}}
+
+/* ---------- NAV ---------- */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 32px;color:var(--text-on-dark);
+  transition:background .3s ease,padding .3s ease,box-shadow .3s ease;
+}
+.nav.scrolled{
+  background:rgba(30,18,8,.92);backdrop-filter:blur(10px);
+  padding:14px 32px;box-shadow:0 2px 24px rgba(0,0,0,.2);
+}
+.nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-size:22px;letter-spacing:2px;font-weight:600;}
+.nav-logo svg{width:16px;height:21px;flex-shrink:0;}
+.nav-cta{
+  font-family:var(--sans);font-size:13.5px;font-weight:600;letter-spacing:.3px;
+  background:var(--gold);color:#1e1208;padding:10px 22px;border-radius:30px;
+  text-decoration:none;transition:background .2s ease, transform .2s ease;
+}
+.nav-cta:hover{background:var(--gold-bright);transform:translateY(-1px);}
+
+/* ---------- HERO ---------- */
+.hero{
+  position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 120% 80% at 50% -10%, #3a2914 0%, var(--ink) 55%);
+  color:var(--text-on-dark);
+  padding:170px 28px 120px;text-align:center;
+}
+.hero-bubbles{position:absolute;inset:0;pointer-events:none;}
+.hero-bubbles span{
+  position:absolute;bottom:-10%;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, rgba(224,179,74,.85), rgba(224,179,74,.15));
+  animation:rise linear infinite;
+}
+@keyframes rise{
+  0%{transform:translateY(0) translateX(0);opacity:0;}
+  8%{opacity:.85;}
+  92%{opacity:.5;}
+  100%{transform:translateY(-620px) translateX(var(--drift,12px));opacity:0;}
+}
+@media (prefers-reduced-motion: reduce){
+  .hero-bubbles span{animation:none;display:none;}
+  html{scroll-behavior:auto;}
+}
+
+.hero-inner{position:relative;max-width:720px;margin:0 auto;}
+.hero-glass{margin:0 auto 30px;width:74px;height:96px;filter:drop-shadow(0 6px 26px rgba(224,179,74,.25));}
+.hero-eyebrow{
+  font-family:var(--sans);font-size:12.5px;letter-spacing:3.4px;text-transform:uppercase;
+  color:var(--gold-bright);font-weight:600;margin-bottom:22px;
+}
+.hero h1{
+  font-family:var(--serif);font-weight:600;color:#fff;
+  font-size:clamp(38px,6.4vw,68px);line-height:1.08;margin:0 0 24px;text-wrap:balance;
+}
+.hero h1 em{font-style:italic;color:var(--gold-bright);}
+.hero-sub{
+  font-size:clamp(16px,2vw,19px);color:var(--text-on-dark-soft);
+  max-width:52ch;margin:0 auto 44px;line-height:1.7;text-wrap:balance;
+}
+
+.store-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+.store-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  background:#000;color:#fff;border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;padding:9px 18px 9px 14px;text-decoration:none;
+  transition:transform .2s ease, border-color .2s ease;
+}
+.store-badge:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.35);}
+.store-badge svg{width:26px;height:26px;flex-shrink:0;}
+.store-badge .sb-text{text-align:left;line-height:1.15;}
+.store-badge .sb-small{display:block;font-size:10.5px;font-family:var(--sans);opacity:.85;}
+.store-badge .sb-big{display:block;font-size:18px;font-family:var(--sans);font-weight:600;letter-spacing:.2px;}
+.store-badge.disabled{opacity:.45;pointer-events:none;position:relative;}
+.store-badge.disabled::after{
+  content:'Prossimamente';position:absolute;bottom:-22px;left:0;right:0;
+  text-align:center;font-size:11px;color:var(--text-on-dark-soft);letter-spacing:.4px;
+}
+
+.hero-note{font-size:13px;color:var(--text-on-dark-soft);opacity:.8;margin-top:6px;}
+
+/* ---------- SECTION SHELL ---------- */
+section{padding:110px 0;}
+@media (max-width:780px){section{padding:76px 0;}}
+.section-head{max-width:640px;margin:0 auto 64px;text-align:center;}
+.eyebrow{
+  font-family:var(--sans);font-size:12.5px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold-deep);font-weight:700;margin-bottom:16px;
+}
+.section-head h2{
+  font-family:var(--serif);font-weight:600;color:var(--ink);
+  font-size:clamp(30px,4vw,44px);line-height:1.15;margin:0 0 18px;text-wrap:balance;
+}
+.section-head p{font-size:16.5px;color:var(--text-muted);line-height:1.75;text-wrap:balance;}
+
+/* ---------- FEATURES ---------- */
+.features{background:var(--paper);}
+.feature-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:28px;
+}
+@media (max-width:900px){.feature-grid{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:620px){.feature-grid{grid-template-columns:1fr;}}
+.feature-card{
+  background:var(--ivory-2);border:1px solid var(--gold-border);border-radius:20px;
+  padding:34px 28px;
+  opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease;
+}
+.feature-card.in{opacity:1;transform:none;}
+.feature-icon{
+  width:52px;height:52px;border-radius:14px;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;margin-bottom:20px;
+}
+.feature-icon svg{width:24px;height:24px;stroke:var(--gold-bright);}
+.feature-card h3{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin:0 0 10px;}
+.feature-card p{font-size:14.5px;color:var(--text-muted);line-height:1.7;margin:0;}
+.feature-card.highlight{background:var(--ink);border-color:transparent;}
+.feature-card.highlight h3,.feature-card.highlight p{color:var(--text-on-dark);}
+.feature-card.highlight p{color:var(--text-on-dark-soft);}
+.feature-card.highlight .feature-icon{background:var(--gold-pale);}
+.feature-card.highlight .feature-icon svg{stroke:var(--gold-deep);}
+
+/* ---------- SCAN SHOWCASE ---------- */
+.showcase{background:var(--ivory);}
+.showcase-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
+@media (max-width:860px){.showcase-grid{grid-template-columns:1fr;gap:44px;}}
+.showcase-copy .eyebrow{margin-bottom:14px;}
+.showcase-copy h2{
+  font-family:var(--serif);font-weight:600;color:var(--ink);
+  font-size:clamp(28px,3.6vw,40px);line-height:1.16;margin:0 0 20px;text-wrap:balance;
+}
+.showcase-copy p{font-size:16px;color:var(--text-muted);line-height:1.8;margin:0 0 28px;}
+.check-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;}
+.check-list li{display:flex;align-items:flex-start;gap:12px;font-size:15px;color:var(--text-body);}
+.check-list svg{width:19px;height:19px;flex-shrink:0;margin-top:2px;stroke:var(--gold-deep);}
+
+.phone-mock{
+  position:relative;margin:0 auto;width:min(280px,80vw);aspect-ratio:9/19.5;
+  background:var(--ink);border-radius:44px;padding:12px;
+  box-shadow:0 40px 80px -20px rgba(30,18,8,.35), 0 0 0 1px rgba(184,146,42,.15);
+}
+.phone-mock .screen{
+  width:100%;height:100%;border-radius:32px;overflow:hidden;
+  background:linear-gradient(180deg,var(--ivory-2),var(--ivory));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:24px;text-align:center;
+}
+.phone-mock .screen .ring{
+  width:64px;height:64px;border-radius:50%;border:2px dashed var(--gold-border);
+  display:flex;align-items:center;justify-content:center;
+}
+.phone-mock .screen .ring svg{width:26px;height:26px;stroke:var(--gold);}
+.phone-mock .screen small{font-size:11px;color:var(--text-muted);letter-spacing:.3px;}
+
+/* ---------- SCREENSHOTS GALLERY (placeholder) ---------- */
+.gallery{background:var(--paper);}
+.gallery-strip{
+  display:flex;gap:22px;overflow-x:auto;padding:10px 4px 24px;
+  scroll-snap-type:x proximity;
+}
+.gallery-strip::-webkit-scrollbar{height:6px;}
+.gallery-strip::-webkit-scrollbar-thumb{background:var(--gold-border);border-radius:10px;}
+.gallery-frame{
+  flex:0 0 auto;width:230px;aspect-ratio:9/19.5;scroll-snap-align:start;
+  background:var(--ink);border-radius:36px;padding:10px;
+}
+.gallery-frame .slot{
+  width:100%;height:100%;border-radius:26px;
+  background:repeating-linear-gradient(135deg,var(--ivory-3),var(--ivory-3) 10px,var(--ivory-2) 10px,var(--ivory-2) 20px);
+  display:flex;align-items:center;justify-content:center;
+}
+.gallery-frame .slot span{font-size:12px;color:var(--text-muted);font-family:var(--sans);text-align:center;padding:0 16px;}
+.gallery-note{
+  text-align:center;font-size:13.5px;color:var(--text-muted);margin-top:6px;
+}
+
+/* ---------- PREMIUM BAND ---------- */
+.premium{
+  background:radial-gradient(ellipse 100% 100% at 50% 0%, #2f2112 0%, var(--ink) 60%);
+  color:var(--text-on-dark);text-align:center;
+}
+.premium .eyebrow{color:var(--gold-bright);}
+.premium h2{
+  font-family:var(--serif);font-weight:600;color:#fff;
+  font-size:clamp(28px,4vw,42px);margin:0 0 18px;text-wrap:balance;
+}
+.premium p{max-width:56ch;margin:0 auto 40px;color:var(--text-on-dark-soft);font-size:16px;line-height:1.75;}
+.price-row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:36px;}
+.price-card{
+  background:rgba(245,239,228,.05);border:1px solid rgba(224,179,74,.28);
+  border-radius:18px;padding:26px 32px;min-width:200px;
+}
+.price-card .amount{font-family:var(--serif);font-size:32px;color:var(--gold-bright);font-weight:600;}
+.price-card .amount span{font-size:14px;color:var(--text-on-dark-soft);font-family:var(--sans);}
+.price-card .plan{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text-on-dark-soft);margin-bottom:8px;}
+.price-card .save{
+  display:inline-block;margin-top:10px;font-size:11.5px;background:var(--gold);color:var(--ink);
+  padding:3px 10px;border-radius:20px;font-weight:600;
+}
+
+/* ---------- FINAL CTA ---------- */
+.final-cta{background:var(--ivory);text-align:center;}
+.final-cta h2{
+  font-family:var(--serif);font-weight:600;color:var(--ink);
+  font-size:clamp(30px,4.4vw,46px);margin:0 0 20px;text-wrap:balance;
+}
+.final-cta p{font-size:16.5px;color:var(--text-muted);max-width:50ch;margin:0 auto 40px;}
+
+/* ---------- FOOTER ---------- */
+footer{background:var(--ink);color:var(--text-on-dark-soft);padding:56px 0 32px;}
+.footer-grid{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:32px;margin-bottom:40px;}
+.footer-logo{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-size:20px;color:#fff;letter-spacing:1.5px;}
+.footer-logo svg{width:14px;height:18px;}
+.footer-links{display:flex;gap:28px;flex-wrap:wrap;font-size:14px;}
+.footer-links a{text-decoration:none;color:var(--text-on-dark-soft);transition:color .2s ease;}
+.footer-links a:hover{color:var(--gold-bright);}
+.footer-bottom{
+  border-top:1px solid rgba(245,239,228,.1);padding-top:24px;
+  font-size:12.5px;color:#6b5c42;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.in{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="nav-logo">
+    <svg viewBox="0 0 56 72" fill="none"><ellipse cx="28" cy="11" rx="10" ry="2.8" stroke="#e0b34a" stroke-width="2.6"/><path d="M18,11 C11,16 10,24 13,29 C16,38 21,44 28,47 C35,44 40,38 43,29 C46,24 45,16 38,11" stroke="#e0b34a" stroke-width="2.6" stroke-linecap="round"/><line x1="28" y1="47" x2="28" y2="60" stroke="#e0b34a" stroke-width="2.6"/><line x1="16" y1="60" x2="40" y2="60" stroke="#e0b34a" stroke-width="2.6" stroke-linecap="round"/></svg>
+    CUVÉE
+  </div>
+  <a class="nav-cta" href="#scarica">Scarica gratis</a>
+</nav>
+
+<header class="hero">
+  <div class="hero-bubbles" id="bubbles"></div>
+  <div class="hero-inner">
+    <svg class="hero-glass" viewBox="0 0 56 72" fill="none">
+      <ellipse cx="28" cy="11" rx="10" ry="2.8" stroke="#e0b34a" stroke-width="1.6"/>
+      <path d="M18,11 C11,16 10,24 13,29 C16,38 21,44 28,47 C35,44 40,38 43,29 C46,24 45,16 38,11" stroke="#e0b34a" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="28" y1="47" x2="28" y2="60" stroke="#e0b34a" stroke-width="1.6"/>
+      <line x1="16" y1="60" x2="40" y2="60" stroke="#e0b34a" stroke-width="1.6" stroke-linecap="round"/>
+      <circle cx="24" cy="34" r="2.2" fill="#e0b34a" opacity=".85"/>
+      <circle cx="34" cy="24" r="1.6" fill="#e0b34a" opacity=".7"/>
+      <circle cx="27" cy="17" r="1.3" fill="#e0b34a" opacity=".55"/>
+      <circle cx="37" cy="31" r="1.5" fill="#e0b34a" opacity=".6"/>
+      <circle cx="20" cy="39" r="1.8" fill="#e0b34a" opacity=".75"/>
+    </svg>
+    <div class="hero-eyebrow">La guida italiana allo Champagne</div>
+    <h1>Ogni bottiglia ha una storia. <em>Cuvée</em> te la racconta all'istante.</h1>
+    <p class="hero-sub">Inquadra l'etichetta con la fotocamera e scopri Maison, cuvée, annata, punteggio e abbinamenti. Poi tieni traccia di ogni degustazione nel tuo Carnet personale — gratis, da scaricare subito.</p>
+    <div class="store-row" id="scarica">
+      <a class="store-badge" href="#" aria-label="Scarica su App Store">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 12.34c-.03-2.6 2.13-3.85 2.23-3.91-1.22-1.78-3.11-2.02-3.78-2.05-1.61-.16-3.14.95-3.96.95-.82 0-2.08-.93-3.42-.9-1.76.03-3.39 1.02-4.29 2.6-1.83 3.17-.47 7.86 1.31 10.43.87 1.25 1.91 2.66 3.28 2.61 1.31-.05 1.81-.85 3.4-.85 1.58 0 2.03.85 3.42.82 1.42-.02 2.31-1.28 3.16-2.55.99-1.47 1.4-2.9 1.42-2.97-.03-.01-2.72-1.04-2.75-4.18zM14.6 4.7c.72-.87 1.2-2.06 1.07-3.26-1.04.04-2.3.69-3.04 1.56-.67.76-1.25 2-1.1 3.15 1.13.09 2.3-.58 3.07-1.45z"/></svg>
+        <span class="sb-text"><span class="sb-small">Download on the</span><span class="sb-big">App Store</span></span>
+      </a>
+      <a class="store-badge disabled" href="#" aria-label="Presto su Google Play" tabindex="-1">
+        <svg viewBox="0 0 24 24"><path fill="#00d9ff" d="M3.6 2.4 13.8 12 3.6 21.6c-.4-.3-.6-.8-.6-1.3V3.7c0-.5.2-1 .6-1.3z"/><path fill="#ffce00" d="m17.6 9.4-3.3 2-2.5-2.5 2.9-2.9 2.9 1.7c.5.3.8.9.8 1.5s-.3 1-.8 1.2z"/><path fill="#ff3d5f" d="M14.3 11.4 3.6 21.6c.2.1.4.2.6.2.3 0 .6-.1.8-.2l9.9-5.7-3.3-3.2z"/><path fill="#00e177" d="m17.6 9.4-3.3 2 3.3 3.3 3.1-1.8c.5-.3.8-.7.8-1.3s-.3-1-.8-1.2l-3.1-1z"/></svg>
+        <span class="sb-text"><span class="sb-small">GET IT ON</span><span class="sb-big">Google Play</span></span>
+      </a>
+    </div>
+    <div class="hero-note">Gratis su App Store · acquisti in-app opzionali</div>
+  </div>
+</header>
+
+<section class="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Cosa puoi fare</div>
+      <h2>Tutto quello che serve a un vero appassionato</h2>
+      <p>Non un semplice catalogo: un compagno di degustazione pensato da chi lo Champagne lo vive davvero.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card highlight reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <h3>Scansione sommelier</h3>
+        <p>Fotografa l'etichetta e ricevi in pochi secondi Maison, cuvée, annata, dosaggio, punteggio e finestra di consumo ideale.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M12 3 8 9l4 12 4-12z"/></svg></div>
+        <h3>Catalogo Maison</h3>
+        <p>Sfoglia le case storiche e i piccoli vigneron, organizzati per zona: Montagne de Reims, Vallée de la Marne, Côte des Blancs e oltre.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <h3>Carnet de dégustation</h3>
+        <p>Punteggio, note personali, aromi, foto, luogo e occasione: un diario privato che cresce degustazione dopo degustazione.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8M8 11h5"/></svg></div>
+        <h3>Glossario e metodo</h3>
+        <p>"Dosage", "sboccatura", "sur lie" — ogni termine tecnico spiegato con chiarezza, dalla Guida al metodo champenoise.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <h3>Storico scansioni</h3>
+        <p>Ritrova ogni bottiglia già scansionata, quando vuoi — utile in enoteca, al ristorante o davanti a uno scaffale.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6z"/></svg></div>
+        <h3>Nessuna pubblicità</h3>
+        <p>Un'esperienza pulita ed elegante, senza banner né distrazioni — dedicata solo allo Champagne.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="showcase">
+  <div class="container">
+    <div class="showcase-grid">
+      <div class="showcase-copy reveal">
+        <div class="eyebrow">Come funziona</div>
+        <h2>Dalla foto al giudizio da sommelier, in tempo reale</h2>
+        <p>Basta la fotocamera del telefono. Cuvée analizza l'etichetta e restituisce un profilo completo della bottiglia — pensato per chi deve scegliere in fretta, ma senza rinunciare alla competenza.</p>
+        <ul class="check-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Riconoscimento istantaneo di Maison e cuvée</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Punteggio, dosaggio e finestra di consumo</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Abbinamenti gastronomici suggeriti</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Salvataggio automatico nello storico</li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <div class="phone-mock">
+          <div class="screen">
+            <div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+            <small>Inquadra un'etichetta<br>per iniziare</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="gallery">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">L'app in anteprima</div>
+      <h2>Uno sguardo dentro Cuvée</h2>
+    </div>
+    <!-- TODO: sostituire ogni .slot con <img src="screenshot-N.png" alt="..."> quando le schermate reali sono pronte -->
+    <div class="gallery-strip reveal">
+      <div class="gallery-frame"><div class="slot"><span>Screenshot Home</span></div></div>
+      <div class="gallery-frame"><div class="slot"><span>Screenshot Scansione</span></div></div>
+      <div class="gallery-frame"><div class="slot"><span>Screenshot Maison</span></div></div>
+      <div class="gallery-frame"><div class="slot"><span>Screenshot Carnet</span></div></div>
+      <div class="gallery-frame"><div class="slot"><span>Screenshot Premium</span></div></div>
+    </div>
+    <div class="gallery-note">Schermate reali in arrivo con il lancio pubblico.</div>
+  </div>
+</section>
+
+<section class="premium">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow">Cuvée Premium</div>
+      <h2>Scaricala gratis. Vai oltre, quando vuoi.</h2>
+      <p>L'app è completa e utilizzabile fin da subito. Chi vuole di più può passare a Premium: 100 scansioni sommelier al mese, catalogo integrale con tutte le Maison prestige, Carnet illimitato e nessun limite allo storico.</p>
+      <div class="price-row">
+        <div class="price-card">
+          <div class="plan">Annuale</div>
+          <div class="amount">4,99€<span> / mese</span></div>
+          <div class="save">Risparmi 17%</div>
+        </div>
+        <div class="price-card">
+          <div class="plan">Mensile</div>
+          <div class="amount">5,99€<span> / mese</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container reveal">
+    <h2>Il mondo dello Champagne, sans limites.</h2>
+    <p>Scarica Cuvée gratuitamente e inizia a riconoscere, catalogare e degustare come un sommelier.</p>
+    <div class="store-row">
+      <a class="store-badge" style="background:var(--ink);" href="#" aria-label="Scarica su App Store">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 12.34c-.03-2.6 2.13-3.85 2.23-3.91-1.22-1.78-3.11-2.02-3.78-2.05-1.61-.16-3.14.95-3.96.95-.82 0-2.08-.93-3.42-.9-1.76.03-3.39 1.02-4.29 2.6-1.83 3.17-.47 7.86 1.31 10.43.87 1.25 1.91 2.66 3.28 2.61 1.31-.05 1.81-.85 3.4-.85 1.58 0 2.03.85 3.42.82 1.42-.02 2.31-1.28 3.16-2.55.99-1.47 1.4-2.9 1.42-2.97-.03-.01-2.72-1.04-2.75-4.18zM14.6 4.7c.72-.87 1.2-2.06 1.07-3.26-1.04.04-2.3.69-3.04 1.56-.67.76-1.25 2-1.1 3.15 1.13.09 2.3-.58 3.07-1.45z"/></svg>
+        <span class="sb-text"><span class="sb-small">Download on the</span><span class="sb-big">App Store</span></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-logo">
+        <svg viewBox="0 0 56 72" fill="none"><ellipse cx="28" cy="11" rx="10" ry="2.8" stroke="#e0b34a" stroke-width="2.6"/><path d="M18,11 C11,16 10,24 13,29 C16,38 21,44 28,47 C35,44 40,38 43,29 C46,24 45,16 38,11" stroke="#e0b34a" stroke-width="2.6" stroke-linecap="round"/><line x1="28" y1="47" x2="28" y2="60" stroke="#e0b34a" stroke-width="2.6"/><line x1="16" y1="60" x2="40" y2="60" stroke="#e0b34a" stroke-width="2.6" stroke-linecap="round"/></svg>
+        CUVÉE
+      </div>
+      <nav class="footer-links">
+        <a href="#scarica">Scarica</a>
+        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/termini.html">Termini di servizio</a>
+        <a href="mailto:info@cuvee-app.it">Contatti</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Cuvée. Tutti i diritti riservati.</span>
+      <span>Apple, il logo Apple e App Store sono marchi di Apple Inc. Google Play e il logo Google Play sono marchi di Google LLC.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Bolle animate nell'hero — stesso linguaggio visivo dello splash screen dell'app
+(function(){
+  var wrap = document.getElementById('bubbles');
+  var n = 22;
+  for (var i = 0; i < n; i++) {
+    var s = document.createElement('span');
+    var size = 3 + Math.random() * 7;
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.width = size + 'px';
+    s.style.height = size + 'px';
+    s.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+    s.style.animationDuration = (7 + Math.random() * 8) + 's';
+    s.style.animationDelay = (Math.random() * 10) + 's';
+    wrap.appendChild(s);
+  }
+})();
+
+// Navbar: sfondo pieno dopo lo scroll
+(function(){
+  var nav = document.getElementById('nav');
+  function onScroll(){
+    if (window.scrollY > 40) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
+// Reveal on scroll — con rete di sicurezza: se per qualsiasi motivo
+// l'IntersectionObserver non rivela un elemento (deep link con salto diretto
+// a un'ancora, scroll programmatico, browser insoliti), il contenuto non deve
+// restare invisibile per sempre.
+(function(){
+  var els = document.querySelectorAll('.reveal, .feature-card');
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(function(el){ el.classList.add('in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  els.forEach(function(el){ io.observe(el); });
+  setTimeout(function(){
+    els.forEach(function(el){ el.classList.add('in'); });
+  }, 2500);
+})();
+</script>
+</body>
+</html>
