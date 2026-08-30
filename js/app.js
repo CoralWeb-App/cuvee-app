@@ -47,6 +47,7 @@ function go(id){
     if(allBtn) allBtn.classList.add('on');
     updateCarnetUI();
   }
+  if(id.indexOf('v-zone-')===0) applyCruPremiumGating(id);
   if(id==='v-maison') loadAndRenderMaison();
   if(id==='v-bottiglie') loadAndRenderBottiglie();
   if(id==='v-salvati') updateSalvatiUI();
@@ -3393,6 +3394,40 @@ function isPremium() {
   // Se c'è una data di scadenza, verifica che non sia passata
   if (p.premium_until) return new Date(p.premium_until) > new Date();
   return true;
+}
+
+// Nelle pagine zona/terroir, gli utenti free vedono solo i primi 2 comuni di
+// ogni gruppo (Grand Cru, Premier Cru, Autres Crus, sotto-zone...) — il resto
+// è dietro una card "sblocca con Premium". Funziona su qualunque .cru-grid
+// trovi nella vista passata, senza dover toccare l'HTML statico di ogni zona.
+function applyCruPremiumGating(viewId) {
+  const view = document.getElementById(viewId);
+  if (!view) return;
+  const premium = isPremium();
+  view.querySelectorAll('.cru-group').forEach(group => {
+    const grid = group.querySelector('.cru-grid');
+    if (!grid) return;
+    const pills = Array.from(grid.children);
+    let lockCard = group.querySelector('.cru-lock-card');
+    if (premium) {
+      pills.forEach(p => { p.style.display = ''; });
+      if (lockCard) lockCard.remove();
+      return;
+    }
+    const hidden = pills.slice(2);
+    pills.forEach((p, i) => { p.style.display = i < 2 ? '' : 'none'; });
+    if (hidden.length === 0) {
+      if (lockCard) lockCard.remove();
+      return;
+    }
+    if (!lockCard) {
+      lockCard = document.createElement('div');
+      lockCard.className = 'cru-lock-card';
+      lockCard.onclick = () => go('v-paywall');
+      grid.insertAdjacentElement('afterend', lockCard);
+    }
+    lockCard.innerHTML = '<i class="ti ti-lock"></i><span>+<strong>' + hidden.length + '</strong> comuni — sblocca con <strong>Premium</strong></span>';
+  });
 }
 
 // Controlli di sviluppo/debug (attivazione test premium, badge fonte scansione, ecc.)

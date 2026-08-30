@@ -557,7 +557,9 @@ html,body{
 .zone-list-card:active{transform:scale(.98);}
 .zone-list-ph{width:100%;height:110px;}
 .zone-list-body{padding:15px 16px 17px;}
-.zone-list-header{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.zone-list-header{display:flex;align-items:center;gap:10px;margin-bottom:6px;justify-content:space-between;}
+.zone-list-header-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.zone-list-arrow{font-size:18px;color:var(--ink-5);flex-shrink:0;}
 .zone-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0;}
 .zone-list-name{font-family:var(--serif);font-size:24px;color:var(--ink);font-weight:500;}
 .zone-list-sub{font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:5px;}
@@ -589,6 +591,10 @@ html,body{
 .cru-group-title i{font-size:16px;}
 .cru-grid{display:flex;flex-wrap:wrap;gap:7px;}
 .cru-pill{font-family:var(--sans);font-size:15px;border-radius:20px;padding:6px 13px;cursor:pointer;}
+.cru-lock-card{display:flex;align-items:center;gap:9px;background:var(--gold-pale);border:1px dashed var(--gold-border);border-radius:var(--radius-md);padding:11px 14px;margin-top:8px;cursor:pointer;}
+.cru-lock-card i{font-size:17px;color:#8a6a1e;flex-shrink:0;}
+.cru-lock-card span{font-family:var(--sans);font-size:13.5px;color:#8a6a1e;line-height:1.4;}
+.cru-lock-card span strong{font-weight:600;}
 .cru-gc{background:#faeeda;color:#633806;border:0.5px solid #EF9F27;}
 .cru-pc{background:#e1f5ee;color:#085041;border:0.5px solid #5DCAA5;}
 .cru-base{background:var(--ivory-2);color:var(--ink-3);border:0.5px solid var(--border);}
