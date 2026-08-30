@@ -1038,6 +1038,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #bottle-photo-info-modal.on{display:flex;}
 #notification-detail-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:center;justify-content:center;padding:24px;}
 #notification-detail-modal.on{display:flex;}
+#welcome-modal{position:fixed;inset:0;z-index:9400;background:rgba(14,10,4,.88);display:none;align-items:center;justify-content:center;padding:24px;}
+#welcome-modal.on{display:flex;}
 .notif-dot{display:none;position:absolute;top:-2px;right:-2px;width:13px;height:13px;border-radius:50%;background:#B4442E;border:2px solid var(--ivory);}
 .notif-dot.show{display:block;animation:notifBlink 1.3s ease-in-out infinite;}
 @keyframes notifBlink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.3);}}

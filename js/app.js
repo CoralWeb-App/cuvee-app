@@ -26,7 +26,7 @@ function go(id){
   if(scrl)scrl.scrollTo(0,0);
   // Load dynamic data when entering certain views
   if(id==='v-onb'){ onbIdx=0; onbApplySlide(onbData[0]); }
-  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); }
+  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); checkWelcomeNotification(); }
   if(id==='v-notifications') renderNotificationsUI();
   if(id==='v-paywall'){ loadPaywallOfferings(); }
   if(id==='v-scan-history') {
@@ -3574,6 +3574,35 @@ function openNotificationDetail(id) {
 }
 function closeNotificationDetailModal() {
   document.getElementById('notification-detail-modal').classList.remove('on');
+}
+
+// Notifica di benvenuto: una riga fissa e sempre presente in tabella notifications
+// (stesso id per tutti gli account, creata via SQL). Al primissimo accesso mostriamo
+// il popup di benvenuto e, nello stesso momento, la segniamo già letta per l'utente:
+// così risulta comunque in "Lette" nel centro notifiche, ma non riappare né conta
+// come non letta, visto che è comparsa automaticamente.
+const WELCOME_NOTIFICATION_ID = '11111111-1111-4111-8111-111111111111';
+let _welcomeChecked = false;
+
+async function checkWelcomeNotification() {
+  if (!currentUser || _welcomeChecked) return;
+  _welcomeChecked = true;
+  try {
+    const { data, error } = await supa.from('notification_reads')
+      .select('notification_id')
+      .eq('user_id', currentUser.id)
+      .eq('notification_id', WELCOME_NOTIFICATION_ID)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return;
+    const { error: e2 } = await supa.from('notification_reads')
+      .upsert({ user_id: currentUser.id, notification_id: WELCOME_NOTIFICATION_ID }, { onConflict: 'user_id,notification_id' });
+    if (e2) throw e2;
+    document.getElementById('welcome-modal')?.classList.add('on');
+  } catch(e) { console.log('checkWelcomeNotification error:', e); }
+}
+function closeWelcomeModal() {
+  document.getElementById('welcome-modal').classList.remove('on');
 }
 
 // Controlli di sviluppo/debug (attivazione test premium, badge fonte scansione, ecc.)
