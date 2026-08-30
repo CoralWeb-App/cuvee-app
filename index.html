@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=89"/>
+<link rel="stylesheet" href="css/style.css?v=90"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -2877,6 +2877,22 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- ═══ BOTTLE PHOTO INFO MODAL (bottiglia senza foto di copertina) ═══ -->
+<div id="bottle-photo-info-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closeBottlePhotoInfoModal()" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-camera-plus"></i></div>
+    <div class="scan-limit-title">Le foto le fate voi</div>
+    <div class="scan-limit-desc">Le copertine delle bottiglie in catalogo nascono dalle scansioni degli utenti Cuvée: più una bottiglia viene scansionata, più probabilità ha di avere una tua foto come copertina ufficiale.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-desc" style="margin-bottom:20px;">Scansiona questa bottiglia per proporre la tua foto — mi raccomando, che sia bella e a fuoco: entrano in catalogo solo gli scatti fatti bene.</div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closeBottlePhotoInfoModal();startScan('explore');">Scansiona questa bottiglia</button>
+    <button class="scan-limit-skip" onclick="closeBottlePhotoInfoModal()">Ho capito</button>
+  </div>
+</div>
+
 <!-- ═══ DELETE ACCOUNT MODAL ═══ -->
 <div id="delete-account-modal">
   <div class="scan-limit-inner">
@@ -2898,6 +2914,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=174"></script>
+<script src="js/app.js?v=175"></script>
 </body>
 </html>

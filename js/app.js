@@ -4605,6 +4605,16 @@ function renderAssemblaggio(b) {
 
 function bottDetailPhotoClick() {
   if (window._bottDetailPhotoUrl) openLightbox([window._bottDetailPhotoUrl], 0);
+  else openBottlePhotoInfoModal();
+}
+
+function openBottlePhotoInfoModal() {
+  const modal = document.getElementById('bottle-photo-info-modal');
+  if (modal) modal.classList.add('on');
+}
+function closeBottlePhotoInfoModal() {
+  const modal = document.getElementById('bottle-photo-info-modal');
+  if (modal) modal.classList.remove('on');
 }
 
 // Verifica sempre lato server la posizione alfabetica reale tra le bottiglie
@@ -4643,8 +4653,16 @@ async function openBottigliaDetail(bottId) {
     } else {
       hero.style.position = '';
       hero.style.display  = 'flex';
-      hero.style.cursor   = 'default';
-      hero.innerHTML = '<i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>';
+      hero.style.cursor   = 'pointer';
+      hero.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px 8px;gap:5px;">'
+        + '<i class="ti ti-camera-plus" style="font-size:28px;color:rgba(200,160,58,.55);"></i>'
+        + '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:rgba(200,160,58,.85);line-height:1.3;">Ancora nessuna foto</div>'
+        + '<div style="font-family:var(--sans);font-size:9.5px;color:rgba(200,160,58,.5);line-height:1.3;">Sii il primo a scansionarla</div>'
+        + '<div style="margin-top:2px;display:flex;align-items:center;gap:3px;background:rgba(200,160,58,.14);border:1px solid rgba(200,160,58,.28);border-radius:20px;padding:3px 8px;">'
+        + '<i class="ti ti-info-circle" style="font-size:10px;color:rgba(200,160,58,.8);"></i>'
+        + '<span style="font-family:var(--sans);font-size:8.5px;color:rgba(200,160,58,.8);">scopri come</span>'
+        + '</div>'
+        + '</div>';
     }
   }
 

@@ -1034,6 +1034,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #scan-not-champagne-modal.on{display:flex;}
 #delete-account-modal{position:fixed;inset:0;z-index:9300;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
 #delete-account-modal.on{display:flex;}
+#bottle-photo-info-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+#bottle-photo-info-modal.on{display:flex;}
 #delete-account-confirm-btn:disabled{cursor:not-allowed;}
 #delete-account-confirm-btn.ready{opacity:1 !important;}
 .scan-limit-inner{width:100%;max-width:480px;background:var(--ivory);border-radius:24px 24px 0 0;padding:28px 22px 30px;display:flex;flex-direction:column;gap:0;}
