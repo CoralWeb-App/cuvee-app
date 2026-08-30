@@ -609,6 +609,7 @@ html,body{
 .miz-sub{font-family:var(--sans);font-size:15px;color:var(--ink-4);}
 .badge-gc{background:#faeeda;color:#633806;border:0.5px solid #EF9F27;}
 .badge-pc{background:#e1f5ee;color:#085041;border:0.5px solid #5DCAA5;}
+.badge-ac{background:#eef0f5;color:#48506a;border:0.5px solid #bfc8d8;}
 
 
 /* ═══ CARNET DE DÉGUSTATION ═══ */
