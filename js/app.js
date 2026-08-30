@@ -1034,10 +1034,25 @@ async function renderScanHistoryUI() {
         '<div style="font-family:var(--serif);font-size:20px;color:var(--ink-3);margin-bottom:8px;">Nessuna scansione</div>' +
         '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-5);line-height:1.6;">Scansiona una bottiglia con la fotocamera<br>e la troverai qui.</div>' +
       '</div>';
-    return;
+  } else {
+    listEl.innerHTML = scans.map((s, i) => _buildScanHistoryCard(s, i)).join('');
   }
-  listEl.innerHTML = scans.map((s, i) => _buildScanHistoryCard(s, i)).join('');
-  if (premBanner) premBanner.style.display = (!isPremium() && scans.length >= 3) ? 'block' : 'none';
+  const premium = isPremium();
+  if (premBanner) {
+    premBanner.style.display = premium ? 'none' : 'block';
+    const msgEl = document.getElementById('scan-history-banner-msg');
+    if (!premium && msgEl) {
+      const used = Math.min(scans.length, 3);
+      const remaining = 3 - used;
+      if (used === 0) {
+        msgEl.innerHTML = 'Hai <strong style="color:#8a6a1e;">3 scansioni salvate</strong> disponibili. Con Premium lo storico scansioni è illimitato.';
+      } else if (remaining > 0) {
+        msgEl.innerHTML = 'Ti restano <strong style="color:#8a6a1e;">' + remaining + ' scansioni salvate</strong>. Con Premium lo storico scansioni è illimitato.';
+      } else {
+        msgEl.innerHTML = 'Hai salvato le <strong style="color:#8a6a1e;">3 scansioni gratuite</strong>. Con Premium lo storico scansioni è illimitato.';
+      }
+    }
+  }
 }
 
 function openScanFromHistory(idx) {
