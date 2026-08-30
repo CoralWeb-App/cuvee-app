@@ -596,39 +596,41 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div style="padding:0 18px;display:flex;flex-direction:column;gap:10px;">
 
       <!-- Guida — full width -->
-      <div onclick="go('v-guida')" style="background:#FBF4E4;border:1px solid #E8D8A8;border-radius:var(--radius-lg);padding:18px 16px 17px;cursor:pointer;display:flex;align-items:center;gap:15px;">
-        <div style="width:50px;height:50px;border-radius:12px;background:#F0E2C0;border:1px solid #DCC888;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="ti ti-books" style="font-size:25px;color:#8A6A1E;"></i>
+      <div onclick="go('v-guida')" style="background:linear-gradient(135deg,#F6EDD3 0%,#EAD8A8 100%);border:1px solid #D6BD7C;border-radius:var(--radius-lg);padding:18px 16px 17px;cursor:pointer;display:flex;align-items:center;gap:15px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:#2b2013;border:2px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="ti ti-books" style="font-size:23px;color:#C8A03A;"></i>
         </div>
         <div style="flex:1;">
           <div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;margin-bottom:7px;">Guida & Glossario</div>
           <div style="display:flex;gap:5px;flex-wrap:wrap;">
-            <span style="font-family:var(--sans);font-size:15px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Méthode</span>
-            <span style="font-family:var(--sans);font-size:15px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Glossaire</span>
-            <span style="font-family:var(--sans);font-size:15px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Terroirs</span>
-            <span style="font-family:var(--sans);font-size:15px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Dosages</span>
-            <span style="font-family:var(--sans);font-size:15px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Service</span>
-            <span style="font-family:var(--sans);font-size:15px;background:rgba(184,146,42,.13);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Formats</span>
+            <span style="font-family:var(--sans);font-size:15px;background:rgba(30,18,8,.09);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Méthode</span>
+            <span style="font-family:var(--sans);font-size:15px;background:rgba(30,18,8,.09);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Glossaire</span>
+            <span style="font-family:var(--sans);font-size:15px;background:rgba(30,18,8,.09);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Terroirs</span>
+            <span style="font-family:var(--sans);font-size:15px;background:rgba(30,18,8,.09);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Dosages</span>
+            <span style="font-family:var(--sans);font-size:15px;background:rgba(30,18,8,.09);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Service</span>
+            <span style="font-family:var(--sans);font-size:15px;background:rgba(30,18,8,.09);color:#8A6A1E;border-radius:20px;padding:2px 9px;">Formats</span>
           </div>
         </div>
-        <i class="ti ti-chevron-right" style="font-size:20px;color:var(--gold-light);flex-shrink:0;"></i>
+        <i class="ti ti-chevron-right" style="font-size:20px;color:#8A6A1E;flex-shrink:0;"></i>
       </div>
 
       <!-- Produttori + Champagne -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div onclick="go('v-maison')" style="background:#F8EEEF;border:1px solid #DEC8CC;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;">
-          <div style="width:40px;height:40px;border-radius:10px;background:#EDD0D4;display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
-            <i class="ti ti-building" style="font-size:21px;color:#8B2635;"></i>
+        <div onclick="go('v-maison')" style="background:linear-gradient(135deg,#F6E3E5 0%,#EBCBCF 100%);border:1px solid #D9A8AD;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;position:relative;">
+          <i class="ti ti-chevron-right" style="position:absolute;top:15px;right:12px;font-size:16px;color:#A8636E;"></i>
+          <div style="width:46px;height:46px;border-radius:50%;background:#2b2013;border:2px solid var(--ivory);box-shadow:0 -2px 10px rgba(30,18,8,.14),0 2px 8px rgba(30,18,8,.16);display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
+            <i class="ti ti-building" style="font-size:19px;color:#D88592;"></i>
           </div>
           <div style="font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:500;margin-bottom:3px;">Produttori</div>
-          <div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);" id="home-count-produttori">Caricamento…</div>
+          <div style="font-family:var(--sans);font-size:12px;color:#A8636E;" id="home-count-produttori">Caricamento…</div>
         </div>
-        <div onclick="go('v-bottiglie')" style="background:#F0F7EE;border:1px solid #C4D8B8;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;">
-          <div style="width:40px;height:40px;border-radius:10px;background:#D8EED0;display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
-            <i class="ti ti-bottle" style="font-size:21px;color:#1E5E28;"></i>
+        <div onclick="go('v-bottiglie')" style="background:linear-gradient(135deg,#E9F1DE 0%,#D3E4C0 100%);border:1px solid #B5CE9A;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;position:relative;">
+          <i class="ti ti-chevron-right" style="position:absolute;top:15px;right:12px;font-size:16px;color:#5C8449;"></i>
+          <div style="width:46px;height:46px;border-radius:50%;background:#2b2013;border:2px solid var(--ivory);box-shadow:0 -2px 10px rgba(30,18,8,.14),0 2px 8px rgba(30,18,8,.16);display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
+            <i class="ti ti-bottle" style="font-size:19px;color:#8FBE72;"></i>
           </div>
           <div style="font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:500;margin-bottom:3px;">Champagne</div>
-          <div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);" id="home-count-champagne">Caricamento…</div>
+          <div style="font-family:var(--sans);font-size:12px;color:#5C8449;" id="home-count-champagne">Caricamento…</div>
         </div>
       </div>
 
