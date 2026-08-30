@@ -250,13 +250,13 @@ function renderGlossario() {
       '<div style="font-family:var(--serif);font-size:24px;color:var(--gold);font-weight:500;margin-bottom:8px;' + (gi > 0 ? 'margin-top:8px;' : '') + '">' + letter + '</div>' +
       groups[letter].map(t => {
         const locked = t.livello === 'premium' && !premium;
-        return '<div class="card" style="padding:13px 14px;margin-bottom:8px;' + (locked ? 'opacity:.5;' : '') + '">' +
+        if (locked) return _lockedSearchCard(t.termine, 'Disponibile con Piano Premium');
+        return '<div class="card" style="padding:13px 14px;margin-bottom:8px;">' +
           '<div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">' +
             '<span>' + t.termine + '</span>' +
-            (locked ? '<i class="ti ti-lock" style="font-size:15px;color:var(--gold);flex-shrink:0;margin-left:8px;"></i>' : '') +
           '</div>' +
           '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">' +
-            (locked ? 'Contenuto disponibile con Piano Premium.' : t.definizione) +
+            t.definizione +
           '</div>' +
           '<div style="margin-top:7px;display:flex;align-items:center;gap:6px;">' +
             '<span class="badge ' + (livelloBadge[t.livello] || 'badge-rm') + '">' + (livelloLabel[t.livello] || 'Base') + '</span>' +
@@ -941,7 +941,7 @@ function _buildScanHistoryCard(s, idx) {
   const scoreHtml = s.score_medio
     ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+s.score_medio+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
     : '';
-  return '<div class="scan-history-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openScanFromHistory("+idx+")") + '" style="display:flex;gap:0;background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+  return '<div class="scan-history-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openScanFromHistory("+idx+")") + '" style="display:flex;gap:0;background:' + (isLocked ? '#f2ead9' : 'var(--white)') + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
     '<div class="scan-history-photo" style="width:90px;flex-shrink:0;background:linear-gradient(150deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">' +
       photo +
       (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
