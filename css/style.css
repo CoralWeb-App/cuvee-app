@@ -1036,7 +1036,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #delete-account-modal.on{display:flex;}
 #bottle-photo-info-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
 #bottle-photo-info-modal.on{display:flex;}
-#notification-detail-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+#notification-detail-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:center;justify-content:center;padding:24px;}
 #notification-detail-modal.on{display:flex;}
 .notif-dot{display:none;position:absolute;top:-2px;right:-2px;width:13px;height:13px;border-radius:50%;background:#B4442E;border:2px solid var(--ivory);}
 .notif-dot.show{display:block;animation:notifBlink 1.3s ease-in-out infinite;}
