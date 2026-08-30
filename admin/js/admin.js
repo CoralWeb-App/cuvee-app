@@ -187,7 +187,7 @@ function showView(id) {
   if (nav) nav.classList.add('active')
   const titles = { dashboard:'Dashboard', approvazioni:'Coda Approvazioni',
     bottiglie:'Catalogo Champagne', maison:'Gestione Maison', glossario:'Gestione Glossario',
-    utenti:'Utenti', abbonamenti:'Abbonamenti Premium', stats:'Statistiche' }
+    utenti:'Utenti', abbonamenti:'Abbonamenti Premium', notifiche:'Notifiche', stats:'Statistiche' }
   const el = document.getElementById('adm-header-view')
   if (el) el.textContent = titles[id] || id
 
@@ -198,6 +198,7 @@ function showView(id) {
   if (id === 'glossario')    { glossarioSearch = ''; glossarioLetterFilter = ''; loadGlossarioAdmin() }
   if (id === 'utenti')       { utentiPage = 1; utentiFilter = 'all'; utentiSearch = ''; renderUtenti() }
   if (id === 'abbonamenti')  loadAbbonamenti()
+  if (id === 'notifiche')    loadNotifiche()
   if (id === 'stats')        loadStats()
 }
 
@@ -2127,6 +2128,111 @@ async function createGlossario() {
     closeModal()
     showToast('Termine aggiunto ✓')
     loadGlossarioAdmin()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+// ══════════════════════════════════════════════════════
+// NOTIFICHE
+// Comunicazioni broadcast lette dagli utenti nell'app (nessun invio push,
+// solo un centro notifiche in-app: l'utente vede il badge e legge il messaggio).
+// ══════════════════════════════════════════════════════
+async function loadNotifiche() {
+  const tbody = document.getElementById('notifiche-tbody')
+  if (!tbody) return
+  tbody.innerHTML = loadingRow(5)
+  try {
+    const { data, error } = await supa
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+
+    const sub = document.getElementById('notifiche-subtitle')
+    if (sub) sub.textContent = (data || []).length + ' notifiche inviate'
+
+    if (!data || !data.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div style="padding:32px;text-align:center;color:var(--text-3)">Nessuna notifica ancora inviata</div></td></tr>`
+      return
+    }
+
+    tbody.innerHTML = data.map(n => `
+      <tr class="adm-table-row">
+        <td><div class="adm-bottle-name">${esc(n.title)}</div></td>
+        <td><div class="adm-bottle-sub" style="max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(n.body)}</div></td>
+        <td>${timeAgo(n.created_at)}</td>
+        <td>
+          <span class="adm-badge ${n.is_active ? 'active' : 'offline'} adm-status-badge"
+                onclick="toggleNotificaStatus('${n.id}',${n.is_active})">
+            ${n.is_active ? 'ATTIVA' : 'ARCHIVIATA'}
+          </span>
+        </td>
+        <td>
+          <div class="adm-row-actions">
+            <button class="adm-btn adm-btn-reject" onclick="deleteNotifica('${n.id}','${esc(n.title).replace(/'/g, "\\'")}')">
+              <i class="ti ti-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`).join('')
+  } catch(e) { tbody.innerHTML = errorRow(5, e.message) }
+}
+
+function openNewNotificaModal() {
+  const html = `
+    <div class="adm-edit-form">
+      <div class="adm-edit-grid">
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label class="adm-form-label">Titolo</label>
+          <input class="adm-form-input" type="text" id="nn-title" placeholder="es. Nuova funzione disponibile">
+        </div>
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label class="adm-form-label">Messaggio</label>
+          <textarea class="adm-form-input" rows="5" id="nn-body" placeholder="Testo del messaggio che vedrà l'utente..."></textarea>
+        </div>
+      </div>
+      <div class="adm-modal-actions">
+        <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+        <button class="adm-btn adm-btn-primary" onclick="createNotifica()">
+          <i class="ti ti-send"></i> Invia
+        </button>
+      </div>
+    </div>`
+  openModal('Nuova notifica', html)
+}
+
+async function createNotifica() {
+  const title = document.getElementById('nn-title')?.value.trim()
+  const body  = document.getElementById('nn-body')?.value.trim()
+  if (!title) { showToast('Il titolo è obbligatorio', 'error'); return }
+  if (!body)  { showToast('Il messaggio è obbligatorio', 'error'); return }
+  try {
+    const { error } = await supa.from('notifications').insert({ title, body, is_active: true })
+    if (error) throw error
+    closeModal()
+    showToast('Notifica inviata ✓')
+    loadNotifiche()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+async function toggleNotificaStatus(id, currentlyActive) {
+  const newStatus = !currentlyActive
+  try {
+    const { data: upd, error } = await supa.from('notifications')
+      .update({ is_active: newStatus }).eq('id', id).select('id')
+    if (error) throw error
+    if (!upd?.length) throw new Error('Aggiornamento bloccato da RLS')
+    showToast(newStatus ? 'Notifica riattivata ✓' : 'Notifica archiviata')
+    loadNotifiche()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+async function deleteNotifica(id, title) {
+  if (!confirm(`Eliminare la notifica "${title || ''}"?`)) return
+  try {
+    const { error } = await supa.from('notifications').delete().eq('id', id)
+    if (error) throw error
+    showToast('Notifica eliminata')
+    loadNotifiche()
   } catch(e) { showToast(e.message, 'error') }
 }
 

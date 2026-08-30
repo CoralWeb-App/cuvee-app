@@ -149,6 +149,11 @@
         <span>Abbonamenti</span>
       </div>
 
+      <div class="adm-nav-item" data-view="notifiche" onclick="showView('notifiche')">
+        <i class="ti ti-bell adm-nav-icon"></i>
+        <span>Notifiche</span>
+      </div>
+
       <div class="adm-nav-section-label">ANALYTICS</div>
 
       <div class="adm-nav-item" data-view="stats" onclick="showView('stats')">
@@ -597,6 +602,39 @@
         </div>
       </div>
 
+      <!-- ─── VIEW: NOTIFICHE ───────────────────────────── -->
+      <div id="view-notifiche" class="adm-view">
+
+        <div class="adm-view-header">
+          <div>
+            <h1 class="adm-view-title">Notifiche</h1>
+            <p class="adm-view-sub" id="notifiche-subtitle">Caricamento...</p>
+          </div>
+          <div class="adm-view-actions">
+            <button class="adm-btn adm-btn-primary" onclick="openNewNotificaModal()">
+              <i class="ti ti-plus"></i> Nuova notifica
+            </button>
+          </div>
+        </div>
+
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>TITOLO</th>
+                <th>MESSAGGIO</th>
+                <th>INVIATA</th>
+                <th>STATO</th>
+                <th>AZIONI</th>
+              </tr>
+            </thead>
+            <tbody id="notifiche-tbody">
+              <tr><td colspan="5" class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
 
       <!-- ─── VIEW: UTENTI ───────────────────────────── -->
       <div id="view-utenti" class="adm-view adm-view-utenti">
@@ -975,7 +1013,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=14"></script>
+<script src="js/admin.js?v=15"></script>
 
 </body>
 </html>

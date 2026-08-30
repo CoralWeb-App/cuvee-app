@@ -444,6 +444,18 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- ═══ NOTIFICHE ═══ -->
+<div class="view" id="v-notifications">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Indietro</button>
+    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Notifiche</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="scroll">
+    <div style="padding:16px 18px 20px;" id="notifications-list"></div>
+  </div>
+</div>
+
 <!-- ═══ SUCCESS ═══ -->
 <div class="view" id="v-success">
   <div class="success-circle"><i class="ti ti-check"></i></div>
@@ -463,6 +475,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <span class="topbar-logo-name">CUVÉE</span>
     </div>
     <div class="topbar-icons">
+      <div style="position:relative;cursor:pointer;display:flex;" onclick="go('v-notifications')">
+        <i class="ti ti-bell" style="font-size:22px;color:var(--ink-3);"></i>
+        <div id="notif-badge-dot" style="display:none;position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:#B4442E;border:1.5px solid var(--ivory);"></div>
+      </div>
       <i class="ti ti-settings" onclick="go('v-profile')" style="font-size:22px;color:var(--ink-3);cursor:pointer;"></i>
     </div>
   </div>
@@ -2044,7 +2060,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="section-label">Impostazioni</div>
     <div style="padding:0 18px 20px;">
       <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
-        <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer;"><div style="display:flex;align-items:center;gap:10px;"><i class="ti ti-bell" style="font-size:20px;color:var(--ink-3);"></i><span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Notifiche</span></div><i class="ti ti-chevron-right" style="font-size:17px;color:var(--ink-5);"></i></div>
+        <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer;" onclick="go('v-notifications')"><div style="display:flex;align-items:center;gap:10px;"><i class="ti ti-bell" style="font-size:20px;color:var(--ink-3);"></i><span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Notifiche</span></div><i class="ti ti-chevron-right" style="font-size:17px;color:var(--ink-5);"></i></div>
         <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer;"><div style="display:flex;align-items:center;gap:10px;"><i class="ti ti-language" style="font-size:20px;color:var(--ink-3);"></i><span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Lingua</span></div><span style="font-family:var(--sans);font-size:15px;color:var(--ink-4);">Italiano</span></div>
         <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="go('v-subscription')"><div style="display:flex;align-items:center;gap:10px;"><i class="ti ti-crown" style="font-size:20px;color:var(--gold);"></i><span style="font-family:var(--sans);font-size:15px;color:var(--ink);">Il mio abbonamento</span></div><i class="ti ti-chevron-right" style="font-size:17px;color:var(--ink-5);"></i></div>
       </div>
@@ -2967,6 +2983,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=175"></script>
+<script src="js/app.js?v=176"></script>
 </body>
 </html>

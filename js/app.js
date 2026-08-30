@@ -12,7 +12,8 @@ function go(id){
     'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
     'v-bottiglie','v-bottiglia-detail',
     'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
-    'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne'];
+    'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne',
+    'v-notifications'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
   }
@@ -25,7 +26,8 @@ function go(id){
   if(scrl)scrl.scrollTo(0,0);
   // Load dynamic data when entering certain views
   if(id==='v-onb'){ onbIdx=0; onbApplySlide(onbData[0]); }
-  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); }
+  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); }
+  if(id==='v-notifications') renderNotificationsUI();
   if(id==='v-paywall'){ loadPaywallOfferings(); }
   if(id==='v-scan-history') {
     const backLabels = { 'v-home':'Home', 'v-profile':'Il mio profilo' };
@@ -3443,6 +3445,64 @@ function applyCruPremiumGating(viewId) {
     }
     lockCard.innerHTML = '<i class="ti ti-lock"></i><span>+<strong>' + hidden.length + '</strong> comuni — sblocca con <strong>Premium</strong></span>';
   });
+}
+
+// Notifiche inviate dall'admin (comunicazioni, nuove funzioni, ecc.)
+// Lette/non lette è gestito con un semplice timestamp "notifications_last_seen"
+// sull'utente, confrontato con la data delle notifiche attive — niente tabella di join.
+async function checkUnreadNotifications() {
+  if (!currentUser) return;
+  const dot = document.getElementById('notif-badge-dot');
+  if (!dot) return;
+  try {
+    const lastSeen = currentUser.profile?.notifications_last_seen || '1970-01-01T00:00:00Z';
+    const { count, error } = await supa.from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .gt('created_at', lastSeen);
+    if (error) throw error;
+    dot.style.display = (count > 0) ? 'block' : 'none';
+  } catch(e) { console.log('checkUnreadNotifications error:', e); }
+}
+
+async function renderNotificationsUI() {
+  const listEl = document.getElementById('notifications-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="padding:60px 20px;text-align:center;font-family:var(--sans);font-size:14px;color:var(--ink-4);">Caricamento…</div>';
+  try {
+    const { data, error } = await supa.from('notifications')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    if (!data || !data.length) {
+      listEl.innerHTML = '<div style="padding:60px 24px;text-align:center;">'
+        + '<i class="ti ti-bell" style="font-size:34px;color:var(--border-2);display:block;margin-bottom:12px;"></i>'
+        + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-4);">Nessuna notifica al momento</div>'
+        + '</div>';
+    } else {
+      listEl.innerHTML = data.map(n => (
+        '<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;">'
+        + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;">'
+        + '<div style="font-family:var(--sans);font-size:14.5px;font-weight:600;color:var(--ink);">' + n.title + '</div>'
+        + '<div style="font-family:var(--sans);font-size:11.5px;color:var(--ink-5);white-space:nowrap;flex-shrink:0;padding-top:1px;">' + new Date(n.created_at).toLocaleDateString('it-IT', {day:'numeric', month:'short'}) + '</div>'
+        + '</div>'
+        + '<div style="font-family:var(--sans);font-size:13.5px;color:var(--ink-3);line-height:1.6;white-space:pre-line;">' + n.body + '</div>'
+        + '</div>'
+      )).join('');
+    }
+    const dot = document.getElementById('notif-badge-dot');
+    if (dot) dot.style.display = 'none';
+    if (currentUser) {
+      const nowIso = new Date().toISOString();
+      if (currentUser.profile) currentUser.profile.notifications_last_seen = nowIso;
+      supa.from('users').update({ notifications_last_seen: nowIso }).eq('id', currentUser.id)
+        .then(({ error }) => { if (error) console.log('mark notifications read error:', error); });
+    }
+  } catch(e) {
+    listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;color:#B4442E;font-family:var(--sans);font-size:13px;">Errore nel caricamento delle notifiche.</div>';
+    console.log('renderNotificationsUI error:', e);
+  }
 }
 
 // Controlli di sviluppo/debug (attivazione test premium, badge fonte scansione, ecc.)
