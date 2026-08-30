@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=90"/>
+<link rel="stylesheet" href="css/style.css?v=91"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -2978,11 +2978,25 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- ═══ NOTIFICATION DETAIL MODAL (popup a tutto testo dalla card anteprima) ═══ -->
+<div id="notification-detail-modal">
+  <div class="scan-limit-inner" style="position:relative;max-height:80vh;overflow-y:auto;">
+    <button onclick="closeNotificationDetailModal()" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-bell"></i></div>
+    <div class="scan-limit-title" id="notif-detail-title" style="margin-bottom:4px;">—</div>
+    <div style="text-align:center;font-family:var(--sans);font-size:12px;color:var(--ink-5);margin-bottom:16px;" id="notif-detail-date"></div>
+    <div class="scan-limit-sep"></div>
+    <div style="font-family:var(--sans);font-size:14.5px;color:var(--ink-2);line-height:1.65;white-space:pre-line;" id="notif-detail-body"></div>
+  </div>
+</div>
+
 <!-- Hidden inputs for scan & photo -->
 <input type="file" id="scan-input" accept="image/*" capture="environment" style="display:none;" onchange="handleScanFile(this)"/>
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=176"></script>
+<script src="js/app.js?v=177"></script>
 </body>
 </html>
