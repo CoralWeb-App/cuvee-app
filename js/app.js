@@ -2596,7 +2596,7 @@ async function ensureBottiglieLoaded() {
   try {
     const { data, error } = await supa
       .from('bottiglie')
-      .select('*, maison(nome, slug)')
+      .select('*, maison(nome, slug, is_free)')
       .eq('is_published', true)
       .eq('needs_review', false)
       .order('nome', { ascending: true });
@@ -2656,6 +2656,35 @@ function doHomeSearch() {
   homeSearchTimeout = setTimeout(() => _execHomeSearch(q), 300);
 }
 
+// Card per un risultato di ricerca bloccato da Premium — niente contenuto
+// reale nel markup (solo titolo, mai la definizione/descrizione), card scura
+// per farsi notare invece di sparire nell'affievolimento usuale.
+function _lockedSearchCard(title, sub) {
+  return '<div class="search-lock-card" onclick="go(\'v-paywall\')">' +
+    '<div class="search-lock-icon"><i class="ti ti-lock"></i></div>' +
+    '<div style="flex:1;min-width:0;">' +
+      '<div class="search-lock-title">' + title + '</div>' +
+      '<div class="search-lock-sub">' + sub + '</div>' +
+    '</div>' +
+    '<div class="search-lock-badge"><i class="ti ti-lock"></i>Premium</div>' +
+  '</div>';
+}
+
+// Stessa regola di isBottigliaLocked ma calcolata in locale sull'elenco già
+// caricato (evita una query per ogni risultato mostrato in ricerca).
+function _computeBottleLockMap() {
+  const map = new Map();
+  if (isPremium()) return map;
+  const seenPerMaison = new Map();
+  allBottiglie.forEach(b => {
+    const maisonLocked = b.maison?.is_free === false;
+    const idx = seenPerMaison.get(b.maison_id) || 0;
+    seenPerMaison.set(b.maison_id, idx + 1);
+    map.set(b.id, maisonLocked || idx >= 2);
+  });
+  return map;
+}
+
 async function _execHomeSearch(q) {
   const results = document.getElementById('home-search-results');
   results.innerHTML = '<div class="home-search-empty">Ricerca in corso…</div>';
@@ -2676,9 +2705,11 @@ async function _execHomeSearch(q) {
       matchesAllTerms(q, m.nome, m.sede)
     ).slice(0, 6);
     if (res.length > 0) {
+      const premium = isPremium();
       const tipoBadge = { 'NM':'badge-gm','RM':'badge-rm','RC':'badge-rm','CM':'badge-bio','SR':'badge-rm','ND':'badge-pres','MA':'badge-pres' };
       html += '<div class="home-search-section">Produttori</div>';
       html += res.map(m => {
+        if (m.is_free === false && !premium) return _lockedSearchCard(m.nome, 'Disponibile con Piano Premium');
         const anno = m.anno_fondazione ? 'dal ' + m.anno_fondazione : '';
         const sub = [m.sede, anno].filter(Boolean).join(' · ');
         const zonaColor = m.zone?.colore || 'var(--gold)';
@@ -2707,8 +2738,10 @@ async function _execHomeSearch(q) {
       matchesAllTerms(q, b.nome, b.maison?.nome)
     ).slice(0, 8);
     if (res.length > 0) {
+      const lockMap = _computeBottleLockMap();
       html += '<div class="home-search-section">Champagne</div>';
       html += res.map(b => {
+        if (lockMap.get(b.id)) return _lockedSearchCard(b.nome, b.maison?.nome ? 'di ' + b.maison.nome : 'Disponibile con Piano Premium');
         const foto = b.foto_url
           ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>'
           : '<i class="ti ti-bottle" style="font-size:22px;color:var(--ink-5);"></i>';
@@ -2730,15 +2763,17 @@ async function _execHomeSearch(q) {
       matchesAllTerms(q, t.termine, t.definizione)
     ).slice(0, 6);
     if (res.length > 0) {
+      const premium = isPremium();
       const livelloBadge = { base:'badge-rm', avanzato:'badge-pres', premium:'badge-prem' };
       html += '<div class="home-search-section">Glossario</div>';
-      html += res.map(t =>
-        '<div class="card" style="padding:12px 14px;margin-bottom:8px;">' +
+      html += res.map(t => {
+        if (t.livello === 'premium' && !premium) return _lockedSearchCard(t.termine, 'Disponibile con Piano Premium');
+        return '<div class="card" style="padding:12px 14px;margin-bottom:8px;">' +
           '<div style="font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:4px;">' + t.termine + '</div>' +
           '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.55;">' + t.definizione + '</div>' +
           '<span class="badge ' + (livelloBadge[t.livello]||'badge-rm') + '" style="margin-top:7px;">' + (t.livello||'base') + '</span>' +
-        '</div>'
-      ).join('');
+        '</div>';
+      }).join('');
     }
   }
 

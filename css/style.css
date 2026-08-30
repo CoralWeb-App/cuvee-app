@@ -160,6 +160,17 @@ html,body{
 .badge-pres{background:#eeedfe;color:#3C3489;border:0.5px solid #AFA9EC;}
 .badge-prem{background:var(--gold-pale);color:#8a6a1e;border:0.5px solid var(--gold-border);}
 
+/* ── Card contenuto bloccato (ricerca, e in futuro altrove) — deve saltare
+   all'occhio: card scura invece del solito affievolimento, badge "stamp" oro
+   ad alto contrasto ── */
+.search-lock-card{background:#1E1208;border-radius:var(--radius-lg);cursor:pointer;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.search-lock-icon{width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.08);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.search-lock-icon i{font-size:18px;color:#C8A03A;}
+.search-lock-title{font-family:var(--sans);font-size:15px;font-weight:600;color:#fff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.search-lock-sub{font-family:var(--sans);font-size:12.5px;color:rgba(255,255,255,.5);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.search-lock-badge{flex-shrink:0;background:#C8A03A;color:#1E1208;font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.3px;border-radius:20px;padding:5px 10px 5px 8px;display:flex;align-items:center;gap:4px;text-transform:uppercase;}
+.search-lock-badge i{font-size:11px;}
+
 /* ── IMG PLACEHOLDER ── */
 .img-ph{
   background:var(--ivory-3);
