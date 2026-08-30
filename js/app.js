@@ -4776,35 +4776,37 @@ async function openBottigliaDetail(bottId) {
       ...(b.link_custom1_nome && b.link_custom1_url ? [{ name: b.link_custom1_nome, desc: 'Link personalizzato', favicon: null, url: b.link_custom1_url }] : []),
       ...(b.link_custom2_nome && b.link_custom2_url ? [{ name: b.link_custom2_nome, desc: 'Link personalizzato', favicon: null, url: b.link_custom2_url }] : []),
     ];
-    const hasAnyLink = links.some(l => l.url);
+    // Solo i venditori con un link davvero impostato per questa bottiglia —
+    // niente più righe grigie/non cliccabili per fornitori non disponibili.
+    const available = links.filter(l => l.url);
 
-    const rows = links.map((l, i) => {
-      const isLast  = i === links.length - 1;
-      const hasLink = !!l.url;
-      const logoEl  = l.favicon
+    const rows = available.map((l, i) => {
+      const isLast = i === available.length - 1;
+      const logoEl = l.favicon
         ? '<img src="' + l.favicon + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:24px;height:24px;object-fit:contain;" alt=""><i class="ti ti-bottle" style="display:none;font-size:18px;color:var(--gold);"></i>'
         : '<i class="ti ti-link" style="font-size:18px;color:var(--gold);"></i>';
-      return '<a '
-        + (hasLink ? 'href="' + l.url + '" target="_blank"' : 'href="javascript:void(0)"')
-        + ' class="buy-row' + (hasLink ? '' : ' buy-row-empty') + '"'
-        + (isLast ? ' style="border-bottom:none;' + (hasLink ? '' : 'opacity:.45') + '"' : (!hasLink ? ' style="opacity:.45"' : ''))
+      return '<a href="' + l.url + '" target="_blank" class="buy-row"'
+        + (isLast ? ' style="border-bottom:none;"' : '')
         + '>'
         + '<div class="buy-logo">' + logoEl + '</div>'
         + '<div class="buy-info"><div class="buy-name">' + l.name + '</div><div class="buy-desc">' + l.desc + '</div></div>'
-        + (hasLink ? '<i class="ti ti-chevron-right buy-arrow"></i>' : '<i class="ti ti-minus" style="color:var(--ink-5);font-size:12px;margin-right:2px;"></i>')
+        + '<i class="ti ti-chevron-right buy-arrow"></i>'
         + '</a>';
     }).join('');
 
-    buySection.innerHTML =
-      '<div style="font-family:var(--sans);font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:10px;">'
+    const header = '<div style="font-family:var(--sans);font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:10px;">'
       + '<i class="ti ti-shopping-bag" style="font-size:10px;margin-right:5px;"></i>Dove acquistare'
-      + '</div>'
-      + '<div style="background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">'
-      + rows
-      + '</div>'
-      + (!hasAnyLink
-          ? '<div style="font-family:var(--sans);font-size:10px;color:var(--ink-5);text-align:center;margin-top:8px;line-height:1.5;">I link di acquisto verranno personalizzati per ogni bottiglia</div>'
-          : '');
+      + '</div>';
+
+    buySection.innerHTML = header + (available.length
+      ? '<div style="background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">' + rows + '</div>'
+      : '<div style="background:var(--ivory-2);border:1px dashed var(--border-2);border-radius:var(--radius-lg);padding:24px 20px;text-align:center;">'
+        + '<div style="width:46px;height:46px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">'
+        + '<i class="ti ti-clock" style="font-size:20px;color:#C8A03A;"></i>'
+        + '</div>'
+        + '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-weight:500;margin-bottom:5px;">Punti vendita in aggiornamento</div>'
+        + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.55;">Stiamo selezionando i migliori rivenditori per questa cuvée — torna presto a controllare.</div>'
+        + '</div>');
   }
   // ── End Dove acquistare ──────────────────────────────
 
