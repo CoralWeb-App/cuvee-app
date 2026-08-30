@@ -636,25 +636,23 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     </div>
     <div style="height:14px;"></div>
-    <div class="prem-banner" onclick="go('v-paywall')" style="cursor:pointer;margin:0 18px;background:linear-gradient(135deg,#FAF3E2 0%,#F0E2BE 100%);border:1px solid #C8A03A;border-radius:var(--radius-lg);padding:20px 18px 17px;flex-direction:column;">
-      <div style="display:flex;align-items:center;gap:15px;">
+    <div class="prem-banner" onclick="go('v-paywall')" style="cursor:pointer;margin:0 18px;background:var(--ivory-2);border:1.5px solid var(--gold-border);border-radius:var(--radius-lg);padding:18px 17px;position:relative;overflow:hidden;">
+      <div style="position:absolute;right:-16px;top:-16px;width:80px;height:80px;border-radius:50%;background:rgba(184,146,42,.08);pointer-events:none;"></div>
+      <div style="display:flex;align-items:flex-start;gap:13px;">
         <div style="width:52px;height:52px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory);box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <i class="ti ti-crown" style="font-size:24px;color:#C8A03A;"></i>
         </div>
         <div style="flex:1;">
-          <div style="font-family:var(--serif);font-size:22px;color:#3D2D0C;font-weight:500;margin-bottom:5px;">Sblocca tutto con Premium</div>
-          <div style="font-family:var(--sans);font-size:14px;color:#6B5420;line-height:1.55;">Catalogo completo, scansioni illimitate e Carnet senza limiti — tutto lo Champagne, senza compromessi.</div>
+          <div style="font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:500;margin-bottom:4px;">Sblocca tutto con Premium</div>
+          <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.55;margin-bottom:10px;">Catalogo completo, <strong style="color:#8a6a1e;">100 scansioni al mese</strong> e Carnet senza limiti — tutto lo Champagne, senza compromessi.</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span style="font-family:var(--sans);font-size:12px;background:var(--white);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:3px 10px;">Da 4,99€/mese</span>
+              <span style="font-family:var(--sans);font-size:12px;background:var(--white);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:3px 10px;">Disdici quando vuoi</span>
+            </div>
+            <span style="font-family:var(--sans);font-size:14px;color:var(--gold);font-weight:600;">→</span>
+          </div>
         </div>
-        <i class="ti ti-chevron-right" style="font-size:19px;color:#6B5420;flex-shrink:0;"></i>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;">
-        <span style="font-family:var(--sans);font-size:12px;background:rgba(30,18,8,.09);border:0.5px solid rgba(30,18,8,.22);color:#4A3814;border-radius:20px;padding:4px 11px;">100 scansioni/mese</span>
-        <span style="font-family:var(--sans);font-size:12px;background:rgba(30,18,8,.09);border:0.5px solid rgba(30,18,8,.22);color:#4A3814;border-radius:20px;padding:4px 11px;">Catalogo completo</span>
-        <span style="font-family:var(--sans);font-size:12px;background:rgba(30,18,8,.09);border:0.5px solid rgba(30,18,8,.22);color:#4A3814;border-radius:20px;padding:4px 11px;">Carnet illimitato</span>
-      </div>
-      <div style="margin-top:11px;background:rgba(30,18,8,.09);border:0.5px solid rgba(30,18,8,.22);border-radius:9px;padding:9px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <span style="font-family:var(--sans);font-size:12.5px;color:#4A3814;">A partire da <strong style="color:#2A1D08;font-weight:700;">4,99€/mese</strong></span>
-        <span style="font-family:var(--sans);font-size:12.5px;color:#2A1D08;font-weight:700;display:flex;align-items:center;gap:3px;">Scopri i piani<i class="ti ti-arrow-right" style="font-size:13px;"></i></span>
       </div>
     </div>
     <div style="height:14px;"></div>
