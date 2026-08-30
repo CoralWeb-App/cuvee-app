@@ -192,6 +192,8 @@ html,body{
 /* ═══════════════════════════════
    SPLASH
 ═══════════════════════════════ */
+#boot-splash{position:fixed;inset:0;z-index:9999;background:var(--ivory);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:40px 30px;transition:opacity .4s ease,visibility .4s ease;}
+#boot-splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
 #v-splash{background:var(--ivory);justify-content:space-between;}
 .splash-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 30px 20px;position:relative;}
 .splash-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}

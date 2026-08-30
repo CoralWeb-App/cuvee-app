@@ -1,6 +1,26 @@
 
 console.log('APP_JS_VERSION: ' + (document.currentScript?.src || 'unknown')); // src include ?v=N, sempre aggiornato da solo
 const stack=[];
+
+// ── Boot splash ───────────────────────────────────────────────────────
+// Copre v-splash (che ha i pulsanti "Entra"/"Accedi") finché initAuth() non
+// ha determinato se l'utente è già loggato, per evitare che si veda per un
+// istante la schermata sbagliata prima dello switch automatico alla Home.
+const _bootStart = Date.now();
+const BOOT_SPLASH_MIN_MS = 600; // dura almeno così tanto, anche se la sessione risulta già pronta subito (niente lampeggio del logo)
+let _bootSplashHidden = false;
+function hideBootSplash() {
+  if (_bootSplashHidden) return;
+  _bootSplashHidden = true;
+  const el = document.getElementById('boot-splash');
+  if (!el) return;
+  const wait = Math.max(0, BOOT_SPLASH_MIN_MS - (Date.now() - _bootStart));
+  setTimeout(() => { el.classList.add('hide'); }, wait);
+}
+// Rete di sicurezza: se la catena di avvio si blocca per qualche motivo
+// (rete lenta, errore imprevisto), non lasciare l'utente bloccato sullo
+// splash all'infinito.
+setTimeout(hideBootSplash, 7000);
 function go(id){
   // La registrazione richiede prima la conferma di avere almeno 18 anni,
   // così chi rifiuta non arriva mai al form (nessun account creato da annullare).
@@ -1249,6 +1269,7 @@ async function _routeAfterAuth() {
   } else {
     go('v-age-gate');
   }
+  hideBootSplash();
 }
 
 // Riapre v-complete-profile per cambiare il nome in un secondo momento
@@ -1295,10 +1316,12 @@ async function initAuth() {
     if (session) {
       currentUser = session.user;
       await _routeAfterAuth();
+    } else {
+      hideBootSplash(); // nessuna sessione: resta/torna sulla v-splash con i pulsanti
     }
-    // else rimane sulla splash
   } catch(e) {
     console.log('Auth init error:', e);
+    hideBootSplash();
   }
 }
 

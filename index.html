@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=97"/>
+<link rel="stylesheet" href="css/style.css?v=98"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -27,6 +27,44 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </script>
 </head>
 <body>
+<!-- ═══ BOOT SPLASH — visibile da subito, prima ancora che il JS determini se
+     l'utente è già loggato; copre l'eventuale schermata di benvenuto (con i
+     pulsanti "Entra"/"Accedi") finché il controllo della sessione non è finito,
+     per evitare il lampeggio della schermata sbagliata. ═══ -->
+<div id="boot-splash">
+  <div class="splash-bubbles">
+    <span style="left:14%;width:5px;height:5px;animation-duration:6.5s;animation-delay:.2s;"></span>
+    <span style="left:26%;width:3px;height:3px;animation-duration:5.2s;animation-delay:1.4s;"></span>
+    <span style="left:40%;width:4px;height:4px;animation-duration:7.4s;animation-delay:.6s;"></span>
+    <span style="left:60%;width:3px;height:3px;animation-duration:6s;animation-delay:2s;"></span>
+    <span style="left:74%;width:5px;height:5px;animation-duration:8s;animation-delay:.9s;"></span>
+    <span style="left:86%;width:3px;height:3px;animation-duration:5.6s;animation-delay:1.8s;"></span>
+  </div>
+  <div class="splash-mark">
+    <svg class="splash-logo-icon" width="56" height="72" viewBox="0 0 56 72" fill="none">
+      <defs>
+        <linearGradient id="capGradBoot" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#b8922a" stop-opacity="1"/>
+          <stop offset="50%" stop-color="#b8922a" stop-opacity=".2"/>
+          <stop offset="100%" stop-color="#b8922a" stop-opacity="1"/>
+        </linearGradient>
+      </defs>
+      <path d="M20,9 C17,12 15,16 15,20 C15,25 17,29 19,33 C22,38 25,43 28,47 C31,43 34,38 37,33 C39,29 41,25 41,20 C41,16 39,12 36,9" stroke="#b8922a" stroke-width="1.4" stroke-linejoin="round"/>
+      <line x1="20" y1="9" x2="36" y2="9" stroke="url(#capGradBoot)" stroke-width="1.4"/>
+      <line x1="28" y1="47" x2="28" y2="60" stroke="#b8922a" stroke-width="1.4"/>
+      <line x1="18" y1="60" x2="38" y2="60" stroke="#b8922a" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="26" cy="36" r="1.3" fill="#b8922a" opacity=".85"/>
+      <circle cx="31" cy="25" r="1.2" fill="#b8922a" opacity=".7"/>
+      <circle cx="27" cy="14" r=".9" fill="#b8922a" opacity=".55"/>
+      <circle cx="33" cy="29" r="1.1" fill="#b8922a" opacity=".6"/>
+      <circle cx="24" cy="32" r="1.2" fill="#b8922a" opacity=".75"/>
+    </svg>
+  </div>
+  <div class="splash-name">CUVÉE</div>
+  <div class="splash-rule"></div>
+  <div class="splash-tagline">La guida italiana allo Champagne</div>
+  <div class="splash-dots"><span></span><span></span><span></span></div>
+</div>
 <div id="app">
 
 <!-- ═══ SPLASH ═══ -->
@@ -3037,6 +3075,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=181"></script>
+<script src="js/app.js?v=182"></script>
 </body>
 </html>
