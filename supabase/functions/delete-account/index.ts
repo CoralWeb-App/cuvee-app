@@ -43,7 +43,20 @@ serve(async (req) => {
     const { data: { user }, error: authErr } = await userSupa.auth.getUser()
     if (authErr || !user) return json({ error: 'Non autorizzato' }, 401)
 
-    const uid = user.id
+    // Corpo opzionale: { target_user_id }. Usato dalla piattaforma admin per
+    // eliminare l'account di un ALTRO utente — richiede che il chiamante
+    // (verificato sopra tramite il suo stesso token) sia admin. Senza questo
+    // campo (o se coincide col chiamante) il comportamento resta invariato:
+    // un utente elimina solo se stesso, esattamente come prima.
+    let uid = user.id
+    try {
+      const body = await req.json()
+      if (body?.target_user_id && body.target_user_id !== user.id) {
+        const { data: caller } = await adminSupa.from('users').select('is_admin').eq('id', user.id).single()
+        if (!caller?.is_admin) return json({ error: 'Non autorizzato a eliminare altri account' }, 403)
+        uid = body.target_user_id
+      }
+    } catch (_) { /* nessun body / body non JSON: nessuna richiesta di eliminare un altro utente */ }
 
     // ── Storage: rimuove ogni file dell'utente nei bucket personali ──
     for (const bucket of USER_STORAGE_BUCKETS) {

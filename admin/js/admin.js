@@ -2509,6 +2509,9 @@ async function showUserDetail(userId) {
                 <i class="ti ti-crown"></i> Attiva premium
               </button>`
           }
+          <button class="adm-btn adm-btn-reject" style="width:100%;justify-content:center;margin-top:6px" onclick="deleteUserAccountModal('${u.id}','${esc(u.email ?? '').replace(/'/g, "\\'")}')">
+            <i class="ti ti-trash"></i> Elimina account
+          </button>
         </div>
 
       </div>`
@@ -2545,6 +2548,54 @@ async function revokeUserPremium(userId) {
     showUserDetail(userId)
     renderUtenti()
   } catch(e) { showToast(e.message, 'error') }
+}
+
+// ── ELIMINAZIONE ACCOUNT (stessa Edge Function usata dall'app per
+// l'autoeliminazione — qui passiamo target_user_id: la function verifica
+// lato server che il chiamante sia admin prima di eliminare un altro utente) ──
+function deleteUserAccountModal(userId, email) {
+  const html = `
+    <div class="adm-edit-form">
+      <div style="background:rgba(226,75,74,.08);border:1px solid rgba(226,75,74,.3);border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+        <div style="color:var(--red);font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="ti ti-alert-triangle"></i> Operazione irreversibile</div>
+        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6;">Elimina definitivamente l'account <strong>${esc(email || '')}</strong>: profilo, storico scansioni, Carnet de dégustation e tutte le foto caricate (avatar, scansioni, carnet). L'utente perde l'accesso subito e i dati non sono recuperabili — esattamente come "Elimina account" dentro l'app.</div>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;cursor:pointer;">
+        <input type="checkbox" id="del-user-ack" onchange="const b=document.getElementById('del-user-confirm-btn');b.disabled=!this.checked;b.style.opacity=this.checked?'1':'.5';" style="width:17px;height:17px;margin-top:1px;flex-shrink:0;accent-color:var(--red);">
+        <span style="font-size:12.5px;color:var(--text-2);line-height:1.5;">Ho capito che l'eliminazione è definitiva e non recuperabile.</span>
+      </label>
+      <div class="adm-modal-actions">
+        <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+        <button class="adm-btn adm-btn-reject" id="del-user-confirm-btn" disabled style="opacity:.5" onclick="confirmDeleteUserAccount('${userId}')">
+          <i class="ti ti-trash"></i> Elimina definitivamente
+        </button>
+      </div>
+    </div>`
+  openModal('Elimina account', html)
+}
+
+async function confirmDeleteUserAccount(userId) {
+  const btn = document.getElementById('del-user-confirm-btn')
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Eliminazione in corso...' }
+  try {
+    const { data: { session } } = await supa.auth.getSession()
+    const token = session?.access_token
+    if (!token) throw new Error('Sessione admin non valida')
+    const resp = await fetch('https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/delete-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ target_user_id: userId })
+    })
+    const result = await resp.json().catch(() => ({}))
+    if (!resp.ok || result.error) throw new Error(result?.error || 'Errore durante l\'eliminazione')
+    closeModal()
+    closeUserDetail()
+    showToast('Account eliminato definitivamente')
+    renderUtenti()
+  } catch(e) {
+    showToast(e.message, 'error')
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-trash"></i> Elimina definitivamente' }
+  }
 }
 
 // ── SCANSIONI MENSILI (override manuale) ──────────────
