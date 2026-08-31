@@ -155,7 +155,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="divider-row"><div class="div-line"></div><div class="div-txt">oppure</div><div class="div-line"></div></div>
     <button class="btn-social" onclick="attemptOAuthSignup('apple')"><i class="ti ti-brand-apple"></i>Continua con Apple</button>
     <button class="btn-social" onclick="attemptOAuthSignup('google')"><i class="ti ti-brand-google"></i>Continua con Google</button>
-    <div class="terms-txt">Registrandoti accetti i <a onclick="go('v-terms')">Termini di servizio</a> e la <a onclick="go('v-privacy')">Privacy Policy</a>.</div>
+    <div class="terms-txt">Registrandoti accetti i Termini di servizio e la Privacy Policy.</div>
     <div class="login-link" onclick="go('v-login')">Hai già un account? <span>Accedi</span></div>
   </div>
 </div>
@@ -198,239 +198,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <input class="input-field" id="complete-profile-name" type="text" placeholder="Il tuo nome" autocomplete="name" onkeydown="if(event.key==='Enter')saveProfileName()"/>
     </div>
     <button class="btn-gold" onclick="saveProfileName()" style="margin-top:6px;">Continua</button>
-  </div>
-</div>
-
-<!-- ═══ PRIVACY POLICY ═══ -->
-<div class="view" id="v-privacy">
-  <div class="topbar">
-    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Indietro</button>
-    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Privacy Policy</div>
-    <div style="width:60px;"></div>
-  </div>
-  <div class="scroll">
-    <div class="legal-updated">Ultimo aggiornamento — <span class="legal-fill">[data]</span></div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">1</div>
-      <div class="legal-section-title">Titolare del trattamento</div>
-      <div class="legal-section-text">Il titolare del trattamento dei dati raccolti tramite l'app Cuvée è:</div>
-      <div class="legal-section-text"><span class="legal-fill">[Ragione sociale o nome e cognome del titolare]</span><br><span class="legal-fill">[Indirizzo sede legale]</span><br>P.IVA/C.F. <span class="legal-fill">[numero]</span><br>Email privacy: <span class="legal-fill">[privacy@dominio.it]</span></div>
-      <div class="legal-section-text">Per qualsiasi richiesta relativa ai tuoi dati personali puoi scrivere all'indirizzo sopra indicato.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">2</div>
-      <div class="legal-section-title">Quali dati raccogliamo</div>
-      <ul class="legal-list">
-        <li><strong>Account</strong> — nome, email, password crittografata, oppure identificativo Apple/Google se usi l'accesso rapido</li>
-        <li><strong>Profilo</strong> — foto profilo (facoltativa)</li>
-        <li><strong>Scansioni</strong> — foto dell'etichetta, esito del riconoscimento, data e conteggio mensile</li>
-        <li><strong>Carnet de dégustation</strong> — note, punteggi, aromi, foto, luogo e data che inserisci tu volontariamente</li>
-        <li><strong>Utilizzo</strong> — stato dell'abbonamento, preferenze salvate localmente sul dispositivo</li>
-        <li><strong>Pagamento</strong> — gestito direttamente dal fornitore di pagamento, non memorizziamo numeri di carta</li>
-      </ul>
-      <div class="legal-section-text">Non raccogliamo altro: nessuna localizzazione GPS, nessun accesso a rubrica o altre app, nessuna raccolta pubblicitaria di terze parti.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">3</div>
-      <div class="legal-section-title">Perché li trattiamo</div>
-      <div class="legal-section-text">Per gestire il tuo account e le funzioni dell'app (catalogo, scansione, Carnet, limiti mensili, abbonamento Premium), rispondere alle richieste di assistenza, prevenire abusi e adempiere agli obblighi fiscali sugli abbonamenti. Non usiamo i tuoi dati per pubblicità mirata né li vendiamo a terzi.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">4</div>
-      <div class="legal-section-title">Fotografie ed elaborazione automatica</div>
-      <div class="legal-section-text">Quando scatti la foto di un'etichetta, l'immagine viene inviata a un sistema di riconoscimento assistito da intelligenza artificiale, fornito dal nostro fornitore tecnologico Anthropic, per identificare la bottiglia e generarne l'analisi. Il passaggio è automatizzato: nessuna persona esamina manualmente le tue foto, salvo tue richieste di assistenza specifiche. Le foto restano nel tuo Storico scansioni finché non le elimini o chiudi l'account.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">5</div>
-      <div class="legal-section-title">Carnet de dégustation</div>
-      <div class="legal-section-text">Le note, i punteggi, gli aromi e le foto che salvi nel tuo Carnet sono contenuti privati, visibili solo a te. Non li condividiamo con altri utenti né li rendiamo pubblici.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">6</div>
-      <div class="legal-section-title">Con chi condividiamo i dati</div>
-      <ul class="legal-list">
-        <li><strong>Supabase Inc.</strong> — hosting database, autenticazione, archiviazione file</li>
-        <li><strong>Anthropic</strong> — analisi automatica delle foto di etichette</li>
-        <li><strong>Apple / Google</strong> — accesso rapido, se scelto dall'utente</li>
-        <li><span class="legal-fill">[fornitore di pagamento]</span> — gestione abbonamento Premium</li>
-      </ul>
-      <div class="legal-section-text">Non vendiamo, affittiamo né condividiamo i tuoi dati con terzi per finalità di marketing.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">7</div>
-      <div class="legal-section-title">Trasferimento dati fuori dall'UE</div>
-      <div class="legal-section-text">Alcuni fornitori possono trattare dati su server fuori dall'Unione Europea (es. Stati Uniti), sulla base di clausole contrattuali standard approvate dalla Commissione Europea o meccanismi equivalenti previsti dal GDPR.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">8</div>
-      <div class="legal-section-title">Per quanto tempo conserviamo i dati</div>
-      <ul class="legal-list">
-        <li>Dati account: per tutta la durata del rapporto, fino alla richiesta di cancellazione</li>
-        <li>Storico scansioni e Carnet: finché non li elimini o chiudi l'account</li>
-        <li>Dati di fatturazione: per il periodo richiesto dalla normativa fiscale applicabile</li>
-        <li>Alla chiusura account: cancellazione entro <span class="legal-fill">[30/60/90]</span> giorni, salvo obblighi di legge</li>
-      </ul>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">9</div>
-      <div class="legal-section-title">I tuoi diritti</div>
-      <div class="legal-section-text">Hai diritto di accesso, rettifica, cancellazione, portabilità, opposizione e limitazione dei tuoi dati, e di reclamo al Garante Privacy (<a href="https://www.gpdp.it" target="_blank" rel="noopener" style="color:var(--gold);">gpdp.it</a>).</div>
-      <div class="legal-section-text">Puoi eliminare da solo il tuo account in qualsiasi momento da <strong>Profilo → Elimina account</strong>: cancella integralmente profilo, storico scansioni e relative foto, Carnet e relative foto, preferiti/wishlist. Se hai un abbonamento Premium attivo, l'eliminazione lo interrompe insieme al resto — vedi §5 dei Termini di servizio. Per ogni altro diritto scrivi a <span class="legal-fill">[privacy@dominio.it]</span>.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">10</div>
-      <div class="legal-section-title">Cookie e memoria locale</div>
-      <div class="legal-section-text">Cuvée non utilizza cookie di profilazione né pubblicitari di terze parti. L'app salva alcune informazioni tecniche sul tuo dispositivo (sessione, preferenze) che restano locali e non vengono condivise a fini di tracciamento.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">11</div>
-      <div class="legal-section-title">Minori ed età minima</div>
-      <div class="legal-section-text">Cuvée tratta contenuti relativi a bevande alcoliche ed è riservata a utenti maggiorenni. La registrazione richiede una conferma esplicita di avere già compiuto 18 anni prima ancora che l'account venga creato; chi accede senza averlo mai confermato resta comunque bloccato su una schermata dedicata. Si tratta di una dichiarazione auto-certificata, non di una verifica documentale. Se veniamo a conoscenza di un account di un minore, procediamo alla sua chiusura.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">12</div>
-      <div class="legal-section-title">Sicurezza</div>
-      <div class="legal-section-text">Adottiamo misure tecniche e organizzative adeguate (connessioni cifrate, autenticazione sicura, accesso limitato al personale autorizzato). In caso di violazione dei dati con rischio per i tuoi diritti, ti informeremo secondo quanto previsto dal GDPR.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">13</div>
-      <div class="legal-section-title">Modifiche a questa informativa</div>
-      <div class="legal-section-text">Possiamo aggiornare questa informativa nel tempo. In caso di modifiche sostanziali te lo comunicheremo tramite l'app o via email prima che entrino in vigore.</div>
-    </div>
-
-    <div style="height:30px;"></div>
-  </div>
-</div>
-
-<!-- ═══ TERMINI DI SERVIZIO ═══ -->
-<div class="view" id="v-terms">
-  <div class="topbar">
-    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Indietro</button>
-    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Termini di servizio</div>
-    <div style="width:60px;"></div>
-  </div>
-  <div class="scroll">
-    <div class="legal-updated">Ultimo aggiornamento — <span class="legal-fill">[data]</span></div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">1</div>
-      <div class="legal-section-title">Accettazione dei termini</div>
-      <div class="legal-section-text">Utilizzando l'app Cuvée accetti questi Termini di servizio e la Privacy Policy. Se non li accetti, ti chiediamo di non utilizzare il servizio.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">2</div>
-      <div class="legal-section-title">Cosa fa Cuvée</div>
-      <div class="legal-section-text">Cuvée è una guida digitale allo Champagne: catalogo di Maison e cuvée, Glossario, Guida al metodo champenoise, riconoscimento automatico delle bottiglie tramite fotocamera, storico delle scansioni e Carnet de dégustation personale. Il servizio è fornito così com'è ed evolve nel tempo: possiamo aggiungere, modificare o rimuovere funzionalità.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">3</div>
-      <div class="legal-section-title">Account e registrazione</div>
-      <ul class="legal-list">
-        <li>Per usare le funzioni principali serve un account (email e password, oppure Apple o Google)</li>
-        <li>Devi avere <strong>almeno 18 anni</strong>: la registrazione richiede una conferma esplicita prima ancora che l'account venga creato, sia via email sia via Apple/Google</li>
-        <li>Sei responsabile della riservatezza delle tue credenziali e di ogni attività svolta dal tuo account</li>
-        <li>Le informazioni fornite in registrazione devono essere veritiere</li>
-      </ul>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">4</div>
-      <div class="legal-section-title">Piano gratuito e piano Premium</div>
-      <ul class="legal-list">
-        <li>Free: 3 scansioni al mese, catalogo, storico scansioni, 3 note nel Carnet</li>
-        <li>Premium: 100 scansioni al mese, storico e Carnet illimitati — <span class="legal-fill">5,99 €/mese</span> o <span class="legal-fill">59,99 €/anno</span></li>
-      </ul>
-      <div class="legal-section-text">I limiti possono essere aggiornati; in caso di modifica sostanziale a tuo sfavore te lo comunicheremo con ragionevole anticipo.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">5</div>
-      <div class="legal-section-title">Pagamenti, rinnovo automatico e recesso</div>
-      <ul class="legal-list">
-        <li>L'abbonamento Premium si rinnova automaticamente alla scadenza, salvo disdetta prima del rinnovo</li>
-        <li>I pagamenti sono gestiti da <span class="legal-fill">[fornitore di pagamento]</span>; non conserviamo i dati della tua carta</li>
-        <li>Puoi disdire in qualsiasi momento da Profilo; la disdetta ha effetto a fine periodo già pagato, senza rimborso della quota residua salvo diversa previsione di legge</li>
-        <li><strong>Diritto di recesso:</strong> trattandosi di contenuto digitale, il diritto di recesso di 14 giorni decade quando, con il tuo consenso esplicito, l'erogazione del Premium inizia subito dopo l'acquisto</li>
-        <li><strong>Eliminazione account con abbonamento attivo:</strong> se elimini l'account da Profilo → Elimina account mentre hai Premium in corso, l'abbonamento termina subito insieme al resto. Nessun rimborso, nemmeno parziale, per i giorni o mesi già pagati e non utilizzati — l'app te lo ricorda esplicitamente prima di confermare</li>
-      </ul>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">6</div>
-      <div class="legal-section-title">Contenuti che carichi tu</div>
-      <div class="legal-section-text">Le foto e le note che carichi restano tue. Ci concedi solo la licenza minima necessaria per archiviarle, elaborarle e mostrartele nell'app. Non le pubblichiamo né le condividiamo con altri utenti. Sei responsabile dei contenuti che carichi.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">7</div>
-      <div class="legal-section-title">Uso accettabile</div>
-      <div class="legal-section-text">Ti impegni a non usare il servizio per scopi illegali, aggirare i limiti di scansione, estrarre in massa i contenuti del catalogo o rivendere l'accesso al tuo account. Possiamo sospendere account che violano queste regole.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">8</div>
-      <div class="legal-section-title">Natura informativa dei contenuti</div>
-      <div class="legal-section-text">Schede prodotto, punteggi, abbinamenti, prezzi indicativi e risultati della scansione automatica hanno finalità informativa e non costituiscono consulenza professionale. I risultati della scansione sono generati algoritmicamente e possono contenere imprecisioni: verificane l'accuratezza prima di basarci decisioni d'acquisto importanti.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">9</div>
-      <div class="legal-section-title">Proprietà intellettuale</div>
-      <div class="legal-section-text">Il marchio Cuvée, il design dell'app, i testi del Glossario e della Guida e il catalogo curato sono di proprietà di <span class="legal-fill">[titolare]</span> o concessi in licenza. Non è consentito copiare, ridistribuire o creare opere derivate senza autorizzazione scritta.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">10</div>
-      <div class="legal-section-title">Disponibilità del servizio</div>
-      <div class="legal-section-text">Ci impegniamo a mantenere il servizio disponibile ma non garantiamo un funzionamento ininterrotto o privo di errori. Potremmo sospendere temporaneamente l'accesso per manutenzione o aggiornamenti.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">11</div>
-      <div class="legal-section-title">Limitazione di responsabilità</div>
-      <div class="legal-section-text">Nei limiti consentiti dalla legge, non siamo responsabili per danni indiretti derivanti dall'uso del servizio, incluse decisioni d'acquisto basate sulle informazioni o sui risultati di scansione forniti dall'app.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">12</div>
-      <div class="legal-section-title">Sospensione e chiusura dell'account</div>
-      <div class="legal-section-text">Puoi chiudere il tuo account in qualsiasi momento da Profilo → Elimina account — è immediato e non richiede di contattarci. Possiamo sospendere o chiudere un account in caso di violazione di questi Termini, salvo i casi che richiedono azione immediata (abuso o frode).</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">13</div>
-      <div class="legal-section-title">Legge applicabile e foro competente</div>
-      <div class="legal-section-text">Questi Termini sono regolati dalla legge italiana. Per le controversie con utenti consumatori resta fermo il foro del luogo di residenza o domicilio del consumatore, se ubicato in Italia.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">14</div>
-      <div class="legal-section-title">Modifiche ai Termini</div>
-      <div class="legal-section-text">Possiamo aggiornare questi Termini nel tempo. Le modifiche sostanziali ti verranno comunicate con ragionevole anticipo; l'uso continuato del servizio dopo l'entrata in vigore costituisce accettazione.</div>
-    </div>
-
-    <div class="legal-section">
-      <div class="legal-section-num">15</div>
-      <div class="legal-section-title">Contatti</div>
-      <div class="legal-section-text">Per domande su questi Termini o sulla Privacy Policy: <span class="legal-fill">[email supporto/legale]</span>.</div>
-    </div>
-
-    <div style="height:30px;"></div>
   </div>
 </div>
 
@@ -2127,7 +1894,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div style="padding:0 18px;margin-bottom:8px;"><button class="btn-outline" onclick="signOut()" style="border:1px solid var(--border-2);color:var(--ink-4);border-radius:var(--radius-md);padding:12px;">Esci dall'account</button></div>
     <div style="padding:0 18px;margin-bottom:8px;"><button onclick="openDeleteAccountModal()" style="width:100%;background:none;border:none;color:#B4442E;font-family:var(--sans);font-size:13px;padding:9px;cursor:pointer;">Elimina account</button></div>
-    <div style="padding:0 18px 24px;text-align:center;font-family:var(--sans);font-size:13px;color:var(--ink-5);"><span id="app-version-block">Cuvée v<span id="app-version-label">1.0</span> · </span>© 2026 · <a onclick="go('v-privacy')" style="color:var(--gold);text-decoration:none;cursor:pointer;">Privacy</a> · <a onclick="go('v-terms')" style="color:var(--gold);text-decoration:none;cursor:pointer;">Termini</a> · <a href="https://coralweb.it" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">coralweb.it</a></div>
+    <div style="padding:0 18px 24px;text-align:center;font-family:var(--sans);font-size:13px;color:var(--ink-5);"><span id="app-version-block">Cuvée v<span id="app-version-label">1.0</span> · </span>© 2026 · <a href="https://coralweb.it" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">coralweb.it</a></div>
   </div>
   
 
@@ -3092,6 +2859,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=188"></script>
+<script src="js/app.js?v=189"></script>
 </body>
 </html>
