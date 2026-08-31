@@ -690,6 +690,8 @@ html, body {
   display: flex; align-items: center; gap: 7px;
 }
 
+.adm-card-title svg { width: 14px; height: 14px; flex-shrink: 0; }
+
 .adm-card-meta {
   margin-left: auto;
   font-family: var(--mono);
