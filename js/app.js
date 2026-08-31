@@ -3299,20 +3299,32 @@ async function _loadPaywallOfferingsImpl() {
 // quello serve ancora un webhook lato server (da collegare più avanti).
 async function _syncPremiumFromCustomerInfo(customerInfo) {
   if (!currentUser || !customerInfo) return;
+  // Non toccare un Premium concesso manualmente dall'admin: RevenueCat non ha
+  // nessun acquisto da sincronizzare per questi account, quindi senza questo
+  // controllo il primo giro di sync (a ogni avvio dell'app) lo riporterebbe
+  // sempre a gratuito. Una volta scaduto, isPremium() lo tratta comunque
+  // come non premium da solo — qui serve solo a non azzerarlo mentre è attivo.
+  if (currentUser.profile?.premium_source === 'admin' && isPremium()) return;
+
   const ent = customerInfo.entitlements?.active?.[RC_ENTITLEMENT];
   const isPremiumNow = !!ent;
   const premiumUntil = ent?.expirationDate || null;
   const cancelAtEnd = isPremiumNow && ent?.willRenew === false;
   try {
-    await supa.from('users').update({
+    const updates = {
       is_premium: isPremiumNow,
       premium_until: premiumUntil,
       cancel_at_period_end: cancelAtEnd,
-    }).eq('id', currentUser.id);
+    };
+    // Da qui in avanti è un abbonamento vero: se l'utente aveva un Premium
+    // manuale precedente, RevenueCat ora è la fonte di verità.
+    if (isPremiumNow) updates.premium_source = 'revenuecat';
+    await supa.from('users').update(updates).eq('id', currentUser.id);
     if (currentUser.profile) {
       currentUser.profile.is_premium = isPremiumNow;
       currentUser.profile.premium_until = premiumUntil;
       currentUser.profile.cancel_at_period_end = cancelAtEnd;
+      if (isPremiumNow) currentUser.profile.premium_source = 'revenuecat';
     }
   } catch(e) {
     console.log('sync premium error:', e);

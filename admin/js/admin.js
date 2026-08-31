@@ -2696,6 +2696,7 @@ async function assignPremiumModal(userId) {
       premium_from:  from  ? new Date(from  + 'T00:00:00').toISOString() : new Date().toISOString(),
       premium_until: new Date(until + 'T23:59:59').toISOString(),
       premium_notes: notes || null,
+      premium_source: 'admin',
     }).eq('id', userId)
     if (error) throw error
     closeModal()
@@ -2835,6 +2836,7 @@ async function assignPremium() {
       premium_from:  from  ? new Date(from  + 'T00:00:00').toISOString() : new Date().toISOString(),
       premium_until: new Date(until + 'T23:59:59').toISOString(),
       premium_notes: notes || null,
+      premium_source: 'admin',
     }).eq('id', users[0].id)
     if (error) throw error
     showToast(`Premium attivato per ${email} ✓`)
@@ -2847,7 +2849,7 @@ async function assignPremium() {
 async function renewPremium(userId) {
   const until = new Date(Date.now() + 365*24*60*60*1000).toISOString()
   try {
-    const { error } = await supa.from('users').update({ premium_until: until }).eq('id', userId)
+    const { error } = await supa.from('users').update({ premium_until: until, premium_source: 'admin' }).eq('id', userId)
     if (error) throw error
     showToast('Premium rinnovato di 1 anno ✓')
     loadAbbonamenti()
