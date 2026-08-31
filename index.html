@@ -2127,7 +2127,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div style="padding:0 18px;margin-bottom:8px;"><button class="btn-outline" onclick="signOut()" style="border:1px solid var(--border-2);color:var(--ink-4);border-radius:var(--radius-md);padding:12px;">Esci dall'account</button></div>
     <div style="padding:0 18px;margin-bottom:8px;"><button onclick="openDeleteAccountModal()" style="width:100%;background:none;border:none;color:#B4442E;font-family:var(--sans);font-size:13px;padding:9px;cursor:pointer;">Elimina account</button></div>
-    <div style="padding:0 18px 24px;text-align:center;font-family:var(--sans);font-size:13px;color:var(--ink-5);">Cuvée v1.0.0 beta · <a onclick="go('v-privacy')" style="color:var(--gold);text-decoration:none;cursor:pointer;">Privacy</a> · <a onclick="go('v-terms')" style="color:var(--gold);text-decoration:none;cursor:pointer;">Termini</a></div>
+    <div style="padding:0 18px 24px;text-align:center;font-family:var(--sans);font-size:13px;color:var(--ink-5);"><span id="app-version-block">Cuvée v<span id="app-version-label">1.0</span> · </span>© 2026 · <a onclick="go('v-privacy')" style="color:var(--gold);text-decoration:none;cursor:pointer;">Privacy</a> · <a onclick="go('v-terms')" style="color:var(--gold);text-decoration:none;cursor:pointer;">Termini</a> · <a href="https://coralweb.it" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">coralweb.it</a></div>
   </div>
   
 
@@ -3092,6 +3092,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=187"></script>
+<script src="js/app.js?v=188"></script>
 </body>
 </html>

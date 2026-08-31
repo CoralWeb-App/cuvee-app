@@ -1959,6 +1959,24 @@ function translateAuthError(msg) {
   return errors[msg] || msg;
 }
 
+// Mostra la versione reale dell'app (da Info.plist/build.gradle, la stessa
+// pubblicata su App Store/Play Store) invece di un numero scritto a mano.
+// Nel sito da browser (non app nativa) il concetto non si applica: si nasconde.
+async function initAppVersionLabel() {
+  const block = document.getElementById('app-version-block');
+  if (!block) return;
+  if (!window.Capacitor?.isNativePlatform?.()) { block.remove(); return; }
+  const AppInfo = window.Capacitor?.Plugins?.App;
+  if (!AppInfo) { block.remove(); return; }
+  try {
+    const info = await AppInfo.getInfo();
+    document.getElementById('app-version-label').textContent = info.version;
+  } catch(e) {
+    console.log('App.getInfo error:', e);
+    block.remove();
+  }
+}
+
 // Aggiorna il pulsante logout nel profilo
 document.addEventListener('DOMContentLoaded', function() {
   const logoutBtn = document.querySelector('#v-profile .btn-outline');
@@ -1967,6 +1985,7 @@ document.addEventListener('DOMContentLoaded', function() {
   loadHomeCounts();
   initRevenueCat();
   initSocialLogin();
+  initAppVersionLabel();
 });
 
 // Arrotonda per difetto alla decina e aggiunge "+" — mostra un numero
