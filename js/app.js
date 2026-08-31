@@ -961,7 +961,7 @@ function _buildScanHistoryCard(s, idx) {
     : '';
   const photo = s.foto_url
     ? '<img src="'+s.foto_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
-    : '<i class="ti ti-bottle" style="font-size:28px;color:rgba(139,168,224,.3);"></i>';
+    : '<svg width="28" height="28" viewBox="0 0 512 512" fill="rgba(139,168,224,.3)"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>';
   const annata = s.annata && s.annata !== 'SA' ? s.annata : (s.annata === 'SA' ? 'S.A.' : '');
   // Le bottiglie di catalogo hanno spesso l'anno già scritto dentro il nome
   // (es. "Cristal 2010") — non ripeterlo se il nome finisce già con quell'anno.
@@ -2152,7 +2152,7 @@ function openNoteDetail(note) {
   // ── HERO: foto sinistra + info destra ───────────────────────
   const photoEl = allPhotos.length > 0
     ? '<img src="'+allPhotos[0]+'" style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;" onclick="openLightbox(window._currentNotePhotos,0)"/>'
-    : '<i class="ti ti-bottle" style="font-size:40px;color:rgba(184,146,42,.28);"></i>';
+    : '<svg width="40" height="40" viewBox="0 0 512 512" fill="rgba(184,146,42,.28)"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>';
 
   let badges = '';
   if (note.annata)       badges += '<span style="background:var(--gold-pale);border:0.5px solid var(--gold-border);border-radius:5px;padding:3px 8px;font-family:var(--sans);font-size:11px;color:#8a6a1e;font-weight:500;">'+note.annata+'</span>';
@@ -2524,7 +2524,7 @@ async function updateWishlistUI() {
     }[b.tipo] || b.tipo || '';
 
     return '<div class="bottle-row" onclick="openSavedBottiglia(\'' + b.id + '\')" style="margin:0 14px 9px;cursor:pointer;">' +
-      '<div class="bottle-ph"><i class="ti ti-bottle"></i></div>' +
+      '<div class="bottle-ph"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>' +
       '<div class="bottle-info">' +
       '<div class="bottle-name">' + b.nome + '</div>' +
       '<div class="bottle-type">' + [b.maison?.nome, tipoLabel, b.annata].filter(Boolean).join(' · ') + '</div>' +
@@ -2779,7 +2779,7 @@ async function _execHomeSearch(q) {
         if (lockMap.get(b.id)) return _lockedSearchCard(b.nome, b.maison?.nome ? 'di ' + b.maison.nome : 'Disponibile con Piano Premium');
         const foto = b.foto_url
           ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;"/>'
-          : '<i class="ti ti-bottle" style="font-size:22px;color:var(--ink-5);"></i>';
+          : '<svg width="22" height="22" viewBox="0 0 512 512" fill="var(--ink-5)"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>';
         return '<div class="card" style="padding:10px 12px;margin-bottom:8px;cursor:pointer;display:flex;gap:12px;align-items:center;" onclick="openSavedBottiglia(\'' + b.id + '\')">' +
           '<div style="width:52px;height:52px;border-radius:10px;background:var(--ivory-2);border:1px solid var(--border);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + foto + '</div>' +
           '<div style="flex:1;min-width:0;">' +
@@ -3105,7 +3105,7 @@ function renderCarnetNotes(notes) {
       '<div class="cnc-img">'+
         (note.foto_url
           ? '<img src="'+note.foto_url+'" style="width:100%;height:100%;object-fit:cover;"/>'
-          : '<div class="cnc-img-ph"><i class="ti ti-bottle"></i></div>')+
+          : '<div class="cnc-img-ph"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>')+
         (!isLocked && tipoLabel ? '<span class="cnc-tipo">'+tipoLabel+'</span>' : '')+
         (!isLocked && note.annata ? '<span class="cnc-annata">'+note.annata+'</span>' : '')+
         (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '')+
@@ -4417,7 +4417,7 @@ async function loadDetailBottles(maisonId) {
       const prezzo = b.prezzo_min ? 'da ' + b.prezzo_min + '€' : (b.fascia_prezzo || '');
       const foto = b.foto_url
         ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">'
-        : '<i class="ti ti-bottle"></i>';
+        : '<svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>';
       return '<div class="bottle-row' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '" style="cursor:pointer;">' +
         '<div class="bottle-ph">' + foto + '</div>' +
         '<div class="bottle-info">' +
@@ -4666,7 +4666,7 @@ function _bottCardHTML(b, tipoLabel) {
   const tipo = tipoLabel[b.tipo] || b.tipo || '';
   return '<div class="bott-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
     '<div class="bott-card-img" style="min-height:88px;">' +
-      (b.foto_url ? '<img src="' + b.foto_url + '" loading="lazy"/>' : '<i class="ti ti-bottle"></i>') +
+      (b.foto_url ? '<img src="' + b.foto_url + '" loading="lazy"/>' : '<svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>') +
       (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
     '</div>' +
     '<div class="bott-card-body">' +
@@ -5055,7 +5055,7 @@ async function openBottigliaDetail(bottId) {
     const rows = available.map((l, i) => {
       const isLast = i === available.length - 1;
       const logoEl = l.favicon
-        ? '<img src="' + l.favicon + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:24px;height:24px;object-fit:contain;" alt=""><i class="ti ti-bottle" style="display:none;font-size:18px;color:var(--gold);"></i>'
+        ? '<img src="' + l.favicon + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:24px;height:24px;object-fit:contain;" alt=""><svg width="18" height="18" viewBox="0 0 512 512" fill="var(--gold)" style="display:none;"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>'
         : '<i class="ti ti-link" style="font-size:18px;color:var(--gold);"></i>';
       return '<a href="' + l.url + '" target="_blank" class="buy-row"'
         + (isLast ? ' style="border-bottom:none;"' : '')
@@ -5495,7 +5495,7 @@ function _renderScanResult(result, photoDataUrl) {
   // Foto verticale sinistra
   const photoHtml = photo
     ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.background=\'#1E1208\';this.style.display=\'none\'">'
-    : '<i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>';
+    : '<svg width="40" height="40" viewBox="0 0 512 512" fill="rgba(200,160,58,.22)"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>';
 
   // Score ring — allineato a sinistra come il testo
   const scoreSmHtml = score ? (function() {

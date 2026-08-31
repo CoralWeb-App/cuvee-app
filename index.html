@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=100"/>
+<link rel="stylesheet" href="css/style.css?v=101"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -163,7 +163,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ CONFERMA ETÀ (blocca l'accesso finché non confermata — vale per registrazione email, Apple e Google) ═══ -->
 <div class="view" id="v-age-gate">
   <div class="agegate-body">
-    <div class="agegate-icon"><i class="ti ti-bottle"></i></div>
+    <div class="agegate-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
     <div class="agegate-title">Conferma la tua età</div>
     <div class="agegate-sub">Cuvée è dedicata al mondo dello Champagne. Per continuare devi confermare di avere già compiuto 18 anni.</div>
     <button class="btn-gold" onclick="confirmAge18()">Ho almeno 18 anni — Continua</button>
@@ -174,7 +174,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ CONFERMA ETÀ PRE-REGISTRAZIONE (prima che l'account venga creato) ═══ -->
 <div class="view" id="v-age-gate-pre">
   <div class="agegate-body">
-    <div class="agegate-icon"><i class="ti ti-bottle"></i></div>
+    <div class="agegate-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
     <div class="agegate-title">Conferma la tua età</div>
     <div class="agegate-sub">Cuvée è dedicata al mondo dello Champagne. Per registrarti devi confermare di avere già compiuto 18 anni.</div>
     <label class="reg-age-check" for="pre-newsletter" style="width:100%;">
@@ -636,7 +636,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div onclick="go('v-bottiglie')" style="background:linear-gradient(135deg,#E9F1DE 0%,#D3E4C0 100%);border:1px solid #B5CE9A;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;position:relative;">
           <i class="ti ti-chevron-right" style="position:absolute;top:15px;right:12px;font-size:16px;color:#5C8449;"></i>
           <div style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.55);border:2px solid rgba(92,132,73,.35);box-shadow:0 2px 8px rgba(92,132,73,.15);display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
-            <i class="ti ti-bottle" style="font-size:25px;color:#5C8449;"></i>
+            <svg width="24" height="24" viewBox="0 0 200 300" fill="#5C8449">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M70,10 L130,10 L130,58 L156,96 L156,272 Q156,292 136,292 L64,292 Q44,292 44,272 L44,96 L70,58 Z M76,58 L100,84 L124,58 L118,58 L100,78 L82,58 Z M72,205 L128,205 L128,235 L72,235 Z"/>
+            </svg>
           </div>
           <div style="font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:500;margin-bottom:3px;">Champagne</div>
           <div style="font-family:var(--sans);font-size:12px;color:#5C8449;" id="home-count-champagne">Caricamento…</div>
@@ -684,7 +686,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="tab" data-tab="zone" onclick="swTab(this,'zone')"><i class="ti ti-map-2"></i><span>Terroirs</span></div>
     <div class="tab" data-tab="dosaggi" onclick="swTab(this,'dosaggi')"><i class="ti ti-droplet-half-2"></i><span>Dosages</span></div>
     <div class="tab" data-tab="service" onclick="swTab(this,'service')"><i class="ti ti-glass-full"></i><span>Service</span></div>
-    <div class="tab" data-tab="formati" onclick="swTab(this,'formati')"><i class="ti ti-bottle"></i><span>Formats</span></div>
+    <div class="tab" data-tab="formati" onclick="swTab(this,'formati')"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg><span>Formats</span></div>
   </div>
   <div class="scroll">
 
@@ -1471,7 +1473,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
         <div style="display:flex;align-items:flex-start;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;">
           <div style="width:36px;height:36px;border-radius:9px;background:#FBF4E0;border:1px solid #E8D098;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i class="ti ti-bottle" style="font-size:18px;color:var(--gold);"></i>
+            <svg width="18" height="18" viewBox="0 0 512 512" fill="var(--gold)"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>
           </div>
           <div>
             <div style="font-family:var(--sans);font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px;">Come versare</div>
@@ -1532,7 +1534,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-piccolo">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-piccolo')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Piccolo (Quart)</strong><span>20 cl · circa ¼ di bottiglia</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1545,7 +1547,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-demi">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-demi')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Demi</strong><span>37,5 cl · ½ bottiglia</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1558,7 +1560,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-bouteille">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-bouteille')">
-          <div class="detail-expand-icon" style="background:var(--gold);border-color:var(--gold);"><i class="ti ti-bottle" style="color:#fff;"></i></div>
+          <div class="detail-expand-icon" style="background:var(--gold);border-color:var(--gold);"><svg viewBox="0 0 512 512" fill="#fff"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Bouteille</strong><span>75 cl · il formato di riferimento</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1574,7 +1576,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-magnum">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-magnum')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Magnum</strong><span>1,5 L · 2 bottiglie</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1587,7 +1589,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-jeroboam">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-jeroboam')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Jéroboam</strong><span>3 L · 4 bottiglie</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1600,7 +1602,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-rehoboam">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-rehoboam')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Réhoboam</strong><span>4,5 L · 6 bottiglie</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1613,7 +1615,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-mathusalem">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-mathusalem')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Mathusalem</strong><span>6 L · 8 bottiglie</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1626,7 +1628,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-salmanazar">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-salmanazar')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Salmanazar</strong><span>9 L · 12 bottiglie</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1639,7 +1641,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-balthazar">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-balthazar')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Balthazar</strong><span>12 L · 16 bottiglie</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1652,7 +1654,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-nabuchodonosor">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-nabuchodonosor')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Nabuchodonosor</strong><span>15 L · 20 bottiglie</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1665,7 +1667,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       <div class="detail-expand-card" id="fmt-melchior">
         <div class="detail-expand-header" onclick="toggleDetailCard('fmt-melchior')">
-          <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+          <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="detail-expand-title"><strong>Melchior</strong><span>18 L · 24 bottiglie</span></div>
           <i class="ti ti-chevron-right detail-expand-chevron"></i>
         </div>
@@ -1813,7 +1815,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <!-- CARD 2: LE CUVÉE -->
     <div class="detail-expand-card" id="card-cuvee">
       <div class="detail-expand-header" onclick="toggleDetailCard('card-cuvee')">
-        <div class="detail-expand-icon"><i class="ti ti-bottle"></i></div>
+        <div class="detail-expand-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
         <div class="detail-expand-title">
           <strong>Le cuvée</strong>
           <span id="detail-cuvee-subtitle">Catalogo bottiglie</span>
@@ -1898,7 +1900,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div id="bott-detail-hero"
            onclick="bottDetailPhotoClick()"
            style="width:40%;max-width:150px;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-        <i class="ti ti-bottle" style="font-size:40px;color:rgba(200,160,58,.22);"></i>
+        <svg width="40" height="40" viewBox="0 0 512 512" fill="rgba(200,160,58,.22)"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>
       </div>
       <!-- Info a destra -->
       <div style="flex:1;min-width:0;padding-top:2px;">
@@ -2020,7 +2022,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
       </div>
       <div class="feature-item"><i class="ti ti-notebook"></i><span>Degustazioni illimitate nel Carnet</span></div>
-      <div class="feature-item"><i class="ti ti-bottle"></i><span>Catalogo Champagne al completo</span></div>
+      <div class="feature-item"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg><span>Catalogo Champagne al completo</span></div>
       <div class="feature-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M13 3a14.5 14.5 0 0 0 -1 6" /><path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" /><path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" /><path d="M14 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M10 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M12 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M16 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M8 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /></svg><span>Tutti i produttori sbloccati — Krug, Salon, Selosse e le altre maison prestige</span></div>
       <div class="feature-item"><i class="ti ti-book-2"></i><span>Glossario tecnico al completo</span></div>
       <div class="feature-item"><i class="ti ti-history"></i><span>Storico scansioni illimitato</span></div>
@@ -2440,7 +2442,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- BOTTIGLIA -->
     <div class="form-section">
-      <div class="form-section-title"><i class="ti ti-bottle"></i> La bottiglia</div>
+      <div class="form-section-title"><svg viewBox="0 0 512 512" fill="currentColor" style="vertical-align:-3px;"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg> La bottiglia</div>
       <div class="input-wrap">
         <label class="input-label">Maison / Produttore <span style="color:#E24B4A;">*</span></label>
         <input class="input-field" id="note-maison" type="text" placeholder="es. Krug, Egly-Ouriet, Salon…"/>
@@ -2871,7 +2873,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-sparkles" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>100 scansioni sommelier al mese</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-notebook" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Degustazioni illimitate nel Carnet</div>
-          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-bottle" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Catalogo Champagne al completo</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><svg width="18" height="18" viewBox="0 0 512 512" fill="var(--gold)" style="flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>Catalogo Champagne al completo</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M13 3a14.5 14.5 0 0 0 -1 6" /><path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" /><path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" /><path d="M14 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M10 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M12 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M16 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M8 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /></svg>Tutti i produttori sbloccati — Krug, Salon, Selosse e le altre maison prestige</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-book-2" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Glossario tecnico al completo</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-history" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Storico scansioni illimitato</div>
@@ -2935,7 +2937,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </svg>
     </div>
   </div>
-  <div class="bn" id="bn-champagne" onclick="go('v-bottiglie')"><i class="ti ti-bottle"></i><span>Champagne</span></div>
+  <div class="bn" id="bn-champagne" onclick="go('v-bottiglie')"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg><span>Champagne</span></div>
   <div class="bn" id="bn-carnet-nav" onclick="go('v-carnet')"><i class="ti ti-notebook"></i><span>Carnet</span></div>
 </div>
 <!-- ═══ SCAN RESULT ═══ -->
@@ -2986,7 +2988,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="scan-limit-features">
       <div class="scan-limit-feat"><i class="ti ti-sparkles"></i><span>100 scansioni sommelier al mese</span></div>
       <div class="scan-limit-feat"><i class="ti ti-notebook"></i><span>Degustazioni illimitate nel Carnet</span></div>
-      <div class="scan-limit-feat"><i class="ti ti-bottle"></i><span>Catalogo Champagne al completo</span></div>
+      <div class="scan-limit-feat"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg><span>Catalogo Champagne al completo</span></div>
       <div class="scan-limit-feat"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M13 3a14.5 14.5 0 0 0 -1 6" /><path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" /><path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" /><path d="M14 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M10 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M12 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M16 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M8 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /></svg><span>Tutti i produttori sbloccati</span></div>
       <div class="scan-limit-feat"><i class="ti ti-history"></i><span>Storico scansioni illimitato</span></div>
       <div class="scan-limit-feat"><i class="ti ti-ad-off"></i><span>Nessuna pubblicità</span></div>
@@ -3083,7 +3085,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="scan-limit-sep"></div>
     <div class="scan-limit-features">
       <div class="scan-limit-feat"><i class="ti ti-scan"></i><span>Scansiona un'etichetta e scopri tutto in pochi secondi</span></div>
-      <div class="scan-limit-feat"><i class="ti ti-bottle"></i><span>Esplora il catalogo Champagne e le grandi maison</span></div>
+      <div class="scan-limit-feat"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg><span>Esplora il catalogo Champagne e le grandi maison</span></div>
       <div class="scan-limit-feat"><i class="ti ti-map-pin"></i><span>Approfondisci terroir, metodo e abbinamenti</span></div>
       <div class="scan-limit-feat"><i class="ti ti-notebook"></i><span>Tieni traccia di ogni degustazione nel tuo Carnet</span></div>
     </div>
@@ -3097,6 +3099,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=185"></script>
+<script src="js/app.js?v=186"></script>
 </body>
 </html>
