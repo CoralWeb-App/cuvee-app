@@ -17,7 +17,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=99"/>
+<link rel="stylesheet" href="css/style.css?v=100"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -619,7 +619,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div onclick="go('v-maison')" style="background:linear-gradient(135deg,#F6E3E5 0%,#EBCBCF 100%);border:1px solid #D9A8AD;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;position:relative;">
           <i class="ti ti-chevron-right" style="position:absolute;top:15px;right:12px;font-size:16px;color:#A8636E;"></i>
           <div style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.55);border:2px solid rgba(184,69,90,.35);box-shadow:0 2px 8px rgba(139,69,80,.15);display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#A8636E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#A8636E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M13 3a14.5 14.5 0 0 0 -1 6" />
               <path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" />
               <path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" />
@@ -636,7 +636,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div onclick="go('v-bottiglie')" style="background:linear-gradient(135deg,#E9F1DE 0%,#D3E4C0 100%);border:1px solid #B5CE9A;border-radius:var(--radius-md);padding:16px 14px 15px;cursor:pointer;position:relative;">
           <i class="ti ti-chevron-right" style="position:absolute;top:15px;right:12px;font-size:16px;color:#5C8449;"></i>
           <div style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.55);border:2px solid rgba(92,132,73,.35);box-shadow:0 2px 8px rgba(92,132,73,.15);display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
-            <i class="ti ti-bottle" style="font-size:19px;color:#5C8449;"></i>
+            <i class="ti ti-bottle" style="font-size:25px;color:#5C8449;"></i>
           </div>
           <div style="font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:500;margin-bottom:3px;">Champagne</div>
           <div style="font-family:var(--sans);font-size:12px;color:#5C8449;" id="home-count-champagne">Caricamento…</div>
@@ -2021,7 +2021,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
       <div class="feature-item"><i class="ti ti-notebook"></i><span>Degustazioni illimitate nel Carnet</span></div>
       <div class="feature-item"><i class="ti ti-bottle"></i><span>Catalogo Champagne al completo</span></div>
-      <div class="feature-item"><i class="ti ti-building"></i><span>Tutti i produttori sbloccati — Krug, Salon, Selosse e le altre maison prestige</span></div>
+      <div class="feature-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M13 3a14.5 14.5 0 0 0 -1 6" /><path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" /><path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" /><path d="M14 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M10 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M12 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M16 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M8 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /></svg><span>Tutti i produttori sbloccati — Krug, Salon, Selosse e le altre maison prestige</span></div>
       <div class="feature-item"><i class="ti ti-book-2"></i><span>Glossario tecnico al completo</span></div>
       <div class="feature-item"><i class="ti ti-history"></i><span>Storico scansioni illimitato</span></div>
       <div class="feature-item"><i class="ti ti-ad-off"></i><span>Nessuna pubblicità</span></div>
@@ -2872,7 +2872,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-sparkles" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>100 scansioni sommelier al mese</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-notebook" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Degustazioni illimitate nel Carnet</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-bottle" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Catalogo Champagne al completo</div>
-          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-building" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Tutti i produttori sbloccati — Krug, Salon, Selosse e le altre maison prestige</div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M13 3a14.5 14.5 0 0 0 -1 6" /><path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" /><path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" /><path d="M14 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M10 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M12 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M16 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M8 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /></svg>Tutti i produttori sbloccati — Krug, Salon, Selosse e le altre maison prestige</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-book-2" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Glossario tecnico al completo</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-history" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Storico scansioni illimitato</div>
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:15px;color:var(--ink-2);"><i class="ti ti-ad-off" style="color:var(--gold);font-size:18px;flex-shrink:0;"></i>Nessuna pubblicità</div>
@@ -2918,7 +2918,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- SINGLE SHARED BOTTOM NAV -->
 <div class="bottom-nav" id="shared-bottom-nav" style="display:none">
   <div class="bn" id="bn-home" onclick="go('v-home')"><i class="ti ti-home"></i><span>Home</span></div>
-  <div class="bn" id="bn-produttori" onclick="go('v-maison')"><i class="ti ti-building"></i><span>Produttori</span></div>
+  <div class="bn" id="bn-produttori" onclick="go('v-maison')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3a14.5 14.5 0 0 0 -1 6" /><path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" /><path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" /><path d="M14 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M10 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M12 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M16 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M8 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /></svg><span>Produttori</span></div>
   <div class="bn bn-carnet" id="bn-scan" onclick="startScan('explore')">
     <div class="bn-carnet-circle">
       <div class="bn-carnet-badge"><i class="ti ti-scan" style="font-size:15px;"></i></div>
@@ -2987,7 +2987,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="scan-limit-feat"><i class="ti ti-sparkles"></i><span>100 scansioni sommelier al mese</span></div>
       <div class="scan-limit-feat"><i class="ti ti-notebook"></i><span>Degustazioni illimitate nel Carnet</span></div>
       <div class="scan-limit-feat"><i class="ti ti-bottle"></i><span>Catalogo Champagne al completo</span></div>
-      <div class="scan-limit-feat"><i class="ti ti-building"></i><span>Tutti i produttori sbloccati</span></div>
+      <div class="scan-limit-feat"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M13 3a14.5 14.5 0 0 0 -1 6" /><path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" /><path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" /><path d="M14 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M10 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M12 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M16 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /><path d="M8 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" /></svg><span>Tutti i produttori sbloccati</span></div>
       <div class="scan-limit-feat"><i class="ti ti-history"></i><span>Storico scansioni illimitato</span></div>
       <div class="scan-limit-feat"><i class="ti ti-ad-off"></i><span>Nessuna pubblicità</span></div>
     </div>
@@ -3097,6 +3097,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=182"></script>
+<script src="js/app.js?v=183"></script>
 </body>
 </html>

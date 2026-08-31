@@ -119,8 +119,20 @@ function goGuida(tab){
     if(el)swTab(el,tab);
   },80);
 }
+// Icona a grappolo (non presente nel webfont ti-*, quindi SVG inline) — usata
+// per la slide "Maison & Vigneron" al posto della generica ti-building.
+const ONB_GRAPE_SVG = '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="{{color}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85;">'
+  + '<path d="M13 3a14.5 14.5 0 0 0 -1 6" />'
+  + '<path d="M12 8.9s-2.77 .52 -4.1 -.8s-.8 -4 -.8 -4s2.57 -.53 3.88 .8s1.02 4 1.02 4" />'
+  + '<path d="M14 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0" />'
+  + '<path d="M14 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" />'
+  + '<path d="M10 17a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" />'
+  + '<path d="M12 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" />'
+  + '<path d="M16 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" />'
+  + '<path d="M8 13a2 2 0 1 1 0 -4a2 2 0 0 1 0 4" />'
+  + '</svg>';
 const onbData=[
-  {title:'Il mondo dello Champagne, tutto in un posto',sub:'Dalle grandi Maison ai piccoli vigneron — ogni bottiglia racconta una storia unica. Scoprila.',loc:'Maison & Vigneron',icon:'ti-building',bg:'linear-gradient(135deg,#F5EFE4 0%,#E8D5A3 100%)',iconColor:'#8a6a1e',btn:'Continua'},
+  {title:'Il mondo dello Champagne, tutto in un posto',sub:'Dalle grandi Maison ai piccoli vigneron — ogni bottiglia racconta una storia unica. Scoprila.',loc:'Maison & Vigneron',iconSvg:ONB_GRAPE_SVG,bg:'linear-gradient(135deg,#F5EFE4 0%,#E8D5A3 100%)',iconColor:'#8a6a1e',btn:'Continua'},
   {title:'Scansiona, scopri',sub:"Inquadra l'etichetta: riconoscimento immediato e un'analisi da Sommelier — profilo, abbinamenti e punteggio, come averne uno al tuo fianco.",loc:'Scansione Sommelier',icon:'ti-scan',bg:'linear-gradient(135deg,#1A1F2E 0%,#252B3D 100%)',iconColor:'#8BA8E0',btn:'Continua'},
   {title:'Il tuo Carnet de dégustation',sub:'Salva ogni assaggio con note, aromi e punteggio personale. La tua storia di degustazioni, sempre con te.',loc:'Carnet personale',icon:'ti-notebook',bg:'linear-gradient(135deg,#1E1208 0%,#3A2814 100%)',iconColor:'#C8A03A',btn:'Continua'},
   {title:'Impara ed esplora',sub:'Glossario completo, guida al metodo champenoise, terroir e formati — tutto lo Champagne, spiegato bene.',loc:'Guida & Glossario',icon:'ti-books',bg:'linear-gradient(135deg,#FBF4E4 0%,#F0E2C0 100%)',iconColor:'#8a6a1e',btn:'Inizia gratis'},
@@ -132,10 +144,10 @@ function onbApplySlide(d){
   document.getElementById('onb-loc').textContent=d.loc;
   document.getElementById('onb-btn').textContent=d.btn;
   const ph=document.getElementById('onb-img-ph');
-  const icon=document.getElementById('onb-img-icon');
   ph.style.background=d.bg;
-  icon.className='ti '+d.icon;
-  icon.style.color=d.iconColor;
+  ph.innerHTML = d.iconSvg
+    ? d.iconSvg.replace('{{color}}', d.iconColor)
+    : '<i class="ti '+d.icon+'" id="onb-img-icon" style="color:'+d.iconColor+'"></i>';
   [0,1,2,3].forEach(i=>document.getElementById('od'+i).classList.toggle('on',i===onbIdx));
   [document.getElementById('onb-img-wrap'),document.getElementById('onb-title'),document.getElementById('onb-sub'),document.getElementById('onb-loc')].forEach(el=>{
     el.classList.remove('onb-anim'); void el.offsetWidth; el.classList.add('onb-anim');
