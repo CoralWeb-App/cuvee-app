@@ -3693,7 +3693,10 @@ async function checkWelcomeNotification() {
       .upsert({ user_id: currentUser.id, notification_id: WELCOME_NOTIFICATION_ID }, { onConflict: 'user_id,notification_id' });
     if (e2) throw e2;
     document.getElementById('welcome-modal')?.classList.add('on');
-  } catch(e) { console.log('checkWelcomeNotification error:', e); }
+  } catch(e) {
+    console.log('checkWelcomeNotification error:', e);
+    _welcomeChecked = false; // riprova al prossimo ingresso in Home nella stessa sessione, invece di restare bloccato finché l'app non viene riavviata
+  }
 }
 function closeWelcomeModal() {
   document.getElementById('welcome-modal').classList.remove('on');
