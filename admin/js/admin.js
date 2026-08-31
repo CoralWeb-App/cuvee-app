@@ -671,7 +671,7 @@ async function loadDashboard() {
       plist.innerHTML = !pending?.length
         ? '<div style="padding:16px 18px;color:var(--text-3);font-size:12px">Nessuna bottiglia in attesa ✓</div>'
         : pending.map(b => `<div class="adm-pending-item" onclick="showView('approvazioni')" style="cursor:pointer">
-            <div class="adm-pending-thumb"><i class="ti ti-bottle"></i></div>
+            <div class="adm-pending-thumb"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
             <div class="adm-pending-info">
               <div class="adm-pending-name">${esc(b.nome ?? 'Senza nome')}</div>
               <div class="adm-pending-meta">${esc(b.maison?.nome ?? '')} · ${fmtTipo(b.tipo)}</div>
@@ -723,7 +723,7 @@ async function loadApprovazioni() {
                    ${(b.foto_url || b.photo_url) ? `onclick="event.stopPropagation();openLightbox('${esc(b.foto_url || b.photo_url)}')"` : ''}>
                 ${(b.foto_url || b.photo_url)
                   ? `<img src="${esc(b.foto_url || b.photo_url)}?t=${Date.now()}" alt="">`
-                  : '<i class="ti ti-bottle"></i>'}
+                  : '<svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>'}
               </div>
               <div>
                 <div class="adm-bottle-name">${esc(b.nome ?? 'Senza nome')}</div>
@@ -1218,7 +1218,7 @@ async function renderBottiglie() {
                    ${(b.foto_url || b.photo_url) ? `onclick="event.stopPropagation();openLightbox('${esc(b.foto_url || b.photo_url)}')"` : ''}>
                 ${(b.foto_url || b.photo_url)
                   ? `<img src="${esc(b.foto_url || b.photo_url)}?t=${Date.now()}" alt="">`
-                  : '<i class="ti ti-bottle"></i>'}
+                  : '<svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>'}
               </div>
               <div>
                 <div class="adm-bottle-name">${esc(b.nome ?? '')}</div>

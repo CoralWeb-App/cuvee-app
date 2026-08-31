@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="css/admin.css?v=5">
+  <link rel="stylesheet" href="css/admin.css?v=6">
 </head>
 <body>
 
@@ -123,7 +123,7 @@
       <div class="adm-nav-section-label">CATALOGO</div>
 
       <div class="adm-nav-item" data-view="bottiglie" onclick="showView('bottiglie')">
-        <i class="ti ti-bottle adm-nav-icon"></i>
+        <svg class="adm-nav-icon" viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>
         <span>Champagne</span>
       </div>
 
@@ -191,7 +191,7 @@
         <!-- STAT CARDS -->
         <div class="adm-stats-grid">
           <div class="adm-stat-card">
-            <div class="adm-stat-icon"><i class="ti ti-bottle"></i></div>
+            <div class="adm-stat-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
             <div class="adm-stat-body">
               <div class="adm-stat-val" id="dash-bottiglie">…</div>
               <div class="adm-stat-label">Bottiglie in catalogo</div>
@@ -269,7 +269,7 @@
             </div>
             <div id="dash-pending-list">
               <div class="adm-pending-item">
-                <div class="adm-pending-thumb"><i class="ti ti-bottle"></i></div>
+                <div class="adm-pending-thumb"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
                 <div class="adm-pending-info"><div class="adm-pending-name">Caricamento...</div></div>
               </div>
             </div>
@@ -293,7 +293,7 @@
         </div>
 
         <div class="adm-section-divider" style="padding-top:4px">
-          <i class="ti ti-bottle"></i> CHAMPAGNE IN ATTESA DI APPROVAZIONE
+          <svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg> CHAMPAGNE IN ATTESA DI APPROVAZIONE
         </div>
 
         <div class="adm-table-wrap">
@@ -811,7 +811,7 @@
             </div>
           </div>
           <div class="adm-stat-card">
-            <div class="adm-stat-icon"><i class="ti ti-bottle"></i></div>
+            <div class="adm-stat-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
             <div class="adm-stat-body">
               <div class="adm-stat-val" id="stats-bottiglie">…</div>
               <div class="adm-stat-label">Bottiglie in catalogo</div>
@@ -1013,7 +1013,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=18"></script>
+<script src="js/admin.js?v=19"></script>
 
 </body>
 </html>
