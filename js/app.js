@@ -3750,6 +3750,18 @@ function updatePremiumUI() {
 // ═══ SCHERMATA ABBONAMENTO ═══
 
 async function loadSubscriptionScreen() {
+  // Ricarica il profilo fresco dal DB: se l'admin attiva/modifica il Premium
+  // mentre la sessione è già aperta, currentUser.profile resta quello caricato
+  // al login finché non si rifà l'accesso. Questa è proprio la schermata dove
+  // l'utente controlla se l'upgrade è andato a buon fine — non deve mai
+  // mostrare uno stato ormai superato.
+  if (currentUser) {
+    try {
+      const { data, error } = await supa.from('users').select('*').eq('id', currentUser.id).maybeSingle();
+      if (!error && data) currentUser.profile = data;
+    } catch(e) { console.log('Subscription profile refresh error:', e); }
+  }
+
   const premium = isPremium();
   const premEl = document.getElementById('sub-premium-active');
   const freeEl = document.getElementById('sub-free-active');
