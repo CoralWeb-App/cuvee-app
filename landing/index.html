@@ -112,9 +112,11 @@ a{color:inherit;}
   padding:170px 28px 120px;text-align:center;
 }
 @media (max-width:640px){
-  .hero{padding:104px 24px 70px;}
-  .hero-glass{margin-bottom:20px;}
-  .hero-eyebrow{margin-bottom:16px;}
+  .hero{
+    min-height:100dvh;box-sizing:border-box;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:90px 24px 28px;
+  }
 }
 .hero-bubbles{position:absolute;inset:0;pointer-events:none;}
 .hero-bubbles span{
