@@ -4271,6 +4271,14 @@ function openMaisonDetail(maisonId) {
     badgesEl.innerHTML = b;
   }
 
+  // Nota editoriale
+  const notaSection = document.getElementById('detail-nota-editoriale-section');
+  const notaEl = document.getElementById('detail-nota-editoriale');
+  if (notaSection && notaEl) {
+    notaSection.style.display = m.nota_editoriale ? 'block' : 'none';
+    if (m.nota_editoriale) notaEl.textContent = m.nota_editoriale;
+  }
+
   // Profilo
   const descEl = document.getElementById('detail-desc');
   if (descEl) descEl.textContent = m.descrizione || '';
