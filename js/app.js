@@ -1444,7 +1444,10 @@ async function signUp() {
     const { data, error } = await supa.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } }
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: 'https://coralweb-app.github.io/cuvee-app/'
+      }
     });
     if (error) throw error;
 
@@ -1607,7 +1610,9 @@ async function resetPassword() {
     alert('Inserisci prima la tua email nel campo sopra');
     return;
   }
-  const { error } = await supa.auth.resetPasswordForEmail(email);
+  const { error } = await supa.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://coralweb-app.github.io/cuvee-app/'
+  });
   if (!error) alert('Email di reset inviata! Controlla la tua casella.');
 }
 
