@@ -793,47 +793,84 @@ async function loadApprovazioni() {
     }
 
     // ── Foto in approvazione ──────────────────────────────
-    const fotoWrap = document.getElementById('approvazioni-foto-wrap')
-    const fotoGrid = document.getElementById('approvazioni-foto-grid')
+    const fotoWrap  = document.getElementById('approvazioni-foto-wrap')
+    const fotoTbody = document.getElementById('approvazioni-foto-tbody')
+    _fotoPendingCache = fotoPending || []
     if (!fotoPending?.length) {
       if (fotoWrap) fotoWrap.style.display = 'none'
     } else {
       if (fotoWrap) fotoWrap.style.display = ''
-      if (fotoGrid) {
-        fotoGrid.innerHTML = fotoPending.map(f => {
+      if (fotoTbody) {
+        fotoTbody.innerHTML = fotoPending.map(f => {
           const b = f.bottiglie || {}
-          const currentUrl = b.foto_url
           return `
-          <div class="adm-foto-pending-card">
-            <div class="adm-foto-pending-title">${esc(b.nome ?? 'Bottiglia eliminata')}</div>
-            <div class="adm-foto-pending-sub">${esc(b.maison?.nome ?? '-')} · ${timeAgo(f.created_at)}</div>
-            <div class="adm-foto-pending-compare">
-              <div class="adm-foto-pending-slot">
-                <div class="adm-foto-pending-label">Attuale</div>
-                <div class="adm-foto-pending-img ${currentUrl ? '' : 'empty'}" ${currentUrl ? `onclick="openLightbox('${esc(currentUrl)}')"` : ''}>
-                  ${currentUrl ? `<img src="${esc(currentUrl)}?t=${Date.now()}" alt="">` : 'Nessuna foto'}
-                </div>
-              </div>
-              <div class="adm-foto-pending-slot">
-                <div class="adm-foto-pending-label">Candidata</div>
-                <div class="adm-foto-pending-img" onclick="openLightbox('${esc(f.foto_url)}')">
+          <tr class="adm-table-row" style="cursor:pointer" onclick="viewFotoPendingDetail('${f.id}')">
+            <td>
+              <div class="adm-bottle-cell">
+                <div class="adm-bottle-thumb has-img clickable">
                   <img src="${esc(f.foto_url)}?t=${Date.now()}" alt="">
                 </div>
+                <div class="adm-bottle-name">${esc(b.nome ?? 'Bottiglia eliminata')}</div>
               </div>
-            </div>
-            <div class="adm-foto-pending-actions">
-              <button class="adm-btn adm-btn-approve" onclick="approvaFotoPending('${f.id}')">
-                <i class="ti ti-check"></i> Approva
-              </button>
-              <button class="adm-btn adm-btn-reject" onclick="rejectFotoPending('${f.id}')">
-                <i class="ti ti-x"></i> Rifiuta
-              </button>
-            </div>
-          </div>`
+            </td>
+            <td><span class="adm-maison-tag">${esc(b.maison?.nome ?? '-')}</span></td>
+            <td class="adm-time-cell">${timeAgo(f.created_at)}</td>
+            <td onclick="event.stopPropagation()">
+              <div class="adm-row-actions">
+                <button class="adm-btn adm-btn-edit" onclick="viewFotoPendingDetail('${f.id}')">
+                  <i class="ti ti-eye"></i> Confronta
+                </button>
+                <button class="adm-btn adm-btn-approve" onclick="approvaFotoPending('${f.id}')">
+                  <i class="ti ti-check"></i>
+                </button>
+                <button class="adm-btn adm-btn-reject" onclick="rejectFotoPending('${f.id}')">
+                  <i class="ti ti-x"></i>
+                </button>
+              </div>
+            </td>
+          </tr>`
         }).join('')
       }
     }
   } catch(e) { tbody.innerHTML = errorRow(7, e.message) }
+}
+
+let _fotoPendingCache = []
+
+function viewFotoPendingDetail(id) {
+  const f = _fotoPendingCache.find(x => x.id === id)
+  if (!f) return
+  const b = f.bottiglie || {}
+  const currentUrl = b.foto_url
+  const html = `
+    <div class="adm-edit-form">
+      <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;">
+        <strong style="color:var(--text)">${esc(b.nome ?? 'Bottiglia eliminata')}</strong> · ${esc(b.maison?.nome ?? '-')}
+      </div>
+      <div class="adm-foto-pending-compare">
+        <div class="adm-foto-pending-slot">
+          <div class="adm-foto-pending-label">Attuale</div>
+          <div class="adm-foto-pending-img ${currentUrl ? '' : 'empty'}" ${currentUrl ? `onclick="openLightbox('${esc(currentUrl)}')"` : ''}>
+            ${currentUrl ? `<img src="${esc(currentUrl)}?t=${Date.now()}" alt="">` : 'Nessuna foto'}
+          </div>
+        </div>
+        <div class="adm-foto-pending-slot">
+          <div class="adm-foto-pending-label">Candidata</div>
+          <div class="adm-foto-pending-img" onclick="openLightbox('${esc(f.foto_url)}')">
+            <img src="${esc(f.foto_url)}?t=${Date.now()}" alt="">
+          </div>
+        </div>
+      </div>
+      <div class="adm-modal-actions">
+        <button class="adm-btn adm-btn-reject" onclick="rejectFotoPending('${f.id}');closeModal()">
+          <i class="ti ti-x"></i> Rifiuta
+        </button>
+        <button class="adm-btn adm-btn-approve" onclick="approvaFotoPending('${f.id}');closeModal()">
+          <i class="ti ti-check"></i> Approva
+        </button>
+      </div>
+    </div>`
+  openModal('Confronto foto', html)
 }
 
 async function approvaFotoPending(pendingId) {
