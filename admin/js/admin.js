@@ -598,6 +598,7 @@ async function loadDashboard() {
       { count: cUtenti },
       { count: cPendingBottiglie },
       { count: cPendingMaison },
+      { count: cPendingFoto },
       { count: cScanOggi },
       { count: cScanTot },
       { count: cPremium },
@@ -607,11 +608,12 @@ async function loadDashboard() {
       supa.from('users').select('*', { count:'exact', head:true }),
       supa.from('bottiglie').select('*', { count:'exact', head:true }).eq('needs_review', true),
       supa.from('maison').select('*', { count:'exact', head:true }).eq('needs_review', true),
+      supa.from('foto_bottiglia_pending').select('*', { count:'exact', head:true }).eq('status', 'pending'),
       supa.from('bottle_scans').select('*', { count:'exact', head:true }).gte('created_at', todayStart.toISOString()),
       supa.from('bottle_scans').select('*', { count:'exact', head:true }),
       supa.from('users').select('*', { count:'exact', head:true }).eq('is_premium', true),
     ])
-    const cPending = (cPendingBottiglie ?? 0) + (cPendingMaison ?? 0)
+    const cPending = (cPendingBottiglie ?? 0) + (cPendingMaison ?? 0) + (cPendingFoto ?? 0)
 
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '-' }
     set('dash-bottiglie', cBottiglie?.toLocaleString('it'))
@@ -696,13 +698,18 @@ async function loadApprovazioni() {
     const [
       { data: bottiglie, error: errB },
       { data: maisonPending },
+      { data: fotoPending },
     ] = await Promise.all([
       supa.from('bottiglie').select('*, maison:maison_id(nome)').eq('needs_review', true).order('created_at', { ascending: false }),
       supa.from('maison').select('*').eq('needs_review', true).order('created_at', { ascending: false }),
+      supa.from('foto_bottiglia_pending')
+        .select('*, bottiglie(id, nome, foto_url, maison:maison_id(nome))')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false }),
     ])
     if (errB) throw errB
 
-    const total = (bottiglie?.length ?? 0) + (maisonPending?.length ?? 0)
+    const total = (bottiglie?.length ?? 0) + (maisonPending?.length ?? 0) + (fotoPending?.length ?? 0)
     const badge = document.querySelector('[data-view="approvazioni"] .adm-nav-badge')
     if (badge) { badge.textContent = total; badge.style.display = total > 0 ? '' : 'none' }
     const cnt = document.getElementById('approvazioni-count')
@@ -784,7 +791,89 @@ async function loadApprovazioni() {
           </tr>`).join('')
       }
     }
+
+    // ── Foto in approvazione ──────────────────────────────
+    const fotoWrap = document.getElementById('approvazioni-foto-wrap')
+    const fotoGrid = document.getElementById('approvazioni-foto-grid')
+    if (!fotoPending?.length) {
+      if (fotoWrap) fotoWrap.style.display = 'none'
+    } else {
+      if (fotoWrap) fotoWrap.style.display = ''
+      if (fotoGrid) {
+        fotoGrid.innerHTML = fotoPending.map(f => {
+          const b = f.bottiglie || {}
+          const currentUrl = b.foto_url
+          return `
+          <div class="adm-foto-pending-card">
+            <div class="adm-foto-pending-title">${esc(b.nome ?? 'Bottiglia eliminata')}</div>
+            <div class="adm-foto-pending-sub">${esc(b.maison?.nome ?? '-')} · ${timeAgo(f.created_at)}</div>
+            <div class="adm-foto-pending-compare">
+              <div class="adm-foto-pending-slot">
+                <div class="adm-foto-pending-label">Attuale</div>
+                <div class="adm-foto-pending-img ${currentUrl ? '' : 'empty'}" ${currentUrl ? `onclick="openLightbox('${esc(currentUrl)}')"` : ''}>
+                  ${currentUrl ? `<img src="${esc(currentUrl)}?t=${Date.now()}" alt="">` : 'Nessuna foto'}
+                </div>
+              </div>
+              <div class="adm-foto-pending-slot">
+                <div class="adm-foto-pending-label">Candidata</div>
+                <div class="adm-foto-pending-img" onclick="openLightbox('${esc(f.foto_url)}')">
+                  <img src="${esc(f.foto_url)}?t=${Date.now()}" alt="">
+                </div>
+              </div>
+            </div>
+            <div class="adm-foto-pending-actions">
+              <button class="adm-btn adm-btn-approve" onclick="approvaFotoPending('${f.id}')">
+                <i class="ti ti-check"></i> Approva
+              </button>
+              <button class="adm-btn adm-btn-reject" onclick="rejectFotoPending('${f.id}')">
+                <i class="ti ti-x"></i> Rifiuta
+              </button>
+            </div>
+          </div>`
+        }).join('')
+      }
+    }
   } catch(e) { tbody.innerHTML = errorRow(7, e.message) }
+}
+
+async function approvaFotoPending(pendingId) {
+  try {
+    const { data: { session } } = await supa.auth.getSession()
+    if (!session) throw new Error('Sessione admin non valida')
+    const resp = await fetch(`${SUPA_URL}/functions/v1/admin-photo-upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type':  'application/json',
+        'apikey':        SUPA_ANON,
+      },
+      body: JSON.stringify({ action: 'approve_photo', pending_id: pendingId }),
+    })
+    const r = await resp.json()
+    if (!resp.ok || r.error) throw new Error(r.error || 'Errore durante l\'approvazione')
+    showToast('Foto approvata e pubblicata ✓')
+    loadApprovazioni()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+async function rejectFotoPending(pendingId) {
+  try {
+    const { data: { session } } = await supa.auth.getSession()
+    if (!session) throw new Error('Sessione admin non valida')
+    const resp = await fetch(`${SUPA_URL}/functions/v1/admin-photo-upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type':  'application/json',
+        'apikey':        SUPA_ANON,
+      },
+      body: JSON.stringify({ action: 'reject_photo', pending_id: pendingId }),
+    })
+    const r = await resp.json()
+    if (!resp.ok || r.error) throw new Error(r.error || 'Errore durante il rifiuto')
+    showToast('Foto rifiutata')
+    loadApprovazioni()
+  } catch(e) { showToast(e.message, 'error') }
 }
 
 async function approvaMaison(id) {

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="css/admin.css?v=7">
+  <link rel="stylesheet" href="css/admin.css?v=8">
 </head>
 <body>
 
@@ -332,6 +332,13 @@
               <tbody id="approvazioni-maison-tbody"></tbody>
             </table>
           </div>
+        </div>
+
+        <div id="approvazioni-foto-wrap" style="display:none;margin-top:28px">
+          <div class="adm-section-divider">
+            <i class="ti ti-photo"></i> FOTO IN APPROVAZIONE
+          </div>
+          <div id="approvazioni-foto-grid" class="adm-foto-pending-grid"></div>
         </div>
 
       </div>
@@ -1013,7 +1020,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=19"></script>
+<script src="js/admin.js?v=20"></script>
 
 </body>
 </html>

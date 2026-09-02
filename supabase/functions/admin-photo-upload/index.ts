@@ -38,7 +38,7 @@ serve(async (req) => {
     if (!profile?.is_admin) return json({ error: 'Accesso negato' }, 403)
 
     const body = await req.json()
-    const { action, bottle_id, image_base64 } = body
+    const { action, bottle_id, image_base64, pending_id } = body
 
     // ── DELETE ────────────────────────────────────────────
     if (action === 'delete') {
@@ -47,6 +47,53 @@ serve(async (req) => {
         .from('champagne-photos')
         .remove([`bottles/${bottle_id}.jpg`])
       if (delErr) return json({ error: delErr.message }, 500)
+      return json({ ok: true })
+    }
+
+    // ── APPROVE_PHOTO — promuove una foto in coda a foto ufficiale ──
+    // Sovrascrive bottles/{bottiglia_id}.jpg (upsert): la vecchia foto, se
+    // c'era, viene sostituita in place, nessuna riga/file resta orfano.
+    // Le altre foto eventualmente ancora in coda per la stessa bottiglia
+    // NON vengono toccate: restano in attesa di una decisione singola.
+    if (action === 'approve_photo') {
+      if (!pending_id) return json({ error: 'pending_id mancante' }, 400)
+      const { data: pending, error: pErr } = await adminSupa
+        .from('foto_bottiglia_pending').select('*').eq('id', pending_id).single()
+      if (pErr || !pending) return json({ error: 'Foto in approvazione non trovata' }, 404)
+
+      const { data: fileData, error: dlErr } = await adminSupa.storage
+        .from('champagne-photos').download(pending.storage_path)
+      if (dlErr) return json({ error: dlErr.message }, 500)
+
+      const canonicalPath = `bottles/${pending.bottiglia_id}.jpg`
+      const { error: upErr } = await adminSupa.storage
+        .from('champagne-photos')
+        .upload(canonicalPath, fileData, { contentType: 'image/jpeg', upsert: true })
+      if (upErr) return json({ error: upErr.message }, 500)
+
+      const { data: urlData } = adminSupa.storage.from('champagne-photos').getPublicUrl(canonicalPath)
+      const { error: updErr } = await adminSupa
+        .from('bottiglie').update({ foto_url: urlData.publicUrl }).eq('id', pending.bottiglia_id)
+      if (updErr) return json({ error: updErr.message }, 500)
+
+      // Pulizia: il file in pending è già stato promosso, non serve più.
+      await adminSupa.storage.from('champagne-photos').remove([pending.storage_path])
+      await adminSupa.from('foto_bottiglia_pending').delete().eq('id', pending_id)
+
+      return json({ ok: true, url: urlData.publicUrl })
+    }
+
+    // ── REJECT_PHOTO — scarta una foto in coda, cancellata subito ──
+    if (action === 'reject_photo') {
+      if (!pending_id) return json({ error: 'pending_id mancante' }, 400)
+      const { data: pending } = await adminSupa
+        .from('foto_bottiglia_pending').select('storage_path').eq('id', pending_id).single()
+      if (pending?.storage_path) {
+        await adminSupa.storage.from('champagne-photos').remove([pending.storage_path])
+      }
+      const { error: delPendErr } = await adminSupa
+        .from('foto_bottiglia_pending').delete().eq('id', pending_id)
+      if (delPendErr) return json({ error: delPendErr.message }, 500)
       return json({ ok: true })
     }
 

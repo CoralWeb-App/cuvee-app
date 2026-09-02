@@ -422,11 +422,14 @@ serve(async (req) => {
     //   → Nessuna chiamata a Sonnet: risparmio garantito!
     // ════════════════════════════════════════════════════════════
     if (matchedBottle) {
-      // Upload foto se la bottiglia non ne ha ancora una
+      // Ogni foto scansionata di una bottiglia già a catalogo va in
+      // approvazione — mai scritta direttamente su bottiglie.foto_url, anche
+      // se la bottiglia non ha ancora nessuna foto. È l'admin a scegliere
+      // manualmente quale candidata pubblicare (vedi foto_bottiglia_pending).
       let uploadedPhotoUrl: string | null = null
       const mb = matchedBottle as any
 
-      if (!bottleHasPhoto && image_base64) {
+      if (image_base64) {
         try {
           const { data: buckets } = await adminSupa.storage.listBuckets()
           const bucketExists = (buckets || []).some((b: any) => b.name === 'champagne-photos')
@@ -434,14 +437,22 @@ serve(async (req) => {
             await adminSupa.storage.createBucket('champagne-photos', { public: true })
           }
           const imageBytes  = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
-          const storagePath = 'bottles/' + mb.id + '.jpg'
+          const pendingId    = crypto.randomUUID()
+          const storagePath = 'pending/' + pendingId + '.jpg'
           const { error: uploadErr } = await adminSupa.storage
             .from('champagne-photos')
             .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
           if (!uploadErr) {
             const { data: urlData } = adminSupa.storage.from('champagne-photos').getPublicUrl(storagePath)
             uploadedPhotoUrl = urlData.publicUrl
-            await adminSupa.from('bottiglie').update({ foto_url: uploadedPhotoUrl }).eq('id', mb.id)
+            await adminSupa.from('foto_bottiglia_pending').insert({
+              id: pendingId,
+              bottiglia_id: mb.id,
+              user_id: user.id,
+              storage_path: storagePath,
+              foto_url: uploadedPhotoUrl,
+              status: 'pending',
+            })
           } else {
             console.error('photo upload (cache hit):', JSON.stringify(uploadErr))
           }
@@ -605,7 +616,9 @@ serve(async (req) => {
           const mb = catalogMatch as any
           let uploadedPhotoUrlCm: string | null = null
 
-          if (!mb.foto_url && image_base64) {
+          // Stessa regola del cache-hit sopra: sempre in approvazione, mai
+          // scritta direttamente su bottiglie.foto_url.
+          if (image_base64) {
             try {
               const { data: buckets } = await adminSupa.storage.listBuckets()
               const bucketExists = (buckets || []).some((b: any) => b.name === 'champagne-photos')
@@ -613,14 +626,22 @@ serve(async (req) => {
                 await adminSupa.storage.createBucket('champagne-photos', { public: true })
               }
               const imageBytes  = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0))
-              const storagePath = 'bottles/' + mb.id + '.jpg'
+              const pendingIdCm  = crypto.randomUUID()
+              const storagePath = 'pending/' + pendingIdCm + '.jpg'
               const { error: uploadErr } = await adminSupa.storage
                 .from('champagne-photos')
                 .upload(storagePath, imageBytes, { contentType: 'image/jpeg', upsert: true })
               if (!uploadErr) {
                 const { data: urlData } = adminSupa.storage.from('champagne-photos').getPublicUrl(storagePath)
                 uploadedPhotoUrlCm = urlData.publicUrl
-                await adminSupa.from('bottiglie').update({ foto_url: uploadedPhotoUrlCm }).eq('id', mb.id)
+                await adminSupa.from('foto_bottiglia_pending').insert({
+                  id: pendingIdCm,
+                  bottiglia_id: mb.id,
+                  user_id: user.id,
+                  storage_path: storagePath,
+                  foto_url: uploadedPhotoUrlCm,
+                  status: 'pending',
+                })
               } else {
                 console.error('photo upload (sonnet catalog match):', JSON.stringify(uploadErr))
               }
