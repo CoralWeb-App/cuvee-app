@@ -1317,9 +1317,21 @@ async function saveProfileName() {
 
 async function initAuth() {
   try {
+    // Controllo diretto sull'URL: se arriviamo dal link "reset password"
+    // dell'email, il hash contiene type=recovery. Non ci affidiamo solo
+    // all'evento PASSWORD_RECOVERY perché supa.auth (creato inline in
+    // index.html) può già aver processato l'URL prima che questo script
+    // (caricato dopo) registri il listener onAuthStateChange — in quel
+    // caso l'evento è già passato e nessuno lo ha intercettato.
+    const isRecoveryLink = /type=recovery/.test(window.location.hash) || /type=recovery/.test(window.location.search);
+
     const { data: { session } } = await supa.auth.getSession();
     if (session) {
       currentUser = session.user;
+      if (isRecoveryLink) {
+        go('v-set-new-password');
+        return;
+      }
       await _routeAfterAuth();
     } else {
       hideBootSplash(); // nessuna sessione: resta/torna sulla v-splash con i pulsanti
