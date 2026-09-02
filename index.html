@@ -12,6 +12,14 @@
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 
+<!-- Preconnect: anticipa DNS+TLS verso i server esterni usati subito al boot,
+     così lo script Supabase (che blocca il rendering) e i font/icone
+     partono prima e il ritardo percepito al primo caricamento si riduce -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link rel="preconnect" href="https://wlfxgbmffvhuqmqjiuqo.supabase.co" crossorigin/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+
 <!-- Tabler Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <!-- Google Fonts -->
@@ -19,7 +27,7 @@
 <!-- App styles -->
 <link rel="stylesheet" href="css/style.css?v=101"/>
 <!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
 const SUPA_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co';
 const SUPA_KEY = 'sb_publishable_uGKM1xe1pSq3nr_8gK8ZIQ_PElk0l0C';
