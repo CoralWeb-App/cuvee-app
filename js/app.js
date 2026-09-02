@@ -3739,21 +3739,38 @@ let _welcomeChecked = false;
 async function checkWelcomeNotification() {
   if (!currentUser || _welcomeChecked) return;
   _welcomeChecked = true;
-  try {
-    const { data, error } = await supa.from('notification_reads')
-      .select('notification_id')
-      .eq('user_id', currentUser.id)
-      .eq('notification_id', WELCOME_NOTIFICATION_ID)
-      .maybeSingle();
-    if (error) throw error;
-    if (data) return;
-    const { error: e2 } = await supa.from('notification_reads')
-      .upsert({ user_id: currentUser.id, notification_id: WELCOME_NOTIFICATION_ID }, { onConflict: 'user_id,notification_id' });
-    if (e2) throw e2;
-    document.getElementById('welcome-modal')?.classList.add('on');
-  } catch(e) {
-    console.log('checkWelcomeNotification error:', e);
-    _welcomeChecked = false; // riprova al prossimo ingresso in Home nella stessa sessione, invece di restare bloccato finché l'app non viene riavviata
+  // Subito dopo una registrazione manuale (email+password) può capitare che
+  // la riga su public.users non sia ancora stata creata dal trigger su
+  // auth.users quando arriviamo qui, perché non c'è nessuna attesa naturale
+  // prima di questo punto (a differenza del round-trip OAuth di Google/Apple,
+  // che dà al trigger il tempo di completarsi). L'upsert fallisce allora per
+  // violazione della foreign key notification_reads_user_id_fkey. Riproviamo
+  // qualche volta con un piccolo ritardo invece di arrenderci subito: senza
+  // questo, chi resta in Home non vede più il popup finché non riavvia l'app,
+  // perché altrimenti il retry scatta solo al prossimo ingresso in Home.
+  const MAX_ATTEMPTS = 4;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const { data, error } = await supa.from('notification_reads')
+        .select('notification_id')
+        .eq('user_id', currentUser.id)
+        .eq('notification_id', WELCOME_NOTIFICATION_ID)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) return;
+      const { error: e2 } = await supa.from('notification_reads')
+        .upsert({ user_id: currentUser.id, notification_id: WELCOME_NOTIFICATION_ID }, { onConflict: 'user_id,notification_id' });
+      if (e2) throw e2;
+      document.getElementById('welcome-modal')?.classList.add('on');
+      return;
+    } catch(e) {
+      console.log(`checkWelcomeNotification error (tentativo ${attempt}/${MAX_ATTEMPTS}):`, e);
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise(r => setTimeout(r, 800));
+      } else {
+        _welcomeChecked = false; // esauriti i tentativi: riprova al prossimo ingresso in Home
+      }
+    }
   }
 }
 function closeWelcomeModal() {
