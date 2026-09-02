@@ -1332,6 +1332,14 @@ async function initAuth() {
 
 // Ascolta cambiamenti auth
 supa.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'PASSWORD_RECOVERY' && session) {
+    // Utente arrivato dal link "Reimposta la password" nell'email:
+    // Supabase ha già creato una sessione temporanea, gli chiediamo
+    // subito la nuova password invece di instradarlo come un login normale.
+    currentUser = session.user;
+    go('v-set-new-password');
+    return;
+  }
   if (event === 'SIGNED_IN' && session) {
     // Supabase riemette SIGNED_IN anche solo tornando col focus sulla tab/app
     // o al refresh automatico del token — non è un nuovo accesso. Se è già
@@ -1601,6 +1609,39 @@ async function resetPassword() {
   }
   const { error } = await supa.auth.resetPasswordForEmail(email);
   if (!error) alert('Email di reset inviata! Controlla la tua casella.');
+}
+
+// Conferma nuova password (dopo click sul link di reset via email)
+async function submitNewPassword() {
+  const pass = document.getElementById('newpass-password')?.value || '';
+  const pass2 = document.getElementById('newpass-password-confirm')?.value || '';
+  const errEl = document.getElementById('newpass-error');
+  const btn = document.getElementById('newpass-btn');
+  errEl.style.display = 'none';
+
+  if (pass.length < 8) {
+    showError(errEl, 'Password troppo corta — minimo 8 caratteri');
+    return;
+  }
+  if (pass !== pass2) {
+    showError(errEl, 'Le due password non coincidono');
+    return;
+  }
+
+  btn.textContent = 'Salvataggio...';
+  btn.disabled = true;
+  try {
+    const { error } = await supa.auth.updateUser({ password: pass });
+    if (error) throw error;
+    btn.textContent = 'Salva nuova password';
+    btn.disabled = false;
+    alert('Password aggiornata! Da ora puoi accedere con la nuova password.');
+    await _routeAfterAuth();
+  } catch(e) {
+    showError(errEl, translateAuthError(e.message));
+    btn.textContent = 'Salva nuova password';
+    btn.disabled = false;
+  }
 }
 
 // LOGOUT
