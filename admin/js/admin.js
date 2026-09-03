@@ -1840,8 +1840,9 @@ async function createBottiglia() {
 async function saveBottigliaFields(id, closeAfter) {
   const updates = collectDataCols()
   try {
-    const { error } = await supa.from('bottiglie').update(updates).eq('id', id)
+    const { data, error } = await supa.from('bottiglie').update(updates).eq('id', id).select('id')
     if (error) throw error
+    if (!data || !data.length) throw new Error('Nessuna riga aggiornata: verifica i permessi (RLS) sulla tabella bottiglie')
     if (closeAfter) { closeModal(); showToast('Bottiglia aggiornata ✓'); renderBottiglie() }
     return true
   } catch(e) { showToast(e.message, 'error'); return false }
@@ -2043,8 +2044,9 @@ async function createMaison() {
 async function saveMaison(id) {
   const updates = collectDataCols()
   try {
-    const { error } = await supa.from('maison').update(updates).eq('id', id)
+    const { data, error } = await supa.from('maison').update(updates).eq('id', id).select('id')
     if (error) throw error
+    if (!data || !data.length) throw new Error('Nessuna riga aggiornata: verifica i permessi (RLS) sulla tabella maison')
     closeModal()
     showToast('Maison aggiornata ✓')
     loadMaison()
@@ -2194,8 +2196,9 @@ async function editGlossario(id) {
 async function saveGlossario(id) {
   const updates = collectDataCols()
   try {
-    const { error } = await supa.from('glossario').update(updates).eq('id', id)
+    const { data, error } = await supa.from('glossario').update(updates).eq('id', id).select('id')
     if (error) throw error
+    if (!data || !data.length) throw new Error('Nessuna riga aggiornata: verifica i permessi (RLS) sulla tabella glossario')
     closeModal()
     showToast('Termine aggiornato ✓')
     loadGlossarioAdmin()
