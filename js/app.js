@@ -5094,7 +5094,10 @@ async function openBottigliaDetail(bottId) {
     scoreWrap.style.display = 'flex';
   } else if (scoreWrap) { scoreWrap.style.display = 'none'; }
 
-  // Finestra degustazione — timeline con marker "adesso"
+  // Finestra degustazione — tracciato a gradiente salvia → oro → terracotta,
+  // le tre fasi seguono esattamente i confini reali [finestra_da, finestra_a]
+  // di questa bottiglia, non una scala fissa: il colore comunica a colpo
+  // d'occhio se è ancora presto, il momento giusto, o se sta declinando.
   const finSection = document.getElementById('bott-detail-finestra-section');
   if (finSection) {
     if (b.finestra_da || b.finestra_a) {
@@ -5106,25 +5109,42 @@ async function openBottigliaDetail(bottId) {
       const trackFrom = from - 2;
       const trackTo   = to   + 2;
       const trackSpan = trackTo - trackFrom;
-      const toPercent = v => Math.max(0, Math.min(100, Math.round(((v - trackFrom) / trackSpan) * 100)));
+      const toPercent = v => Math.max(0, Math.min(100, ((v - trackFrom) / trackSpan) * 100));
 
-      const fillEl  = document.getElementById('bott-finestra-fill');
+      const trackEl = document.getElementById('bott-finestra-track');
       const nowEl   = document.getElementById('bott-finestra-now');
       const daEl    = document.getElementById('bott-finestra-da');
       const aEl     = document.getElementById('bott-finestra-a');
       const statoEl = document.getElementById('bott-finestra-stato');
 
-      if (fillEl) { fillEl.style.left = toPercent(from) + '%'; fillEl.style.width = (toPercent(to) - toPercent(from)) + '%'; }
+      const fromPct = toPercent(from), toPct = toPercent(to);
+      // Sfumatura di ~6 punti percentuali ai due confini, invece di un taglio netto
+      const SAGE = '#8a9970', GOLD = '#b8922a', RUST = '#b2694a';
+      const blend = 6;
+      const stops = [
+        SAGE + ' 0%', SAGE + ' ' + Math.max(0, fromPct - blend) + '%',
+        GOLD + ' ' + fromPct + '%', GOLD + ' ' + toPct + '%',
+        RUST + ' ' + Math.min(100, toPct + blend) + '%', RUST + ' 100%',
+      ];
+      if (trackEl) trackEl.style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
       if (nowEl)  nowEl.style.left = toPercent(now) + '%';
       if (daEl)   daEl.textContent  = from;
       if (aEl)    aEl.textContent   = to;
 
-      // Stato corrente
-      let stato = '';
-      if (now < from)      stato = 'Da aprire nel ' + from;
-      else if (now <= to)  stato = now === from ? 'Appena pronta' : (now >= to - 1 ? 'In declino' : '● Ottimale ora');
-      else                 stato = 'Oltre la finestra';
-      if (statoEl) { statoEl.textContent = stato; statoEl.style.color = (now >= from && now <= to) ? 'var(--gold)' : 'var(--ink-4)'; }
+      // Stato corrente: testo + pillola colorata coerente con la fase sul tracciato
+      let stato = '', pillBg = '', pillColor = '';
+      if (now < from) {
+        stato = 'Da aprire nel ' + from;
+        pillBg = '#eef1e8'; pillColor = '#57633f';
+      } else if (now <= to) {
+        if (now === from)      { stato = 'Appena pronta';   pillBg = 'var(--gold-pale)'; pillColor = '#8a6a1e'; }
+        else if (now >= to - 1){ stato = 'In declino';       pillBg = '#f5e6df'; pillColor = '#874531'; }
+        else                    { stato = '● Ottimale ora';  pillBg = 'var(--gold-pale)'; pillColor = '#8a6a1e'; }
+      } else {
+        stato = 'Oltre la finestra';
+        pillBg = '#f5e6df'; pillColor = '#874531';
+      }
+      if (statoEl) { statoEl.textContent = stato; statoEl.style.background = pillBg; statoEl.style.color = pillColor; }
     } else { finSection.style.display = 'none'; }
   }
 
