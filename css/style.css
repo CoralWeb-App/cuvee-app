@@ -954,6 +954,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .finestra-now-marker{position:absolute;top:50%;width:17px;height:17px;border-radius:50%;background:#fff;border:3px solid var(--ink);transform:translate(-50%,-50%);box-shadow:0 2px 6px rgba(26,18,8,.28);transition:left .5s ease;}
 .finestra-labels{display:flex;justify-content:space-between;align-items:center;font-family:var(--sans);font-size:12px;color:var(--ink-4);font-weight:500;margin-top:6px;}
 .finestra-labels-now{font-size:9.5px;color:var(--ink-5);text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+.finestra-legend{display:flex;justify-content:center;gap:18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.finestra-legend-item{display:flex;align-items:center;gap:6px;font-family:var(--sans);font-size:11px;color:var(--ink-4);}
+.finestra-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 
 /* ── Assemblaggio / Vini di base ── */
 .assembl-header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;margin-bottom:14px;margin-top:20px;}

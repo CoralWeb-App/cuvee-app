@@ -5094,10 +5094,10 @@ async function openBottigliaDetail(bottId) {
     scoreWrap.style.display = 'flex';
   } else if (scoreWrap) { scoreWrap.style.display = 'none'; }
 
-  // Finestra degustazione — tracciato a gradiente salvia → oro → terracotta,
-  // le tre fasi seguono esattamente i confini reali [finestra_da, finestra_a]
-  // di questa bottiglia, non una scala fissa: il colore comunica a colpo
-  // d'occhio se è ancora presto, il momento giusto, o se sta declinando.
+  // Finestra degustazione — tracciato a gradiente rosso → verde → rosso,
+  // seguendo la convenzione universale (verde = va bene, rosso = non ancora
+  // o non più): le due fasi rosse ai bordi seguono i confini reali
+  // [finestra_da, finestra_a] di questa bottiglia, non una scala fissa.
   const finSection = document.getElementById('bott-detail-finestra-section');
   if (finSection) {
     if (b.finestra_da || b.finestra_a) {
@@ -5118,13 +5118,14 @@ async function openBottigliaDetail(bottId) {
       const statoEl = document.getElementById('bott-finestra-stato');
 
       const fromPct = toPercent(from), toPct = toPercent(to);
-      // Sfumatura di ~6 punti percentuali ai due confini, invece di un taglio netto
-      const SAGE = '#8a9970', GOLD = '#b8922a', RUST = '#b2694a';
+      // Sfumatura di ~6 punti percentuali ai due confini, invece di un taglio netto.
+      // Toni smorzati (non rosso/verde acceso) per restare eleganti nella palette dell'app.
+      const RED = '#a8564f', GREEN = '#7c9473';
       const blend = 6;
       const stops = [
-        SAGE + ' 0%', SAGE + ' ' + Math.max(0, fromPct - blend) + '%',
-        GOLD + ' ' + fromPct + '%', GOLD + ' ' + toPct + '%',
-        RUST + ' ' + Math.min(100, toPct + blend) + '%', RUST + ' 100%',
+        RED + ' 0%', RED + ' ' + Math.max(0, fromPct - blend) + '%',
+        GREEN + ' ' + fromPct + '%', GREEN + ' ' + toPct + '%',
+        RED + ' ' + Math.min(100, toPct + blend) + '%', RED + ' 100%',
       ];
       if (trackEl) trackEl.style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
       if (nowEl)  nowEl.style.left = toPercent(now) + '%';
@@ -5132,17 +5133,19 @@ async function openBottigliaDetail(bottId) {
       if (aEl)    aEl.textContent   = to;
 
       // Stato corrente: testo + pillola colorata coerente con la fase sul tracciato
+      // (verde = dentro la finestra e quindi va bene, anche se in declino; rosso = fuori)
+      const REDBG = '#f5e6e4', REDTXT = '#8a453e', GREENBG = '#eef1e8', GREENTXT = '#5c7a4f';
       let stato = '', pillBg = '', pillColor = '';
       if (now < from) {
         stato = 'Da aprire nel ' + from;
-        pillBg = '#eef1e8'; pillColor = '#57633f';
+        pillBg = REDBG; pillColor = REDTXT;
       } else if (now <= to) {
-        if (now === from)      { stato = 'Appena pronta';   pillBg = 'var(--gold-pale)'; pillColor = '#8a6a1e'; }
-        else if (now >= to - 1){ stato = 'In declino';       pillBg = '#f5e6df'; pillColor = '#874531'; }
-        else                    { stato = '● Ottimale ora';  pillBg = 'var(--gold-pale)'; pillColor = '#8a6a1e'; }
+        if (now === from)      { stato = 'Appena pronta';   pillBg = GREENBG; pillColor = GREENTXT; }
+        else if (now >= to - 1){ stato = 'In declino';       pillBg = GREENBG; pillColor = GREENTXT; }
+        else                    { stato = '● Ottimale ora';  pillBg = GREENBG; pillColor = GREENTXT; }
       } else {
         stato = 'Oltre la finestra';
-        pillBg = '#f5e6df'; pillColor = '#874531';
+        pillBg = REDBG; pillColor = REDTXT;
       }
       if (statoEl) { statoEl.textContent = stato; statoEl.style.background = pillBg; statoEl.style.color = pillColor; }
     } else { finSection.style.display = 'none'; }
