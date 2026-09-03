@@ -4916,9 +4916,11 @@ function renderAssemblaggio(b) {
     return;
   }
 
-  // Colori per distinguere annate vs riserva
-  const colors = ['#b8922a','#c4a855','#7a6234','#9a7a3a','#d4b06a'];
+  // Colori per distinguere le annate (oro in gradazioni diverse); la riserva
+  // usa sempre un tono più freddo/spento per restare distinguibile a colpo d'occhio.
+  const colors = ['#b8922a','#8a6a1e','#d4b06a','#a68030','#e0c48a'];
   let colorIdx = 0;
+  const RISERVA_COLOR = '#9a8a72';
 
   section.style.display = 'block';
 
@@ -4934,25 +4936,45 @@ function renderAssemblaggio(b) {
   const hasRiserva = items.some(i => !i.anno);
   if (!hasRiserva) items = [...items, { tipo: 'riserva', perc: 0 }];
 
-  // Card per ogni componente
-  const cards = items.map(item => {
-    const isRiserva = !item.anno;
+  el.innerHTML = renderRibbon(items, colors, RISERVA_COLOR)
+    + '<div class="assembl-divider"></div>';
+}
+
+// Nastro proporzionale riusabile: un'unica barra divisa in segmenti in base
+// alla % reale di ciascun componente, con legenda leggibile sotto (pallino
+// colore + etichetta + percentuale). Usato per "Vini di base" e per l'uvaggio.
+function renderRibbon(items, yearColors, otherColor) {
+  let colorIdx = 0;
+  const segData = items.map(item => {
+    // "riserva" copre anche varianti descrittive tipo "riserva perpetua dal 1998"
+    const isRiserva = typeof item.tipo === 'string' && item.tipo.startsWith('riserva');
     const label = item.anno
       ? String(item.anno)
-      : (item.tipo === 'riserva' ? 'Riserva' : (item.label || 'Base'));
+      : (item.label || (isRiserva ? (item.tipo.charAt(0).toUpperCase() + item.tipo.slice(1)) : (item.tipo || 'Base')));
     const perc  = item.perc || 0;
-    const color = isRiserva ? '#c4b49a' : colors[colorIdx++ % colors.length];
-    const percColor = perc > 0 ? 'var(--gold)' : 'var(--ink-4)';
+    const color = isRiserva ? otherColor : yearColors[colorIdx++ % yearColors.length];
+    return { label, perc, color };
+  });
 
-    return '<div style="background:var(--ivory-2);border:1px solid var(--border);border-top:3px solid ' + color + ';'
-      + 'border-radius:8px;padding:10px 8px;text-align:center;flex:1;min-width:62px;max-width:90px;">'
-      + '<div style="font-family:var(--serif);font-size:13px;color:var(--ink-2);font-weight:600;margin-bottom:5px;">' + label + '</div>'
-      + '<div style="font-family:var(--sans);font-size:15px;font-weight:700;color:' + percColor + ';">' + perc + '%</div>'
+  const segs = segData.map(s => {
+    const showPct = s.perc >= 12; // sotto questa soglia il testo non ci sta leggibile
+    return '<div class="ribbon-seg" style="flex-grow:' + Math.max(s.perc, 0.001) + ';background:' + s.color + ';">'
+      + (showPct ? '<span class="ribbon-seg-pct">' + s.perc + '%</span>' : '')
       + '</div>';
   }).join('');
 
-  el.innerHTML = '<div style="display:flex;gap:8px;padding:0 18px 16px;flex-wrap:wrap;">' + cards + '</div>'
-    + '<div class="assembl-divider"></div>';
+  const legend = segData.map(s =>
+    '<div class="ribbon-legend-item">'
+      + '<span class="ribbon-dot" style="background:' + s.color + ';"></span>'
+      + '<span class="ribbon-legend-label">' + s.label + '</span>'
+      + '<span class="ribbon-legend-pct">' + s.perc + '%</span>'
+    + '</div>'
+  ).join('');
+
+  return '<div class="ribbon-wrap">'
+    + '<div class="ribbon-bar">' + segs + '</div>'
+    + '<div class="ribbon-legend">' + legend + '</div>'
+  + '</div>';
 }
 
 function bottDetailPhotoClick() {
@@ -5104,23 +5126,55 @@ async function openBottigliaDetail(bottId) {
 
   const schedaEl = document.getElementById('bott-detail-scheda');
   if (schedaEl) {
-    const uvaggi = [b.pct_pinot_noir ? b.pct_pinot_noir + '% Pinot Noir' : null, b.pct_chardonnay ? b.pct_chardonnay + '% Chardonnay' : null, b.pct_meunier ? b.pct_meunier + '% Meunier' : null].filter(Boolean).join(' · ');
     // Mostra vini_base come testo solo se non c'è assemblaggio strutturato
     const hasAssembl = (b.assemblaggio && b.assemblaggio.length) || !!b.annata;
+
+    // ── Card statistiche in evidenza: dosaggio, maturazione, uvaggio principale ──
+    const uvaggiParts = [
+      { l:'Pinot Noir', v: b.pct_pinot_noir },
+      { l:'Chardonnay',  v: b.pct_chardonnay },
+      { l:'Meunier',     v: b.pct_meunier },
+    ].filter(u => u.v);
+    const uvaggioPrincipale = uvaggiParts.length
+      ? uvaggiParts.reduce((max, u) => u.v > max.v ? u : max, uvaggiParts[0])
+      : null;
+
+    const statCards = [
+      b.dosaggio_gl != null ? { icon:'ti-droplet', value: b.dosaggio_gl + ' g/l', label: b.dosaggio_tipo || 'Dosaggio' } : (b.dosaggio_tipo ? { icon:'ti-droplet', value: b.dosaggio_tipo, label:'Dosaggio' } : null),
+      b.maturazione_mesi ? { icon:'ti-clock-hour-4', value: b.maturazione_mesi, label:'Mesi sui lieviti' } : null,
+      uvaggioPrincipale ? { icon:'ti-glass-full', value: uvaggioPrincipale.v + '%', label: uvaggioPrincipale.l } : null,
+    ].filter(Boolean);
+
+    const statCardsHtml = statCards.length
+      ? '<div class="stat-cards-row">' + statCards.map(s =>
+          '<div class="stat-card">'
+            + '<i class="ti ' + s.icon + ' stat-card-icon"></i>'
+            + '<div class="stat-card-value">' + s.value + '</div>'
+            + '<div class="stat-card-label">' + s.label + '</div>'
+          + '</div>'
+        ).join('') + '</div>'
+      : '';
+
+    // ── Uvaggio come nastro proporzionale (se più di un vitigno) ──
+    const uvaggioRibbon = uvaggiParts.length > 1
+      ? '<div class="detail-row-label-wrap" style="margin-bottom:8px;"><i class="ti ti-glass-full detail-row-icon"></i><span class="detail-row-label">Uvaggio</span></div>'
+        + renderRibbon(uvaggiParts.map(u => ({ label: u.l, perc: u.v, tipo: 'uva' })), ['#7a2f3a','#b8922a','#8a6a1e'], '#9a8a72').replace('ribbon-wrap', 'ribbon-wrap ribbon-wrap-tight')
+      : '';
+
+    // ── Righe rimanenti con icona ──
     const rows = [
-      { l:'Produttore', v: b.maison?.nome || null },
-      { l:'Uvaggi', v: uvaggi || null },
-      { l:'Dosaggio', v: b.dosaggio_gl != null ? b.dosaggio_gl + ' g/l — ' + (b.dosaggio_tipo||'') : (b.dosaggio_tipo||null) },
-      { l:'Provenienza uve', v: b.provenienza_uve || null },
-      { l:'Note assemblaggio', v: !hasAssembl ? (b.vini_base || null) : null },
-      { l:'Vinificazione', v: b.vinificazione || null },
-      { l:'Malolattica', v: b.malolattica || null },
-      { l:'Maturazione sui lieviti', v: b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null },
-      { l:'Produzione', v: b.produzione_bottiglie ? b.produzione_bottiglie.toLocaleString('it') + ' bott.' : null },
+      { icon:'ti-building-store', l:'Produttore', v: b.maison?.nome || null },
+      { icon:'ti-map-pin',        l:'Provenienza uve', v: b.provenienza_uve || null },
+      { icon:'ti-flask',          l:'Vinificazione', v: b.vinificazione || null },
+      { icon:'ti-flask-2',        l:'Malolattica', v: b.malolattica || null },
+      { icon:'ti-notes',          l:'Note assemblaggio', v: !hasAssembl ? (b.vini_base || null) : null },
+      { icon:'ti-bottle',         l:'Produzione', v: b.produzione_bottiglie ? b.produzione_bottiglie.toLocaleString('it') + ' bott.' : null },
     ].filter(r => r.v);
-    schedaEl.innerHTML = rows.map(r =>
-      '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span><span class="detail-row-value">' + r.v + '</span></div>'
+    const rowsHtml = rows.map(r =>
+      '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ' + r.icon + ' detail-row-icon"></i><span class="detail-row-label">' + r.l + '</span></span><span class="detail-row-value">' + r.v + '</span></div>'
     ).join('');
+
+    schedaEl.innerHTML = statCardsHtml + uvaggioRibbon + rowsHtml;
   }
 
   // Abbinamento

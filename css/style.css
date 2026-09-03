@@ -953,13 +953,30 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 /* ── Assemblaggio / Vini di base ── */
 .assembl-header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;margin-bottom:14px;margin-top:20px;}
 .assembl-total{font-family:var(--sans);font-size:12px;color:var(--ink-5);font-style:italic;}
-.assembl-row{display:flex;align-items:center;gap:10px;padding:0 18px;margin-bottom:11px;}
-.assembl-year{font-family:var(--sans);font-size:13px;color:var(--ink-2);font-weight:600;width:90px;flex-shrink:0;line-height:1.3;}
-.assembl-bar-wrap{flex:1;height:7px;background:var(--ivory-3);border-radius:4px;overflow:hidden;}
-.assembl-bar-fill{height:100%;border-radius:4px;}
-.assembl-perc{font-family:var(--sans);font-size:13px;color:var(--ink-3);width:36px;text-align:right;flex-shrink:0;font-weight:500;}
+/* Nastro proporzionale: un'unica barra divisa in segmenti in base alla % reale */
+.ribbon-wrap{padding:0 18px 16px;}
+.ribbon-wrap-tight{padding:0 0 16px;}
+.ribbon-wrap-tight .ribbon-bar{height:32px;}
+.ribbon-bar{display:flex;height:40px;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--border);}
+.ribbon-seg{display:flex;align-items:center;justify-content:center;min-width:0;position:relative;transition:flex-grow .4s ease;}
+.ribbon-seg:not(:last-child)::after{content:'';position:absolute;right:0;top:6px;bottom:6px;width:1px;background:rgba(255,255,255,.35);}
+.ribbon-seg-pct{font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.18);white-space:nowrap;}
+.ribbon-legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:12px;}
+.ribbon-legend-item{display:flex;align-items:center;gap:7px;}
+.ribbon-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.ribbon-legend-label{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);}
+.ribbon-legend-pct{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-4);}
 /* divisore sotto la sezione */
 .assembl-divider{height:1px;background:var(--border);margin:18px 18px 0;}
+
+/* ── Scheda tecnica: stat card in evidenza ── */
+.stat-cards-row{display:flex;gap:10px;padding:0 18px;margin-bottom:18px;}
+.stat-card{flex:1;min-width:0;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 10px;text-align:center;}
+.stat-card-icon{font-size:16px;color:var(--gold);margin-bottom:5px;display:block;}
+.stat-card-value{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--ink);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stat-card-label{font-family:var(--sans);font-size:10px;letter-spacing:.6px;color:var(--ink-4);text-transform:uppercase;margin-top:3px;}
+.detail-row-icon{font-size:13px;color:var(--gold);margin-right:6px;flex-shrink:0;}
+.detail-row-label-wrap{display:flex;align-items:center;min-width:110px;flex-shrink:0;}
 
 /* ── Sezione acquisto ─────────────────────────────────── */
 .buy-row{
