@@ -4369,20 +4369,37 @@ function openMaisonDetail(maisonId) {
   // Scheda tecnica
   const schedaEl = document.getElementById('detail-scheda');
   if (schedaEl) {
+    // ── Card statistiche in evidenza: i 3 numeri che raccontano la maison a colpo d'occhio ──
+    const statCards = [
+      m.anno_fondazione ? { icon:'ti-calendar-event', value: m.anno_fondazione, label:'Fondazione' } : null,
+      m.ettari_totali ? { icon:'ti-map-2', value: m.ettari_totali + ' ha', label:'Vigneto' } : null,
+      m.produzione_bottiglie ? { icon:'ti-bottle', value: (m.produzione_bottiglie >= 1000 ? Math.round(m.produzione_bottiglie/1000) + 'k' : m.produzione_bottiglie), label:'Bottiglie/anno' } : null,
+    ].filter(Boolean);
+    const statCardsHtml = statCards.length
+      ? '<div class="stat-cards-row">' + statCards.map(s =>
+          '<div class="stat-card">'
+            + '<i class="ti ' + s.icon + ' stat-card-icon"></i>'
+            + '<div class="stat-card-value">' + s.value + '</div>'
+            + '<div class="stat-card-label">' + s.label + '</div>'
+          + '</div>'
+        ).join('') + '</div>'
+      : '';
+
     const rows = [
-      { l:'Fondazione', v: m.anno_fondazione },
-      { l:'Tipo', v: m.tipo ? m.tipo + ' — ' + (tipoLabel[m.tipo]||'') : null },
-      { l:'Zona', v: zonaNome || null },
-      { l:'Sede', v: [m.sede_comune, m.sede_regione].filter(Boolean).join(', ') || null },
-      { l:'Indirizzo', v: m.sede_indirizzo || null },
-      { l:'Chef de cave', v: m.chef_de_cave || null },
-      { l:'Direzione', v: m.direzione || null },
-      { l:'Proprietà', v: m.proprieta || null },
-      { l:'Gruppo', v: m.gruppo || null },
+      { icon:'ti-category',        l:'Tipo', v: m.tipo ? m.tipo + ' — ' + (tipoLabel[m.tipo]||'') : null },
+      { icon:'ti-map-pin',         l:'Zona', v: zonaNome || null },
+      { icon:'ti-building-store',  l:'Sede', v: [m.sede_comune, m.sede_regione].filter(Boolean).join(', ') || null },
+      { icon:'ti-map-pin-filled',  l:'Indirizzo', v: m.sede_indirizzo || null },
+      { icon:'ti-chef-hat',        l:'Chef de cave', v: m.chef_de_cave || null },
+      { icon:'ti-user-star',       l:'Direzione', v: m.direzione || null },
+      { icon:'ti-key',             l:'Proprietà', v: m.proprieta || null },
+      { icon:'ti-hierarchy-2',     l:'Gruppo', v: m.gruppo || null },
     ].filter(r => r.v);
-    schedaEl.innerHTML = rows.map(r =>
-      '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span><span class="detail-row-value">' + r.v + '</span></div>'
+    const rowsHtml = rows.map(r =>
+      '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ' + r.icon + ' detail-row-icon"></i><span class="detail-row-label">' + r.l + '</span></span><span class="detail-row-value">' + r.v + '</span></div>'
     ).join('');
+
+    schedaEl.innerHTML = statCardsHtml + rowsHtml;
   }
 
   // Vigneti & uvaggi
@@ -4398,25 +4415,20 @@ function openMaisonDetail(maisonId) {
         if (m.ettari_totali) ettariVal += m.ettari_totali + ' ha totali';
         if (m.ettari_proprieta && m.ettari_proprieta !== m.ettari_totali) ettariVal += (ettariVal ? '<br>' : '') + m.ettari_proprieta + ' ha di proprietà';
         if (m.ettari_gestione) ettariVal += '<br>' + m.ettari_gestione + ' ha in gestione';
-        html += '<div class="detail-row"><span class="detail-row-label">Ettari</span><span class="detail-row-value">' + ettariVal + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ti-map-2 detail-row-icon"></i><span class="detail-row-label">Ettari</span></span><span class="detail-row-value">' + ettariVal + '</span></div>';
       }
       if (m.comuni_vigneti && m.comuni_vigneti.length) {
-        html += '<div class="detail-row"><span class="detail-row-label">Comuni</span><span class="detail-row-value">' + m.comuni_vigneti.join(', ') + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ti-map-pins detail-row-icon"></i><span class="detail-row-label">Comuni</span></span><span class="detail-row-value">' + m.comuni_vigneti.join(', ') + '</span></div>';
       }
       const uvaggi = [
         { name:'Pinot Noir', pct: m.pct_pinot_noir },
         { name:'Chardonnay', pct: m.pct_chardonnay },
-        { name:'Pinot Meunier', pct: m.pct_meunier }
+        { name:'Meunier', pct: m.pct_meunier }
       ].filter(u => u.pct > 0);
       if (uvaggi.length) {
-        html += '<div style="margin-top:14px;">';
-        uvaggi.forEach(u => {
-          html += '<div class="uvaggio-item">' +
-            '<div class="uvaggio-head"><span>' + u.name + '</span><span>' + u.pct + '%</span></div>' +
-            '<div class="uvaggio-track"><div class="uvaggio-fill" style="width:' + u.pct + '%"></div></div>' +
-          '</div>';
-        });
-        html += '</div>';
+        html += '<div class="detail-row-label-wrap" style="margin-top:16px;margin-bottom:8px;"><i class="ti ti-glass-full detail-row-icon"></i><span class="detail-row-label">Uvaggio</span></div>'
+          + renderRibbon(uvaggi.map(u => ({ label: u.name, perc: u.pct, tipo: 'uva' })), ['#7a2f3a','#b8922a','#8a6a1e'], '#9a8a72')
+              .replace('ribbon-wrap', 'ribbon-wrap ribbon-wrap-tight');
       }
       if (m.certificazioni && m.certificazioni.length) {
         html += '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">';
@@ -4431,18 +4443,18 @@ function openMaisonDetail(maisonId) {
   const prodSection = document.getElementById('detail-produzione-section');
   const prodEl = document.getElementById('detail-produzione');
   if (prodSection && prodEl) {
+    // Produzione annua è già in evidenza tra le card statistiche sopra, non ripetuta qui.
     const rows = [
-      { l:'Vinificazione', v: m.vinificazione || null },
-      { l:'Malolattica', v: m.malolattica || null },
-      { l:'Tipo di pressa', v: m.tipo_pressa || null },
-      { l:'Vins de réserve', v: m.vins_de_reserve || null },
-      { l:'Liqueur d\'expédition', v: m.liqueur_expedition || null },
-      { l:'Produzione annua', v: m.produzione_bottiglie ? m.produzione_bottiglie.toLocaleString('it') + ' bott.' : null },
-      { l:'Stock in cantina', v: m.stock_cantina ? m.stock_cantina.toLocaleString('it') + ' bott.' : null },
+      { icon:'ti-flask',       l:'Vinificazione', v: m.vinificazione || null },
+      { icon:'ti-flask-2',     l:'Malolattica', v: m.malolattica || null },
+      { icon:'ti-gauge',       l:'Tipo di pressa', v: m.tipo_pressa || null },
+      { icon:'ti-recycle',     l:'Vins de réserve', v: m.vins_de_reserve || null },
+      { icon:'ti-droplet',     l:'Liqueur d\'expédition', v: m.liqueur_expedition || null },
+      { icon:'ti-archive',     l:'Stock in cantina', v: m.stock_cantina ? m.stock_cantina.toLocaleString('it') + ' bott.' : null },
     ].filter(r => r.v);
     prodSection.style.display = rows.length ? 'block' : 'none';
     prodEl.innerHTML = rows.map(r =>
-      '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span><span class="detail-row-value">' + r.v + '</span></div>'
+      '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ' + r.icon + ' detail-row-icon"></i><span class="detail-row-label">' + r.l + '</span></span><span class="detail-row-value">' + r.v + '</span></div>'
     ).join('');
   }
 
@@ -4451,11 +4463,11 @@ function openMaisonDetail(maisonId) {
   const distribEl = document.getElementById('detail-distribuzione');
   if (distribSection && distribEl) {
     let html = '';
-    if (m.importatore_italia) html += '<div class="detail-row"><span class="detail-row-label">In Italia</span><span class="detail-row-value">' + m.importatore_italia + '</span></div>';
-    if (m.telefono) html += '<div class="detail-row"><span class="detail-row-label">Telefono</span><span class="detail-row-value"><a class="detail-link" href="tel:' + m.telefono + '">' + m.telefono + '</a></span></div>';
+    if (m.importatore_italia) html += '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ti-world detail-row-icon"></i><span class="detail-row-label">In Italia</span></span><span class="detail-row-value">' + m.importatore_italia + '</span></div>';
+    if (m.telefono) html += '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ti-phone detail-row-icon"></i><span class="detail-row-label">Telefono</span></span><span class="detail-row-value"><a class="detail-link" href="tel:' + m.telefono + '">' + m.telefono + '</a></span></div>';
     if (m.sito_web) {
       const url = m.sito_web.startsWith('http') ? m.sito_web : 'https://' + m.sito_web;
-      html += '<div class="detail-row"><span class="detail-row-label">Sito web</span><span class="detail-row-value"><a class="detail-link" href="' + url + '" target="_blank" onclick="event.stopPropagation()">' + m.sito_web + '</a></span></div>';
+      html += '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ti-link detail-row-icon"></i><span class="detail-row-label">Sito web</span></span><span class="detail-row-value"><a class="detail-link" href="' + url + '" target="_blank" onclick="event.stopPropagation()">' + m.sito_web + '</a></span></div>';
     }
     html += '<div style="margin-top:4px;">' +
       '<span class="visit-pill' + (m.visita_possibile ? ' on' : '') + '"><i class="ti ' + (m.visita_possibile ? 'ti-check' : 'ti-x') + '"></i>Visita</span>' +
