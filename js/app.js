@@ -2358,78 +2358,36 @@ function openNoteDetail(note) {
         '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;">'+abbinamento+'</div>' +
       '</div>';
 
-    // Assemblaggio (anni + %)
-    if (assemblaggio && Array.isArray(assemblaggio) && assemblaggio.length) {
-      const bars = assemblaggio.map(x => {
-        const isRis = x.tipo === 'riserva';
-        const label = isRis ? (x.label || 'Vins de réserve') : String(x.anno);
-        const bg    = isRis ? 'var(--border-2)' : 'var(--gold)';
-        const pct   = x.perc || 0;
-        return '<div style="margin-bottom:7px;">' +
-          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
-            '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-3);">'+label+'</span>' +
-            '<span style="font-family:var(--sans);font-size:12px;font-weight:600;color:var(--gold);">'+pct+'%</span>' +
-          '</div>' +
-          '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">' +
-            '<div style="height:100%;width:'+pct+'%;background:'+bg+';border-radius:3px;"></div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
+    // Assemblaggio (vini di base, anni + %)
+    (function() {
+      const ribbon = buildAssemblaggioHTML(assemblaggio);
+      if (!ribbon) return;
       innerHtml +=
         '<div style="margin-bottom:16px;">' +
-          '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i>Assemblaggio</div>' +
-          bars +
+          '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i>Vini di base</div>' +
+          ribbon +
         '</div>';
-    }
+    })();
 
     // Scheda tecnica
     (function() {
-      const uvaggi = [
-        pctCH ? pctCH+'% Chardonnay' : null,
-        pctPN ? pctPN+'% Pinot Noir'  : null,
-        pctPM ? pctPM+'% Meunier'     : null,
-      ].filter(Boolean).join(' · ');
-      const dosageLabel = dosaggioGl != null
-        ? dosaggioGl+' g/l'+(dosage ? ' — '+dosage : '')
-        : (dosage || null);
-      const rows = [
-        { l:'Uvaggi',                  v: uvaggi || null },
-        { l:'Dosaggio',                v: dosageLabel },
-        { l:'Provenienza uve',         v: provenienzaUve },
-        { l:'Vinificazione',           v: vinificazione },
-        { l:'Malolattica',             v: malolattica },
-        { l:'Maturazione sui lieviti', v: maturazioneMesi ? maturazioneMesi+' mesi' : null },
-        { l:'Produzione',              v: prodBottiglie ? prodBottiglie.toLocaleString('it')+' bott.' : null },
-      ].filter(r => r.v);
-      if (!rows.length) return;
+      const inner = buildSchedaTecnicaHTML({
+        pctPinotNoir: pctPN, pctChardonnay: pctCH, pctMeunier: pctPM,
+        dosaggioGl, dosaggioTipo: dosage,
+        maturazioneMesi, provenienzaUve, vinificazione, malolattica,
+        produzioneBottiglie: prodBottiglie,
+      });
+      if (!inner) return;
       innerHtml +=
         '<div style="margin-bottom:16px;">' +
           '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;"><i class="ti ti-list-details" style="margin-right:5px;"></i>Scheda tecnica</div>' +
-          rows.map(r =>
-            '<div class="detail-row"><span class="detail-row-label">'+r.l+'</span><span class="detail-row-value">'+r.v+'</span></div>'
-          ).join('') +
+          inner +
         '</div>';
     })();
 
     // Finestra di degustazione
-    if (finestra_da || finestra_a) {
-      const now  = new Date().getFullYear();
-      const from = finestra_da || now;
-      const to   = finestra_a  || (now + 8);
-      const span = to - from;
-      const pct  = span > 0 ? Math.round((Math.min(Math.max(now - from, 0), span) / span) * 100) : 0;
-      innerHtml +=
-        '<div style="margin-bottom:16px;">' +
-          '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;"><i class="ti ti-calendar-time" style="margin-right:5px;"></i>Finestra di degustazione</div>' +
-          '<div style="display:flex;align-items:center;gap:10px;">' +
-            '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">'+from+'</span>' +
-            '<div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden;">' +
-              '<div style="height:100%;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:4px;width:'+pct+'%;"></div>' +
-            '</div>' +
-            '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">'+to+'</span>' +
-          '</div>' +
-        '</div>';
-    }
+    const finestraHtml = buildFinestraHTML(finestra_da, finestra_a);
+    if (finestraHtml) innerHtml += '<div style="margin-bottom:16px;">' + finestraHtml + '</div>';
 
     // Prezzo
     if (prezzoMin || fascia) {
@@ -4989,6 +4947,122 @@ function renderRibbon(items, yearColors, otherColor) {
   + '</div>';
 }
 
+// Versione string-based di renderAssemblaggio(), per i contesti che costruiscono
+// HTML via innerHTML in un colpo solo (risultato scansione, nota carnet) invece
+// di patchare nodi DOM fissi come fa la pagina scheda bottiglia.
+function buildAssemblaggioHTML(assemblaggio) {
+  if (!assemblaggio || !Array.isArray(assemblaggio) || !assemblaggio.length) return '';
+  let items = assemblaggio;
+  const colors = ['#b8922a','#8a6a1e','#d4b06a','#a68030','#e0c48a'];
+  const RISERVA_COLOR = '#9a8a72';
+  const hasRiserva = items.some(i => !i.anno);
+  if (!hasRiserva) items = [...items, { tipo: 'riserva', perc: 0 }];
+  return renderRibbon(items, colors, RISERVA_COLOR);
+}
+
+// Blocco completo "finestra di degustazione" (titolo, pillola stato, tracciato
+// rosso→verde→rosso, marker "oggi", etichette anni, legenda) come stringa HTML
+// autonoma — stessa logica/colori della scheda bottiglia, riusata ovunque serva
+// lo stesso riferimento visivo (risultato scansione, nota carnet).
+function buildFinestraHTML(finestra_da, finestra_a) {
+  if (!finestra_da && !finestra_a) return '';
+  const now  = new Date().getFullYear();
+  const from = finestra_da || now;
+  const to   = finestra_a  || (now + 10);
+  const trackFrom = from - 2;
+  const trackTo   = to   + 2;
+  const trackSpan = trackTo - trackFrom;
+  const toPercent = v => Math.max(0, Math.min(100, ((v - trackFrom) / trackSpan) * 100));
+
+  const fromPct = toPercent(from), toPct = toPercent(to), nowPct = toPercent(now);
+  const RED = '#a8564f', GREEN = '#7c9473';
+  const blend = 6;
+  const stops = [
+    RED + ' 0%', RED + ' ' + Math.max(0, fromPct - blend) + '%',
+    GREEN + ' ' + fromPct + '%', GREEN + ' ' + toPct + '%',
+    RED + ' ' + Math.min(100, toPct + blend) + '%', RED + ' 100%',
+  ];
+  const gradient = 'linear-gradient(90deg,' + stops.join(',') + ')';
+
+  const REDBG = '#f5e6e4', REDTXT = '#8a453e', GREENBG = '#eef1e8', GREENTXT = '#5c7a4f';
+  let stato = '', pillBg = '', pillColor = '';
+  if (now < from) {
+    stato = 'Da aprire nel ' + from;
+    pillBg = REDBG; pillColor = REDTXT;
+  } else if (now <= to) {
+    if (now === from)       { stato = 'Appena pronta';  pillBg = GREENBG; pillColor = GREENTXT; }
+    else if (now >= to - 1) { stato = 'In declino';      pillBg = GREENBG; pillColor = GREENTXT; }
+    else                     { stato = '● Ottimale ora'; pillBg = GREENBG; pillColor = GREENTXT; }
+  } else {
+    stato = 'Oltre la finestra';
+    pillBg = REDBG; pillColor = REDTXT;
+  }
+
+  return '<div class="finestra-wrap">'
+    + '<div class="finestra-header">'
+      + '<div class="finestra-title"><i class="ti ti-calendar-time"></i>Finestra di degustazione</div>'
+      + '<span class="finestra-status-pill" style="background:' + pillBg + ';color:' + pillColor + ';">' + stato + '</span>'
+    + '</div>'
+    + '<div class="finestra-track-wrap"><div class="finestra-track" style="background:' + gradient + ';">'
+      + '<div class="finestra-now-marker" style="left:' + nowPct + '%;"></div>'
+    + '</div></div>'
+    + '<div class="finestra-labels"><span>' + from + '</span><span class="finestra-labels-now">Oggi</span><span>' + to + '</span></div>'
+    + '<div class="finestra-legend">'
+      + '<span class="finestra-legend-item"><span class="finestra-legend-dot" style="background:' + REDTXT + ';"></span>Non ancora ideale</span>'
+      + '<span class="finestra-legend-item"><span class="finestra-legend-dot" style="background:' + GREENTXT + ';"></span>Nel momento giusto</span>'
+    + '</div>'
+  + '</div>';
+}
+
+// Scheda tecnica (card statistiche + nastro uvaggio + righe con icona) come
+// stringa HTML autonoma — stessa logica/stile della scheda bottiglia, riusata
+// nei contesti che costruiscono la pagina via innerHTML in un colpo solo.
+function buildSchedaTecnicaHTML(f) {
+  const uvaggiParts = [
+    { l:'Pinot Noir', v: f.pctPinotNoir },
+    { l:'Chardonnay', v: f.pctChardonnay },
+    { l:'Meunier',    v: f.pctMeunier },
+  ].filter(u => u.v);
+  const uvaggioPrincipale = uvaggiParts.length
+    ? uvaggiParts.reduce((max, u) => u.v > max.v ? u : max, uvaggiParts[0])
+    : null;
+
+  const statCards = [
+    f.dosaggioGl != null ? { icon:'ti-droplet', value: f.dosaggioGl + ' g/l', label: f.dosaggioTipo || 'Dosaggio' } : (f.dosaggioTipo ? { icon:'ti-droplet', value: f.dosaggioTipo, label:'Dosaggio' } : null),
+    f.maturazioneMesi ? { icon:'ti-clock-hour-4', value: f.maturazioneMesi, label:'Mesi sui lieviti' } : null,
+    uvaggioPrincipale ? { icon:'ti-glass-full', value: uvaggioPrincipale.v + '%', label: uvaggioPrincipale.l } : null,
+  ].filter(Boolean);
+
+  const statCardsHtml = statCards.length
+    ? '<div class="stat-cards-row">' + statCards.map(s =>
+        '<div class="stat-card">'
+          + '<i class="ti ' + s.icon + ' stat-card-icon"></i>'
+          + '<div class="stat-card-value">' + s.value + '</div>'
+          + '<div class="stat-card-label">' + s.label + '</div>'
+        + '</div>'
+      ).join('') + '</div>'
+    : '';
+
+  const uvaggioRibbon = uvaggiParts.length > 1
+    ? '<div class="detail-row-label-wrap" style="margin-bottom:8px;"><i class="ti ti-glass-full detail-row-icon"></i><span class="detail-row-label">Uvaggio</span></div>'
+      + renderRibbon(uvaggiParts.map(u => ({ label: u.l, perc: u.v, tipo: 'uva' })), ['#7a2f3a','#b8922a','#8a6a1e'], '#9a8a72').replace('ribbon-wrap', 'ribbon-wrap ribbon-wrap-tight')
+    : '';
+
+  const rows = [
+    { icon:'ti-building-store', l:'Produttore', v: f.maison || null },
+    { icon:'ti-map-pin',        l:'Provenienza uve', v: f.provenienzaUve || null },
+    { icon:'ti-flask',          l:'Vinificazione', v: f.vinificazione || null },
+    { icon:'ti-flask-2',        l:'Malolattica', v: f.malolattica || null },
+    { icon:'ti-notes',          l:'Note assemblaggio', v: f.notaAssemblaggio || null },
+    { icon:'ti-bottle',         l:'Produzione', v: f.produzioneBottiglie ? f.produzioneBottiglie.toLocaleString('it') + ' bott.' : null },
+  ].filter(r => r.v);
+  const rowsHtml = rows.map(r =>
+    '<div class="detail-row"><span class="detail-row-label-wrap"><i class="ti ' + r.icon + ' detail-row-icon"></i><span class="detail-row-label">' + r.l + '</span></span><span class="detail-row-value">' + r.v + '</span></div>'
+  ).join('');
+
+  return statCardsHtml + uvaggioRibbon + rowsHtml;
+}
+
 function bottDetailPhotoClick() {
   if (window._bottDetailPhotoUrl) openLightbox([window._bottDetailPhotoUrl], 0);
   else openBottlePhotoInfoModal();
@@ -5696,26 +5770,7 @@ function _renderScanResult(result, photoDataUrl) {
   })() : '';
 
   // Finestra di degustazione
-  let finestraHtml = '';
-  if (finestra_da || finestra_a) {
-    const now = new Date().getFullYear();
-    const from = finestra_da || now;
-    const to   = finestra_a  || (now + 8);
-    const span = to - from;
-    const elapsed = Math.min(Math.max(now - from, 0), span);
-    const pct = span > 0 ? Math.round((elapsed / span) * 100) : 0;
-    finestraHtml =
-      '<div class="form-section" style="margin:0 14px 14px;">'
-      + '<div class="form-section-title"><i class="ti ti-calendar-time"></i> Finestra di degustazione</div>'
-      + '<div style="display:flex;align-items:center;gap:10px;margin-top:10px;">'
-        + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">' + from + '</span>'
-        + '<div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden;">'
-          + '<div style="height:100%;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:4px;width:' + pct + '%;"></div>'
-        + '</div>'
-        + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-4);">' + to + '</span>'
-      + '</div>'
-      + '</div>';
-  }
+  const finestraHtml = buildFinestraHTML(finestra_da, finestra_a);
 
   // ── Card azioni: due card se in catalogo, una sola se non in catalogo ──
   const actionCards = result.is_in_catalog && result.matched_bottle_id
@@ -5771,61 +5826,29 @@ function _renderScanResult(result, photoDataUrl) {
         + '<div class="form-section-title"><i class="ti ti-chef-hat"></i> Abbinamento</div>'
         + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:8px;">' + abbinamento + '</div>'
       + '</div>' : '')
-    // ── Assemblaggio ──
+    // ── Assemblaggio (vini di base) ──
     + (function(){
-        if (!assemblaggio || !Array.isArray(assemblaggio) || !assemblaggio.length) return '';
-        const anni    = assemblaggio.filter(x => x.anno).sort((a,b) => b.anno - a.anno);
-        const riserve = assemblaggio.filter(x => x.tipo === 'riserva');
-        if (!anni.length && !riserve.length) return '';
-        const bars = assemblaggio.map(x => {
-          const isRis  = x.tipo === 'riserva';
-          const label  = isRis ? (x.label || 'Vins de réserve') : String(x.anno);
-          const bg     = isRis ? 'var(--border-2)' : 'var(--gold)';
-          const pct    = x.perc || 0;
-          return '<div style="margin-bottom:6px;">'
-            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">'
-              + '<span style="font-family:var(--sans);font-size:12px;color:var(--ink-3);">' + label + '</span>'
-              + '<span style="font-family:var(--sans);font-size:12px;font-weight:600;color:var(--gold);">' + pct + '%</span>'
-            + '</div>'
-            + '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">'
-              + '<div style="height:100%;width:' + pct + '%;background:' + bg + ';border-radius:3px;transition:width .4s;"></div>'
-            + '</div>'
-          + '</div>';
-        }).join('');
+        const ribbon = buildAssemblaggioHTML(assemblaggio);
+        if (!ribbon) return '';
         return '<div class="form-section" style="margin:14px 14px 0;">'
-          + '<div class="form-section-title"><i class="ti ti-chart-bar"></i> Assemblaggio</div>'
-          + '<div style="margin-top:10px;">' + bars + '</div>'
+          + '<div class="form-section-title"><i class="ti ti-chart-bar"></i> Vini di base</div>'
+          + '<div style="margin-top:10px;">' + ribbon + '</div>'
         + '</div>';
       })()
     // ── Scheda tecnica ──
     + (function(){
-        const uvaggi = [
-          pctChardonnay ? pctChardonnay + '% Chardonnay' : null,
-          pctPinotNoir  ? pctPinotNoir  + '% Pinot Noir'  : null,
-          pctMeunier    ? pctMeunier    + '% Meunier'      : null,
-        ].filter(Boolean).join(' · ');
-        const dosageLabel = dosaggioGl != null
-          ? (dosaggioGl + ' g/l' + (dosage ? ' — ' + dosage : ''))
-          : (dosage || null);
-        const schedaRows = [
-          { l:'Produttore',             v: maison !== '—' ? maison : null },
-          { l:'Uvaggi',                 v: uvaggi || null },
-          { l:'Dosaggio',               v: dosageLabel },
-          { l:'Provenienza uve',        v: provenienzaUve },
-          { l:'Vinificazione',          v: vinificazione },
-          { l:'Malolattica',            v: malolattica },
-          { l:'Maturazione sui lieviti',v: maturazioneMesi ? maturazioneMesi + ' mesi' : null },
-          { l:'Produzione',             v: prodBottiglie ? prodBottiglie.toLocaleString('it') + ' bott.' : null },
-        ].filter(r => r.v);
-        if (!schedaRows.length) return '';
+        const inner = buildSchedaTecnicaHTML({
+          maison: maison !== '—' ? maison : null,
+          pctPinotNoir, pctChardonnay, pctMeunier,
+          dosaggioGl, dosaggioTipo: dosage,
+          maturazioneMesi, provenienzaUve, vinificazione, malolattica,
+          produzioneBottiglie: prodBottiglie,
+        });
+        if (!inner) return '';
         return '<div class="form-section" style="margin:14px 14px 0;">'
           + '<div class="form-section-title"><i class="ti ti-list-details"></i> Scheda tecnica</div>'
-          + '<div style="margin-top:8px;">'
-          + schedaRows.map(r =>
-              '<div class="detail-row"><span class="detail-row-label">' + r.l + '</span>'
-              + '<span class="detail-row-value">' + r.v + '</span></div>'
-            ).join('')
-          + '</div></div>';
+          + '<div style="margin-top:10px;">' + inner + '</div>'
+        + '</div>';
       })()
     // ── Finestra ──
     + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
