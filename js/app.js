@@ -4482,11 +4482,10 @@ async function loadDetailBottles(maisonId) {
     if (subtitleEl) subtitleEl.textContent = bottles.length + (bottles.length === 1 ? ' cuvée nel catalogo' : ' cuvée nel catalogo');
     const premium = isPremium();
     const lockedCount = premium ? 0 : Math.max(0, bottles.length - 2);
-    const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
     listEl.innerHTML = bottles.map((b, i) => {
       const isLocked = !premium && i >= 2;
-      const tipo = tipoLabel[b.tipo] || b.tipo || '';
-      const meta = [tipo, b.dosaggio_tipo, (b.is_millesimato && b.annata ? b.annata : null)].filter(Boolean).join(' · ');
+      const meta = (b.is_millesimato ? '<span class="type-pill type-pill-mill">Millesimato</span>' : '<span class="type-pill type-pill-sa">Sans Année</span>') +
+        (b.dosaggio_tipo ? dosagePill(b.dosaggio_tipo) : '');
       const prezzo = b.prezzo_min ? 'da ' + b.prezzo_min + '€' : (b.fascia_prezzo || '');
       const foto = b.foto_url
         ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">'
@@ -4495,7 +4494,7 @@ async function loadDetailBottles(maisonId) {
         '<div class="bottle-ph">' + foto + '</div>' +
         '<div class="bottle-info">' +
           '<div class="bottle-name">' + b.nome + '</div>' +
-          '<div class="bottle-type">' + meta + '</div>' +
+          '<div class="bottle-type" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' + meta + '</div>' +
           (isLocked ? '<div class="lock-pill"><i class="ti ti-lock"></i><span>Premium</span></div>' :
             (prezzo ? '<div class="bottle-price" style="font-family:var(--sans);font-size:13px;color:var(--gold);margin-top:2px;">' + prezzo + '</div>' : '')) +
         '</div>' +
@@ -4736,7 +4735,6 @@ function _bottLoadMoreHTML() {
 // completo (cambio filtro/ricerca) e caricamento della pagina successiva col pulsante "Mostra altri".
 function _bottCardHTML(b, tipoLabel) {
   const isLocked = !!b._locked && !isPremium();
-  const tipo = tipoLabel[b.tipo] || b.tipo || '';
   return '<div class="bott-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
     '<div class="bott-card-img" style="min-height:88px;">' +
       (b.foto_url ? '<img src="' + b.foto_url + '" loading="lazy"/>' : '<svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>') +
@@ -4746,7 +4744,7 @@ function _bottCardHTML(b, tipoLabel) {
       '<div class="bott-card-maison">' + (b.maison?.nome || '') + '</div>' +
       '<div class="bott-card-nome">' + b.nome + '</div>' +
       '<div class="bott-card-tipo" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-        (tipo ? '<span>' + tipo + '</span>' : '') +
+        (b.is_millesimato ? '<span class="type-pill type-pill-mill">Millesimato</span>' : '<span class="type-pill type-pill-sa">Sans Année</span>') +
         dosagePill(b.dosaggio_tipo) +
       '</div>' +
       '<div class="bott-card-footer">' +
