@@ -437,7 +437,7 @@ html,body{
 .cru-cmp-gc{background:#F5EDD8;color:#8A6A1E;}
 .cru-cmp-pc{background:#EAEEF6;color:#3E5A7E;}
 .cru-cmp-ac{background:#EFEFEF;color:#666;}
-.cru-ac-zone-label{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--ink-4);letter-spacing:.3px;margin:2px 0 6px;}
+.cru-ac-zone-label{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--ink-4);letter-spacing:.3px;margin:0 0 8px;}
 /* ── Card informative con titolo in evidenza (Cru, testi lunghi in genere) ── */
 .info-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin:0 14px 12px;}
 .info-card-title{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--ink);margin-bottom:9px;letter-spacing:.2px;}
@@ -667,7 +667,8 @@ html,body{
 .zone-section-title{font-family:var(--sans);font-size:15px;letter-spacing:1.5px;color:var(--ink-4);text-transform:uppercase;margin-bottom:11px;}
 .zone-section-text{font-family:var(--sans);font-size:var(--fs-sm);color:var(--ink-2);line-height:1.7;}
 .cru-group{margin-bottom:16px;}
-.cru-group-title{font-family:var(--sans);font-size:15px;letter-spacing:.5px;color:var(--gold);font-weight:500;margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+.cru-group-title{font-family:var(--sans);font-size:15px;letter-spacing:.5px;color:var(--gold);font-weight:500;margin:26px 0 12px;display:flex;align-items:center;gap:6px;}
+.cru-group-title:first-child{margin-top:4px;}
 .cru-group-title i{font-size:16px;}
 .cru-grid{display:flex;flex-wrap:wrap;gap:7px;}
 .cru-pill{font-family:var(--sans);font-size:15px;border-radius:20px;padding:6px 13px;cursor:pointer;}
