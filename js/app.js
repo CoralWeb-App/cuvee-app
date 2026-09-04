@@ -50,6 +50,7 @@ function go(id){
   if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); checkWelcomeNotification(); }
   if(id==='v-notifications') renderNotificationsUI();
   if(id==='v-guida-glossario') loadGlossario();
+  if(id==='v-guida') updateGuidaHubPremiumUI();
   if(id==='v-paywall'){ loadPaywallOfferings(); }
   if(id==='v-scan-history') {
     const backLabels = { 'v-home':'Home', 'v-profile':'Il mio profilo' };
@@ -120,6 +121,14 @@ function goCru(){
 }
 function goClos(){
   go(isPremium() ? 'v-guida-clos' : 'v-paywall');
+}
+// Chi ha già Premium non deve vedere badge/evidenza sui tile della guida
+// che gli appartengono già — quella grafica serve solo a chi deve ancora abbonarsi.
+function updateGuidaHubPremiumUI(){
+  const premium = isPremium();
+  document.querySelectorAll('#v-guida .guida-hub-tile-premium').forEach(el => {
+    el.classList.toggle('is-premium', premium);
+  });
 }
 // Apre la scheda di una bottiglia da un link esterno alla normale navigazione
 // (es. dalla guida Clos): se non è ancora in cache la recupera al volo, così

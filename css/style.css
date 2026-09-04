@@ -414,6 +414,8 @@ html,body{
 .guida-hub-tile-premium{box-shadow:0 0 0 1.5px rgba(184,146,42,.4),0 3px 12px rgba(184,146,42,.15);}
 .guida-hub-premium-badge{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:4px;background:var(--gold-pale);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:3px 9px 3px 8px;font-family:var(--sans);font-size:11px;font-weight:700;}
 .guida-hub-premium-badge i{font-size:12px;color:var(--gold);}
+.guida-hub-tile-premium.is-premium{box-shadow:none;}
+.guida-hub-tile-premium.is-premium .guida-hub-premium-badge{display:none;}
 .guida-hub-tile-cru{background:linear-gradient(135deg,#F2E1E3 0%,#DEBAC0 100%);border-color:#C08A92;}
 .guida-hub-tile-cru .guida-hub-icon{background:rgba(255,255,255,.6);border-color:rgba(122,36,48,.35);box-shadow:0 2px 8px rgba(122,36,48,.12);}
 .guida-hub-tile-cru .guida-hub-icon i{color:#7A2430;}
