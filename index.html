@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=104"/>
+<link rel="stylesheet" href="css/style.css?v=105"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -1704,31 +1704,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
       <div id="bott-detail-assembl"></div>
     </div>
-    <!-- FINESTRA DEGUSTAZIONE -->
-    <div id="bott-detail-finestra-section" style="display:none;padding:0 14px;margin-bottom:20px;margin-top:16px;">
-      <div class="finestra-wrap">
-        <div class="finestra-header">
-          <div class="finestra-title"><i class="ti ti-calendar-time"></i>Finestra di degustazione</div>
-          <span class="finestra-status-pill" id="bott-finestra-stato">—</span>
-        </div>
-        <!-- Tracciato a gradiente: rosso smorzato (fuori finestra, in un senso o nell'altro) → verde smorzato (finestra ottimale) → rosso smorzato -->
-        <div class="finestra-track-wrap">
-          <div class="finestra-track" id="bott-finestra-track">
-            <div class="finestra-now-marker" id="bott-finestra-now"></div>
-          </div>
-        </div>
-        <div class="finestra-labels">
-          <span id="bott-finestra-da">—</span>
-          <span class="finestra-labels-now">Oggi</span>
-          <span id="bott-finestra-a">—</span>
-        </div>
-        <!-- Legenda: toglie ogni dubbio su cosa significhi il colore -->
-        <div class="finestra-legend">
-          <span class="finestra-legend-item"><span class="finestra-legend-dot" style="background:#8a453e;"></span>Non ancora ideale</span>
-          <span class="finestra-legend-item"><span class="finestra-legend-dot" style="background:#5c7a4f;"></span>Nel momento giusto</span>
-        </div>
-      </div>
-    </div>
+    <!-- FINESTRA DEGUSTAZIONE: contenuto generato via JS (buildFinestraHTML per i millesimati, buildFinestraSAHTML per le Sans Année) -->
+    <div id="bott-detail-finestra-section" style="display:none;padding:0 14px;margin-bottom:20px;margin-top:16px;"></div>
     <!-- NOTE DEGUSTAZIONE -->
     <div class="detail-sec-title" style="margin-top:4px;">Note di degustazione</div>
     <div class="detail-desc" id="bott-detail-note" style="margin-bottom:20px;">—</div>
@@ -2919,6 +2896,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=201"></script>
+<script src="js/app.js?v=202"></script>
 </body>
 </html>

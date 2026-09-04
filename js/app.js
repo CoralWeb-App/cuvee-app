@@ -2322,6 +2322,9 @@ function openNoteDetail(note) {
     const abbinamento    = sr.abbinamento          || b2.abbinamento          || '';
     const finestra_da    = sr.finestra_da          || b2.finestra_da          || null;
     const finestra_a     = sr.finestra_a           || b2.finestra_a           || null;
+    const isMillesimato  = sr.is_millesimato       ?? b2.is_millesimato       ?? false;
+    const finestraConsMin= sr.finestra_consumo_min_anni ?? b2.finestra_consumo_min_anni ?? null;
+    const finestraConsMax= sr.finestra_consumo_max_anni ?? b2.finestra_consumo_max_anni ?? null;
     const pctPN          = sr.pct_pinot_noir       ?? b2.pct_pinot_noir       ?? null;
     const pctCH          = sr.pct_chardonnay       ?? b2.pct_chardonnay       ?? null;
     const pctPM          = sr.pct_meunier          ?? b2.pct_meunier          ?? null;
@@ -2386,7 +2389,9 @@ function openNoteDetail(note) {
     })();
 
     // Finestra di degustazione
-    const finestraHtml = buildFinestraHTML(finestra_da, finestra_a);
+    const finestraHtml = isMillesimato
+      ? buildFinestraHTML(finestra_da, finestra_a)
+      : buildFinestraSAHTML(finestraConsMin, finestraConsMax);
     if (finestraHtml) innerHtml += '<div style="margin-bottom:16px;">' + finestraHtml + '</div>';
 
     // Prezzo
@@ -4960,10 +4965,42 @@ function buildAssemblaggioHTML(assemblaggio) {
   return renderRibbon(items, colors, RISERVA_COLOR);
 }
 
+// Blocco "finestra di degustazione" per le Sans Année: qui non esiste un'annata
+// fissa da collocare su un asse a calendario (la SA si rinnova ogni anno), quindi
+// mostriamo una durata consigliata dall'acquisto invece di un intervallo assoluto.
+function buildFinestraSAHTML(minAnni, maxAnni) {
+  if (minAnni == null && maxAnni == null) return '';
+  let testo;
+  if (minAnni != null && maxAnni != null) {
+    testo = minAnni === maxAnni
+      ? `Da bere entro ${maxAnni} ${maxAnni === 1 ? 'anno' : 'anni'} dall'acquisto`
+      : `Da bere entro ${minAnni}-${maxAnni} anni dall'acquisto`;
+  } else if (maxAnni != null) {
+    testo = `Da bere entro ${maxAnni} ${maxAnni === 1 ? 'anno' : 'anni'} dall'acquisto`;
+  } else {
+    testo = `Da bere almeno dopo ${minAnni} ${minAnni === 1 ? 'anno' : 'anni'} dall'acquisto`;
+  }
+  return '<div class="finestra-wrap finestra-wrap-sa">'
+    + '<div class="finestra-header">'
+      + '<div class="finestra-title"><i class="ti ti-calendar-time"></i>Finestra di degustazione</div>'
+    + '</div>'
+    + '<div class="finestra-sa-badge">' + testo + '</div>'
+    + '<div class="finestra-sa-note">Sans Année: la bottiglia si rinnova ogni anno, quindi la finestra vale dal momento dell\'acquisto e non da un\'annata fissa.</div>'
+  + '</div>';
+}
+
+// Dispatcher: sceglie la versione a calendario (millesimati) o a durata (Sans
+// Année) in base al tipo di bottiglia. Usato ovunque serva il blocco finestra.
+function buildFinestraSectionHTML(b) {
+  if (b.is_millesimato) return buildFinestraHTML(b.finestra_da, b.finestra_a);
+  return buildFinestraSAHTML(b.finestra_consumo_min_anni, b.finestra_consumo_max_anni);
+}
+
 // Blocco completo "finestra di degustazione" (titolo, pillola stato, tracciato
 // rosso→verde→rosso, marker "oggi", etichette anni, legenda) come stringa HTML
 // autonoma — stessa logica/colori della scheda bottiglia, riusata ovunque serva
-// lo stesso riferimento visivo (risultato scansione, nota carnet).
+// lo stesso riferimento visivo (risultato scansione, nota carnet). Solo per
+// millesimati: le Sans Année usano buildFinestraSAHTML tramite il dispatcher.
 function buildFinestraHTML(finestra_da, finestra_a) {
   if (!finestra_da && !finestra_a) return '';
   const now  = new Date().getFullYear();
@@ -5168,61 +5205,16 @@ async function openBottigliaDetail(bottId) {
     scoreWrap.style.display = 'flex';
   } else if (scoreWrap) { scoreWrap.style.display = 'none'; }
 
-  // Finestra degustazione — tracciato a gradiente rosso → verde → rosso,
-  // seguendo la convenzione universale (verde = va bene, rosso = non ancora
-  // o non più): le due fasi rosse ai bordi seguono i confini reali
-  // [finestra_da, finestra_a] di questa bottiglia, non una scala fissa.
+  // Finestra degustazione — a calendario (rosso→verde→rosso) per i millesimati,
+  // a durata dall'acquisto per le Sans Année (che si rinnovano ogni anno e non
+  // hanno un'annata fissa da collocare su un asse a calendario).
   const finSection = document.getElementById('bott-detail-finestra-section');
   if (finSection) {
-    if (b.finestra_da || b.finestra_a) {
-      finSection.style.display = 'block';
-      const now  = new Date().getFullYear();
-      const from = b.finestra_da || now;
-      const to   = b.finestra_a  || (now + 10);
-      // Span totale track: 2 anni prima di from → 2 anni dopo to
-      const trackFrom = from - 2;
-      const trackTo   = to   + 2;
-      const trackSpan = trackTo - trackFrom;
-      const toPercent = v => Math.max(0, Math.min(100, ((v - trackFrom) / trackSpan) * 100));
-
-      const trackEl = document.getElementById('bott-finestra-track');
-      const nowEl   = document.getElementById('bott-finestra-now');
-      const daEl    = document.getElementById('bott-finestra-da');
-      const aEl     = document.getElementById('bott-finestra-a');
-      const statoEl = document.getElementById('bott-finestra-stato');
-
-      const fromPct = toPercent(from), toPct = toPercent(to);
-      // Sfumatura di ~6 punti percentuali ai due confini, invece di un taglio netto.
-      // Toni smorzati (non rosso/verde acceso) per restare eleganti nella palette dell'app.
-      const RED = '#a8564f', GREEN = '#7c9473';
-      const blend = 6;
-      const stops = [
-        RED + ' 0%', RED + ' ' + Math.max(0, fromPct - blend) + '%',
-        GREEN + ' ' + fromPct + '%', GREEN + ' ' + toPct + '%',
-        RED + ' ' + Math.min(100, toPct + blend) + '%', RED + ' 100%',
-      ];
-      if (trackEl) trackEl.style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
-      if (nowEl)  nowEl.style.left = toPercent(now) + '%';
-      if (daEl)   daEl.textContent  = from;
-      if (aEl)    aEl.textContent   = to;
-
-      // Stato corrente: testo + pillola colorata coerente con la fase sul tracciato
-      // (verde = dentro la finestra e quindi va bene, anche se in declino; rosso = fuori)
-      const REDBG = '#f5e6e4', REDTXT = '#8a453e', GREENBG = '#eef1e8', GREENTXT = '#5c7a4f';
-      let stato = '', pillBg = '', pillColor = '';
-      if (now < from) {
-        stato = 'Da aprire nel ' + from;
-        pillBg = REDBG; pillColor = REDTXT;
-      } else if (now <= to) {
-        if (now === from)      { stato = 'Appena pronta';   pillBg = GREENBG; pillColor = GREENTXT; }
-        else if (now >= to - 1){ stato = 'In declino';       pillBg = GREENBG; pillColor = GREENTXT; }
-        else                    { stato = '● Ottimale ora';  pillBg = GREENBG; pillColor = GREENTXT; }
-      } else {
-        stato = 'Oltre la finestra';
-        pillBg = REDBG; pillColor = REDTXT;
-      }
-      if (statoEl) { statoEl.textContent = stato; statoEl.style.background = pillBg; statoEl.style.color = pillColor; }
-    } else { finSection.style.display = 'none'; }
+    const finHtml = b.is_millesimato
+      ? buildFinestraHTML(b.finestra_da, b.finestra_a)
+      : buildFinestraSAHTML(b.finestra_consumo_min_anni, b.finestra_consumo_max_anni);
+    finSection.style.display = finHtml ? 'block' : 'none';
+    finSection.innerHTML = finHtml;
   }
 
   // Note degustazione
@@ -5714,6 +5706,9 @@ function _renderScanResult(result, photoDataUrl) {
   const abbinamento = result.abbinamento || b.abbinamento || '';
   const finestra_da = result.finestra_da || b.finestra_da || null;
   const finestra_a  = result.finestra_a  || b.finestra_a  || null;
+  const isMillesimato = result.is_millesimato ?? b.is_millesimato ?? false;
+  const finestraConsMin = result.finestra_consumo_min_anni ?? b.finestra_consumo_min_anni ?? null;
+  const finestraConsMax = result.finestra_consumo_max_anni ?? b.finestra_consumo_max_anni ?? null;
   // Scheda tecnica fields
   const pctChardonnay  = result.pct_chardonnay  ?? b.pct_chardonnay  ?? null;
   const pctPinotNoir   = result.pct_pinot_noir   ?? b.pct_pinot_noir   ?? null;
@@ -5770,7 +5765,9 @@ function _renderScanResult(result, photoDataUrl) {
   })() : '';
 
   // Finestra di degustazione
-  const finestraHtml = buildFinestraHTML(finestra_da, finestra_a);
+  const finestraHtml = isMillesimato
+    ? buildFinestraHTML(finestra_da, finestra_a)
+    : buildFinestraSAHTML(finestraConsMin, finestraConsMax);
 
   // ── Card azioni: due card se in catalogo, una sola se non in catalogo ──
   const actionCards = result.is_in_catalog && result.matched_bottle_id
