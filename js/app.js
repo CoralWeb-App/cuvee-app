@@ -112,6 +112,9 @@ function goBack(){
 function goGuida(tab){
   go('v-guida-'+tab);
 }
+function goConservazione(){
+  go(isPremium() ? 'v-guida-conservazione' : 'v-paywall');
+}
 // Icona a grappolo (non presente nel webfont ti-*, quindi SVG inline) — usata
 // per la slide "Maison & Vigneron" al posto della generica ti-building.
 const ONB_GRAPE_SVG = '<svg width="56" height="70" viewBox="0 0 44.309 55.104" fill="{{color}}" style="opacity:.85;">'

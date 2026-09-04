@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=111"/>
+<link rel="stylesheet" href="css/style.css?v=112"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -456,8 +456,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="guida-hub-title">Glossaire</div>
           <div class="guida-hub-sub">I termini e le definizioni chiave dello Champagne</div>
         </div>
-        <div class="guida-hub-tile guida-hub-tile-cave" onclick="go('v-guida-conservazione')">
-          <i class="ti ti-chevron-right guida-hub-arrow"></i>
+        <div class="guida-hub-tile guida-hub-tile-cave guida-hub-tile-premium" onclick="goConservazione()">
+          <span class="guida-hub-premium-badge"><i class="ti ti-crown"></i>Premium</span>
           <div class="guida-hub-icon"><i class="ti ti-temperature"></i></div>
           <div class="guida-hub-title">Conservation</div>
           <div class="guida-hub-sub">Temperatura, umidità e posizione: come conservare al meglio</div>
@@ -3260,6 +3260,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=207"></script>
+<script src="js/app.js?v=208"></script>
 </body>
 </html>
