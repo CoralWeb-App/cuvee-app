@@ -33,7 +33,7 @@ function go(id){
     'v-bottiglie','v-bottiglia-detail',
     'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne',
-    'v-guida-metodo','v-guida-glossario','v-guida-zone','v-guida-uve','v-guida-dosaggi','v-guida-service','v-guida-formati',
+    'v-guida-metodo','v-guida-glossario','v-guida-conservazione','v-guida-zone','v-guida-uve','v-guida-dosaggi','v-guida-service','v-guida-formati',
     'v-notifications'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
