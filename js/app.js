@@ -5136,7 +5136,6 @@ async function openBottigliaDetail(bottId) {
   if (!b) return;
   if (await isBottigliaLocked(b)) { go('v-paywall'); return; }
   currentBottiglia = b;
-  const tipoLabel = {'nv':'Sans Année','millesimato':'Millésimé','prestige':'Prestige Cuvée','blanc_de_blancs':'Blanc de Blancs','blanc_de_noirs':'Blanc de Noirs','rose':'Rosé','nature':'Brut Nature'};
 
   // Foto verticale cliccabile — riempie il contenitore senza barre nere
   const hero = document.getElementById('bott-detail-hero');
@@ -5176,16 +5175,23 @@ async function openBottigliaDetail(bottId) {
   if (maisonNomeEl) maisonNomeEl.textContent = b.maison?.nome || '';
   const nomeEl = document.getElementById('bott-detail-nome');
   if (nomeEl) nomeEl.textContent = b.nome;
+  // Riga tipo: solo Millesimato/Sans Année + dosaggio, come due badge colorati
   const tipoEl = document.getElementById('bott-detail-tipo');
-  if (tipoEl) tipoEl.textContent = [tipoLabel[b.tipo]||b.tipo, b.dosaggio_tipo].filter(Boolean).join(' · ');
+  if (tipoEl) {
+    const millPill = b.is_millesimato
+      ? '<span class="type-pill type-pill-mill">Millesimato</span>'
+      : '<span class="type-pill type-pill-sa">Sans Année</span>';
+    tipoEl.innerHTML = millPill + (b.dosaggio_tipo ? dosagePill(b.dosaggio_tipo) : '');
+  }
 
-  // Badges
+  // Prezzo: un'unica riga pulita, scala € + range
   const badgesEl = document.getElementById('bott-detail-badges');
   if (badgesEl) {
     let bdg = '';
-    if (b.dosaggio_tipo) bdg += dosagePill(b.dosaggio_tipo) + ' ';
-    if (b.fascia_prezzo || b.prezzo_min) bdg += priceScale(b.fascia_prezzo, b.prezzo_min);
-    if (b.prezzo_min && b.prezzo_max) bdg += '<span style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-left:6px;">da ' + b.prezzo_min + '€</span>';
+    if (b.prezzo_min) {
+      bdg += '<span class="bott-price-value">da ' + b.prezzo_min + (b.prezzo_max ? '–' + b.prezzo_max : '') + ' €</span>';
+    }
+    if (b.fascia_prezzo || b.prezzo_min) bdg += '<span class="bott-price-scale">' + priceScale(b.fascia_prezzo, b.prezzo_min) + '</span>';
     badgesEl.innerHTML = bdg;
   }
 

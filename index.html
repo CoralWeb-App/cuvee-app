@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=105"/>
+<link rel="stylesheet" href="css/style.css?v=106"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -1677,14 +1677,14 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <!-- Info a destra -->
       <div style="flex:1;min-width:0;padding-top:2px;">
         <div id="bott-detail-maison-nome"
-             style="font-family:var(--sans);font-size:10px;color:var(--gold);font-weight:600;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+             style="font-family:var(--sans);font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
         <div class="detail-name" id="bott-detail-nome">—</div>
-        <div class="detail-meta" id="bott-detail-tipo" style="margin-top:4px;margin-bottom:8px;">—</div>
-        <div class="badges-row" id="bott-detail-badges"></div>
+        <div class="bott-type-row" id="bott-detail-tipo"></div>
+        <div class="bott-price-row" id="bott-detail-badges"></div>
         <!-- Score inline: cerchio + label a destra -->
-        <div id="bott-detail-score-wrap" style="display:none;flex-direction:row;align-items:center;gap:9px;margin-top:10px;">
+        <div id="bott-detail-score-wrap" style="display:none;flex-direction:row;align-items:center;gap:10px;margin-top:12px;">
           <div id="bott-detail-score-ring"></div>
-          <div id="bott-detail-score-label" style="font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-3);line-height:1.2;">—</div>
+          <div id="bott-detail-score-label" style="font-family:var(--sans);font-size:14px;font-weight:600;color:var(--ink-2);line-height:1.2;">—</div>
         </div>
       </div>
     </div>
@@ -2896,6 +2896,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=202"></script>
+<script src="js/app.js?v=203"></script>
 </body>
 </html>

@@ -926,10 +926,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 }
 .bott-card-info{display:flex;align-items:center;gap:8px;}
 /* Dosage pills */
-.dosage-pill{display:inline-block;font-family:var(--sans);font-size:12px;font-weight:500;border-radius:20px;padding:3px 10px;letter-spacing:.3px;margin-bottom:6px;}
+.dosage-pill{display:inline-block;font-family:var(--sans);font-size:12.5px;font-weight:600;border-radius:20px;padding:4px 11px;letter-spacing:.3px;}
 /* Price scale */
 .price-scale{display:flex;gap:2px;align-items:center;}
 .price-scale span{font-family:var(--sans);font-size:13px;line-height:1;}
+
+/* ── Riga tipo bottiglia: Millesimato/Sans Année + dosaggio, sotto il titolo ── */
+.bott-type-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px;}
+.type-pill{display:inline-block;font-family:var(--sans);font-size:12.5px;font-weight:600;border-radius:20px;padding:4px 11px;letter-spacing:.3px;}
+.type-pill-mill{background:#e6ece2;color:#3f5c37;}
+.type-pill-sa{background:var(--ivory-3);color:var(--ink-3);}
+
+/* ── Riga prezzo: fascia in scala € + range prezzo, versione compatta ── */
+.bott-price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;}
+.bott-price-value{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink-2);}
+.bott-price-scale{margin-left:1px;}
 
 /* Score ring — small */
 .score-ring-sm{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:3px;}
