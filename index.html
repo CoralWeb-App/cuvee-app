@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=109"/>
+<link rel="stylesheet" href="css/style.css?v=110"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -450,17 +450,17 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="scroll">
       <div class="guida-hub-grid">
-        <div class="guida-hub-tile" onclick="go('v-guida-metodo')">
-          <i class="ti ti-chevron-right guida-hub-arrow"></i>
-          <div class="guida-hub-icon"><i class="ti ti-leaf"></i></div>
-          <div class="guida-hub-title">Méthode</div>
-          <div class="guida-hub-sub">La méthode champenoise in 10 fasi, dalla vendemmia al dosaggio</div>
-        </div>
         <div class="guida-hub-tile guida-hub-tile-alt" onclick="go('v-guida-glossario')">
           <i class="ti ti-chevron-right guida-hub-arrow"></i>
           <div class="guida-hub-icon"><i class="ti ti-book-2"></i></div>
           <div class="guida-hub-title">Glossaire</div>
           <div class="guida-hub-sub">I termini e le definizioni chiave dello Champagne</div>
+        </div>
+        <div class="guida-hub-tile" onclick="go('v-guida-metodo')">
+          <i class="ti ti-chevron-right guida-hub-arrow"></i>
+          <div class="guida-hub-icon"><i class="ti ti-leaf"></i></div>
+          <div class="guida-hub-title">Méthode</div>
+          <div class="guida-hub-sub">La méthode champenoise in 10 fasi, dalla vendemmia al dosaggio</div>
         </div>
         <div class="guida-hub-tile" onclick="go('v-guida-zone')">
           <i class="ti ti-chevron-right guida-hub-arrow"></i>
@@ -482,13 +482,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
         <div class="guida-hub-tile" onclick="go('v-guida-service')">
           <i class="ti ti-chevron-right guida-hub-arrow"></i>
-          <div class="guida-hub-icon"><svg class="glass-icon" width="15" height="21" viewBox="0 0 13 19" fill="none"><path d="M4.3,2 C3.5,2.8 2.9,3.8 2.9,5 C2.9,6.4 3.5,7.6 4.3,8.6 C5.1,9.9 5.8,11 6.5,12.3 C7.2,11 7.9,9.9 8.7,8.6 C9.5,7.6 10.1,6.4 10.1,5 C10.1,3.8 9.5,2.8 8.7,2" stroke="#8a6a1e" stroke-width="1.1" stroke-linejoin="round"/><line x1="4.3" y1="2" x2="8.7" y2="2" stroke="#8a6a1e" stroke-width="1.1" stroke-opacity=".65"/><line x1="6.5" y1="12.3" x2="6.5" y2="16" stroke="#8a6a1e" stroke-width="1.1"/><line x1="3" y1="16" x2="10" y2="16" stroke="#8a6a1e" stroke-width="1.1" stroke-linecap="round"/><circle cx="5.6" cy="7" r=".6" fill="#8a6a1e" opacity=".8"/><circle cx="7.5" cy="4.5" r=".5" fill="#8a6a1e" opacity=".6"/></svg></div>
+          <div class="guida-hub-icon"><svg class="glass-icon" width="18" height="25" viewBox="0 0 13 19" fill="none"><path d="M4.3,2 C3.5,2.8 2.9,3.8 2.9,5 C2.9,6.4 3.5,7.6 4.3,8.6 C5.1,9.9 5.8,11 6.5,12.3 C7.2,11 7.9,9.9 8.7,8.6 C9.5,7.6 10.1,6.4 10.1,5 C10.1,3.8 9.5,2.8 8.7,2" stroke="#8a6a1e" stroke-width="1.1" stroke-linejoin="round"/><line x1="4.3" y1="2" x2="8.7" y2="2" stroke="#8a6a1e" stroke-width="1.1" stroke-opacity=".65"/><line x1="6.5" y1="12.3" x2="6.5" y2="16" stroke="#8a6a1e" stroke-width="1.1"/><line x1="3" y1="16" x2="10" y2="16" stroke="#8a6a1e" stroke-width="1.1" stroke-linecap="round"/><circle cx="5.6" cy="7" r=".6" fill="#8a6a1e" opacity=".8"/><circle cx="7.5" cy="4.5" r=".5" fill="#8a6a1e" opacity=".6"/></svg></div>
           <div class="guida-hub-title">Service</div>
           <div class="guida-hub-sub">Calici, temperature, conservazione e abbinamenti</div>
         </div>
         <div class="guida-hub-tile" onclick="go('v-guida-formati')">
           <i class="ti ti-chevron-right guida-hub-arrow"></i>
-          <div class="guida-hub-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
+          <div class="guida-hub-icon"><svg class="bottle-icon" viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
           <div class="guida-hub-title">Formats</div>
           <div class="guida-hub-sub">Dalla mezza bottiglia al Melchior, tutti i formati</div>
         </div>
