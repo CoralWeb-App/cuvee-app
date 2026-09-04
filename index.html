@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=117"/>
+<link rel="stylesheet" href="css/style.css?v=118"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -1057,7 +1057,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
   <div class="scroll">
 
-      <div style="padding:14px 14px 4px;">
+      <div style="padding:24px 14px 4px;">
         <div class="section-label" style="padding:0 0 10px;">17 Grand Cru, 42 Premier Cru, 261 Autres Crus</div>
         <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">Ognuno dei 320 comuni della Champagne appartiene a una categoria di qualità — un'eredità di un sistema nato oltre un secolo fa che oggi vive solo sulle etichette, ma che continua a pesare moltissimo su prezzo e prestigio.</div>
       </div>
@@ -1151,6 +1151,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="cru-grid" style="margin-bottom:10px;"><span class="cru-pill cru-ac">Bar-sur-Aube</span><span class="cru-pill cru-ac">Bayel</span><span class="cru-pill cru-ac">Colombé-le-Sec</span><span class="cru-pill cru-ac">Fontette</span><span class="cru-pill cru-ac">Meurville</span><span class="cru-pill cru-ac">Rizaucourt-Buchey</span><span class="cru-pill cru-ac">Urville</span><span class="cru-pill cru-ac">Ville-sur-Arce</span><span class="cru-pill cru-ac">Balnot-sur-Laignes</span><span class="cru-pill cru-ac">Bar-sur-Seine</span><span class="cru-pill cru-ac">Celles-sur-Ource</span><span class="cru-pill cru-ac">Cunfin</span><span class="cru-pill cru-ac">Gyé-sur-Seine</span><span class="cru-pill cru-ac">Les Riceys</span><span class="cru-pill cru-ac">Merrey-sur-Arce</span><span class="cru-pill cru-ac">Neuville-sur-Seine</span><span class="cru-pill cru-ac">Noé-les-Mallets</span><span class="cru-pill cru-ac">Polisot</span><span class="cru-pill cru-ac">Polisy</span></div>
           <div class="cru-ac-zone-label">Côte de Sézanne</div>
           <div class="cru-grid" style="margin-bottom:10px;"><span class="cru-pill cru-ac">Bethon</span><span class="cru-pill cru-ac">Broyes</span><span class="cru-pill cru-ac">Chantemerle</span><span class="cru-pill cru-ac">Mondement-Montgivroux</span><span class="cru-pill cru-ac">Sézanne</span><span class="cru-pill cru-ac">Vindey</span><span class="cru-pill cru-ac">Villenauxe-la-Grande</span></div>
+          <div class="appro-fact" style="margin:10px 0 0;">
+            <i class="ti ti-info-circle"></i>
+            <span>Questi sono i comuni Autres Crus più noti o più vicini alle zone di pregio. Gli Autres Crus sono in realtà 261 in tutto: gli altri, circa 200, sono piccoli borghi meno conosciuti sparsi in tutta la denominazione — troppo numerosi e poco documentati per elencarli tutti con certezza.</span>
+          </div>
       </div>
 
       <div style="height:14px;"></div>
@@ -1163,7 +1167,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-guida-clos">
   <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
   <div class="scroll">
-      <div style="padding:14px 14px 10px;">
+      <div style="padding:24px 14px 10px;">
         <div class="section-label" style="padding:0 0 10px;">Le vigne murate più rare della Champagne</div>
         <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:14px;">Un Clos è una parcella di vigna interamente circondata da un muro — spesso costruito secoli fa per proteggere le viti dal freddo e dagli animali, oggi diventato il simbolo massimo dell'esclusività in Champagne. Quasi sempre un <em>monopole</em>: un solo produttore, un solo appezzamento, nessun assemblaggio con altre vigne.</div>
         <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:8px;">Perché sono così ambiti? Tre motivi si sommano: <strong>rarità estrema</strong> (spesso meno di un ettaro, poche migliaia di bottiglie o anche meno), <strong>storia autentica</strong> (mura di secoli fa, in un caso vigne sopravvissute persino alla fillossera) e <strong>terroir irripetibile</strong> — un microclima isolato dal resto del vigneto circostante. Il risultato: prezzi che vanno dalle poche decine ad alcune migliaia di euro a bottiglia.</div>
