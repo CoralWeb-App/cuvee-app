@@ -435,6 +435,12 @@ html,body{
 .cru-cmp-gc{background:#F5EDD8;color:#8A6A1E;}
 .cru-cmp-pc{background:#EAEEF6;color:#3E5A7E;}
 .cru-cmp-ac{background:#EFEFEF;color:#666;}
+.cru-ac-zone-label{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--ink-4);letter-spacing:.3px;margin:2px 0 6px;}
+/* ── Card informative con titolo in evidenza (Cru, testi lunghi in genere) ── */
+.info-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin:0 14px 12px;}
+.info-card-title{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--ink);margin-bottom:9px;letter-spacing:.2px;}
+.info-card-text{font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:8px;}
+.info-card-text:last-child{margin-bottom:0;}
 /* ── CLOS: card e tabella estesa ── */
 .clos-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;}
 .clos-card-head{padding:14px 16px 10px;}
@@ -445,8 +451,9 @@ html,body{
 .clos-stat strong{color:var(--ink);font-weight:700;}
 .clos-card-text{padding:0 16px 14px;font-family:var(--sans);font-size:13.5px;color:var(--ink-2);line-height:1.62;}
 .clos-card-bottles{padding:0 16px 16px;display:flex;gap:6px;flex-wrap:wrap;}
-.clos-bottle-chip{background:var(--gold-pale);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:20px;padding:5px 11px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
-.clos-bottle-chip i{font-size:12px;}
+.clos-bottle-chip{background:var(--gold-pale);border:0.5px solid var(--gold-border);color:#8a6a1e;border-radius:22px;padding:8px 9px 8px 14px;font-family:var(--sans);font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.clos-bottle-chip i:first-child{font-size:13px;}
+.clos-bottle-chip .ti-chevron-right{font-size:15px;color:#B8922A;margin-left:1px;}
 .clos-nocatalog{background:var(--ivory-2);border-radius:20px;padding:5px 11px;font-family:var(--sans);font-size:12px;color:var(--ink-4);font-style:italic;display:inline-flex;align-items:center;gap:4px;}
 .clos-ext-table{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
 .clos-ext-row{display:flex;gap:6px;padding:9px 12px;border-bottom:1px solid var(--border);align-items:center;}
