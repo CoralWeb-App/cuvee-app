@@ -399,8 +399,13 @@ html,body{
 .guida-hub-icon{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.6);border:2px solid rgba(200,160,58,.35);box-shadow:0 2px 8px rgba(138,106,30,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .guida-hub-icon i{font-size:20px;color:#8A6A1E;}
 .guida-hub-icon svg{width:19px;height:19px;color:#8A6A1E;}
+.guida-hub-icon svg.glass-icon{width:15px;height:21px;}
 .guida-hub-title{font-family:var(--serif);font-size:16.5px;font-weight:600;color:var(--ink);letter-spacing:.2px;}
 .guida-hub-sub{font-family:var(--sans);font-size:12.5px;color:var(--ink-4);line-height:1.4;margin-top:-4px;}
+.guida-hub-tile-alt{background:linear-gradient(135deg,#EAEEF6 0%,#D4DCEA 100%);border-color:#A8B8D0;}
+.guida-hub-tile-alt .guida-hub-arrow{color:#3E5A7E;}
+.guida-hub-tile-alt .guida-hub-icon{background:rgba(255,255,255,.6);border-color:rgba(62,90,126,.35);box-shadow:0 2px 8px rgba(62,90,126,.12);}
+.guida-hub-tile-alt .guida-hub-icon i{color:#3E5A7E;}
 .step-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin:0 14px 16px;overflow:hidden;}
 .step-ph{width:100%;height:200px;object-fit:cover;display:block;}
 .step-head{padding:13px 14px 11px;display:flex;align-items:center;gap:11px;cursor:pointer;}
