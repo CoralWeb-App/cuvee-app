@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=106"/>
+<link rel="stylesheet" href="css/style.css?v=107"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -448,18 +448,52 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div style="flex:1;"><div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:500;">Guida & Glossario</div><div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:1px;">De la méthode aux classifications</div></div>
     <div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div>
   </div>
-  <div class="tabs">
-    <div class="tab on" data-tab="metodo" onclick="swTab(this,'metodo')"><i class="ti ti-leaf"></i><span>Méthode</span></div>
-    <div class="tab" data-tab="glossario" onclick="swTab(this,'glossario')"><i class="ti ti-book-2"></i><span>Glossaire</span></div>
-    <div class="tab" data-tab="zone" onclick="swTab(this,'zone')"><i class="ti ti-map-2"></i><span>Terroirs</span></div>
-    <div class="tab" data-tab="dosaggi" onclick="swTab(this,'dosaggi')"><i class="ti ti-droplet-half-2"></i><span>Dosages</span></div>
-    <div class="tab" data-tab="service" onclick="swTab(this,'service')"><i class="ti ti-glass-full"></i><span>Service</span></div>
-    <div class="tab" data-tab="formati" onclick="swTab(this,'formati')"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg><span>Formats</span></div>
-  </div>
   <div class="scroll">
+      <div class="guida-hub-grid">
+        <div class="guida-hub-tile" onclick="go('v-guida-metodo')">
+          <i class="ti ti-chevron-right guida-hub-arrow"></i>
+          <div class="guida-hub-icon"><i class="ti ti-leaf"></i></div>
+          <div class="guida-hub-title">Méthode</div>
+          <div class="guida-hub-sub">La méthode champenoise in 10 fasi, dalla vendemmia al dosaggio</div>
+        </div>
+        <div class="guida-hub-tile" onclick="go('v-guida-glossario')">
+          <i class="ti ti-chevron-right guida-hub-arrow"></i>
+          <div class="guida-hub-icon"><i class="ti ti-book-2"></i></div>
+          <div class="guida-hub-title">Glossaire</div>
+          <div class="guida-hub-sub">I termini e le definizioni chiave dello Champagne</div>
+        </div>
+        <div class="guida-hub-tile" onclick="go('v-guida-zone')">
+          <i class="ti ti-chevron-right guida-hub-arrow"></i>
+          <div class="guida-hub-icon"><i class="ti ti-map-2"></i></div>
+          <div class="guida-hub-title">Terroirs</div>
+          <div class="guida-hub-sub">Le 5 grandi zone della Champagne, cru e uvaggi</div>
+        </div>
+        <div class="guida-hub-tile" onclick="go('v-guida-dosaggi')">
+          <i class="ti ti-chevron-right guida-hub-arrow"></i>
+          <div class="guida-hub-icon"><i class="ti ti-droplet-half-2"></i></div>
+          <div class="guida-hub-title">Dosages</div>
+          <div class="guida-hub-sub">Dal Brut Nature al Doux, la scala dei dosaggi</div>
+        </div>
+        <div class="guida-hub-tile" onclick="go('v-guida-service')">
+          <i class="ti ti-chevron-right guida-hub-arrow"></i>
+          <div class="guida-hub-icon"><i class="ti ti-glass-full"></i></div>
+          <div class="guida-hub-title">Service</div>
+          <div class="guida-hub-sub">Calici, temperature, conservazione e abbinamenti</div>
+        </div>
+        <div class="guida-hub-tile" onclick="go('v-guida-formati')">
+          <i class="ti ti-chevron-right guida-hub-arrow"></i>
+          <div class="guida-hub-icon"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>
+          <div class="guida-hub-title">Formats</div>
+          <div class="guida-hub-sub">Dalla mezza bottiglia al Melchior, tutti i formati</div>
+        </div>
+      </div>
+  </div><!-- /scroll -->
+</div>
 
-    <!-- METODO -->
-    <div class="tab-content on" id="tc-metodo">
+<!-- GUIDA: MÉTHODE -->
+<div class="view" id="v-guida-metodo">
+  <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
+  <div class="scroll">
       <div class="section-label">La méthode champenoise — 10 étapes</div>
 
       <!-- Phase overview pills -->
@@ -733,10 +767,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <!-- Spacer to allow last phase header to reach sticky position -->
       <div style="height:55vh;" aria-hidden="true"></div>
 
-    </div><!-- /metodo -->
+  </div><!-- /scroll -->
+</div>
 
-    <!-- GLOSSARIO -->
-    <div class="tab-content" id="tc-glossario">
+<!-- GUIDA: GLOSSAIRE -->
+<div class="view" id="v-guida-glossario">
+  <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
+  <div class="scroll">
       <div class="section-label">Termini chiave</div>
       <div id="gloss-filters" class="gloss-filters-row" style="position:sticky;top:0;z-index:10;background:var(--ivory);padding:8px 14px;border-bottom:1px solid var(--border);">
         <div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Caricamento…</div>
@@ -746,10 +783,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div style="padding:40px;text-align:center;font-family:var(--sans);font-size:15px;color:var(--ink-4);">Caricamento…</div>
         </div>
       </div>
-    </div><!-- /glossario -->
+  </div><!-- /scroll -->
+</div>
 
-    <!-- ZONE LIST -->
-    <div class="tab-content" id="tc-zone">
+<!-- GUIDA: TERROIRS -->
+<div class="view" id="v-guida-zone">
+  <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
+  <div class="scroll">
       <div class="section-label">Le 5 grandi zone · tocca per approfondire</div>
       <div style="padding:2px 14px 18px;font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">La Champagne si divide in cinque grandi zone, ciascuna con suoli, esposizioni e uvaggi distinti. Ogni zona esprime uno stile preciso — è questa diversità, unita nell'assemblaggio, a rendere ogni maison inimitabile.</div>
       <div class="zone-list-card" onclick="go('v-zone-montagne')">
@@ -812,10 +852,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="zone-kw-row"><span class="zone-kw" style="background:#EAEEF8;border-color:#9AAAD0;color:#3A4D7A;">Morbidezza</span><span class="zone-kw" style="background:#EAEEF8;border-color:#9AAAD0;color:#3A4D7A;">Frutto bianco</span><span class="zone-kw" style="background:#EAEEF8;border-color:#9AAAD0;color:#3A4D7A;">Accessibilità</span></div>
         </div>
       </div>
-    </div><!-- /zone -->
+  </div><!-- /scroll -->
+</div>
 
-    <!-- DOSAGGI -->
-    <div class="tab-content" id="tc-dosaggi">
+<!-- GUIDA: DOSAGES -->
+<div class="view" id="v-guida-dosaggi">
+  <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
+  <div class="scroll">
       <div style="padding:14px 14px 28px;">
 
         <div class="section-label" style="padding:0 0 10px;">Scala dei dosaggi · dal più secco al più dolce</div>
@@ -1002,10 +1045,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
 
       </div>
-    </div><!-- /dosaggi -->
+  </div><!-- /scroll -->
+</div>
 
-    <!-- SERVICE / CALICI -->
-    <div class="tab-content" id="tc-service">
+<!-- GUIDA: SERVICE -->
+<div class="view" id="v-guida-service">
+  <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
+  <div class="scroll">
 
       <!-- Intro -->
       <div style="padding:14px 14px 0;">
@@ -1277,10 +1323,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
       </div>
 
-    </div><!-- /service -->
+  </div><!-- /scroll -->
+</div>
 
-    <!-- FORMATI -->
-    <div class="tab-content" id="tc-formati">
+<!-- GUIDA: FORMATS -->
+<div class="view" id="v-guida-formati">
+  <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
+  <div class="scroll">
 
       <!-- Intro -->
       <div style="padding:14px 14px 0;">
@@ -1453,11 +1502,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <span>Fino al Jéroboam (e talvolta al Mathusalem) lo Champagne nasce direttamente in quel formato: la presa di spuma avviene già nella grande bottiglia, un processo più lento e delicato da gestire. Oltre quella soglia, quasi sempre il vino viene sboccato in bottiglia standard e travasato sotto pressione di CO₂ nel grande formato — un procedimento chiamato transvasement, dichiarato in etichetta dalle maison più rigorose.</span>
       </div>
 
-    </div><!-- /formati -->
-
   </div><!-- /scroll -->
-  
-
 </div>
 
 <!-- ═══ MAISON LIST ═══ -->
@@ -2896,6 +2941,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=204"></script>
+<script src="js/app.js?v=205"></script>
 </body>
 </html>

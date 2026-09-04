@@ -33,6 +33,7 @@ function go(id){
     'v-bottiglie','v-bottiglia-detail',
     'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne',
+    'v-guida-metodo','v-guida-glossario','v-guida-zone','v-guida-dosaggi','v-guida-service','v-guida-formati',
     'v-notifications'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
@@ -48,6 +49,7 @@ function go(id){
   if(id==='v-onb'){ onbIdx=0; onbApplySlide(onbData[0]); }
   if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); checkWelcomeNotification(); }
   if(id==='v-notifications') renderNotificationsUI();
+  if(id==='v-guida-glossario') loadGlossario();
   if(id==='v-paywall'){ loadPaywallOfferings(); }
   if(id==='v-scan-history') {
     const backLabels = { 'v-home':'Home', 'v-profile':'Il mio profilo' };
@@ -108,16 +110,7 @@ function goBack(){
   }
 }
 function goGuida(tab){
-  go('v-guida');
-  setTimeout(function(){
-    let el=document.querySelector('#v-guida .tab[data-tab="'+tab+'"]');
-    if(!el){
-      document.querySelectorAll('#v-guida .tab').forEach(function(t){
-        if(t.getAttribute('onclick')&&t.getAttribute('onclick').indexOf("'"+tab+"'")>-1)el=t;
-      });
-    }
-    if(el)swTab(el,tab);
-  },80);
+  go('v-guida-'+tab);
 }
 // Icona a grappolo (non presente nel webfont ti-*, quindi SVG inline) — usata
 // per la slide "Maison & Vigneron" al posto della generica ti-building.
@@ -183,16 +176,6 @@ function backToOnboardingEnd(){
     if(dx<0) onbNext(); else onbPrev();
   }, {passive:true});
 })();
-
-function swTab(el,tab){
-  document.querySelectorAll('#v-guida .tab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on');
-  document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('on'));
-  document.getElementById('tc-'+tab).classList.add('on');
-  if(tab==='glossario') loadGlossario();
-  const scrollEl = document.querySelector('#v-guida .scroll');
-  if(scrollEl) scrollEl.scrollTop = 0;
-}
 
 // ═══ GLOSSARIO — dinamico da DB ═══
 let allGlossario = [];
