@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=112"/>
+<link rel="stylesheet" href="css/style.css?v=113"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -473,6 +473,18 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="guida-hub-icon"><i class="ti ti-map-2"></i></div>
           <div class="guida-hub-title">Terroirs</div>
           <div class="guida-hub-sub">Le 5 grandi zone della Champagne, cru e uvaggi</div>
+        </div>
+        <div class="guida-hub-tile guida-hub-tile-cru guida-hub-tile-premium" onclick="goCru()">
+          <span class="guida-hub-premium-badge"><i class="ti ti-crown"></i>Premium</span>
+          <div class="guida-hub-icon"><i class="ti ti-stairs"></i></div>
+          <div class="guida-hub-title">Cru</div>
+          <div class="guida-hub-sub">Grand Cru, Premier Cru: la classificazione spiegata bene</div>
+        </div>
+        <div class="guida-hub-tile guida-hub-tile-clos guida-hub-tile-premium" onclick="goClos()">
+          <span class="guida-hub-premium-badge"><i class="ti ti-crown"></i>Premium</span>
+          <div class="guida-hub-icon"><i class="ti ti-door"></i></div>
+          <div class="guida-hub-title">Clos</div>
+          <div class="guida-hub-sub">Le vigne murate leggendarie, dal Clos du Mesnil in poi</div>
         </div>
         <div class="guida-hub-tile" onclick="go('v-guida-uve')">
           <i class="ti ti-chevron-right guida-hub-arrow"></i>
@@ -1040,6 +1052,251 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
   </div><!-- /scroll -->
 </div>
+<!-- GUIDA: CRU -->
+<div class="view" id="v-guida-cru">
+  <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
+  <div class="scroll">
+      <div style="padding:14px 14px 28px;">
+
+        <div class="section-label" style="padding:0 0 10px;">17 Grand Cru, 42 Premier Cru, 261 Autres Crus</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:20px;">Ognuno dei 320 comuni della Champagne appartiene a una categoria di qualità — un'eredità di un sistema nato oltre un secolo fa che oggi vive solo sulle etichette, ma che continua a pesare moltissimo su prezzo e prestigio.</div>
+
+        <div class="section-label" style="padding:0 0 10px;">Cos'è l'Échelle des Crus</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:10px;">Il sistema nasce nel <strong>1919</strong> con uno scopo puramente amministrativo: fissare in modo equo il prezzo dell'uva che le maison pagavano ai viticoltori, comune per comune. Non un giudizio estetico sul vino — una scala del valore della materia prima.</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:14px;">Ogni comune riceveva una percentuale: <strong>100%</strong> per i Grand Cru, tra <strong>90 e 99%</strong> per i Premier Cru, tra <strong>80 e 89%</strong> per tutti gli altri. Un viticoltore di un comune al 95% riceveva il 95% del prezzo di riferimento fissato quell'anno per il chilo d'uva.</div>
+        <div class="appro-fact" style="margin:0 0 20px;">
+          <i class="ti ti-history"></i>
+          <span>Alla nascita del sistema, nel 1919, i Grand Cru erano solo 12. Nel 1985 se ne aggiunsero altri cinque — Chouilly, Le Mesnil-sur-Oger, Oger, Oiry e Verzy — portando il totale ai 17 attuali.</span>
+        </div>
+
+        <div class="section-label" style="padding:0 0 10px;">L'abolizione del 2010</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:20px;">Nel 2010 l'Échelle des Crus è stata ufficialmente abolita: il prezzo dell'uva è tornato a essere negoziato liberamente tra viticoltori e maison, appezzamento per appezzamento. Le menzioni Grand Cru e Premier Cru sono rimaste in uso in etichetta — non più come obbligo di prezzo, ma come riconoscimento tutelato dal disciplinare per "uso leale, locale e costante".</div>
+
+        <div class="section-label" style="padding:0 0 12px;">Quanto costano davvero le uve, oggi</div>
+        <div class="cru-cmp-table">
+          <div class="cru-cmp-row cru-cmp-header">
+            <div class="cru-cmp-label"></div>
+            <div class="cru-cmp-vals">
+              <div class="cru-cmp-val cru-cmp-gc"><span>Grand Cru</span></div>
+              <div class="cru-cmp-val cru-cmp-pc"><span>Premier Cru</span></div>
+              <div class="cru-cmp-val cru-cmp-ac"><span>Autres Crus</span></div>
+            </div>
+          </div>
+        <div class="cru-cmp-row">
+          <div class="cru-cmp-label">Comuni</div>
+          <div class="cru-cmp-vals">
+            <div class="cru-cmp-val cru-cmp-gc"><span>17</span></div>
+            <div class="cru-cmp-val cru-cmp-pc"><span>42</span></div>
+            <div class="cru-cmp-val cru-cmp-ac"><span>261</span></div>
+          </div>
+        </div>
+        <div class="cru-cmp-row">
+          <div class="cru-cmp-label">Scala storica</div>
+          <div class="cru-cmp-vals">
+            <div class="cru-cmp-val cru-cmp-gc"><span>100%</span></div>
+            <div class="cru-cmp-val cru-cmp-pc"><span>90–99%</span></div>
+            <div class="cru-cmp-val cru-cmp-ac"><span>80–89%</span></div>
+          </div>
+        </div>
+        <div class="cru-cmp-row">
+          <div class="cru-cmp-label">Prezzo uva 2025</div>
+          <div class="cru-cmp-vals">
+            <div class="cru-cmp-val cru-cmp-gc"><span>7–8,50 €/kg</span></div>
+            <div class="cru-cmp-val cru-cmp-pc"><span>6–7,50 €/kg</span></div>
+            <div class="cru-cmp-val cru-cmp-ac"><span>5,50–6,50 €/kg</span></div>
+          </div>
+        </div>
+        </div>
+        <div style="font-family:var(--sans);font-size:12.5px;color:var(--ink-4);line-height:1.55;margin:8px 0 20px;">Il prezzo medio del terreno vitato in tutta la Champagne si aggira sui 930.000 €/ha. Nei Grand Cru sale a <strong>1,5-2 milioni €/ha</strong> — la Côte des Blancs (quasi interamente Grand Cru) ha toccato 1,63 milioni €/ha nel 2024, la Montagne de Reims 1,23 milioni €/ha.</div>
+
+        <div class="section-label" style="padding:0 0 10px;">Cosa significa per la qualità nel calice</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:10px;">Un Grand Cru non garantisce automaticamente un vino migliore in bottiglia — dipende sempre dalla mano del vigneron e dalle scelte di vinificazione. Ma statisticamente offre le condizioni di partenza più favorevoli: le esposizioni migliori, i suoli più puri, le rese in genere più controllate.</div>
+        <div class="appro-fact" style="margin:0 0 20px;">
+          <i class="ti ti-percentage"></i>
+          <span>Meno del <strong>9%</strong> dell'intera superficie vitata della Champagne ha diritto alla menzione Grand Cru — è il motivo per cui queste uve restano tra le più contese e costose della denominazione.</span>
+        </div>
+
+        <div class="section-label" style="padding:0 0 10px;">Chi lavora quasi solo Grand Cru</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">Alcune maison hanno costruito la propria identità quasi esclusivamente sui Grand Cru: <strong>Salon</strong> e <strong>Delamotte</strong> lavorano lo Chardonnay di Le Mesnil-sur-Oger, <strong>Bollinger</strong> ha il suo cuore ad Aÿ. Altre, come la maggior parte delle grandi maison NM, assemblano deliberatamente su più livelli — Grand Cru, Premier Cru e Autres Crus insieme — per costruire uno stile complesso e costante nel tempo, non necessariamente per limiti di budget.</div>
+
+      </div>
+  </div><!-- /scroll -->
+</div>
+
+<!-- GUIDA: CLOS -->
+<div class="view" id="v-guida-clos">
+  <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
+  <div class="scroll">
+      <div style="padding:14px 14px 10px;">
+        <div class="section-label" style="padding:0 0 10px;">Le vigne murate più rare della Champagne</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:14px;">Un Clos è una parcella di vigna interamente circondata da un muro — spesso costruito secoli fa per proteggere le viti dal freddo e dagli animali, oggi diventato il simbolo massimo dell'esclusività in Champagne. Quasi sempre un <em>monopole</em>: un solo produttore, un solo appezzamento, nessun assemblaggio con altre vigne.</div>
+        <div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;margin-bottom:8px;">Perché sono così ambiti? Tre motivi si sommano: <strong>rarità estrema</strong> (spesso meno di un ettaro, poche migliaia di bottiglie o anche meno), <strong>storia autentica</strong> (mura di secoli fa, in un caso vigne sopravvissute persino alla fillossera) e <strong>terroir irripetibile</strong> — un microclima isolato dal resto del vigneto circostante. Il risultato: prezzi che vanno dalle poche decine ad alcune migliaia di euro a bottiglia.</div>
+      </div>
+
+      <div class="section-label" style="padding:6px 14px 12px;">I Clos più celebri</div>
+      <div style="padding:0 14px;">
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Clos du Mesnil</div>
+          <div class="clos-card-meta">Krug · Le Mesnil-sur-Oger · Grand Cru</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>1,84</strong> ha</div>
+          <div class="clos-stat">Chardonnay</div>
+          <div class="clos-stat">Mura dal 1698 · 1ª annata 1979</div>
+        </div>
+        <div class="clos-card-text">Il Clos più mitico della Champagne. Un'iscrizione ancora visibile sul muro racconta che fu costruito nel 1698 da Claude Jannin, e le vigne piantate lo stesso anno dal figlio Gaspard. Krug ne fece la prima cuvée solo con la vendemmia 1979 — da allora, uno degli Chardonnay più ricercati e costosi al mondo, spesso oltre i 1.000€ a bottiglia.</div>
+        <div class="clos-card-bottles"><span class="clos-bottle-chip" onclick="goToBottiglia('5c1c4e86-d824-40fd-ad79-93496e6b86fc')"><i class="ti ti-glass-full"></i>1995</span><span class="clos-bottle-chip" onclick="goToBottiglia('67b99879-9d61-46c1-b72d-d6d5d901c5f1')"><i class="ti ti-glass-full"></i>2002</span><span class="clos-bottle-chip" onclick="goToBottiglia('25c421d6-877c-411e-b93f-ea5d53ce9721')"><i class="ti ti-glass-full"></i>2006</span><span class="clos-bottle-chip" onclick="goToBottiglia('19a2f540-0c96-4227-a9a9-4d9ff77dae64')"><i class="ti ti-glass-full"></i>2008</span><span class="clos-bottle-chip" onclick="goToBottiglia('967cac6a-f800-4037-903d-b0c42b42193c')"><i class="ti ti-glass-full"></i>2009</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Clos d'Ambonnay</div>
+          <div class="clos-card-meta">Krug · Ambonnay · Grand Cru</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>0,68</strong> ha</div>
+          <div class="clos-stat">Pinot Noir</div>
+          <div class="clos-stat">Mura dal 1766 · 1ª annata 1995</div>
+        </div>
+        <div class="clos-card-text">Il fratello minore e ancora più raro del Clos du Mesnil: appena 0,68 ettari murati dal 1766, scoperti da Krug solo nel 1991 sul versante sud-est della Montagne de Reims. La prima annata, la 1995, arrivò sul mercato solo nel 2007. È il Pinot Noir in purezza più costoso della Champagne — spesso oltre le 2.500€ a bottiglia.</div>
+        <div class="clos-card-bottles"><span class="clos-bottle-chip" onclick="goToBottiglia('3ae88ec5-b531-440f-985f-4010ae357709')"><i class="ti ti-glass-full"></i>1995</span><span class="clos-bottle-chip" onclick="goToBottiglia('0e6dca53-c22b-44d9-9682-e2ad81a77fce')"><i class="ti ti-glass-full"></i>2000</span><span class="clos-bottle-chip" onclick="goToBottiglia('cbe3f0a0-ef1a-489c-863a-7750139a7150')"><i class="ti ti-glass-full"></i>2002</span><span class="clos-bottle-chip" onclick="goToBottiglia('1040d3cd-3e6a-4963-88d7-d8d4c09a7fd8')"><i class="ti ti-glass-full"></i>2006</span><span class="clos-bottle-chip" onclick="goToBottiglia('460459a3-a527-4d05-9583-d14a5076dbf0')"><i class="ti ti-glass-full"></i>2008</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Clos des Goisses</div>
+          <div class="clos-card-meta">Philipponnat · Mareuil-sur-Aÿ · Premier Cru (99%)</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>5,5</strong> ha</div>
+          <div class="clos-stat">Pinot Noir prevalente</div>
+          <div class="clos-stat">Acquistato nel 1935</div>
+        </div>
+        <div class="clos-card-text">Uno dei pendii più ripidi di tutta la Champagne — tra 30° e 45° di inclinazione, quasi impossibile da lavorare a macchina. Pierre Philipponnat lo acquistò nel 1935, rendendolo probabilmente il primo Clos moderno rivendicato in etichetta come vino a sé. L'esposizione sud regala maturazioni eccezionali anche nelle annate più fredde.</div>
+        <div class="clos-card-bottles"><span class="clos-bottle-chip" onclick="goToBottiglia('d37b62b6-09e2-410c-a356-fc412419d1c4')"><i class="ti ti-glass-full"></i>2016</span><span class="clos-bottle-chip" onclick="goToBottiglia('c10bc560-251f-4b7f-955c-076320b4a6b5')"><i class="ti ti-glass-full"></i>L.V. 2000</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Vieilles Vignes Françaises</div>
+          <div class="clos-card-meta">Bollinger · Aÿ · Grand Cru</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>0,36</strong> ha</div>
+          <div class="clos-stat">Pinot Noir</div>
+          <div class="clos-stat">Non innestato · 1ª annata 1969</div>
+        </div>
+        <div class="clos-card-text">Due minuscole parcelle murate, Clos Saint-Jacques (0,21 ha) e Chaudes Terres (0,15 ha), sono le uniche vigne di Pinot Noir della Champagne sopravvissute alla fillossera senza mai essere innestate su piede americano — un ricordo vivente di come si coltivava prima della fine dell'800. Madame Lily Bollinger la creò nel 1969 per il suo 70° compleanno.</div>
+        <div class="clos-card-bottles"><span class="clos-nocatalog"><i class="ti ti-hourglass"></i> Non ancora a catalogo</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Le Clos Saint-Hilaire</div>
+          <div class="clos-card-meta">Billecart-Salmon · Mareuil-sur-Aÿ · Premier Cru (99%)</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>1</strong> ha</div>
+          <div class="clos-stat">Pinot Noir</div>
+          <div class="clos-stat">Piantato 1964 · 1ª annata 1995</div>
+        </div>
+        <div class="clos-card-text">Fino al 1964 era l'orto e il frutteto di famiglia. Ripiantato a Pinot Noir e condotto in biodinamica, produce appena 3.500-7.500 bottiglie numerate a mano nelle annate migliori. Per trent'anni le sue uve finivano solo nella Cuvée Elisabeth Salmon rosé, prima che nel 1995 nascesse come cuvée a sé.</div>
+        <div class="clos-card-bottles"><span class="clos-nocatalog"><i class="ti ti-hourglass"></i> Non ancora a catalogo</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Clos du Moulin</div>
+          <div class="clos-card-meta">Cattier · Ludes · Premier Cru</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>2,2</strong> ha</div>
+          <div class="clos-stat">Pinot Noir e Chardonnay</div>
+          <div class="clos-stat">Origini XVIII sec. · Cattier dal 1950</div>
+        </div>
+        <div class="clos-card-text">Le mura risalgono al Settecento, quando un mulino a vento sorgeva al centro della proprietà (distrutto da un incendio nel 1789, ricostruito, poi eroso dal tempo e dalle due guerre). Jean Cattier acquistò il Clos nel 1950: la prima vendemmia, la 1951, arrivò sul mercato nel 1955.</div>
+        <div class="clos-card-bottles"><span class="clos-bottle-chip" onclick="goToBottiglia('a07a61a0-ae91-48bc-8779-9d7556f3b9b2')"><i class="ti ti-glass-full"></i>in catalogo</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Clos Cazals</div>
+          <div class="clos-card-meta">Cazals · Le Mesnil-sur-Oger · Grand Cru</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>3,70</strong> ha</div>
+          <div class="clos-stat">Chardonnay</div>
+        </div>
+        <div class="clos-card-text">Nel cuore del Grand Cru per eccellenza dello Chardonnay, Le Mesnil-sur-Oger — lo stesso comune del Clos du Mesnil di Krug e della maison Salon. Un'espressione più accessibile ma altrettanto autentica della mineralità gessosa che rende celebre questo terroir.</div>
+        <div class="clos-card-bottles"><span class="clos-bottle-chip" onclick="goToBottiglia('538df662-db25-44ca-9169-886f372b96e2')"><i class="ti ti-glass-full"></i>2016</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Clos des Bouveries</div>
+          <div class="clos-card-meta">Duval-Leroy · Vertus · Premier Cru</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>2</strong> ha</div>
+          <div class="clos-stat">Chardonnay</div>
+        </div>
+        <div class="clos-card-text">Situato a Vertus, nella Côte des Blancs, uno dei pochi Clos gestiti da una grande maison storica piuttosto che da un piccolo vigneron indipendente — una rara occasione per assaggiare un vero monopole a un prezzo relativamente accessibile.</div>
+        <div class="clos-card-bottles"><span class="clos-bottle-chip" onclick="goToBottiglia('f2651475-f674-43fa-a9ca-68a62535085f')"><i class="ti ti-glass-full"></i>2008</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Clos de l'Abbaye</div>
+          <div class="clos-card-meta">Doyard · Vertus · Premier Cru</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>0,5</strong> ha</div>
+          <div class="clos-stat">Chardonnay</div>
+          <div class="clos-stat">1ª annata 1956</div>
+        </div>
+        <div class="clos-card-text">Le vigne furono ripiantate nel 1956 su un piccolo appezzamento murato di mezzo ettaro a Vertus. Una produzione minuscola per una famiglia di vigneron che coltiva la Côte des Blancs da generazioni.</div>
+        <div class="clos-card-bottles"><span class="clos-bottle-chip" onclick="goToBottiglia('37172a5b-1bb7-4554-8a91-5cc6508a2863')"><i class="ti ti-glass-full"></i>2019</span></div>
+      </div>
+      <div class="clos-card">
+        <div class="clos-card-head">
+          <div class="clos-card-name">Le Clos Lanson</div>
+          <div class="clos-card-meta">Lanson · Reims · Grand Cru</div>
+        </div>
+        <div class="clos-card-stats">
+          <div class="clos-stat"><strong>1</strong> ha</div>
+          <div class="clos-stat">Chardonnay</div>
+          <div class="clos-stat">Vigna del XVIII sec. · 1ª annata 2006</div>
+        </div>
+        <div class="clos-card-text">Il primo Champagne mai realizzato da una vigna murata storica dentro i confini della città di Reims — un ettaro di Chardonnay a franco di piede quasi cinquantenario. Nonostante la lunga tradizione della maison per l'assemblaggio, la vendemmia 2006 convinse il allora direttore Philippe Baijot a vinificarla da sola: 7.870 bottiglie numerate, sboccate dopo oltre 7 anni sui lieviti, uscite solo nel 2016.</div>
+        <div class="clos-card-bottles"><span class="clos-nocatalog"><i class="ti ti-hourglass"></i> Non ancora a catalogo</span></div>
+      </div>
+      </div>
+
+      <div class="section-label" style="padding:20px 14px 4px;">Tutti gli altri Clos della Champagne</div>
+      <div style="padding:0 14px 6px;font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.55;">Un elenco più ampio, per chi vuole andare oltre i nomi più noti — dai piccoli vigneron indipendenti alle grandi maison.</div>
+      <div style="padding:0 14px 28px;">
+        <div class="clos-ext-table">
+          <div class="clos-ext-row clos-ext-header"><div class="clos-ext-c1">Clos</div><div class="clos-ext-c2">Produttore</div><div class="clos-ext-c3">Villaggio</div><div class="clos-ext-c4">Ha</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos des Bergeronneau</div><div class="clos-ext-c2">Bergeronneau-Marion</div><div class="clos-ext-c3">Ville-Dommange</div><div class="clos-ext-c4">2,10</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos Virgile</div><div class="clos-ext-c2">Paul-Sadi</div><div class="clos-ext-c3">Beaumont-sur-Vesle</div><div class="clos-ext-c4">2,4</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos de Pompadour</div><div class="clos-ext-c2">Pommery (Vranken)</div><div class="clos-ext-c3">Reims</div><div class="clos-ext-c4">25</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos du Château de Bligny</div><div class="clos-ext-c2">Château de Bligny</div><div class="clos-ext-c3">Bligny</div><div class="clos-ext-c4">20</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos des Trois Clochers</div><div class="clos-ext-c2">Leclerc-Briant</div><div class="clos-ext-c3">Villers-Allerand</div><div class="clos-ext-c4">0,4</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Le Clos Rocher</div><div class="clos-ext-c2">Gremillet</div><div class="clos-ext-c3">Les Riceys</div><div class="clos-ext-c4">1,4</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos Mandois</div><div class="clos-ext-c2">Mandois</div><div class="clos-ext-c3">Pierry</div><div class="clos-ext-c4">1,5</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos des Chaulins</div><div class="clos-ext-c2">Lombard & Medot</div><div class="clos-ext-c3">Pargny-lès-Reims</div><div class="clos-ext-c4">0,68</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos Sainte-Sophie</div><div class="clos-ext-c2">Jacques Lassaigne</div><div class="clos-ext-c3">Montgueux</div><div class="clos-ext-c4">0,4</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos des Monnaies</div><div class="clos-ext-c2">Goutorbe-Bouillot</div><div class="clos-ext-c3">Damery</div><div class="clos-ext-c4">0,28</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos des Belevals</div><div class="clos-ext-c2">Person</div><div class="clos-ext-c3">Vertus</div><div class="clos-ext-c4">1,2</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos de Cumières</div><div class="clos-ext-c2">Hervé Jestin</div><div class="clos-ext-c3">Cumières</div><div class="clos-ext-c4">0,5</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Le Clos à Doré</div><div class="clos-ext-c2">Monmarthe</div><div class="clos-ext-c3">Ludes</div><div class="clos-ext-c4">22</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos des Maladries</div><div class="clos-ext-c2">Etienne Calsac</div><div class="clos-ext-c3">Avize</div><div class="clos-ext-c4">0,16</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos Barnaut</div><div class="clos-ext-c2">Barnaut</div><div class="clos-ext-c3">Bouzy</div><div class="clos-ext-c4">0,4</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos de Bouzy</div><div class="clos-ext-c2">André Clouet</div><div class="clos-ext-c3">Bouzy</div><div class="clos-ext-c4">0,35</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos l'Abbé</div><div class="clos-ext-c2">Hubert Soreau</div><div class="clos-ext-c3">Épernay</div><div class="clos-ext-c4">0,14</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Le Petit Clos</div><div class="clos-ext-c2">Jean Vesselle</div><div class="clos-ext-c3">Bouzy</div><div class="clos-ext-c4">0,08</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos Jacquin</div><div class="clos-ext-c2">Pierre Callot et Fils</div><div class="clos-ext-c3">Côte des Blancs</div><div class="clos-ext-c4">7</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Le Clos Jacquesson</div><div class="clos-ext-c2">Jacquesson</div><div class="clos-ext-c3">Dizy</div><div class="clos-ext-c4">0,9</div></div>
+          <div class="clos-ext-row"><div class="clos-ext-c1">Clos Faubourg Notre Dame</div><div class="clos-ext-c2">Veuve Fourny</div><div class="clos-ext-c3">Vertus</div><div class="clos-ext-c4">0,29</div></div>
+        </div>
+      </div>
+
+  </div><!-- /scroll -->
+</div>
+
 <!-- GUIDA: CÉPAGES -->
 <div class="view" id="v-guida-uve">
   <div class="topbar"><button class="back-btn" onclick="go('v-guida')"><i class="ti ti-arrow-left"></i>Guida</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
@@ -2149,6 +2406,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="feature-item"><i class="ti ti-book-2"></i><span>Glossario tecnico al completo</span></div>
       <div class="feature-item"><i class="ti ti-temperature"></i><span>Guida alla conservazione delle bottiglie</span></div>
       <div class="feature-item"><i class="ti ti-map-2"></i><span>Terroirs al completo — tutti i comuni Grand Cru e Premier Cru</span></div>
+      <div class="feature-item"><i class="ti ti-stairs"></i><span>Guida completa ai Cru — classificazione, prezzi, differenze</span></div>
+      <div class="feature-item"><i class="ti ti-door"></i><span>I Clos leggendari, dal Clos du Mesnil in poi</span></div>
       <div class="feature-item"><i class="ti ti-history"></i><span>Storico scansioni illimitato</span></div>
     </div>
     <div style="padding:0 18px 8px;">
@@ -3261,6 +3520,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=209"></script>
+<script src="js/app.js?v=210"></script>
 </body>
 </html>

@@ -33,7 +33,7 @@ function go(id){
     'v-bottiglie','v-bottiglia-detail',
     'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne',
-    'v-guida-metodo','v-guida-glossario','v-guida-conservazione','v-guida-zone','v-guida-uve','v-guida-dosaggi','v-guida-service','v-guida-formati',
+    'v-guida-metodo','v-guida-glossario','v-guida-conservazione','v-guida-zone','v-guida-cru','v-guida-clos','v-guida-uve','v-guida-dosaggi','v-guida-service','v-guida-formati',
     'v-notifications'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
@@ -114,6 +114,24 @@ function goGuida(tab){
 }
 function goConservazione(){
   go(isPremium() ? 'v-guida-conservazione' : 'v-paywall');
+}
+function goCru(){
+  go(isPremium() ? 'v-guida-cru' : 'v-paywall');
+}
+function goClos(){
+  go(isPremium() ? 'v-guida-clos' : 'v-paywall');
+}
+// Apre la scheda di una bottiglia da un link esterno alla normale navigazione
+// (es. dalla guida Clos): se non è ancora in cache la recupera al volo, così
+// il link funziona anche per chi non ha mai visitato la pagina Champagne.
+async function goToBottiglia(bottId){
+  if (!allBottiglie.find(x => x.id === bottId)) {
+    try {
+      const { data } = await supa.from('bottiglie').select('*, maison(nome, slug, is_free)').eq('id', bottId).single();
+      if (data) allBottiglie.push(data);
+    } catch(e) { console.log('goToBottiglia fetch error:', e); }
+  }
+  openBottigliaDetail(bottId);
 }
 // Icona a grappolo (non presente nel webfont ti-*, quindi SVG inline) — usata
 // per la slide "Maison & Vigneron" al posto della generica ti-building.
