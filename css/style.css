@@ -401,6 +401,7 @@ html,body{
 .guida-hub-icon svg{width:19px;height:19px;color:#8A6A1E;}
 .guida-hub-icon svg.glass-icon{width:18px;height:25px;}
 .guida-hub-icon svg.bottle-icon{width:23px;height:23px;}
+.guida-hub-icon svg.fence-icon{width:22px;height:22px;}
 .guida-hub-title{font-family:var(--serif);font-size:16.5px;font-weight:600;color:var(--ink);letter-spacing:.2px;}
 .guida-hub-sub{font-family:var(--sans);font-size:12.5px;color:var(--ink-4);line-height:1.4;margin-top:-4px;}
 .guida-hub-tile-alt{background:linear-gradient(135deg,#EAEEF6 0%,#D4DCEA 100%);border-color:#A8B8D0;}
@@ -422,6 +423,7 @@ html,body{
 .guida-hub-tile-clos{background:linear-gradient(135deg,#E3ECE3 0%,#BFD6BF 100%);border-color:#8FAE8F;}
 .guida-hub-tile-clos .guida-hub-icon{background:rgba(255,255,255,.6);border-color:rgba(45,74,45,.35);box-shadow:0 2px 8px rgba(45,74,45,.12);}
 .guida-hub-tile-clos .guida-hub-icon i{color:#2D4A2D;}
+.guida-hub-tile-clos .guida-hub-icon svg{color:#2D4A2D;}
 /* ── CRU: tabella comparativa ── */
 .cru-cmp-table{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
 .cru-cmp-row{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);padding:9px 12px;}
