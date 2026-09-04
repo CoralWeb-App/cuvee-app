@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=120"/>
+<link rel="stylesheet" href="css/style.css?v=121"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -445,15 +445,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ GUIDA ═══ -->
 <div class="view" id="v-guida">
   <div class="topbar">
-    <div style="flex:1;"></div>
+    <div style="flex:1;"><div style="font-family:var(--serif);font-size:21px;color:var(--ink);font-weight:700;">Guida & Glossario</div><div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:1px;">Dalla vendemmia al calice — tutto lo Champagne, spiegato bene</div></div>
     <div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div>
   </div>
   <div class="scroll">
-      <div class="guida-hero">
-        <div class="guida-hero-icon"><i class="ti ti-books"></i></div>
-        <div class="guida-hero-title">Guida &amp; Glossario</div>
-        <div class="guida-hero-sub">Dalla vendemmia al calice — tutto lo Champagne, spiegato bene</div>
-      </div>
       <div class="guida-hub-grid">
         <div class="guida-hub-tile guida-hub-tile-alt" onclick="go('v-guida-glossario')">
           <i class="ti ti-chevron-right guida-hub-arrow"></i>
