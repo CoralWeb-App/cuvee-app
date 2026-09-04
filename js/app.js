@@ -2724,17 +2724,28 @@ function _lockedSearchCard(title, sub) {
   '</div>';
 }
 
+// Regola comune di sblocco bottiglie, condivisa da tutti i punti dell'app che
+// bloccano contenuti Premium: quante bottiglie di un produttore restano visibili
+// gratis, in base a quante ne ha in catalogo. Con pochissime bottiglie (<=3)
+// mostrarne 2 libere renderebbe visibile quasi tutto il catalogo del produttore,
+// quindi in quel caso se ne mostra solo 1.
+function _freeBottleCount(total) {
+  return total <= 3 ? 1 : 2;
+}
+
 // Stessa regola di isBottigliaLocked ma calcolata in locale sull'elenco già
 // caricato (evita una query per ogni risultato mostrato in ricerca).
 function _computeBottleLockMap() {
   const map = new Map();
   if (isPremium()) return map;
+  const countByMaison = new Map();
+  allBottiglie.forEach(b => countByMaison.set(b.maison_id, (countByMaison.get(b.maison_id) || 0) + 1));
   const seenPerMaison = new Map();
   allBottiglie.forEach(b => {
     const maisonLocked = b.maison?.is_free === false;
     const idx = seenPerMaison.get(b.maison_id) || 0;
     seenPerMaison.set(b.maison_id, idx + 1);
-    map.set(b.id, maisonLocked || idx >= 2);
+    map.set(b.id, maisonLocked || idx >= _freeBottleCount(countByMaison.get(b.maison_id) || 0));
   });
   return map;
 }
@@ -4467,9 +4478,10 @@ async function loadDetailBottles(maisonId) {
     }
     if (subtitleEl) subtitleEl.textContent = bottles.length + (bottles.length === 1 ? ' cuvée nel catalogo' : ' cuvée nel catalogo');
     const premium = isPremium();
-    const lockedCount = premium ? 0 : Math.max(0, bottles.length - 2);
+    const freeCount = _freeBottleCount(bottles.length);
+    const lockedCount = premium ? 0 : Math.max(0, bottles.length - freeCount);
     listEl.innerHTML = bottles.map((b, i) => {
-      const isLocked = !premium && i >= 2;
+      const isLocked = !premium && i >= freeCount;
       const meta = (b.is_millesimato ? '<span class="type-pill type-pill-mill">Millesimato</span>' : '<span class="type-pill type-pill-sa">Sans Année</span>') +
         (b.dosaggio_tipo ? dosagePill(b.dosaggio_tipo) : '');
       const prezzo = b.prezzo_min ? 'da ' + b.prezzo_min + '€' : (b.fascia_prezzo || '');
@@ -4608,8 +4620,8 @@ async function loadAndRenderBottiglie() {
   }
 }
 
-// Calcola quali bottiglie sono libere: prime 2 in ordine alfabetico per ogni maison,
-// oppure tutte bloccate se la maison stessa è premium.
+// Calcola quali bottiglie sono libere: le prime (vedi _freeBottleCount) in ordine
+// alfabetico per ogni maison, oppure tutte bloccate se la maison stessa è premium.
 function computeBottiglieLocks() {
   const byMaison = {};
   allBottiglie.forEach(b => {
@@ -4620,7 +4632,8 @@ function computeBottiglieLocks() {
   Object.values(byMaison).forEach(group => {
     group.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
     const maisonLocked = group[0]?.maison?.is_free === false;
-    group.forEach((b, i) => { b._locked = maisonLocked || i >= 2; });
+    const freeCount = _freeBottleCount(group.length);
+    group.forEach((b, i) => { b._locked = maisonLocked || i >= freeCount; });
   });
 }
 
@@ -5112,7 +5125,7 @@ async function isBottigliaLocked(b) {
   if (!data || !data.length) return false;
   if (data[0].maison?.is_free === false) return true;
   const idx = data.findIndex(x => x.id === b.id);
-  return idx === -1 ? false : idx >= 2;
+  return idx === -1 ? false : idx >= _freeBottleCount(data.length);
 }
 
 async function openBottigliaDetail(bottId) {
