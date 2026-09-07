@@ -222,6 +222,18 @@ const SYSTEM_PROMPT =
   'Se dopo aver applicato questa regola resti genuinamente incerto su quale sia il produttore, ' +
   'e SOLO in quel caso, lascia maison null piuttosto che indovinare un nome sbagliato.\n\n' +
 
+  '=== REGOLA ASSOLUTA #6: SCHEDA PRODUTTORE (maison_*) ===\n' +
+  'Oltre ai dati della bottiglia, fornisci SEMPRE anche una scheda completa del produttore stesso ' +
+  '(campi maison_*), con lo stesso livello di dettaglio e rigore enciclopedico usato per la bottiglia — ' +
+  'indipendentemente dal fatto che il produttore sia già presente nel nostro catalogo o meno (non lo sai, ' +
+  'e non importa: la scheda va sempre compilata). Usa la tua conoscenza reale del produttore: sede, anno di ' +
+  'fondazione o di primo imbottigliamento a proprio nome, proprietà/famiglia, chef de cave o responsabile, ' +
+  'ettari vitati, percentuali varietali del vigneto, produzione annua indicativa, certificazioni (bio, ' +
+  'biodinamico, HVE, sostenibile) se note, e due brevi testi editoriali (descrizione: storia e identità in ' +
+  '2-4 frasi; filosofia: approccio stilistico/enologico in 1-2 frasi). Se un singolo dato non è noto con ' +
+  'certezza, lascialo null piuttosto che inventarlo — ma il tentativo di compilare la scheda va fatto sempre, ' +
+  'anche per vigneron/RM poco conosciuti, usando ciò che sai davvero su di loro.\n\n' +
+
   'Per campi tecnici usa la tua conoscenza enciclopedica anche se non visibili sull etichetta.'
 
 const USER_PROMPT =
@@ -253,6 +265,9 @@ const USER_PROMPT =
   '   Super Tuscan/Bordeaux classificati 40-150€, grandi Borgogna/Bordeaux Grand Cru 100-500€+) — adatta sempre\n' +
   '   al produttore e all etichetta reali se riconoscibili, non usare mai un valore fisso.\n' +
   '   NON usare prezzi francesi o UK per lo Champagne.\n\n' +
+  'STEP 4 - SOLO se is_champagne=true e hai identificato un maison: compila anche la scheda produttore ' +
+  '(campi maison_*) seguendo la REGOLA ASSOLUTA #6 del system prompt — sempre, non solo se ti sembra un ' +
+  'produttore sconosciuto o raro.\n\n' +
   'Rispondi SOLO con JSON valido, zero testo extra:\n' +
   '{\n' +
   '  "is_bottle": true se bottiglia/contenitore bevanda, false se altro,\n' +
@@ -283,7 +298,22 @@ const USER_PROMPT =
   '  "produzione_bottiglie": integer o null,\n' +
   '  "prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, arrotondato a 5 — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino,\n' +
   '  "prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, arrotondato a 5 — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino,\n' +
-  '  "not_champagne_type": "denominazione/tipologia del vino/bevanda se NOT champagne (es. \'Barolo DOCG\', \'Franciacorta DOCG\', \'vino rosso fermo\'), o null se è Champagne"\n' +
+  '  "not_champagne_type": "denominazione/tipologia del vino/bevanda se NOT champagne (es. \'Barolo DOCG\', \'Franciacorta DOCG\', \'vino rosso fermo\'), o null se è Champagne",\n' +
+  '  "maison_tipo": "NM" o "RM" o "RC" o "CM" o "SR" o "ND" o "MA" o null — sigla ufficiale sul tappo/etichetta (NM=grande maison, RM=vigneron/récoltant-manipulant, RC=récoltant-coopérateur, CM=cooperativa, SR=société de récoltants, ND=négociant-distributeur, MA=marque auxiliaire), SOLO se is_champagne, altrimenti null,\n' +
+  '  "maison_sede_comune": "comune sede del produttore (es. Ay, Reims, Epernay, Le Mesnil-sur-Oger) o null",\n' +
+  '  "maison_zona": "Montagne de Reims" o "Côte des Blancs" o "Vallée de la Marne" o "Côte des Bar" o "Côte de Sézanne" o null — zona di Champagne dove ha sede il produttore,\n' +
+  '  "maison_anno_fondazione": integer anno di fondazione della maison o di primo imbottigliamento a proprio nome, o null,\n' +
+  '  "maison_proprieta": "proprietà/famiglia/gruppo proprietario (es. \'Famiglia Krug\', \'LVMH\') o null",\n' +
+  '  "maison_direzione": "nome di chi dirige la maison oggi o null",\n' +
+  '  "maison_chef_de_cave": "nome del chef de cave o null",\n' +
+  '  "maison_ettari_totali": numero decimale ettari vitati totali o null,\n' +
+  '  "maison_pct_chardonnay": integer 0-100 percentuale Chardonnay nel vigneto del produttore o null,\n' +
+  '  "maison_pct_pinot_noir": integer 0-100 percentuale Pinot Noir nel vigneto del produttore o null,\n' +
+  '  "maison_pct_meunier": integer 0-100 percentuale Meunier nel vigneto del produttore o null,\n' +
+  '  "maison_produzione_bottiglie": integer produzione annua indicativa in bottiglie o null,\n' +
+  '  "maison_certificazioni": array di stringhe (es. ["Biologico","Biodinamico (Demeter)","HVE"]) o null,\n' +
+  '  "maison_descrizione": "2-4 frasi in italiano: storia e identità del produttore, o null",\n' +
+  '  "maison_filosofia": "1-2 frasi in italiano: approccio stilistico/enologico, o null"\n' +
   '}'
 
 serve(async (req) => {
@@ -718,9 +748,42 @@ serve(async (req) => {
           })
         }
       } else {
+        // Risolve maison_zona (nome testuale dato da Sonnet) nell'id reale della
+        // tabella zone — senza questo lookup la nuova maison in approvazione
+        // resterebbe senza zona, uno dei campi che rendevano la scheda incompleta.
+        let zonaId: string | null = null
+        if (ai.maison_zona) {
+          const { data: zoneRow } = await adminSupa
+            .from('zone')
+            .select('id')
+            .ilike('nome', ai.maison_zona as string)
+            .maybeSingle()
+          zonaId = zoneRow?.id ?? null
+        }
+
         const { data: newMaison, error: maisonErr } = await adminSupa
           .from('maison')
-          .insert({ nome: ai.maison, slug: makeSlug(ai.maison as string), needs_review: true })
+          .insert({
+            nome:                 ai.maison,
+            slug:                 makeSlug(ai.maison as string),
+            tipo:                 ai.maison_tipo ?? null,
+            zona_id:              zonaId,
+            sede_comune:          ai.maison_sede_comune ?? null,
+            anno_fondazione:      ai.maison_anno_fondazione ?? null,
+            proprieta:            ai.maison_proprieta ?? null,
+            direzione:            ai.maison_direzione ?? null,
+            chef_de_cave:         ai.maison_chef_de_cave ?? null,
+            ettari_totali:        ai.maison_ettari_totali ?? null,
+            pct_chardonnay:       ai.maison_pct_chardonnay ?? null,
+            pct_pinot_noir:       ai.maison_pct_pinot_noir ?? null,
+            pct_meunier:          ai.maison_pct_meunier ?? null,
+            produzione_bottiglie: ai.maison_produzione_bottiglie ?? null,
+            certificazioni:       Array.isArray(ai.maison_certificazioni) ? ai.maison_certificazioni : null,
+            descrizione:          ai.maison_descrizione ?? null,
+            filosofia:            ai.maison_filosofia ?? null,
+            source:               'scan',
+            needs_review:         true,
+          })
           .select('id')
           .single()
         if (maisonErr) {
