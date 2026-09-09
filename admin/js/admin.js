@@ -2998,70 +2998,298 @@ async function revokeAbb(userId, email) {
 // ══════════════════════════════════════════════════════
 // STATS
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// STATISTICHE — filtro periodo
+// ══════════════════════════════════════════════════════
+const STATS_MONTH_NAMES = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre']
+const STATS_MONTH_ABBR  = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic']
+const STATS_WEEKDAY_LETTER = ['D','L','M','M','G','V','S'] // getDay(): 0=domenica..6=sabato
+const STATS_WEEKDAY_NAME   = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato']
+
+function _startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x }
+function _addDays(d, n) { const x = new Date(d); x.setDate(x.getDate()+n); return x }
+function _startOfWeek(d) { const x = _startOfDay(d); const day = (x.getDay()+6)%7; return _addDays(x,-day) }
+function _startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1) }
+function _startOfYear(d) { return new Date(d.getFullYear(), 0, 1) }
+function _isoDateLocal(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
+function _fmtDateIt(d) { return `${d.getDate()} ${STATS_MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}` }
+
+function computeStatsRange(preset) {
+  const now = new Date()
+  const todayStart = _startOfDay(now)
+  const tomorrowStart = _addDays(todayStart, 1)
+  switch (preset) {
+    case 'today':     return { from: todayStart, to: tomorrowStart, label: `Oggi — ${_fmtDateIt(todayStart)}` }
+    case 'yesterday': { const y = _addDays(todayStart,-1); return { from: y, to: todayStart, label: `Ieri — ${_fmtDateIt(y)}` } }
+    case 'week':      { const s = _startOfWeek(now); return { from: s, to: tomorrowStart, label: `Questa settimana — dal ${_fmtDateIt(s)}` } }
+    case 'month':     { const s = _startOfMonth(now); return { from: s, to: tomorrowStart, label: `Questo mese — ${STATS_MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}` } }
+    case 'lastmonth': { const s = new Date(now.getFullYear(), now.getMonth()-1, 1); const e = _startOfMonth(now); return { from: s, to: e, label: `Mese scorso — ${STATS_MONTH_NAMES[s.getMonth()]} ${s.getFullYear()}` } }
+    case '7d':        { const s = _addDays(todayStart,-6); return { from: s, to: tomorrowStart, label: `Ultimi 7 giorni — dal ${_fmtDateIt(s)}` } }
+    case '30d':       { const s = _addDays(todayStart,-29); return { from: s, to: tomorrowStart, label: `Ultimi 30 giorni — dal ${_fmtDateIt(s)}` } }
+    case '90d':       { const s = _addDays(todayStart,-89); return { from: s, to: tomorrowStart, label: `Ultimi 90 giorni — dal ${_fmtDateIt(s)}` } }
+    case 'year':      { const s = _startOfYear(now); return { from: s, to: tomorrowStart, label: `Quest'anno — ${now.getFullYear()}` } }
+    case 'all':
+    default:          return { from: null, to: tomorrowStart, label: 'Da sempre' }
+  }
+}
+
+let statsRangeState = null
+;(function initStatsRangeDefault() {
+  const r = computeStatsRange('month')
+  statsRangeState = { preset: 'month', ...r }
+  const fromInp = document.getElementById('stats-date-from')
+  const toInp = document.getElementById('stats-date-to')
+  if (fromInp) fromInp.value = r.from ? _isoDateLocal(r.from) : ''
+  if (toInp) toInp.value = _isoDateLocal(_addDays(r.to, -1))
+})()
+
+function setStatsPreset(preset, btnEl) {
+  document.querySelectorAll('#stats-presets .adm-filter').forEach(b => b.classList.remove('active'))
+  if (btnEl) btnEl.classList.add('active')
+  const r = computeStatsRange(preset)
+  statsRangeState = { preset, ...r }
+  const fromInp = document.getElementById('stats-date-from')
+  const toInp = document.getElementById('stats-date-to')
+  if (fromInp) fromInp.value = r.from ? _isoDateLocal(r.from) : ''
+  if (toInp) toInp.value = _isoDateLocal(_addDays(r.to, -1))
+  const lbl = document.getElementById('stats-range-label')
+  if (lbl) lbl.textContent = r.label
+  loadStats()
+}
+
+function applyCustomStatsRange() {
+  const fromInp = document.getElementById('stats-date-from')
+  const toInp = document.getElementById('stats-date-to')
+  if (!fromInp?.value || !toInp?.value) { alert('Seleziona sia la data di inizio che quella di fine'); return }
+  const from = new Date(fromInp.value + 'T00:00:00')
+  const to = _addDays(new Date(toInp.value + 'T00:00:00'), 1)
+  if (from >= to) { alert('La data di inizio deve precedere quella di fine'); return }
+  document.querySelectorAll('#stats-presets .adm-filter').forEach(b => b.classList.remove('active'))
+  const label = `Dal ${_fmtDateIt(from)} al ${_fmtDateIt(_addDays(to,-1))}`
+  statsRangeState = { preset: 'custom', from, to, label }
+  const lbl = document.getElementById('stats-range-label')
+  if (lbl) lbl.textContent = label
+  loadStats()
+}
+
+// ══════════════════════════════════════════════════════
+// STATISTICHE — rendering helper
+// ══════════════════════════════════════════════════════
+function _topFromCounts(countsMap, namesMap, n = 5) {
+  return Object.entries(countsMap).sort((a,b) => b[1]-a[1]).slice(0, n)
+    .map(([id, c]) => ({ name: namesMap[id] ?? id.slice(0,8), count: c }))
+}
+
+function _renderTopList(elId, items, emptyMsg) {
+  const el = document.getElementById(elId)
+  if (!el) return
+  if (!items.length) { el.innerHTML = `<div class="adm-loading-block" style="color:var(--text-3)">${esc(emptyMsg)}</div>`; return }
+  const maxC = items[0].count || 1
+  const ranks = ['I','II','III','IV','V']
+  el.innerHTML = items.map((it, i) => `
+    <div class="adm-top-item">
+      <span class="adm-top-rank">${ranks[i]}</span>
+      <div class="adm-top-info">
+        <span class="adm-top-name">${esc(it.name)}</span>
+        <div class="adm-top-bar"><div class="adm-top-fill" style="width:${Math.round(it.count/maxC*100)}%"></div></div>
+      </div>
+      <span class="adm-top-count">${it.count}</span>
+    </div>`).join('')
+}
+
+function _bucketKeyFor(d, granularity) {
+  if (granularity === 'day') return _isoDateLocal(d)
+  if (granularity === 'week') return _isoDateLocal(_startOfWeek(d))
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+}
+
+function _bucketScans(scans, from, to) {
+  const spanDays = from ? Math.ceil((to - from) / 86400000) : (scans.length ? Math.ceil((to - new Date(scans[0].created_at)) / 86400000) : 1)
+  let granularity = 'day'
+  if (spanDays > 180) granularity = 'month'
+  else if (spanDays > 45) granularity = 'week'
+
+  const buckets = new Map()
+  if (from) {
+    let cursor = new Date(from)
+    let guard = 0
+    while (cursor < to && guard < 2000) {
+      const k = _bucketKeyFor(cursor, granularity)
+      if (!buckets.has(k)) buckets.set(k, 0)
+      cursor = granularity === 'day' ? _addDays(cursor,1) : granularity === 'week' ? _addDays(cursor,7) : new Date(cursor.getFullYear(), cursor.getMonth()+1, 1)
+      guard++
+    }
+  }
+  scans.forEach(s => {
+    const k = _bucketKeyFor(new Date(s.created_at), granularity)
+    buckets.set(k, (buckets.get(k) || 0) + 1)
+  })
+  const entries = Array.from(buckets.entries()).sort((a,b) => a[0] < b[0] ? -1 : 1)
+  return { granularity, entries: entries.length > 60 ? entries.slice(-60) : entries }
+}
+
+function _bucketShortLabel(key, granularity) {
+  if (granularity === 'day')   return STATS_WEEKDAY_LETTER[new Date(key+'T00:00:00').getDay()]
+  if (granularity === 'week')  { const d = new Date(key+'T00:00:00'); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}` }
+  const [y,m] = key.split('-'); return STATS_MONTH_ABBR[parseInt(m,10)-1]
+}
+
+function _bucketFullLabel(key, granularity) {
+  if (granularity === 'month') { const [y,m] = key.split('-'); return `${STATS_MONTH_NAMES[parseInt(m,10)-1]} ${y}` }
+  if (granularity === 'week')  return `Settimana dal ${_fmtDateIt(new Date(key+'T00:00:00'))}`
+  return _fmtDateIt(new Date(key+'T00:00:00'))
+}
+
+function _peakWeekdayLabel(scans) {
+  if (!scans.length) return ''
+  const counts = new Array(7).fill(0)
+  scans.forEach(s => counts[new Date(s.created_at).getDay()]++)
+  const max = Math.max(...counts)
+  if (max === 0) return ''
+  const top = counts.map((c,i) => ({c,i})).filter(x => x.c === max).map(x => STATS_WEEKDAY_NAME[x.i])
+  return `${top.join(' e ')} → giorno con più scansioni (${max})`
+}
+
+function _renderDailyBars(scans, from, to) {
+  const barsEl = document.getElementById('stats-daily-bars')
+  const labelEl = document.getElementById('stats-daily-label')
+  if (!barsEl) return
+  const { granularity, entries } = _bucketScans(scans, from, to)
+  if (!entries.length) {
+    barsEl.innerHTML = '<div class="adm-loading-block" style="color:var(--text-3)">Nessun dato nel periodo</div>'
+    if (labelEl) labelEl.textContent = ''
+    return
+  }
+  const maxC = Math.max(1, ...entries.map(([,c]) => c))
+  barsEl.innerHTML = entries.map(([key, c]) => {
+    const h = c > 0 ? Math.max(Math.round(c/maxC*100), 4) : 2
+    return `<div class="adm-bar-wrap" title="${esc(_bucketFullLabel(key,granularity))}: ${c} scansioni"><div class="adm-bar" style="height:${h}%"></div><span>${esc(_bucketShortLabel(key,granularity))}</span></div>`
+  }).join('')
+  const total = entries.reduce((s,[,c]) => s+c, 0)
+  const peak = granularity === 'day' ? _peakWeekdayLabel(scans) : ''
+  if (labelEl) labelEl.textContent = peak || `${total.toLocaleString('it')} scansioni nel periodo`
+}
+
+function _renderTipoDonut(scans) {
+  const labels = { blanc_de_blancs:'Blanc de Blancs', blanc_de_noirs:'Blanc de Noirs', rose:'Rosé', assemblage:'Assemblage' }
+  const colors = { blanc_de_blancs:'#6B8AE8', blanc_de_noirs:'#5BBCAD', rose:'#E87B7B', assemblage:'#C8A03A' }
+  const el = document.getElementById('stats-tipo-donut')
+  if (!el) return
+  const counts = {}
+  let total = 0
+  scans.forEach(s => { if (!s.detected_tipo) return; counts[s.detected_tipo] = (counts[s.detected_tipo]||0) + 1; total++ })
+  if (!total) { el.innerHTML = '<div class="adm-loading-block" style="color:var(--text-3)">Nessun tipo rilevato nel periodo</div>'; return }
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1])
+  el.innerHTML = sorted.map(([k,c]) => `
+    <div class="adm-donut-item">
+      <div class="adm-donut-dot" style="background:${colors[k] || '#8a8a8a'}"></div>
+      <span class="adm-donut-label">${esc(labels[k] || k)}</span>
+      <span class="adm-donut-pct">${Math.round(c/total*100)}%</span>
+    </div>`).join('')
+}
+
+// ══════════════════════════════════════════════════════
+// STATISTICHE — caricamento principale
+// ══════════════════════════════════════════════════════
 async function loadStats() {
   try {
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '-' }
+    if (!statsRangeState) statsRangeState = { preset: 'month', ...computeStatsRange('month') }
+    const { from, to } = statsRangeState
+    const dateFilter = (q, col = 'created_at') => { let qq = q.lt(col, to.toISOString()); if (from) qq = qq.gte(col, from.toISOString()); return qq }
 
-    // ── Contatori base ───────────────────────────────────────────
+    // ── Stato attuale (non dipende dal periodo) ──────────────────
     const [
-      { count: totScans },
-      { count: totBottiglie },
-      { count: totUtenti },
-      { count: totPremium },
+      { count: totBottiglie }, { count: totBottiglieReview },
+      { count: totMaison }, { count: totMaisonReview },
+      { count: totUtenti }, { count: totPremium },
+      { count: totNewsletter }, { count: totWishlist },
     ] = await Promise.all([
-      supa.from('bottle_scans').select('*', { count:'exact', head:true }),
-      supa.from('bottiglie').select('*', { count:'exact', head:true }).eq('needs_review', false),
+      supa.from('bottiglie').select('*', { count:'exact', head:true }).eq('needs_review', false).eq('is_published', true),
+      supa.from('bottiglie').select('*', { count:'exact', head:true }).eq('needs_review', true),
+      supa.from('maison').select('*', { count:'exact', head:true }).eq('needs_review', false).eq('is_published', true),
+      supa.from('maison').select('*', { count:'exact', head:true }).eq('needs_review', true),
       supa.from('users').select('*', { count:'exact', head:true }),
       supa.from('users').select('*', { count:'exact', head:true }).eq('is_premium', true),
+      supa.from('users').select('*', { count:'exact', head:true }).eq('newsletter_opt_in', true),
+      supa.from('wishlist').select('*', { count:'exact', head:true }),
     ])
 
-    set('stats-scans',     (totScans??0).toLocaleString('it'))
     set('stats-bottiglie', (totBottiglie??0).toLocaleString('it'))
-    set('stats-utenti',    (totUtenti??0).toLocaleString('it'))
-    set('stats-premium',   (totPremium??0).toLocaleString('it'))
+    set('stats-bottiglie-review', (totBottiglieReview??0).toLocaleString('it'))
+    set('stats-maison', (totMaison??0).toLocaleString('it'))
+    set('stats-maison-review', (totMaisonReview??0).toLocaleString('it'))
+    set('stats-utenti', (totUtenti??0).toLocaleString('it'))
+    set('stats-premium', (totPremium??0).toLocaleString('it'))
+    set('stats-newsletter', (totNewsletter??0).toLocaleString('it'))
+    set('stats-wishlist-tot', (totWishlist??0).toLocaleString('it'))
+    const premPctEl = document.getElementById('stats-premium-pct')
+    if (premPctEl) premPctEl.textContent = totUtenti ? `${((totPremium/totUtenti)*100).toFixed(1)}% degli utenti registrati` : ''
 
-    // ── Statistiche costi AI (via RPC aggregata) ─────────────────
-    const { data: scanStats, error: rpcErr } = await supa.rpc('get_scan_stats')
-    if (scanStats && !rpcErr) {
-      const s = scanStats
-      const haikuN   = Number(s.haiku_only_count    ?? 0)
-      const sonnetN  = Number(s.sonnet_full_count    ?? 0)
-      const fbN      = Number(s.haiku_fallback_count ?? 0)
-      const tracked  = haikuN + sonnetN + fbN   // scansioni con tracking (esclude legacy)
-      const hitRate  = tracked > 0 ? Math.round(haikuN / tracked * 100) : null
-      const totalCost = Number(s.total_cost_usd ?? 0)
+    // ── Attività nel periodo: contatori semplici ──────────────────
+    const [
+      { count: newUsers }, { count: newPremium },
+      { count: newBottiglie }, { count: newMaison },
+    ] = await Promise.all([
+      dateFilter(supa.from('users').select('*', { count:'exact', head:true })),
+      dateFilter(supa.from('users').select('*', { count:'exact', head:true }).not('premium_from', 'is', null), 'premium_from'),
+      dateFilter(supa.from('bottiglie').select('*', { count:'exact', head:true })),
+      dateFilter(supa.from('maison').select('*', { count:'exact', head:true })),
+    ])
+    set('stats-new-users', (newUsers??0).toLocaleString('it'))
+    set('stats-new-premium', (newPremium??0).toLocaleString('it'))
+    set('stats-new-bottiglie', (newBottiglie??0).toLocaleString('it'))
+    set('stats-new-maison', (newMaison??0).toLocaleString('it'))
 
-      set('stats-haiku-count',  haikuN.toLocaleString('it'))
-      set('stats-sonnet-count', (sonnetN + fbN).toLocaleString('it'))
-      set('stats-hit-rate',     hitRate !== null ? hitRate + '%' : '—')
-      set('stats-total-cost',   '$' + totalCost.toFixed(4))
+    // ── Scansioni nel periodo (un'unica query, tutto derivato client-side) ──
+    const { data: scansPeriod, error: scansErr } = await dateFilter(
+      supa.from('bottle_scans').select('id,created_at,scan_type,cost_usd,haiku_input_tokens,haiku_output_tokens,sonnet_input_tokens,sonnet_output_tokens,is_champagne,added_to_carnet,detected_tipo,matched_bottle_id,bottiglie:matched_bottle_id(nome,maison_id,maison:maison_id(nome))')
+    ).order('created_at', { ascending: true }).limit(20000)
 
-      // ── Breakdown dettagliato ────────────────────────────────
-      const haikuCost   = Number(s.haiku_only_cost_usd     ?? 0)
-      const sonnetCost  = Number(s.sonnet_full_cost_usd    ?? 0)
-      const fbCost      = Number(s.haiku_fallback_cost_usd ?? 0)
-      const haikuInTok  = Number(s.total_haiku_input_tokens  ?? 0)
-      const haikuOutTok = Number(s.total_haiku_output_tokens ?? 0)
-      const sonnetInTok = Number(s.total_sonnet_input_tokens  ?? 0)
-      const sonnetOutTok= Number(s.total_sonnet_output_tokens ?? 0)
-      const avgHaiku    = Number(s.avg_cost_haiku_only  ?? 0)
-      const avgSonnet   = Number(s.avg_cost_sonnet_full ?? 0)
+    const scans = scansErr ? [] : (scansPeriod || [])
+    set('stats-scans', scans.length.toLocaleString('it'))
 
-      const fmtTok = n => n >= 1_000_000
-        ? (n/1_000_000).toFixed(2) + 'M'
-        : n >= 1_000 ? (n/1_000).toFixed(1) + 'K' : String(n)
+    const notChampagneN = scans.filter(s => s.is_champagne === false).length
+    set('stats-not-champagne', notChampagneN.toLocaleString('it'))
 
-      const breakdownEl = document.getElementById('stats-cost-breakdown')
-      if (breakdownEl) {
+    const carnetN = scans.filter(s => s.added_to_carnet === true).length
+    set('stats-carnet-adds', carnetN.toLocaleString('it'))
+    const carnetRateEl = document.getElementById('stats-carnet-rate')
+    if (carnetRateEl) carnetRateEl.textContent = scans.length ? `${((carnetN/scans.length)*100).toFixed(1)}% delle scansioni` : ''
+
+    // ── Breakdown costi AI (derivato dalle stesse righe) ──────────
+    const haikuRows  = scans.filter(s => s.scan_type === 'haiku_only')
+    const sonnetRows = scans.filter(s => s.scan_type === 'sonnet_full')
+    const fbRows     = scans.filter(s => s.scan_type === 'haiku_fallback')
+    const legacyN    = scans.filter(s => s.scan_type === 'legacy').length
+
+    const haikuN = haikuRows.length, sonnetN = sonnetRows.length, fbN = fbRows.length
+    const tracked = haikuN + sonnetN + fbN
+    const hitRate = tracked > 0 ? Math.round(haikuN / tracked * 100) : null
+    const sumCost = rows => rows.reduce((s,r) => s + Number(r.cost_usd||0), 0)
+    const sumTok  = (rows, f) => rows.reduce((s,r) => s + Number(r[f]||0), 0)
+    const haikuCost = sumCost(haikuRows), sonnetCost = sumCost(sonnetRows), fbCost = sumCost(fbRows)
+    const totalCost = haikuCost + sonnetCost + fbCost
+    const haikuInTok = sumTok(haikuRows,'haiku_input_tokens'), haikuOutTok = sumTok(haikuRows,'haiku_output_tokens')
+    const sonnetInTok = sumTok(sonnetRows,'sonnet_input_tokens'), sonnetOutTok = sumTok(sonnetRows,'sonnet_output_tokens')
+    const avgHaiku = haikuN ? haikuCost/haikuN : 0
+    const avgSonnet = sonnetN ? sonnetCost/sonnetN : 0
+
+    set('stats-haiku-count', haikuN.toLocaleString('it'))
+    set('stats-sonnet-count', (sonnetN + fbN).toLocaleString('it'))
+    set('stats-fallback-count', fbN.toLocaleString('it'))
+    set('stats-hit-rate', hitRate !== null ? hitRate + '%' : '—')
+    set('stats-total-cost', '$' + totalCost.toFixed(4))
+
+    const fmtTok = n => n >= 1_000_000 ? (n/1_000_000).toFixed(2)+'M' : n >= 1_000 ? (n/1_000).toFixed(1)+'K' : String(n)
+    const breakdownEl = document.getElementById('stats-cost-breakdown')
+    if (breakdownEl) {
+      if (!scans.length) {
+        breakdownEl.innerHTML = '<div class="adm-loading-block" style="color:var(--text-3)">Nessuna scansione nel periodo selezionato</div>'
+      } else {
         const saving = tracked > 0 && (sonnetN + fbN) > 0
-          ? (() => {
-              // Risparmio stimato: ogni scan haiku-only ha evitato ~1 scan sonnet
-              const sonnetAvgCost = avgSonnet || 0.004
-              const savedUsd = haikuN * (sonnetAvgCost - avgHaiku)
-              return savedUsd > 0 ? '$' + savedUsd.toFixed(4) : null
-            })()
+          ? (() => { const sonnetAvgCost = avgSonnet || 0.004; const savedUsd = haikuN * (sonnetAvgCost - avgHaiku); return savedUsd > 0 ? '$'+savedUsd.toFixed(4) : null })()
           : null
-
         breakdownEl.innerHTML = `
           <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px">
             <thead>
@@ -3076,10 +3304,7 @@ async function loadStats() {
             </thead>
             <tbody>
               <tr style="border-bottom:1px solid var(--border-1)">
-                <td style="padding:8px;display:flex;align-items:center;gap:6px">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#388E3C"></span>
-                  <span>Haiku — cache hit</span>
-                </td>
+                <td style="padding:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#388E3C"></span><span>Haiku — cache hit</span></td>
                 <td style="text-align:right;padding:8px">${haikuN.toLocaleString('it')}</td>
                 <td style="text-align:right;padding:8px">${fmtTok(haikuInTok)}</td>
                 <td style="text-align:right;padding:8px">${fmtTok(haikuOutTok)}</td>
@@ -3087,10 +3312,7 @@ async function loadStats() {
                 <td style="text-align:right;padding:8px">$${avgHaiku.toFixed(5)}</td>
               </tr>
               <tr style="border-bottom:1px solid var(--border-1)">
-                <td style="padding:8px;display:flex;align-items:center;gap:6px">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1565C0"></span>
-                  <span>Sonnet — full analysis</span>
-                </td>
+                <td style="padding:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1565C0"></span><span>Sonnet — full analysis</span></td>
                 <td style="text-align:right;padding:8px">${sonnetN.toLocaleString('it')}</td>
                 <td style="text-align:right;padding:8px">${fmtTok(sonnetInTok)}</td>
                 <td style="text-align:right;padding:8px">${fmtTok(sonnetOutTok)}</td>
@@ -3099,10 +3321,7 @@ async function loadStats() {
               </tr>
               ${fbN > 0 ? `
               <tr style="border-bottom:1px solid var(--border-1)">
-                <td style="padding:8px;display:flex;align-items:center;gap:6px">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E65100"></span>
-                  <span>Haiku — fallback Sonnet</span>
-                </td>
+                <td style="padding:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E65100"></span><span>Haiku — fallback Sonnet</span></td>
                 <td style="text-align:right;padding:8px">${fbN.toLocaleString('it')}</td>
                 <td style="text-align:right;padding:8px">—</td>
                 <td style="text-align:right;padding:8px">—</td>
@@ -3119,52 +3338,45 @@ async function loadStats() {
               </tr>
             </tbody>
           </table>
-          ${saving ? `
-          <div style="margin-top:12px;padding:10px 14px;background:#E8F5E9;border-radius:8px;font-family:var(--sans);font-size:12px;color:#1B5E20;display:flex;align-items:center;gap:8px">
-            <i class="ti ti-pig-money" style="font-size:16px"></i>
-            <span>Risparmio stimato grazie al catalogo (scan haiku al posto di Sonnet): <strong>${saving}</strong></span>
-          </div>` : ''}
-          ${Number(s.legacy_count ?? 0) > 0 ? `
-          <div style="margin-top:8px;font-family:var(--sans);font-size:11px;color:var(--text-4)">
-            * ${Number(s.legacy_count).toLocaleString('it')} scansioni precedenti non hanno dati di costo (registrate prima del tracking).
-          </div>` : ''}`
-      }
-    } else {
-      // RPC non disponibile (migration non ancora eseguita)
-      const el = document.getElementById('stats-cost-breakdown')
-      if (el) el.innerHTML = '<div style="padding:12px;font-family:var(--sans);font-size:12px;color:var(--text-4)"><i class="ti ti-info-circle"></i> Esegui prima la migration <code>sql_scan_tracking_migration.sql</code> per abilitare il tracking costi.</div>'
-    }
-
-    // ── Top bottiglie per scansioni ──────────────────────────────
-    const { data: topScans } = await supa
-      .from('bottle_scans')
-      .select('matched_bottle_id, bottiglie:matched_bottle_id(nome)')
-      .not('matched_bottle_id', 'is', null)
-      .limit(2000)
-
-    if (topScans) {
-      const counts = {}, names = {}
-      topScans.forEach(s => {
-        counts[s.matched_bottle_id] = (counts[s.matched_bottle_id] || 0) + 1
-        if (s.bottiglie?.nome) names[s.matched_bottle_id] = s.bottiglie.nome
-      })
-      const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 5)
-      const maxC = sorted[0]?.[1] ?? 1
-      const el = document.getElementById('stats-top-bottiglie')
-      if (el) {
-        if (!sorted.length) { el.innerHTML = '<div class="adm-loading-block" style="color:var(--text-3)">Nessuna scansione ancora</div>'; return }
-        const ranks = ['I','II','III','IV','V']
-        el.innerHTML = sorted.map(([id, c], i) => `
-          <div class="adm-top-item">
-            <span class="adm-top-rank">${ranks[i]}</span>
-            <div class="adm-top-info">
-              <span class="adm-top-name">${esc(names[id] ?? id.slice(0,8))}</span>
-              <div class="adm-top-bar"><div class="adm-top-fill" style="width:${Math.round(c/maxC*100)}%"></div></div>
-            </div>
-            <span class="adm-top-count">${c}</span>
-          </div>`).join('')
+          ${saving ? `<div style="margin-top:12px;padding:10px 14px;background:#E8F5E9;border-radius:8px;font-family:var(--sans);font-size:12px;color:#1B5E20;display:flex;align-items:center;gap:8px"><i class="ti ti-pig-money" style="font-size:16px"></i><span>Risparmio stimato grazie al catalogo (scan haiku al posto di Sonnet): <strong>${saving}</strong></span></div>` : ''}
+          ${legacyN > 0 ? `<div style="margin-top:8px;font-family:var(--sans);font-size:11px;color:var(--text-4)">* ${legacyN.toLocaleString('it')} scansioni nel periodo non hanno dati di costo (registrate prima del tracking).</div>` : ''}`
       }
     }
+
+    // ── Grafici ────────────────────────────────────────────────
+    _renderDailyBars(scans, from, to)
+    _renderTipoDonut(scans)
+
+    // ── Top bottiglie / maison per scansioni ──────────────────
+    const bottCounts = {}, bottNames = {}
+    const maisonScanCounts = {}, maisonScanNames = {}
+    scans.forEach(s => {
+      if (s.matched_bottle_id) {
+        bottCounts[s.matched_bottle_id] = (bottCounts[s.matched_bottle_id]||0) + 1
+        if (s.bottiglie?.nome) bottNames[s.matched_bottle_id] = s.bottiglie.nome
+        const mId = s.bottiglie?.maison_id
+        if (mId) {
+          maisonScanCounts[mId] = (maisonScanCounts[mId]||0) + 1
+          if (s.bottiglie?.maison?.nome) maisonScanNames[mId] = s.bottiglie.maison.nome
+        }
+      }
+    })
+    _renderTopList('stats-top-bottiglie', _topFromCounts(bottCounts, bottNames), 'Nessuna scansione riconosciuta nel periodo')
+    _renderTopList('stats-top-maison-scan', _topFromCounts(maisonScanCounts, maisonScanNames), 'Nessuna scansione riconosciuta nel periodo')
+
+    // ── Top maison preferite / top bottiglie in wishlist ──────
+    const [{ data: favPeriod }, { data: wishPeriod }] = await Promise.all([
+      dateFilter(supa.from('favorites').select('maison_id,created_at,maison:maison_id(nome)')).limit(5000),
+      dateFilter(supa.from('wishlist').select('bottiglia_id,created_at,bottiglie:bottiglia_id(nome)')).limit(5000),
+    ])
+    const favCounts = {}, favNames = {}
+    ;(favPeriod||[]).forEach(f => { favCounts[f.maison_id] = (favCounts[f.maison_id]||0)+1; if (f.maison?.nome) favNames[f.maison_id] = f.maison.nome })
+    _renderTopList('stats-top-maison-fav', _topFromCounts(favCounts, favNames), 'Nessun preferito salvato nel periodo')
+
+    const wishCounts = {}, wishNames = {}
+    ;(wishPeriod||[]).forEach(w => { wishCounts[w.bottiglia_id] = (wishCounts[w.bottiglia_id]||0)+1; if (w.bottiglie?.nome) wishNames[w.bottiglia_id] = w.bottiglie.nome })
+    _renderTopList('stats-top-wishlist', _topFromCounts(wishCounts, wishNames), 'Nessuna bottiglia salvata in wishlist nel periodo')
+
   } catch(e) { console.error('Stats:', e) }
 }
 
