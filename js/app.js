@@ -377,7 +377,7 @@ function setNoteEvoluzione(el, val){
 // ══════════════════════════════════════════════════════
 let _tastingSlots = [];      // [{data:{...}|null}, ...] bozze in memoria, una per calice
 let _tastingActiveIdx = 0;
-const TASTING_MAX_SLOTS = 6;
+const TASTING_MAX_SLOTS = 50; // nessun limite reale nell'uso: solo un tetto di sicurezza tecnico
 
 function _resetTastingSlots(){
   _tastingSlots = [];
@@ -490,6 +490,10 @@ function switchTastingSlot(idx){
 
 function removeTastingSlot(idx){
   if (_tastingSlots.length <= 1) return;
+  // Per lo slot attivo i dati più recenti sono nel form, non ancora sincronizzati in _tastingSlots
+  const d = idx === _tastingActiveIdx ? _serializeNoteFormFields() : _tastingSlots[idx]?.data;
+  const hasData = !!(d && (d.maison || d.cuvee));
+  if (hasData && !confirm('Vuoi eliminare questa bottiglia dalla degustazione? I dati inseriti andranno persi.')) return;
   const wasActive = idx === _tastingActiveIdx;
   _tastingSlots.splice(idx,1);
   if (_tastingActiveIdx >= _tastingSlots.length) _tastingActiveIdx = _tastingSlots.length - 1;
