@@ -63,6 +63,7 @@ function go(id){
     activeCaliceFilter = 0;
     activeSearchQuery = '';
     activeTypeFilter = 'tutti';
+    activeMultiOnlyFilter = false;
     const si = document.getElementById('carnet-search');
     if(si) si.value = '';
     const clr = document.getElementById('carnet-search-clear');
@@ -3712,6 +3713,13 @@ let allCarnetNotes = [];
 let activeCaliceFilter = 0;
 let activeSearchQuery = '';
 let activeTypeFilter = 'tutti';
+let activeMultiOnlyFilter = false; // "Degustazioni multiple" — indipendente, combinabile con gli altri filtri
+
+function toggleMultiOnlyFilter(btn){
+  activeMultiOnlyFilter = !activeMultiOnlyFilter;
+  btn.classList.toggle('on', activeMultiOnlyFilter);
+  renderCarnetNotes(allCarnetNotes);
+}
 
 // Tipo nota: restituisce ARRAY di tipi (tipo è text[] nel DB)
 function inferTipoNota(n) {
@@ -3810,6 +3818,35 @@ function renderCarnetNotes(notes) {
     countLbl.textContent = n === 0 ? 'Nessuna nota' : n === 1 ? '1 nota' : n + ' note';
   }
 
+  const attributeFiltersActive = activeCaliceFilter > 0 || (activeTypeFilter && activeTypeFilter !== 'tutti') || !!activeSearchQuery;
+
+  // Filtro "Degustazioni multiple": mostra solo le card di sessione. Combinato
+  // con calice/tipo/ricerca, tiene solo le sessioni che contengono almeno un
+  // calice che soddisfa quel filtro — per ritrovare in fretta "quella
+  // degustazione dove ho dato 5 calici a una bottiglia", non per spezzare la card.
+  if (activeMultiOnlyFilter) {
+    const sessionsM = new Map();
+    notes.forEach(n => {
+      if (n.sessione_id && n.carnet_sessioni) {
+        if (!sessionsM.has(n.sessione_id)) sessionsM.set(n.sessione_id, { id: n.sessione_id, meta: n.carnet_sessioni, notes: [] });
+        sessionsM.get(n.sessione_id).notes.push(n);
+      }
+    });
+    window._carnetSessions = sessionsM;
+
+    const filteredIds = new Set(filtered.map(n => n.id));
+    let sessionList = Array.from(sessionsM.values());
+    if (attributeFiltersActive) sessionList = sessionList.filter(s => s.notes.some(n => filteredIds.has(n.id)));
+    sessionList.sort((a, b) => (b.meta?.data_degustazione || '').localeCompare(a.meta?.data_degustazione || ''));
+
+    if (!sessionList.length) {
+      listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;font-family:var(--sans);font-size:16px;color:var(--ink-4);">Nessuna degustazione multipla trovata</div>';
+      return;
+    }
+    listEl.innerHTML = '<div class="carnet-grid">' + sessionList.map(renderCarnetSessionCard).join('') + '</div>';
+    return;
+  }
+
   if (filtered.length === 0) {
     listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;font-family:var(--sans);font-size:16px;color:var(--ink-4);">Nessuna nota trovata</div>';
     return;
@@ -3819,9 +3856,7 @@ function renderCarnetNotes(notes) {
   // degustazione multipla in una card sola. Con un filtro attivo (calice/tipo/
   // ricerca) mostriamo invece le note singole come sempre — filtrare dentro un
   // gruppo con attributi che variano da calice a calice non avrebbe un esito pulito.
-  const filtersActive = activeCaliceFilter > 0 || (activeTypeFilter && activeTypeFilter !== 'tutti') || !!activeSearchQuery;
-
-  if (filtersActive) {
+  if (attributeFiltersActive) {
     listEl.innerHTML = '<div class="carnet-grid">' + filtered.map(renderCarnetNoteCard).join('') + '</div>';
     return;
   }

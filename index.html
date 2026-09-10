@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=129"/>
+<link rel="stylesheet" href="css/style.css?v=131"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2787,6 +2787,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <i class="ti ti-x" id="carnet-search-clear" style="display:none;cursor:pointer;font-size:16px;color:var(--ink-5);" onclick="clearCarnetSearch()"></i>
   </div>
   <div class="carnet-filter-row">
+    <button class="calice-btn multi-filter-btn" id="cf-multi" onclick="toggleMultiOnlyFilter(this)">
+      <i class="ti ti-layers-intersect"></i> Multiple
+    </button>
+    <span class="carnet-filter-sep"></span>
     <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
       <svg class="flute-icon"><use href="#ti-flute"/></svg> Tutti
     </button>
@@ -3667,6 +3671,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=223"></script>
+<script src="js/app.js?v=224"></script>
 </body>
 </html>
