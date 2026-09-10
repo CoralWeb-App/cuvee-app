@@ -791,7 +791,10 @@ async function quickNewMultiTasting(){
   // slot iniziali — se l'utente ha appena ripristinato una bozza multipla non
   // tocchiamo nulla, altrimenti si perderebbe quanto recuperato.
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    if (_tastingSlots.length < 2) addTastingSlot();
+    if (_tastingSlots.length < 2) {
+      addTastingSlot();
+      switchTastingSlot(0); // si inizia sempre a scrivere dal primo calice, non dal secondo appena creato
+    }
   }));
 }
 
