@@ -856,6 +856,40 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .slider-lung input[type=range]::-webkit-slider-thumb{background:#4A8A5A;}
 .slider-lung .slider-val{background:#4A8A5A;}
 .slider-lung .slider-label i{color:#4A8A5A;}
+/* Perlage — acquamarina */
+.slider-perlage input[type=range]{accent-color:#4AA8A0;}
+.slider-perlage input[type=range]::-webkit-slider-thumb{background:#4AA8A0;}
+.slider-perlage .slider-val{background:#4AA8A0;}
+.slider-perlage .slider-label i{color:#4AA8A0;}
+/* Corpo — terracotta */
+.slider-corpo input[type=range]{accent-color:#B87355;}
+.slider-corpo input[type=range]::-webkit-slider-thumb{background:#B87355;}
+.slider-corpo .slider-val{background:#B87355;}
+.slider-corpo .slider-label i{color:#B87355;}
+/* Équilibre — rosa antico */
+.slider-equilibrio input[type=range]{accent-color:#C97B94;}
+.slider-equilibrio input[type=range]::-webkit-slider-thumb{background:#C97B94;}
+.slider-equilibrio .slider-val{background:#C97B94;}
+.slider-equilibrio .slider-label i{color:#C97B94;}
+
+/* Esame visivo — swatch colore con pallino */
+.colore-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.colore-swatch{
+  font-family:var(--sans);font-size:13px;border:1px solid var(--border-2);border-radius:20px;
+  padding:5px 13px 5px 8px;background:var(--white);color:var(--ink-4);cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.colore-swatch .cs-dot{
+  width:14px;height:14px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(0,0,0,.12);box-shadow:inset 0 1px 2px rgba(0,0,0,.08);
+}
+.colore-swatch.on{background:var(--gold-pale);border-color:var(--gold);color:var(--ink);font-weight:500;}
+.colore-swatch.on .cs-dot{box-shadow:0 0 0 2px var(--white),0 0 0 3px var(--gold);}
+
+/* Evoluzione — stesso linguaggio dei tipo-chip */
+.evo-chip{font-family:var(--sans);font-size:13px;border:1px solid var(--border-2);border-radius:20px;padding:6px 13px;background:var(--white);color:var(--ink-4);cursor:pointer;transition:background .15s,border-color .15s,color .15s;white-space:nowrap;}
+.evo-chip.on{background:var(--gold-pale);border-color:var(--gold);color:var(--ink);font-weight:500;}
 
 
 /* ═══ MAPPA INTERATTIVA ═══ */

@@ -332,6 +332,8 @@ function selectPlan(el){
 // CARNET
 let currentRating=0;
 let _noteTypes=[];  // array — supporta selezione multipla
+let _noteColore=null;     // esame visivo: singolo valore o null
+let _noteEvoluzione=null; // esame visivo: singolo valore o null
 let _pendingPhotos=[];      // {id,dataUrl,blob,ext} – new photos to upload
 let _existingPhotoUrls=[];  // URLs already saved (edit mode)
 let _lightboxPhotos=[];
@@ -355,6 +357,16 @@ function _syncTipoChips() {
     const m = /,'([^']+)'\)/.exec(c.getAttribute('onclick') || '');
     c.classList.toggle('on', !!(m && _noteTypes.includes(m[1])));
   });
+}
+
+// Esame visivo — Colore ed Evoluzione sono a scelta singola (tocca di nuovo per deselezionare)
+function setNoteColore(el, val){
+  _noteColore = (_noteColore === val) ? null : val;
+  document.querySelectorAll('.colore-swatch').forEach(c => c.classList.toggle('on', c.dataset.val === _noteColore));
+}
+function setNoteEvoluzione(el, val){
+  _noteEvoluzione = (_noteEvoluzione === val) ? null : val;
+  document.querySelectorAll('.evo-chip').forEach(c => c.classList.toggle('on', c.dataset.val === _noteEvoluzione));
 }
 
 // Chiamata dal pulsante Carnet nella bottom nav:
@@ -394,6 +406,8 @@ function checkAndNewNote(){
   currentRating = 0;
   _noteTypes = [];
   _syncTipoChips();
+  _noteColore = null; _noteEvoluzione = null;
+  document.querySelectorAll('.colore-swatch, .evo-chip').forEach(c => c.classList.remove('on'));
   // Reset form
   ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo','note-sboccatura','note-aromi-custom'].forEach(id => {
     const el = document.getElementById(id);
@@ -425,6 +439,8 @@ function openNewNoteFromBottiglia(bottId) {
   currentRating = 0;
   _noteTypes = [];
   _syncTipoChips();
+  _noteColore = null; _noteEvoluzione = null;
+  document.querySelectorAll('.colore-swatch, .evo-chip').forEach(c => c.classList.remove('on'));
   ['note-maison','note-cuvee','note-annata','note-dosage','note-luogo','note-text','note-prezzo','note-sboccatura','note-aromi-custom'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -470,10 +486,13 @@ function openNewNoteFromBottiglia(bottId) {
 
 /* ── Slider fill ──────────────────────────────────────────────────── */
 const _sliderColors = {
-  acidite: ['#4A8FA8','#E0EDF2'],
-  eff:     ['#9B7DC8','#EDE8F6'],
-  comp:    ['#C8962A','#F5EDD5'],
-  lung:    ['#4A8A5A','#DFF0E4']
+  acidite:    ['#4A8FA8','#E0EDF2'],
+  eff:        ['#9B7DC8','#EDE8F6'],
+  comp:       ['#C8962A','#F5EDD5'],
+  lung:       ['#4A8A5A','#DFF0E4'],
+  perlage:    ['#4AA8A0','#E0F2F0'],
+  corpo:      ['#B87355','#F2E4DD'],
+  equilibrio: ['#C97B94','#F5E4EA']
 };
 let _activeSliders = new Set(); // slider toccati dall'utente
 
@@ -497,7 +516,9 @@ function touchSlider(el, key, displayId) {
 function initAllSliders(defaultVal) {
   const map = [
     ['val-acidite','acidite'], ['val-eff','eff'],
-    ['val-comp','comp'],       ['val-lung','lung']
+    ['val-corpo','corpo'],     ['val-comp','comp'],
+    ['val-equilibrio','equilibrio'], ['val-lung','lung'],
+    ['val-perlage','perlage']
   ];
   // Nuova nota (defaultVal=5): resetta tutto, slider disattivati
   if (defaultVal != null) _activeSliders = new Set();
@@ -770,6 +791,11 @@ async function saveNote(editId = null){
     effervescence:_activeSliders.has('eff')     ? (parseInt(document.getElementById('val-eff')?.textContent)     || null) : null,
     complexite:   _activeSliders.has('comp')    ? (parseInt(document.getElementById('val-comp')?.textContent)    || null) : null,
     longueur:     _activeSliders.has('lung')    ? (parseInt(document.getElementById('val-lung')?.textContent)    || null) : null,
+    perlage:      _activeSliders.has('perlage') ? (parseInt(document.getElementById('val-perlage')?.textContent) || null) : null,
+    corpo:        _activeSliders.has('corpo')   ? (parseInt(document.getElementById('val-corpo')?.textContent)   || null) : null,
+    equilibrio:   _activeSliders.has('equilibrio') ? (parseInt(document.getElementById('val-equilibrio')?.textContent) || null) : null,
+    colore:       _noteColore,
+    evoluzione:   _noteEvoluzione,
     aromi: (() => {
       const selected = Array.from(document.querySelectorAll('#aromi-grid .aromi-pill.on')).map(el => el.textContent);
       const customRaw = document.getElementById('note-aromi-custom')?.value?.trim() || '';
@@ -2198,16 +2224,30 @@ function openNoteDetail(note) {
   const container = document.getElementById('detail-content');
   if (!container) { go('v-carnet-detail'); return; }
 
-  const _tipoLabel = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',prestige:'Prestige Cuvée',nature:'Brut Nature'};
+  const _tipoLabel = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',assemblage:'Assemblage',prestige:'Prestige Cuvée',nature:'Brut Nature'};
   const tipoArr = Array.isArray(note.tipo) ? note.tipo : (note.tipo ? [note.tipo] : []);
   const tipoLabel = tipoArr.filter(t => t !== 'non_so').map(t => _tipoLabel[t]||t).join(' · ');
 
   const paramDefs = [
     {key:'acidite',      label:'Acidité',             color:'#4A8FA8',bg:'#E0EDF2',icon:'ti-droplet'},
     {key:'effervescence',label:'Effervescence',        color:'#9B7DC8',bg:'#EDE8F6',icon:'ti-wind'},
+    {key:'corpo',        label:'Corpo',                color:'#B87355',bg:'#F2E4DD',icon:'ti-weight'},
     {key:'complexite',   label:'Complexité aromatique',color:'#C8962A',bg:'#F5EDD5',icon:'ti-sparkles'},
+    {key:'equilibrio',   label:'Équilibre',            color:'#C97B94',bg:'#F5E4EA',icon:'ti-scale'},
     {key:'longueur',     label:'Longueur en bouche',   color:'#4A8A5A',bg:'#DFF0E4',icon:'ti-arrow-right'}
   ].filter(p => note[p.key] != null && note[p.key] !== '');
+
+  const _coloreDef = {
+    paglierino_verdolino:{label:'Paglierino verdolino',hex:'#D9DE8A'},
+    paglierino:{label:'Paglierino',hex:'#EDDD82'},
+    giallo_dorato:{label:'Giallo dorato',hex:'#E8C34A'},
+    oro_intenso:{label:'Oro intenso',hex:'#D4A017'},
+    ambrato:{label:'Ambrato',hex:'#B8792E'},
+    rosa_pallido:{label:'Rosa pallido',hex:'#F0C4C0'},
+    rosa_salmone:{label:'Rosa salmone',hex:'#E89080'},
+    rosa_cerasuolo:{label:'Rosa cerasuolo',hex:'#C94F6D'}
+  };
+  const _evoLabel = {giovane:'Giovane e teso',apogeo:'Nel pieno della finestra',evoluto:'Evoluto'};
 
   const date = note.data_degustazione
     ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})
@@ -2270,6 +2310,35 @@ function openNoteDetail(note) {
     });
     gBody += '</div>';
     html += sec('ti-photo', 'Galleria · '+allPhotos.length+' foto', gBody);
+  }
+
+  // ── ESAME VISIVO ─────────────────────────────────────────────
+  if (note.colore || note.perlage != null || note.evoluzione) {
+    let body = '';
+    if (note.colore && _coloreDef[note.colore]) {
+      const cd = _coloreDef[note.colore];
+      body += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+((note.perlage!=null||note.evoluzione)?'16px':'0')+';">'+
+        '<span style="width:22px;height:22px;border-radius:50%;background:'+cd.hex+';border:1px solid rgba(0,0,0,.12);box-shadow:inset 0 1px 3px rgba(0,0,0,.1);flex-shrink:0;"></span>'+
+        '<span style="font-family:var(--sans);font-size:15px;color:var(--ink-2);">'+cd.label+'</span>'+
+      '</div>';
+    }
+    if (note.perlage != null) {
+      const pct = note.perlage / 10 * 100;
+      body +=
+        '<div style="margin-bottom:'+(note.evoluzione?'16px':'0')+';">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">'+
+            '<span style="font-family:var(--sans);font-size:14px;color:var(--ink-2);display:flex;align-items:center;gap:6px;"><i class="ti ti-circles" style="color:#4AA8A0;font-size:15px;"></i>Perlage</span>'+
+            '<span style="width:26px;height:26px;border-radius:50%;background:#4AA8A0;color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;">'+note.perlage+'</span>'+
+          '</div>'+
+          '<div style="height:6px;background:#E0F2F0;border-radius:3px;overflow:hidden;">'+
+            '<div style="width:'+pct+'%;height:100%;background:#4AA8A0;border-radius:3px;"></div>'+
+          '</div>'+
+        '</div>';
+    }
+    if (note.evoluzione && _evoLabel[note.evoluzione]) {
+      body += '<span class="evo-chip on" style="cursor:default;">'+_evoLabel[note.evoluzione]+'</span>';
+    }
+    html += sec('ti-eye','Esame visivo', body);
   }
 
   // ── PARAMETRI SENSORIALI ────────────────────────────────────
@@ -2916,10 +2985,13 @@ function openEditNote(note) {
   // Set sliders — attiva solo quelli con valore salvato
   _activeSliders = new Set();
   const sliders = {
-    'val-acidite': { val: note.acidite,       key: 'acidite' },
-    'val-eff':     { val: note.effervescence,  key: 'eff'     },
-    'val-comp':    { val: note.complexite,     key: 'comp'    },
-    'val-lung':    { val: note.longueur,       key: 'lung'    }
+    'val-acidite':    { val: note.acidite,       key: 'acidite'    },
+    'val-eff':        { val: note.effervescence, key: 'eff'        },
+    'val-comp':       { val: note.complexite,    key: 'comp'       },
+    'val-lung':       { val: note.longueur,      key: 'lung'       },
+    'val-perlage':    { val: note.perlage,       key: 'perlage'    },
+    'val-corpo':      { val: note.corpo,         key: 'corpo'      },
+    'val-equilibrio': { val: note.equilibrio,    key: 'equilibrio' }
   };
   Object.entries(sliders).forEach(([id, {val, key}]) => {
     const el = document.getElementById(id);
@@ -2943,6 +3015,12 @@ function openEditNote(note) {
   // Set tipo chip
   _noteTypes = Array.isArray(note.tipo) ? [...note.tipo] : (note.tipo ? [note.tipo] : []);
   _syncTipoChips();
+
+  // Set colore ed evoluzione (esame visivo)
+  _noteColore = note.colore || null;
+  _noteEvoluzione = note.evoluzione || null;
+  document.querySelectorAll('.colore-swatch').forEach(c => c.classList.toggle('on', c.dataset.val === _noteColore));
+  document.querySelectorAll('.evo-chip').forEach(c => c.classList.toggle('on', c.dataset.val === _noteEvoluzione));
 
   // Set aromi predefiniti
   const _PREDEF_AROMI = new Set(['Agrumi','Mela verde','Pera','Pêche blanche','Frutta rossa','Fiori bianchi','Brioche','Pane tostato','Nocciola tostata','Burro','Miele','Vaniglia','Spezie','Cioccolato','Frutta secca','Gesso · minéralité','Tabacco','Fungo']);

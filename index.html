@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=122"/>
+<link rel="stylesheet" href="css/style.css?v=123"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2913,8 +2913,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'rose')">Rosé</button>
           <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'blanc_de_blancs')">Blanc de Blancs</button>
           <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'blanc_de_noirs')">Blanc de Noirs</button>
+          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'assemblage')">Assemblage</button>
           <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'prestige')">Prestige Cuvée</button>
-          <button type="button" class="tipo-chip" onclick="setNoteTipo(this,'nature')">Brut Nature</button>
           <button type="button" class="tipo-chip non-so" onclick="setNoteTipo(this,'non_so')">Non so</button>
         </div>
       </div>
@@ -2940,6 +2940,40 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div style="font-family:var(--sans);font-size:14px;color:var(--ink-5);margin-top:8px;" id="rating-label">Tocca per valutare *</div>
     </div>
 
+    <!-- ESAME VISIVO -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="ti ti-eye"></i> Esame visivo</div>
+      <div class="input-wrap">
+        <label class="input-label">Colore</label>
+        <div class="colore-grid" id="colore-chips" style="margin-top:8px;">
+          <button type="button" class="colore-swatch" data-val="paglierino_verdolino" onclick="setNoteColore(this,'paglierino_verdolino')"><span class="cs-dot" style="background:#D9DE8A;"></span>Paglierino verdolino</button>
+          <button type="button" class="colore-swatch" data-val="paglierino" onclick="setNoteColore(this,'paglierino')"><span class="cs-dot" style="background:#EDDD82;"></span>Paglierino</button>
+          <button type="button" class="colore-swatch" data-val="giallo_dorato" onclick="setNoteColore(this,'giallo_dorato')"><span class="cs-dot" style="background:#E8C34A;"></span>Giallo dorato</button>
+          <button type="button" class="colore-swatch" data-val="oro_intenso" onclick="setNoteColore(this,'oro_intenso')"><span class="cs-dot" style="background:#D4A017;"></span>Oro intenso</button>
+          <button type="button" class="colore-swatch" data-val="ambrato" onclick="setNoteColore(this,'ambrato')"><span class="cs-dot" style="background:#B8792E;"></span>Ambrato</button>
+          <button type="button" class="colore-swatch" data-val="rosa_pallido" onclick="setNoteColore(this,'rosa_pallido')"><span class="cs-dot" style="background:#F0C4C0;"></span>Rosa pallido</button>
+          <button type="button" class="colore-swatch" data-val="rosa_salmone" onclick="setNoteColore(this,'rosa_salmone')"><span class="cs-dot" style="background:#E89080;"></span>Rosa salmone</button>
+          <button type="button" class="colore-swatch" data-val="rosa_cerasuolo" onclick="setNoteColore(this,'rosa_cerasuolo')"><span class="cs-dot" style="background:#C94F6D;"></span>Rosa cerasuolo</button>
+        </div>
+      </div>
+      <div class="slider-wrap slider-perlage" style="margin-top:6px;">
+        <div class="slider-label-row">
+          <span class="slider-label"><i class="ti ti-circles"></i> Perlage</span>
+          <span class="slider-val" id="val-perlage">5</span>
+        </div>
+        <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'perlage','val-perlage')">
+        <div style="display:flex;justify-content:space-between;font-family:var(--sans);font-size:11px;color:var(--ink-5);margin-top:4px;"><span>Grossolano</span><span>Finissimo e persistente</span></div>
+      </div>
+      <div class="input-wrap" style="margin-bottom:0;margin-top:8px;">
+        <label class="input-label">Fase evolutiva</label>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;" id="evo-chips">
+          <button type="button" class="evo-chip" data-val="giovane" onclick="setNoteEvoluzione(this,'giovane')">Giovane e teso</button>
+          <button type="button" class="evo-chip" data-val="apogeo" onclick="setNoteEvoluzione(this,'apogeo')">Nel pieno della finestra</button>
+          <button type="button" class="evo-chip" data-val="evoluto" onclick="setNoteEvoluzione(this,'evoluto')">Evoluto</button>
+        </div>
+      </div>
+    </div>
+
     <!-- PARAMETRI SENSORIALI -->
     <div class="form-section">
       <div class="form-section-title"><i class="ti ti-adjustments-horizontal"></i> Parametri sensoriali</div>
@@ -2957,12 +2991,26 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
         <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'eff','val-eff')">
       </div>
+      <div class="slider-wrap slider-corpo">
+        <div class="slider-label-row">
+          <span class="slider-label"><i class="ti ti-weight"></i> Corpo</span>
+          <span class="slider-val" id="val-corpo">5</span>
+        </div>
+        <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'corpo','val-corpo')">
+      </div>
       <div class="slider-wrap slider-comp">
         <div class="slider-label-row">
           <span class="slider-label"><i class="ti ti-sparkles"></i> Complexité aromatique</span>
           <span class="slider-val" id="val-comp">5</span>
         </div>
         <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'comp','val-comp')">
+      </div>
+      <div class="slider-wrap slider-equilibrio">
+        <div class="slider-label-row">
+          <span class="slider-label"><i class="ti ti-scale"></i> Équilibre</span>
+          <span class="slider-val" id="val-equilibrio">5</span>
+        </div>
+        <input type="range" min="0" max="10" value="5" oninput="touchSlider(this,'equilibrio','val-equilibrio')">
       </div>
       <div class="slider-wrap slider-lung" style="padding-bottom:2px;">
         <div class="slider-label-row">
@@ -3567,6 +3615,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=211"></script>
+<script src="js/app.js?v=212"></script>
 </body>
 </html>
