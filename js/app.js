@@ -507,6 +507,32 @@ function removeTastingSlot(idx){
   _renderTastingSlotBar();
 }
 
+function _formDataHasContent(d){
+  if (!d) return false;
+  if (d.maison || d.cuvee || d.annata || d.dosage || d.sboccatura) return true;
+  if (d.rating) return true;
+  if (d.tipi && d.tipi.length) return true;
+  if (d.colore || d.evoluzione) return true;
+  if (d.sliders && Object.values(d.sliders).some(v => v != null)) return true;
+  if (d.aromiOn && d.aromiOn.length) return true;
+  if (d.aromiCustom) return true;
+  if (d.noteText) return true;
+  if (d.prezzo) return true;
+  return false;
+}
+
+// Tocca "Annulla": chiede conferma solo se c'è davvero qualcosa da perdere —
+// lo slot attivo, o (in degustazione multipla) uno qualsiasi degli altri slot.
+function cancelNoteForm(){
+  const currentData = _serializeNoteFormFields();
+  let hasAnyData = _formDataHasContent(currentData) || _pendingPhotos.length > 0 || _existingPhotoUrls.length > 0;
+  if (!hasAnyData && _tastingSlots.length > 1) {
+    hasAnyData = _tastingSlots.some((s, i) => i !== _tastingActiveIdx && _formDataHasContent(s.data));
+  }
+  if (hasAnyData && !confirm('Vuoi annullare questa degustazione? I dati inseriti andranno persi.')) return;
+  goBack();
+}
+
 // Reset dei soli campi "per bottiglia" quando si apre uno slot nuovo vuoto —
 // luogo e data degustazione restano condivisi tra tutti i calici della sessione.
 function _resetNoteFormFieldsForNewSlot(){
