@@ -582,6 +582,25 @@ function cancelNoteForm(){
 
 // Reset dei soli campi "per bottiglia" quando si apre uno slot nuovo vuoto —
 // luogo e data degustazione restano condivisi tra tutti i calici della sessione.
+// Aggiunge una foto già elaborata allo slot "giusto". Scan e galleria
+// elaborano la foto in modo asincrono (fetch/FileReader): se nel frattempo
+// l'utente è già passato a un altro calice, scrivere sempre in _pendingPhotos
+// (stato "live") metterebbe la foto sullo slot sbagliato. Qui si controlla lo
+// slot di destinazione catturato PRIMA di iniziare l'elaborazione: se è ancora
+// quello attivo si aggiorna lo stato live come sempre, altrimenti si scrive
+// direttamente nella bozza di quello slot, senza toccare quello che si vede ora.
+function _pushPendingPhotoForSlot(photo, targetSlotIdx){
+  if (targetSlotIdx == null || targetSlotIdx === _tastingActiveIdx) {
+    _pendingPhotos.push(photo);
+    renderPhotoStrip();
+  } else if (_tastingSlots[targetSlotIdx]) {
+    if (!_tastingSlots[targetSlotIdx].data) _tastingSlots[targetSlotIdx].data = _serializeNoteFormFields();
+    const d = _tastingSlots[targetSlotIdx].data;
+    d.pendingPhotos = [...(d.pendingPhotos || []), photo];
+    _renderTastingSlotBar();
+  }
+}
+
 function _resetNoteFormFieldsForNewSlot(){
   ['note-maison','note-cuvee','note-annata','note-dosage','note-sboccatura','note-text','note-prezzo','note-aromi-custom'].forEach(id => {
     const el = document.getElementById(id);
@@ -875,6 +894,10 @@ function addPhoto(input) {
   const slots = 3 - (_existingPhotoUrls.length + _pendingPhotos.length);
   if (slots <= 0) return;
 
+  // Slot su cui si trovava l'utente quando ha avviato l'upload — l'elaborazione
+  // è asincrona e potrebbe finire dopo che è già passato a un altro calice
+  const targetSlotIdx = _tastingSlots.length ? _tastingActiveIdx : null;
+
   // Processa in sequenza: ogni foto aspetta la precedente (conteggio sempre aggiornato)
   let idx = 0;
   function processNext() {
@@ -906,8 +929,7 @@ function addPhoto(input) {
         const bytes = new Uint8Array(binary.length);
         for (let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
         const blob = new Blob([bytes],{type:mimeType});
-        _pendingPhotos.push({id:Date.now()+Math.random(), dataUrl, blob, ext});
-        renderPhotoStrip();
+        _pushPendingPhotoForSlot({id:Date.now()+Math.random(), dataUrl, blob, ext}, targetSlotIdx);
         processNext(); // foto successiva solo dopo che questa è pronta
       };
       img.src = e.target.result;
@@ -6600,6 +6622,9 @@ function openBottigliaFromScan() {
 
 // Pre-compila il form carnet dai dati scan e ci va direttamente
 function _fillCarnetFromScan(result, photoDataUrl) {
+  // Slot su cui si trovava l'utente al momento della scansione — la conversione
+  // della foto in blob è asincrona e potrebbe finire dopo un cambio di calice
+  const targetSlotIdx = _tastingSlots.length ? _tastingActiveIdx : null;
   resetPhotoStrip();
   const b = result.matched_bottle || {};
 
@@ -6647,13 +6672,11 @@ function _fillCarnetFromScan(result, photoDataUrl) {
       fetch(photoToAdd)
         .then(r => r.blob())
         .then(blob => {
-          _pendingPhotos.push({ id: Date.now(), dataUrl: photoToAdd, blob, ext: 'jpg' });
-          renderPhotoStrip();
+          _pushPendingPhotoForSlot({ id: Date.now(), dataUrl: photoToAdd, blob, ext: 'jpg' }, targetSlotIdx);
         })
         .catch(() => {
           // Fallback: usa dataUrl direttamente
-          _pendingPhotos.push({ id: Date.now(), dataUrl: photoToAdd, blob: null, ext: 'jpg' });
-          renderPhotoStrip();
+          _pushPendingPhotoForSlot({ id: Date.now(), dataUrl: photoToAdd, blob: null, ext: 'jpg' }, targetSlotIdx);
         });
     }
   }
