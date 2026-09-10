@@ -618,7 +618,7 @@ function _renderTastingSlotBar(){
   _updateTastingModeUI();
   if (_tastingSlots.length < 2) {
     bar.style.display = 'none';
-    if (fab) fab.style.display = isAdmin() ? 'flex' : 'none';
+    if (fab) fab.style.display = 'flex';
     return;
   }
   if (fab) fab.style.display = 'none';
@@ -754,30 +754,56 @@ function _resetNoteFormFieldsForNewSlot(){
 
 // Chiamata dal pulsante Carnet nella bottom nav:
 // controlla SEMPRE il limite prima di aprire il form — locale se disponibile, DB altrimenti
+// Note già usate dal piano Free: cache locale se disponibile (carnet già
+// visitato in sessione), altrimenti query veloce solo per il conteggio.
+async function _countExistingFreeNotes(){
+  if (window._carnetNotes != null) return window._carnetNotes.length;
+  try {
+    const { count: dbCount } = await supa
+      .from('carnet_notes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', currentUser.id);
+    return dbCount || 0;
+  } catch(e) {
+    return 0; // in caso di errore di rete, lascia aprire il form
+  }
+}
+
 async function quickNewNote(){
-  if(!isPremium()){
-    let count;
-    if(window._carnetNotes != null){
-      // Cache locale già disponibile (carnet già visitato in sessione)
-      count = window._carnetNotes.length;
-    } else {
-      // Prima visita al carnet: query veloce solo per il conteggio
-      try {
-        const { count: dbCount } = await supa
-          .from('carnet_notes')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', currentUser.id);
-        count = dbCount || 0;
-      } catch(e) {
-        count = 0; // in caso di errore di rete, lascia aprire il form
-      }
-    }
-    if(count >= FREE_NOTES_LIMIT){
-      go('v-paywall');
-      return;
-    }
+  if (!isPremium() && (await _countExistingFreeNotes()) >= FREE_NOTES_LIMIT) {
+    go('v-paywall');
+    return;
   }
   checkAndNewNote();
+}
+
+// Apre subito il form di degustazione multipla con 2 calici già pronti (slot
+// vuoti) e l'intestazione di sessione visibile — così si capisce a colpo
+// d'occhio cosa significa "multipla" invece di doverla scoprire da soli.
+async function quickNewMultiTasting(){
+  if (!isPremium() && (await _countExistingFreeNotes()) + 2 > FREE_NOTES_LIMIT) {
+    go('v-paywall');
+    return;
+  }
+  checkAndNewNote();
+  // Aspetta che checkAndNewNote abbia finito il proprio giro (reset, eventuale
+  // proposta di ripristino bozza, avvio autosalvataggio) prima di creare i due
+  // slot iniziali — se l'utente ha appena ripristinato una bozza multipla non
+  // tocchiamo nulla, altrimenti si perderebbe quanto recuperato.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (_tastingSlots.length < 2) addTastingSlot();
+  }));
+}
+
+function openNewTastingMenu(){
+  const overlay = document.getElementById('new-tasting-menu-overlay');
+  if (overlay) overlay.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeNewTastingMenu(){
+  const overlay = document.getElementById('new-tasting-menu-overlay');
+  if (overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 function checkAndNewNote(){

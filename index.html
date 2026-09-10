@@ -2773,7 +2773,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div id="carnet-count-label" style="font-family:var(--sans);font-size:14px;color:var(--ink-4);margin-top:1px;">Le tue note di degustazione</div>
     </div>
     <div class="topbar-icons">
-      <button onclick="quickNewNote()" style="position:relative;width:36px;height:36px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);flex-shrink:0;">
+      <button onclick="openNewTastingMenu()" style="position:relative;width:36px;height:36px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);flex-shrink:0;">
         <i class="ti ti-notebook" style="font-size:17px;color:#C8A03A;"></i>
         <span style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>
       </button>
@@ -2822,7 +2822,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
       <div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:500;margin-bottom:8px;">Il tuo carnet è vuoto</div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-3);line-height:1.65;margin-bottom:26px;">Registra ogni Champagne assaggiato — aggiungi foto, punteggio, aromi e note personali. Il tuo diario privato delle degustazioni.</div>
-      <button onclick="checkAndNewNote()" style="position:relative;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:14px 32px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+      <button onclick="openNewTastingMenu()" style="position:relative;background:#1E1208;border:2px solid var(--ivory);border-radius:12px;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);padding:14px 32px;font-family:var(--sans);font-size:15px;font-weight:500;color:#C8A03A;display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
         <i class="ti ti-notebook" style="font-size:18px;"></i> Aggiungi una degustazione
       </button>
     </div>
@@ -3368,6 +3368,28 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div>
 
+<!-- ═══ MENÙ NUOVA DEGUSTAZIONE — singola o multipla ═══ -->
+<div id="new-tasting-menu-overlay" class="note-menu-overlay" style="display:none;" onclick="closeNewTastingMenu()">
+  <div class="note-menu-sheet" onclick="event.stopPropagation()">
+    <div class="note-menu-handle"></div>
+    <div style="padding:2px 22px 12px;font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;">Nuova degustazione</div>
+    <div class="note-menu-item" onclick="closeNewTastingMenu();quickNewNote()">
+      <svg class="flute-icon" style="font-size:22px;color:var(--gold);"><use href="#ti-flute"/></svg>
+      <div>
+        <div>Degustazione singola</div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);font-weight:400;margin-top:2px;">Una bottiglia alla volta</div>
+      </div>
+    </div>
+    <div class="note-menu-item" onclick="closeNewTastingMenu();quickNewMultiTasting()">
+      <i class="ti ti-layers-intersect" style="color:var(--gold);"></i>
+      <div>
+        <div>Degustazione multipla</div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);font-weight:400;margin-top:2px;">Più calici insieme — verticali, confronti tra bottiglie</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- ═══ IL MIO ABBONAMENTO ═══ -->
 <div class="view" id="v-subscription">
@@ -3671,6 +3693,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=224"></script>
+<script src="js/app.js?v=225"></script>
 </body>
 </html>
