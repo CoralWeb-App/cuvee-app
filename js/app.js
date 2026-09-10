@@ -379,6 +379,113 @@ let _tastingSlots = [];      // [{data:{...}|null}, ...] bozze in memoria, una p
 let _tastingActiveIdx = 0;
 const TASTING_MAX_SLOTS = 50; // nessun limite reale nell'uso: solo un tetto di sicurezza tecnico
 
+// ══════════════════════════════════════════════════════
+// BOZZA AUTOSALVATA — vale sia per la degustazione singola che multipla.
+// Tutto lo stato del form vive solo in memoria JS finché non si preme Salva:
+// se l'app viene terminata dal sistema (background troppo a lungo, memoria
+// scarsa, chiusura forzata) tutto andrebbe perso. Per evitarlo si scrive
+// periodicamente una copia in localStorage (sopravvive alla chiusura
+// dell'app), e alla riapertura si offre di riprenderla.
+// ══════════════════════════════════════════════════════
+let _draftAutosaveInterval = null;
+
+function _draftKey(){
+  return currentUser ? 'cuvee_tasting_draft_' + currentUser.id : null;
+}
+
+// Rappresenta lo stato corrente come un array di "slot" — anche in modalità
+// singola è un array di un elemento, così un'unica logica serve entrambi i casi.
+function _buildDraftSnapshot(){
+  if (_tastingSlots.length >= 2) {
+    _tastingSlots[_tastingActiveIdx].data = _serializeNoteFormFields();
+  }
+  const rawSlots = _tastingSlots.length >= 2 ? _tastingSlots.map(s => s.data) : [_serializeNoteFormFields()];
+  // I blob non sono serializzabili in localStorage: si tiene solo il dataUrl,
+  // il blob viene ricostruito al volo in fase di upload (_uploadNotePhotos).
+  const slots = rawSlots.map(d => ({
+    ...d,
+    pendingPhotos: (d.pendingPhotos || []).map(p => ({ id: p.id, dataUrl: p.dataUrl, ext: p.ext }))
+  }));
+  const multi = _tastingSlots.length >= 2;
+  return {
+    savedAt: Date.now(),
+    slots,
+    activeIdx: _tastingActiveIdx,
+    isMulti: multi,
+    session: {
+      titolo: document.getElementById('session-titolo')?.value || '',
+      luogo: (multi ? document.getElementById('session-luogo')?.value : document.getElementById('note-luogo')?.value) || '',
+      data: (multi ? document.getElementById('session-data')?.value : document.getElementById('note-data-deg')?.value) || ''
+    }
+  };
+}
+
+function _saveDraft(){
+  const key = _draftKey();
+  if (!key || currentEditId) return; // niente autosalvataggio mentre si modifica una nota esistente
+  try {
+    const snap = _buildDraftSnapshot();
+    const hasAny = snap.slots.some(d => _formDataHasContent(d)) || !!snap.session.titolo;
+    if (hasAny) localStorage.setItem(key, JSON.stringify(snap));
+    else localStorage.removeItem(key);
+  } catch(e) { console.log('draft save error:', e); }
+}
+
+function _clearDraft(){
+  const key = _draftKey();
+  if (!key) return;
+  try { localStorage.removeItem(key); } catch(e) {}
+}
+
+function _startDraftAutosave(){
+  _stopDraftAutosave();
+  _draftAutosaveInterval = setInterval(_saveDraft, 20000);
+}
+function _stopDraftAutosave(){
+  if (_draftAutosaveInterval) { clearInterval(_draftAutosaveInterval); _draftAutosaveInterval = null; }
+}
+
+// Forza il salvataggio della bozza appena l'app passa in background/si blocca
+// lo schermo — è il momento in cui il sistema operativo può terminare il
+// processo da un momento all'altro, non possiamo contare sul prossimo timer.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && document.getElementById('v-carnet-new')?.classList.contains('active')) {
+    _saveDraft();
+  }
+});
+
+// Chiamata quando si apre una nuova degustazione: se c'è una bozza salvata
+// (con dati veri dentro) chiede se riprenderla, altrimenti la scarta in silenzio.
+function _maybeRestoreDraft(){
+  const key = _draftKey();
+  if (!key) return;
+  let raw;
+  try { raw = localStorage.getItem(key); } catch(e) { return; }
+  if (!raw) return;
+  let draft;
+  try { draft = JSON.parse(raw); } catch(e) { try { localStorage.removeItem(key); } catch(e2){} return; }
+  if (!draft?.slots?.length || !draft.slots.some(d => _formDataHasContent(d))) { _clearDraft(); return; }
+
+  const n = draft.slots.length;
+  const label = n > 1 ? ('una degustazione multipla con ' + n + ' bottiglie') : 'una degustazione';
+  if (!confirm('Hai ' + label + ' non salvata (l\'app si era chiusa prima del Salva). Vuoi riprenderla da dove l\'avevi lasciata?')) {
+    _clearDraft();
+    return;
+  }
+
+  _tastingSlots = draft.slots.map(d => ({ data: d }));
+  _tastingActiveIdx = Math.min(draft.activeIdx || 0, _tastingSlots.length - 1);
+  _applyNoteFormFields(_tastingSlots[_tastingActiveIdx].data);
+  if (_tastingSlots.length < 2) { _tastingSlots = []; _tastingActiveIdx = 0; } // era una degustazione singola
+  _renderTastingSlotBar();
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+  if (draft.session) {
+    if (_tastingSlots.length >= 2) { set('session-titolo', draft.session.titolo); set('session-luogo', draft.session.luogo); set('session-data', draft.session.data); }
+    else { set('note-luogo', draft.session.luogo); set('note-data-deg', draft.session.data); }
+  }
+}
+
 function _resetTastingSlots(){
   _tastingSlots = [];
   _tastingActiveIdx = 0;
@@ -523,6 +630,7 @@ function addTastingSlot(){
   _tastingActiveIdx = _tastingSlots.length - 1;
   _resetNoteFormFieldsForNewSlot();
   _renderTastingSlotBar();
+  _saveDraft();
 }
 
 function switchTastingSlot(idx){
@@ -531,6 +639,7 @@ function switchTastingSlot(idx){
   _tastingActiveIdx = idx;
   _applyNoteFormFields(_tastingSlots[idx].data); // foto incluse, ripristinate per-slot
   _renderTastingSlotBar();
+  _saveDraft();
 }
 
 function removeTastingSlot(idx){
@@ -546,10 +655,12 @@ function removeTastingSlot(idx){
     _tastingSlots = [];
     _tastingActiveIdx = 0;
     _renderTastingSlotBar();
+    _saveDraft();
     return;
   }
   if (wasActive) _applyNoteFormFields(_tastingSlots[_tastingActiveIdx].data);
   _renderTastingSlotBar();
+  _saveDraft();
 }
 
 function _formDataHasContent(d){
@@ -577,6 +688,8 @@ function cancelNoteForm(){
     hasAnyData = _tastingSlots.some((s, i) => i !== _tastingActiveIdx && _formDataHasContent(s.data));
   }
   if (hasAnyData && !confirm('Vuoi annullare questa degustazione? I dati inseriti andranno persi.')) return;
+  _clearDraft();
+  _stopDraftAutosave();
   goBack();
 }
 
@@ -671,7 +784,11 @@ function checkAndNewNote(){
   if (btn) btn.textContent = 'Salva nel Carnet';
   _resetTastingSlots();
   go('v-carnet-new');
-  requestAnimationFrame(() => initAllSliders(5));
+  requestAnimationFrame(() => {
+    initAllSliders(5);
+    _maybeRestoreDraft(); // dopo il reset, così un eventuale ripristino non viene sovrascritto
+    _startDraftAutosave();
+  });
 }
 function openNewNoteFromBottiglia(bottId) {
   if (!currentUser) { go('v-login'); return; }
@@ -730,7 +847,11 @@ function openNewNoteFromBottiglia(bottId) {
 
   _resetTastingSlots();
   go('v-carnet-new');
-  requestAnimationFrame(() => { initAllSliders(5); renderPhotoStrip(); });
+  requestAnimationFrame(() => {
+    initAllSliders(5);
+    renderPhotoStrip();
+    _startDraftAutosave(); // niente proposta di ripristino qui: si parte già precompilati da una bottiglia specifica
+  });
 }
 
 /* ── Slider fill ──────────────────────────────────────────────────── */
@@ -1120,6 +1241,8 @@ async function saveMultiTasting(){
     if (notesErr) throw notesErr;
 
     if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
+    _clearDraft();
+    _stopDraftAutosave();
     _resetTastingSlots();
     resetPhotoStrip();
     go('v-carnet'); // resetta i filtri, così il raggruppamento per sessione funziona subito dopo
@@ -1171,13 +1294,16 @@ async function _uploadNotePhotos(existingUrls, pendingPhotos){
     }
   }
 
-  // Nuove foto scattate dall'utente
+  // Nuove foto scattate dall'utente — se il blob manca (foto ripristinata da
+  // una bozza salvata: il blob non è serializzabile in localStorage) lo si
+  // ricostruisce al volo dal suo dataUrl, sempre presente.
   for (const photo of pendingPhotos) {
     try {
+      const blob = photo.blob || await (await fetch(photo.dataUrl)).blob();
       const path = currentUser.id+'/'+Date.now()+'_'+Math.random().toString(36).substr(2,5)+'.'+photo.ext;
       const { error: uploadError } = await supa.storage
         .from('carnet-photos')
-        .upload(path, photo.blob, { upsert: true, contentType: photo.blob.type });
+        .upload(path, blob, { upsert: true, contentType: blob.type });
       if (!uploadError) {
         const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
         if (urlData?.publicUrl) allPhotoUrls.push(urlData.publicUrl);
@@ -1280,6 +1406,8 @@ async function saveNote(editId = null){
     const hiddenIdReset = document.getElementById('edit-note-id');
     if (hiddenIdReset) hiddenIdReset.value = '';
     resetPhotoStrip();
+    _clearDraft();
+    _stopDraftAutosave();
     // Aggiorna la cache locale
     if (Array.isArray(allCarnetNotes)) {
       const idx = allCarnetNotes.findIndex(n => n.id === result.id);
@@ -3433,6 +3561,7 @@ function openEditNote(note) {
   if (fab) fab.style.display = 'none';
   const bar = document.getElementById('tasting-slotbar');
   if (bar) bar.style.display = 'none';
+  _stopDraftAutosave(); // niente autosalvataggio bozza durante la modifica di una nota già esistente
 
   go('v-carnet-new');
   requestAnimationFrame(() => { initAllSliders(null); renderPhotoStrip(); });
