@@ -84,7 +84,7 @@ function go(id){
 }
 function updateBottomNav(id){
   // View senza bottom nav (fuori dall'app: splash, onboarding, auth, paywall)
-  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-age-gate-pre','v-complete-profile'];
+  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-age-gate-pre','v-complete-profile','v-carnet-new'];
   const nav = document.getElementById('shared-bottom-nav');
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 
@@ -369,6 +369,157 @@ function setNoteEvoluzione(el, val){
   document.querySelectorAll('.evo-chip').forEach(c => c.classList.toggle('on', c.dataset.val === _noteEvoluzione));
 }
 
+// ══════════════════════════════════════════════════════
+// DEGUSTAZIONE MULTIPLA (WIP — solo admin per ora)
+// Permette di passare da un calice all'altro senza perdere i dati inseriti.
+// Il salvataggio, per questo primo step, riguarda ancora solo lo slot attivo:
+// la logica di sessione/DB per salvare tutti i calici insieme arriva dopo.
+// ══════════════════════════════════════════════════════
+let _tastingSlots = [];      // [{data:{...}|null}, ...] bozze in memoria, una per calice
+let _tastingActiveIdx = 0;
+const TASTING_MAX_SLOTS = 6;
+
+function _resetTastingSlots(){
+  _tastingSlots = [];
+  _tastingActiveIdx = 0;
+  _renderTastingSlotBar();
+}
+
+function _serializeNoteFormFields(){
+  const sliderVal = key => _activeSliders.has(key) ? (document.getElementById('val-'+key)?.textContent ?? null) : null;
+  return {
+    maison: document.getElementById('note-maison')?.value || '',
+    cuvee: document.getElementById('note-cuvee')?.value || '',
+    annata: document.getElementById('note-annata')?.value || '',
+    dosage: document.getElementById('note-dosage')?.value || '',
+    sboccatura: document.getElementById('note-sboccatura')?.value || '',
+    tipi: [..._noteTypes],
+    colore: _noteColore,
+    evoluzione: _noteEvoluzione,
+    rating: currentRating,
+    sliders: {
+      acidite: sliderVal('acidite'), eff: sliderVal('eff'), corpo: sliderVal('corpo'),
+      comp: sliderVal('comp'), equilibrio: sliderVal('equilibrio'), lung: sliderVal('lung'),
+      perlage: sliderVal('perlage')
+    },
+    aromiOn: Array.from(document.querySelectorAll('#aromi-grid .aromi-pill.on')).map(el => el.textContent),
+    aromiCustom: document.getElementById('note-aromi-custom')?.value || '',
+    noteText: document.getElementById('note-text')?.value || '',
+    prezzo: document.getElementById('note-prezzo')?.value || ''
+  };
+}
+
+function _applyNoteFormFields(d){
+  const set = (id,v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+  set('note-maison', d?.maison); set('note-cuvee', d?.cuvee); set('note-annata', d?.annata);
+  set('note-dosage', d?.dosage); set('note-sboccatura', d?.sboccatura);
+  set('note-aromi-custom', d?.aromiCustom); set('note-text', d?.noteText); set('note-prezzo', d?.prezzo);
+
+  _noteTypes = Array.isArray(d?.tipi) ? [...d.tipi] : [];
+  _syncTipoChips();
+  _noteColore = d?.colore || null;
+  _noteEvoluzione = d?.evoluzione || null;
+  document.querySelectorAll('.colore-swatch').forEach(c => c.classList.toggle('on', c.dataset.val === _noteColore));
+  document.querySelectorAll('.evo-chip').forEach(c => c.classList.toggle('on', c.dataset.val === _noteEvoluzione));
+
+  document.querySelectorAll('#aromi-grid .aromi-pill').forEach(p => p.classList.toggle('on', (d?.aromiOn||[]).includes(p.textContent)));
+
+  currentRating = d?.rating || 0;
+  setRating(currentRating);
+
+  _activeSliders = new Set();
+  ['acidite','eff','corpo','comp','equilibrio','lung','perlage'].forEach(key => {
+    const val = d?.sliders?.[key];
+    const el = document.getElementById('val-'+key);
+    const wrap = el?.closest('.slider-wrap');
+    if (val != null && el && wrap) {
+      el.textContent = val;
+      const input = wrap.querySelector('input[type=range]');
+      if (input) input.value = val;
+      _activeSliders.add(key);
+      wrap.classList.add('slider-active');
+    } else if (wrap) {
+      wrap.classList.remove('slider-active');
+    }
+  });
+  initAllSliders(null);
+}
+
+function _renderTastingSlotBar(){
+  const bar = document.getElementById('tasting-slotbar');
+  const fab = document.getElementById('tasting-fab');
+  if (!bar) return;
+  if (_tastingSlots.length < 2) {
+    bar.style.display = 'none';
+    if (fab) fab.style.display = isAdmin() ? 'flex' : 'none';
+    return;
+  }
+  if (fab) fab.style.display = 'none';
+  bar.style.display = 'flex';
+  bar.innerHTML = _tastingSlots.map((s,i) => {
+    const filled = !!(s.data && (s.data.maison || s.data.cuvee));
+    return '<button type="button" class="tasting-slot'+(i===_tastingActiveIdx?' active':'')+(filled?' filled':'')+'" onclick="switchTastingSlot('+i+')">'+
+      '<span class="tasting-slot-num">'+(i+1)+'</span>'+
+      '<span class="tasting-slot-x" onclick="event.stopPropagation();removeTastingSlot('+i+')"><i class="ti ti-x"></i></span>'+
+    '</button>';
+  }).join('') + (_tastingSlots.length < TASTING_MAX_SLOTS ? '<button type="button" class="tasting-slot-add" onclick="addTastingSlot()"><i class="ti ti-plus"></i></button>' : '');
+}
+
+function addTastingSlot(){
+  if (_tastingSlots.length === 0) {
+    // Prima aggiunta: la bottiglia corrente sul form diventa lo slot 1
+    _tastingSlots.push({ data: _serializeNoteFormFields() });
+  } else {
+    _tastingSlots[_tastingActiveIdx].data = _serializeNoteFormFields();
+  }
+  if (_tastingSlots.length >= TASTING_MAX_SLOTS) { _renderTastingSlotBar(); return; }
+  _tastingSlots.push({ data: null });
+  _tastingActiveIdx = _tastingSlots.length - 1;
+  _resetNoteFormFieldsForNewSlot();
+  _renderTastingSlotBar();
+}
+
+function switchTastingSlot(idx){
+  if (idx === _tastingActiveIdx || !_tastingSlots[idx]) return;
+  _tastingSlots[_tastingActiveIdx].data = _serializeNoteFormFields();
+  _tastingActiveIdx = idx;
+  _applyNoteFormFields(_tastingSlots[idx].data);
+  resetPhotoStrip(); // foto non ancora gestite per-slot in questo step
+  _renderTastingSlotBar();
+}
+
+function removeTastingSlot(idx){
+  if (_tastingSlots.length <= 1) return;
+  const wasActive = idx === _tastingActiveIdx;
+  _tastingSlots.splice(idx,1);
+  if (_tastingActiveIdx >= _tastingSlots.length) _tastingActiveIdx = _tastingSlots.length - 1;
+  if (_tastingSlots.length < 2) {
+    _tastingSlots = [];
+    _tastingActiveIdx = 0;
+    _renderTastingSlotBar();
+    return;
+  }
+  if (wasActive) _applyNoteFormFields(_tastingSlots[_tastingActiveIdx].data);
+  _renderTastingSlotBar();
+}
+
+// Reset dei soli campi "per bottiglia" quando si apre uno slot nuovo vuoto —
+// luogo e data degustazione restano condivisi tra tutti i calici della sessione.
+function _resetNoteFormFieldsForNewSlot(){
+  ['note-maison','note-cuvee','note-annata','note-dosage','note-sboccatura','note-text','note-prezzo','note-aromi-custom'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.querySelectorAll('#aromi-grid .aromi-pill').forEach(p => p.classList.remove('on'));
+  _noteTypes = []; _syncTipoChips();
+  _noteColore = null; _noteEvoluzione = null;
+  document.querySelectorAll('.colore-swatch, .evo-chip').forEach(c => c.classList.remove('on'));
+  currentRating = 0; setRating(0);
+  _activeSliders = new Set();
+  initAllSliders(5);
+  resetPhotoStrip();
+}
+
 // Chiamata dal pulsante Carnet nella bottom nav:
 // controlla SEMPRE il limite prima di aprire il form — locale se disponibile, DB altrimenti
 async function quickNewNote(){
@@ -422,6 +573,7 @@ function checkAndNewNote(){
   if (title) title.textContent = 'Nuova degustazione';
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva nel Carnet';
+  _resetTastingSlots();
   go('v-carnet-new');
   requestAnimationFrame(() => initAllSliders(5));
 }
@@ -480,6 +632,7 @@ function openNewNoteFromBottiglia(bottId) {
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva nel Carnet';
 
+  _resetTastingSlots();
   go('v-carnet-new');
   requestAnimationFrame(() => { initAllSliders(5); renderPhotoStrip(); });
 }
@@ -3054,6 +3207,13 @@ function openEditNote(note) {
   if (title) title.textContent = 'Modifica nota';
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva modifiche';
+
+  // Modificare una nota esistente resta un flusso singolo: niente FAB multi-degustazione
+  _tastingSlots = []; _tastingActiveIdx = 0;
+  const fab = document.getElementById('tasting-fab');
+  if (fab) fab.style.display = 'none';
+  const bar = document.getElementById('tasting-slotbar');
+  if (bar) bar.style.display = 'none';
 
   go('v-carnet-new');
   requestAnimationFrame(() => { initAllSliders(null); renderPhotoStrip(); });

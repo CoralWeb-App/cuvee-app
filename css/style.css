@@ -876,6 +876,41 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .slider-equilibrio .slider-val{background:#C97B94;}
 .slider-equilibrio .slider-label i{color:#C97B94;}
 
+/* Degustazione multipla — FAB "+" e barra slot (WIP) */
+.tasting-fab-wrap{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:0;pointer-events:none;z-index:200;}
+.tasting-fab{
+  position:absolute;right:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);
+  width:52px;height:52px;border-radius:50%;background:#1E1208;border:3px solid var(--ivory);
+  box-shadow:0 3px 14px rgba(30,18,8,.25);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;pointer-events:auto;
+}
+.tasting-fab i{font-size:24px;color:#C8A03A;}
+.tasting-slotbar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;
+  display:flex;gap:9px;align-items:center;background:var(--white);border-top:1px solid var(--border);
+  padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px);z-index:200;overflow-x:auto;
+}
+.tasting-slot{
+  position:relative;flex-shrink:0;width:40px;height:40px;border-radius:50%;
+  border:2px solid var(--border-2);background:var(--ivory);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;
+}
+.tasting-slot.filled{border-color:var(--gold);background:var(--gold-pale);}
+.tasting-slot.active{border-color:#1E1208;box-shadow:0 0 0 2px rgba(30,18,8,.15);}
+.tasting-slot-num{font-family:var(--sans);font-size:15px;font-weight:600;color:var(--ink-3);}
+.tasting-slot.filled .tasting-slot-num{color:#8a6a1e;}
+.tasting-slot.active .tasting-slot-num{color:#1E1208;}
+.tasting-slot-x{
+  position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;
+  background:var(--ink-4);color:#fff;display:flex;align-items:center;justify-content:center;
+}
+.tasting-slot-x i{font-size:10px;}
+.tasting-slot-add{
+  flex-shrink:0;width:40px;height:40px;border-radius:50%;border:2px dashed var(--border-2);
+  background:none;display:flex;align-items:center;justify-content:center;color:var(--ink-4);cursor:pointer;
+}
+.tasting-slot-add i{font-size:18px;}
+
 /* Esame visivo — swatch colore con pallino */
 .colore-grid{display:flex;flex-wrap:wrap;gap:7px;}
 .colore-swatch{
