@@ -378,6 +378,19 @@ function setNoteEvoluzione(el, val){
 let _tastingSlots = [];      // [{data:{...}|null}, ...] bozze in memoria, una per calice
 let _tastingActiveIdx = 0;
 const TASTING_MAX_SLOTS = 50; // nessun limite reale nell'uso: solo un tetto di sicurezza tecnico
+const FREE_NOTES_LIMIT = 3; // note totali nel Carnet per il piano Free — vale anche sommando i calici di una degustazione multipla
+
+// Conteggio note già salvate dal free tier, aggiornato all'apertura del form:
+// serve per bloccare l'aggiunta di nuovi slot PRIMA che l'utente compili 5
+// bottiglie e scopra solo al Salva di poterne tenere solo 3.
+let _freeNotesUsedCache = 0;
+async function _refreshFreeNotesUsedCache(){
+  if (!currentUser || isPremium()) { _freeNotesUsedCache = 0; return; }
+  try {
+    const { count } = await supa.from('carnet_notes').select('*', { count:'exact', head:true }).eq('user_id', currentUser.id);
+    _freeNotesUsedCache = count || 0;
+  } catch(e) { _freeNotesUsedCache = 0; }
+}
 
 // ══════════════════════════════════════════════════════
 // BOZZA AUTOSALVATA — vale sia per la degustazione singola che multipla.
@@ -619,6 +632,15 @@ function _renderTastingSlotBar(){
 }
 
 function addTastingSlot(){
+  // Piano Free: il totale delle note nel Carnet resta 3, calici di una
+  // degustazione multipla compresi — non si aggira il limite aprendone una.
+  if (!isPremium()) {
+    const afterCount = (_tastingSlots.length || 1) + 1;
+    if (_freeNotesUsedCache + afterCount > FREE_NOTES_LIMIT) {
+      showNoteError('Con il piano Free puoi registrare al massimo ' + FREE_NOTES_LIMIT + ' degustazioni in totale, anche sommando i calici di una degustazione multipla. Passa a Premium per non avere limiti.');
+      return;
+    }
+  }
   if (_tastingSlots.length === 0) {
     // Prima aggiunta: la bottiglia corrente sul form diventa lo slot 1
     _tastingSlots.push({ data: _serializeNoteFormFields() });
@@ -749,7 +771,7 @@ async function quickNewNote(){
         count = 0; // in caso di errore di rete, lascia aprire il form
       }
     }
-    if(count >= 3){
+    if(count >= FREE_NOTES_LIMIT){
       go('v-paywall');
       return;
     }
@@ -784,6 +806,7 @@ function checkAndNewNote(){
   if (btn) btn.textContent = 'Salva nel Carnet';
   _resetTastingSlots();
   go('v-carnet-new');
+  _refreshFreeNotesUsedCache();
   requestAnimationFrame(() => {
     initAllSliders(5);
     _maybeRestoreDraft(); // dopo il reset, così un eventuale ripristino non viene sovrascritto
@@ -847,6 +870,7 @@ function openNewNoteFromBottiglia(bottId) {
 
   _resetTastingSlots();
   go('v-carnet-new');
+  _refreshFreeNotesUsedCache();
   requestAnimationFrame(() => {
     initAllSliders(5);
     renderPhotoStrip();
@@ -1200,7 +1224,7 @@ async function saveMultiTasting(){
 
   if (!isPremium()) {
     const { count } = await supa.from('carnet_notes').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
-    if ((count || 0) + candidates.length > 3) {
+    if ((count || 0) + candidates.length > FREE_NOTES_LIMIT) {
       if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
       go('v-paywall');
       return;
@@ -2488,7 +2512,7 @@ async function saveCarnetNote(nota) {
         .from('carnet_notes')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', currentUser.id);
-      if (count >= 3) {
+      if (count >= FREE_NOTES_LIMIT) {
         go('v-paywall');
         return;
       }
@@ -3742,8 +3766,8 @@ async function updateCarnetUI() {
   if (premBanner) {
     premBanner.style.display = isPrem ? 'none' : 'block';
     if (!isPrem && msgEl) {
-      const used = Math.min(notes.length, 3);
-      const remaining = 3 - used;
+      const used = Math.min(notes.length, FREE_NOTES_LIMIT);
+      const remaining = FREE_NOTES_LIMIT - used;
       if (used === 0) {
         msgEl.innerHTML = 'Hai <strong style="color:#8a6a1e;">3 note gratuite</strong> disponibili. Con Premium puoi aggiungere tutte le degustazioni che vuoi — senza limiti.';
       } else if (remaining > 0) {
@@ -3763,7 +3787,7 @@ function renderCarnetNotes(notes) {
   // libere; se l'utente non è premium, le successive vengono offuscate e bloccate,
   // anche se erano state inserite mentre l'account era premium.
   const premium = isPremium();
-  notes.forEach((n, i) => { n._locked = !premium && i >= 3; });
+  notes.forEach((n, i) => { n._locked = !premium && i >= FREE_NOTES_LIMIT; });
 
   // Apply filters
   let filtered = notes;
