@@ -409,7 +409,9 @@ function _serializeNoteFormFields(){
     aromiOn: Array.from(document.querySelectorAll('#aromi-grid .aromi-pill.on')).map(el => el.textContent),
     aromiCustom: document.getElementById('note-aromi-custom')?.value || '',
     noteText: document.getElementById('note-text')?.value || '',
-    prezzo: document.getElementById('note-prezzo')?.value || ''
+    prezzo: document.getElementById('note-prezzo')?.value || '',
+    pendingPhotos: [..._pendingPhotos],
+    existingPhotoUrls: [..._existingPhotoUrls]
   };
 }
 
@@ -447,6 +449,10 @@ function _applyNoteFormFields(d){
     }
   });
   initAllSliders(null);
+
+  _pendingPhotos = Array.isArray(d?.pendingPhotos) ? [...d.pendingPhotos] : [];
+  _existingPhotoUrls = Array.isArray(d?.existingPhotoUrls) ? [...d.existingPhotoUrls] : [];
+  renderPhotoStrip();
 }
 
 // Mostra/nasconde l'header di sessione (nome, luogo, data condivisi) quando
@@ -523,8 +529,7 @@ function switchTastingSlot(idx){
   if (idx === _tastingActiveIdx || !_tastingSlots[idx]) return;
   _tastingSlots[_tastingActiveIdx].data = _serializeNoteFormFields();
   _tastingActiveIdx = idx;
-  _applyNoteFormFields(_tastingSlots[idx].data);
-  resetPhotoStrip(); // foto non ancora gestite per-slot in questo step
+  _applyNoteFormFields(_tastingSlots[idx].data); // foto incluse, ripristinate per-slot
   _renderTastingSlotBar();
 }
 
@@ -558,6 +563,8 @@ function _formDataHasContent(d){
   if (d.aromiCustom) return true;
   if (d.noteText) return true;
   if (d.prezzo) return true;
+  if (d.pendingPhotos && d.pendingPhotos.length) return true;
+  if (d.existingPhotoUrls && d.existingPhotoUrls.length) return true;
   return false;
 }
 
@@ -1074,30 +1081,18 @@ async function saveMultiTasting(){
       .select().single();
     if (sessErr) throw sessErr;
 
-    // Foto: solo lo slot attivo (se ha foto pending/esistenti) le riceve, per ora
-    const allPhotoUrls = [];
-    for (const photo of _pendingPhotos) {
-      try {
-        const path = currentUser.id+'/'+Date.now()+'_'+Math.random().toString(36).substr(2,5)+'.'+photo.ext;
-        const { error: uploadError } = await supa.storage.from('carnet-photos').upload(path, photo.blob, { upsert: true, contentType: photo.blob.type });
-        if (!uploadError) {
-          const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
-          if (urlData?.publicUrl) allPhotoUrls.push(urlData.publicUrl);
-        }
-      } catch(e) { console.log('Photo upload error:', e); }
-    }
-    allPhotoUrls.push(..._existingPhotoUrls);
-
-    const rows = candidates.map(c => {
+    // Foto: ogni bottiglia carica le proprie (esistenti dal catalogo + scattate per quello slot)
+    const rows = await Promise.all(candidates.map(async c => {
       const nota = _notaFromSlotData(c.data, sessionMeta);
       nota.sessione_id = session.id;
       nota.user_id = currentUser.id;
-      if (c.idx === _tastingActiveIdx && allPhotoUrls.length) {
-        nota.foto_url = allPhotoUrls[0];
-        nota.foto_urls = allPhotoUrls;
+      const photoUrls = await _uploadNotePhotos(c.data.existingPhotoUrls || [], c.data.pendingPhotos || []);
+      if (photoUrls.length) {
+        nota.foto_url = photoUrls[0];
+        nota.foto_urls = photoUrls;
       }
       return nota;
-    });
+    }));
 
     const { data: savedNotes, error: notesErr } = await supa.from('carnet_notes').insert(rows).select();
     if (notesErr) throw notesErr;
@@ -1113,6 +1108,61 @@ async function saveMultiTasting(){
     alert('Errore nel salvataggio della degustazione: ' + (e.message || e));
     if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
   }
+}
+
+// Carica le foto di UNA bottiglia (esistenti dal catalogo + nuove scattate) e
+// ritorna l'elenco di URL definitivi nel bucket personale carnet-photos.
+// Condivisa da saveNote() (singola) e saveMultiTasting() (una volta per slot).
+async function _uploadNotePhotos(existingUrls, pendingPhotos){
+  const allPhotoUrls = [];
+
+  // Foto esistenti: copia quelle del catalogo (champagne-photos) nel bucket personale
+  // → ogni nota carnet ha copia indipendente; eliminare la nota non tocca il catalogo
+  for (const url of existingUrls) {
+    if (url && url.includes('/champagne-photos/')) {
+      try {
+        const marker = '/champagne-photos/';
+        const idx = url.indexOf(marker);
+        const storagePath = idx !== -1 ? url.substring(idx + marker.length).split('?')[0] : null;
+        let copied = false;
+        if (storagePath) {
+          const { data: fileBlob, error: dlErr } = await supa.storage
+            .from('champagne-photos').download(storagePath);
+          if (!dlErr && fileBlob) {
+            const carnetPath = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).substr(2,5)}.jpg`;
+            const { error: upErr } = await supa.storage
+              .from('carnet-photos')
+              .upload(carnetPath, fileBlob, { contentType: 'image/jpeg', upsert: true });
+            if (!upErr) {
+              const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(carnetPath);
+              if (urlData?.publicUrl) { allPhotoUrls.push(urlData.publicUrl); copied = true; }
+            }
+          }
+        }
+        if (!copied) allPhotoUrls.push(url); // fallback: usa URL originale
+      } catch(e) {
+        console.log('Catalog photo copy error:', e);
+        allPhotoUrls.push(url); // fallback sicuro
+      }
+    } else {
+      allPhotoUrls.push(url); // già in carnet-photos, tenere com'è
+    }
+  }
+
+  // Nuove foto scattate dall'utente
+  for (const photo of pendingPhotos) {
+    try {
+      const path = currentUser.id+'/'+Date.now()+'_'+Math.random().toString(36).substr(2,5)+'.'+photo.ext;
+      const { error: uploadError } = await supa.storage
+        .from('carnet-photos')
+        .upload(path, photo.blob, { upsert: true, contentType: photo.blob.type });
+      if (!uploadError) {
+        const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
+        if (urlData?.publicUrl) allPhotoUrls.push(urlData.publicUrl);
+      } else { console.log('Upload error:', uploadError); }
+    } catch(e) { console.log('Photo upload error:', e); }
+  }
+  return allPhotoUrls;
 }
 
 async function saveNote(editId = null){
@@ -1173,55 +1223,7 @@ async function saveNote(editId = null){
   }
 
   // Upload all pending photos + gestione foto esistenti
-  const allPhotoUrls = [];
-
-  // Foto esistenti: copia quelle del catalogo (champagne-photos) nel bucket personale
-  // → ogni nota carnet ha copia indipendente; eliminare la nota non tocca il catalogo
-  for (const url of _existingPhotoUrls) {
-    if (url && url.includes('/champagne-photos/')) {
-      // Scarica dal bucket catalogo e ricarica nel bucket personale
-      try {
-        const marker = '/champagne-photos/';
-        const idx = url.indexOf(marker);
-        const storagePath = idx !== -1 ? url.substring(idx + marker.length).split('?')[0] : null;
-        let copied = false;
-        if (storagePath) {
-          const { data: fileBlob, error: dlErr } = await supa.storage
-            .from('champagne-photos').download(storagePath);
-          if (!dlErr && fileBlob) {
-            const carnetPath = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).substr(2,5)}.jpg`;
-            const { error: upErr } = await supa.storage
-              .from('carnet-photos')
-              .upload(carnetPath, fileBlob, { contentType: 'image/jpeg', upsert: true });
-            if (!upErr) {
-              const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(carnetPath);
-              if (urlData?.publicUrl) { allPhotoUrls.push(urlData.publicUrl); copied = true; }
-            }
-          }
-        }
-        if (!copied) allPhotoUrls.push(url); // fallback: usa URL originale
-      } catch(e) {
-        console.log('Catalog photo copy error:', e);
-        allPhotoUrls.push(url); // fallback sicuro
-      }
-    } else {
-      allPhotoUrls.push(url); // già in carnet-photos, tenere com'è
-    }
-  }
-
-  // Nuove foto scattate dall'utente
-  for (const photo of _pendingPhotos) {
-    try {
-      const path = currentUser.id+'/'+Date.now()+'_'+Math.random().toString(36).substr(2,5)+'.'+photo.ext;
-      const { error: uploadError } = await supa.storage
-        .from('carnet-photos')
-        .upload(path, photo.blob, { upsert: true, contentType: photo.blob.type });
-      if (!uploadError) {
-        const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
-        if (urlData?.publicUrl) allPhotoUrls.push(urlData.publicUrl);
-      } else { console.log('Upload error:', uploadError); }
-    } catch(e) { console.log('Photo upload error:', e); }
-  }
+  const allPhotoUrls = await _uploadNotePhotos(_existingPhotoUrls, _pendingPhotos);
   nota.foto_url  = allPhotoUrls[0] || null;
   nota.foto_urls = allPhotoUrls.length > 0 ? allPhotoUrls : null;
 
@@ -3414,13 +3416,38 @@ function openEditNote(note) {
   requestAnimationFrame(() => { initAllSliders(null); renderPhotoStrip(); });
 }
 
+// Estrae dagli URL foto i path dentro carnet-photos (unico bucket personale
+// per le foto del Carnet) e li elimina dallo storage. Condivisa da
+// deleteNote() e deleteCarnetSession() per non lasciare mai file orfani.
+async function _deletePhotosFromStorage(urls){
+  const marker = '/carnet-photos/';
+  const storagePaths = [...new Set(
+    (urls||[]).filter(Boolean)
+      .filter(url => url.includes(marker))
+      .map(url => url.substring(url.indexOf(marker) + marker.length).split('?')[0])
+  )];
+  if (storagePaths.length) {
+    try {
+      await supa.storage.from('carnet-photos').remove(storagePaths);
+      console.log('Photos deleted from storage:', storagePaths);
+    } catch(e) { console.log('Storage delete error:', e); }
+  }
+}
+
+function _photoUrlsOf(note){
+  return [
+    ...(note?.foto_urls ? (Array.isArray(note.foto_urls) ? note.foto_urls : [note.foto_urls]) : []),
+    ...(note?.foto_url && !note?.foto_urls ? [note.foto_url] : []),
+  ].filter(Boolean);
+}
+
 async function deleteNote(noteId) {
   if (!confirm('Vuoi eliminare questa nota? L\'operazione non è reversibile.')) return;
   try {
-    // Recupera la nota per ottenere TUTTE le foto (foto_url + foto_urls)
+    // Recupera la nota per ottenere foto e l'eventuale sessione di appartenenza
     const { data: noteData } = await supa
       .from('carnet_notes')
-      .select('foto_url, foto_urls')
+      .select('foto_url, foto_urls, sessione_id')
       .eq('id', noteId)
       .single();
 
@@ -3432,36 +3459,57 @@ async function deleteNote(noteId) {
       .eq('user_id', currentUser.id);
     if (error) throw error;
 
-    // Elimina TUTTE le foto dallo storage (sia foto_url che foto_urls)
-    try {
-      const allUrls = [
-        ...(noteData?.foto_urls
-          ? (Array.isArray(noteData.foto_urls) ? noteData.foto_urls : [noteData.foto_urls])
-          : []),
-        ...(noteData?.foto_url && !noteData?.foto_urls ? [noteData.foto_url] : []),
-      ].filter(Boolean);
+    await _deletePhotosFromStorage(_photoUrlsOf(noteData));
 
-      const marker = '/carnet-photos/';
-      const storagePaths = [...new Set(
-        allUrls
-          .filter(url => url.includes(marker))
-          .map(url => url.substring(url.indexOf(marker) + marker.length).split('?')[0])
-      )];
-
-      if (storagePaths.length) {
-        await supa.storage.from('carnet-photos').remove(storagePaths);
-        console.log('Photos deleted from storage:', storagePaths);
+    // Se la nota apparteneva a una sessione e non ci sono più calici collegati,
+    // elimina anche la sessione — niente sessioni vuote a vagare nel Carnet.
+    if (noteData?.sessione_id) {
+      const { count } = await supa
+        .from('carnet_notes')
+        .select('*', { count: 'exact', head: true })
+        .eq('sessione_id', noteData.sessione_id);
+      if (!count) {
+        await supa.from('carnet_sessioni').delete().eq('id', noteData.sessione_id).eq('user_id', currentUser.id);
       }
-    } catch(storageErr) {
-      console.log('Storage delete error:', storageErr);
-      // Non bloccare se le foto non si cancellano
     }
 
-    goBack();
+    // Non torniamo indietro con goBack(): se si veniva dal dettaglio di una
+    // sessione, quella vista resterebbe con l'elenco vecchio (nota già
+    // cancellata). Si torna sempre alla lista, che è già aggiornata.
+    go('v-carnet');
     await updateCarnetUI();
   } catch(e) {
     console.log('deleteNote error:', e);
     alert('Errore durante l\'eliminazione.');
+  }
+}
+
+// Elimina un'intera sessione di degustazione multipla: tutte le foto di
+// tutti i calici vengono rimosse dallo storage, poi la sessione (le note
+// collegate seguono via ON DELETE CASCADE a livello di database).
+async function deleteCarnetSession(sessionId) {
+  if (!confirm('Vuoi eliminare l\'intera degustazione? Tutte le bottiglie e le foto al suo interno verranno cancellate. L\'operazione non è reversibile.')) return;
+  try {
+    const { data: notes } = await supa
+      .from('carnet_notes')
+      .select('foto_url, foto_urls')
+      .eq('sessione_id', sessionId);
+
+    const allUrls = (notes || []).flatMap(_photoUrlsOf);
+    await _deletePhotosFromStorage(allUrls);
+
+    const { error } = await supa
+      .from('carnet_sessioni')
+      .delete()
+      .eq('id', sessionId)
+      .eq('user_id', currentUser.id);
+    if (error) throw error;
+
+    go('v-carnet');
+    await updateCarnetUI();
+  } catch(e) {
+    console.log('deleteCarnetSession error:', e);
+    alert('Errore durante l\'eliminazione della degustazione.');
   }
 }
 
@@ -3678,9 +3726,11 @@ function renderCarnetSessionCard(session) {
 }
 
 // Apre la vista di dettaglio di una sessione dal suo id (cache in window._carnetSessions)
+let currentCarnetSessionId = null;
 function openCarnetSession(sessionId) {
   const s = window._carnetSessions?.get(sessionId);
   if (!s) return;
+  currentCarnetSessionId = sessionId;
   go('v-carnet-session-detail');
   renderCarnetSessionDetail(s);
 }
