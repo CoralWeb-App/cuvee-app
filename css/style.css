@@ -717,6 +717,7 @@ html,body{
 .cnc-footer{display:flex;align-items:center;justify-content:space-between;}
 .cnc-glasses{display:flex;gap:3px;}
 .cnc-glasses i{font-size:15px;color:var(--gold);}
+.cnc-glasses .flute-icon{font-size:15px;color:var(--gold);}
 .cnc-date{font-family:var(--sans);font-size:12px;color:var(--ink-5);}
 /* legacy classes kept for safety */
 .carnet-hero{padding:20px 18px 0;}
@@ -776,10 +777,13 @@ html,body{
 
 /* Rating */
 .rating-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
-.rating-star{font-size:34px;color:var(--gold);opacity:.2;cursor:pointer;transition:opacity .15s,transform .1s;}
+.rating-star{font-size:34px;color:var(--gold);opacity:.2;cursor:pointer;transition:opacity .15s,transform .1s;display:inline-flex;}
 .rating-star.on{opacity:1;transform:scale(1.08);}
 .rating-heart{font-size:28px;cursor:pointer;transition:color .18s,opacity .18s,transform .15s;}
 .rating-heart.on{transform:scale(1.12);}
+
+/* Calice Cuvée (flûte) — sostituisce ovunque il vecchio ti-glass-full */
+.flute-icon{width:.68em;height:1em;display:inline-block;vertical-align:-0.15em;fill:none;}
 
 /* Photo box */
 .photo-upload-box{
@@ -979,6 +983,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .calice-btn{display:flex;align-items:center;gap:2px;background:var(--white);border:1.5px solid var(--border);border-radius:20px;padding:7px 11px;cursor:pointer;font-family:var(--sans);font-size:13px;color:var(--ink-4);transition:all .2s;white-space:nowrap;flex-shrink:0;}
 .calice-btn.on{background:var(--gold-pale);border-color:var(--gold);color:#8a6a1e;}
 .calice-btn i{font-size:13px;color:var(--gold);}
+.calice-btn .flute-icon{font-size:13px;color:var(--gold);}
 #cf-all{gap:5px;padding:7px 13px;}
 #cf-6 i:not(.ti-heart-filled){color:var(--gold);}
 #cf-6 .ti-heart-filled{color:#E05252;margin-left:2px;}

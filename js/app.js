@@ -545,7 +545,7 @@ function setRating(n){
   const labels=['Tocca per valutare *','Deludente','Nella media','Buono','Ottimo','Eccellente — da ricordare!','Fantastico — il mio preferito!'];
   const glassN = Math.min(n, 5);
   document.querySelectorAll('.rating-star').forEach((s,i)=>{
-    s.className='ti ti-glass-full rating-star' + (i<glassN?' on':'');
+    s.classList.toggle('on', i<glassN);
     s.style.color='var(--gold)';
     s.style.opacity=i<glassN?'1':'0.25';
   });
@@ -2255,7 +2255,7 @@ function openNoteDetail(note) {
 
   const noteRating = note.rating || 0;
   const glasses = Array.from({length:5},(_,i) =>
-    '<i class="ti ti-glass-full" style="font-size:20px;color:var(--gold);opacity:'+(i<Math.min(noteRating,5)?'1':'0.18')+'"></i>'
+    '<svg class="flute-icon" style="font-size:20px;color:var(--gold);opacity:'+(i<Math.min(noteRating,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
   ).join('') + (noteRating >= 6
     ? '<i class="ti ti-heart-filled" style="font-size:20px;color:#E05252;margin-left:5px;"></i><span style="font-family:var(--sans);font-size:12px;color:#E05252;font-weight:700;margin-left:4px;letter-spacing:.2px;">Fantastico!</span>'
     : '');
@@ -3229,7 +3229,7 @@ function renderCarnetNotes(notes) {
     const tipoLabel = tipi.filter(t => t !== 'non_so').map(t => _tipoShort[t] || t).join(' · ');
     const r = note.rating || 0;
     const glasses = Array.from({length:5}, (_,i) =>
-      '<i class="ti ti-glass-full" style="opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"></i>'
+      '<svg class="flute-icon" style="opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
     ).join('') + (r >= 6 ? '<i class="ti ti-heart-filled" style="color:#E05252;font-size:13px;margin-left:3px;opacity:1;"></i>' : '');
     const date = note.data_degustazione
       ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short'})

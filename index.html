@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=123"/>
+<link rel="stylesheet" href="css/style.css?v=124"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -35,6 +35,17 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </script>
 </head>
 <body>
+<!-- Sprite icona calice Cuvée (flûte con bollicine) — riusata ovunque al posto del ti-glass-full -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs>
+  <symbol id="ti-flute" viewBox="0 0 13 19">
+    <path d="M4.3,2 C3.5,2.8 2.9,3.8 2.9,5 C2.9,6.4 3.5,7.6 4.3,8.6 C5.1,9.9 5.8,11 6.5,12.3 C7.2,11 7.9,9.9 8.7,8.6 C9.5,7.6 10.1,6.4 10.1,5 C10.1,3.8 9.5,2.8 8.7,2" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+    <line x1="4.3" y1="2" x2="8.7" y2="2" stroke="currentColor" stroke-width="1.1" stroke-opacity=".65"/>
+    <line x1="6.5" y1="12.3" x2="6.5" y2="16" stroke="currentColor" stroke-width="1.1"/>
+    <line x1="3" y1="16" x2="10" y2="16" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+    <circle cx="5.6" cy="7" r=".6" fill="currentColor" opacity=".8"/>
+    <circle cx="7.5" cy="4.5" r=".5" fill="currentColor" opacity=".6"/>
+  </symbol>
+</defs></svg>
 <!-- ═══ BOOT SPLASH — visibile da subito, prima ancora che il JS determini se
      l'utente è già loggato; copre l'eventuale schermata di benvenuto (con i
      pulsanti "Entra"/"Accedi") finché il controllo della sessione non è finito,
@@ -2777,25 +2788,25 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="carnet-filter-row">
     <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
-      <i class="ti ti-glass-full"></i> Tutti
+      <svg class="flute-icon"><use href="#ti-flute"/></svg> Tutti
     </button>
     <button class="calice-btn" id="cf-6" onclick="setCaliceFilter(6)">
-      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-heart-filled" style="color:#E05252;"></i>
+      <svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><i class="ti ti-heart-filled" style="color:#E05252;"></i>
     </button>
     <button class="calice-btn" id="cf-5" onclick="setCaliceFilter(5)">
-      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
+      <svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg>
     </button>
     <button class="calice-btn" id="cf-4" onclick="setCaliceFilter(4)">
-      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
+      <svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg>
     </button>
     <button class="calice-btn" id="cf-3" onclick="setCaliceFilter(3)">
-      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
+      <svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg>
     </button>
     <button class="calice-btn" id="cf-2" onclick="setCaliceFilter(2)">
-      <i class="ti ti-glass-full"></i><i class="ti ti-glass-full"></i>
+      <svg class="flute-icon"><use href="#ti-flute"/></svg><svg class="flute-icon"><use href="#ti-flute"/></svg>
     </button>
     <button class="calice-btn" id="cf-1" onclick="setCaliceFilter(1)">
-      <i class="ti ti-glass-full"></i>
+      <svg class="flute-icon"><use href="#ti-flute"/></svg>
     </button>
   </div>
   <div class="scroll" id="carnet-list-scroll" style="background:var(--ivory-2);">
@@ -2926,13 +2937,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <!-- PUNTEGGIO -->
     <div class="form-section">
-      <div class="form-section-title"><i class="ti ti-glass-full"></i> Punteggio <span style="font-size:12px;color:#E24B4A;font-family:var(--sans);font-weight:400;margin-left:2px;">obbligatorio</span></div>
+      <div class="form-section-title"><svg class="flute-icon"><use href="#ti-flute"/></svg> Punteggio <span style="font-size:12px;color:#E24B4A;font-family:var(--sans);font-weight:400;margin-left:2px;">obbligatorio</span></div>
       <div class="rating-row" id="rating-stars">
-        <i class="ti ti-glass-full rating-star" onclick="setRating(1)"></i>
-        <i class="ti ti-glass-full rating-star" onclick="setRating(2)"></i>
-        <i class="ti ti-glass-full rating-star" onclick="setRating(3)"></i>
-        <i class="ti ti-glass-full rating-star" onclick="setRating(4)"></i>
-        <i class="ti ti-glass-full rating-star" onclick="setRating(5)"></i>
+        <span class="rating-star" onclick="setRating(1)"><svg class="flute-icon"><use href="#ti-flute"/></svg></span>
+        <span class="rating-star" onclick="setRating(2)"><svg class="flute-icon"><use href="#ti-flute"/></svg></span>
+        <span class="rating-star" onclick="setRating(3)"><svg class="flute-icon"><use href="#ti-flute"/></svg></span>
+        <span class="rating-star" onclick="setRating(4)"><svg class="flute-icon"><use href="#ti-flute"/></svg></span>
+        <span class="rating-star" onclick="setRating(5)"><svg class="flute-icon"><use href="#ti-flute"/></svg></span>
         <span style="width:1px;height:22px;background:var(--border-2);margin:0 6px;display:inline-block;vertical-align:middle;flex-shrink:0;"></span>
         <i class="ti ti-heart rating-heart" id="rating-heart" onclick="toggleFavoriteRating()" style="color:var(--ink-4);opacity:0.25;flex-shrink:0;"></i>
         <span id="rating-top-label" style="display:none;font-family:var(--sans);font-size:12px;color:#E05252;font-weight:700;margin-left:5px;letter-spacing:.2px;vertical-align:middle;">Fantastico!</span>
@@ -3615,6 +3626,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=212"></script>
+<script src="js/app.js?v=213"></script>
 </body>
 </html>
