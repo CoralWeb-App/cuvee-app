@@ -29,7 +29,7 @@ function go(id){
   }
   // Viste protette: richiedono login
   const protectedViews = ['v-home','v-guida','v-maison','v-carnet','v-profile',
-    'v-detail','v-carnet-new','v-carnet-detail','v-salvati','v-wishlist',
+    'v-detail','v-carnet-new','v-carnet-detail','v-carnet-session-detail','v-salvati','v-wishlist',
     'v-bottiglie','v-bottiglia-detail',
     'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne',
@@ -93,7 +93,7 @@ function updateBottomNav(id){
     'bn-produttori': ['v-maison','v-detail'],
     'bn-scan':       ['v-scan-result'],
     'bn-champagne':  ['v-bottiglie','v-bottiglia-detail'],
-    'bn-carnet-nav': ['v-carnet','v-carnet-new','v-carnet-detail']
+    'bn-carnet-nav': ['v-carnet','v-carnet-new','v-carnet-detail','v-carnet-session-detail']
   };
   Object.entries(map).forEach(([btnId, views])=>{
     const el = document.getElementById(btnId);
@@ -993,11 +993,136 @@ function lightboxNext() {
   const c = document.getElementById('lightbox-counter');
   if (c) c.textContent = (_lightboxIdx+1)+'/'+_lightboxPhotos.length;
 }
+// Converte i dati serializzati di uno slot (_serializeNoteFormFields) nella
+// forma di riga carnet_notes — stessa mappatura usata da saveNote() per il
+// form singolo, parametrizzata su un oggetto invece che leggere dal DOM.
+function _notaFromSlotData(d, sessionMeta){
+  return {
+    maison_nome: (d.maison || '').trim(),
+    cuvee_nome: (d.cuvee || '').trim(),
+    annata: (d.annata || '').trim(),
+    dosage_testo: (d.dosage || '').trim(),
+    luogo: (sessionMeta.luogo || '').trim(),
+    rating: d.rating || null,
+    note_libere: (d.noteText || '').trim(),
+    prezzo_pagato: d.prezzo ? parseFloat(d.prezzo) : null,
+    acidite: d.sliders?.acidite != null ? parseInt(d.sliders.acidite) : null,
+    effervescence: d.sliders?.eff != null ? parseInt(d.sliders.eff) : null,
+    complexite: d.sliders?.comp != null ? parseInt(d.sliders.comp) : null,
+    longueur: d.sliders?.lung != null ? parseInt(d.sliders.lung) : null,
+    perlage: d.sliders?.perlage != null ? parseInt(d.sliders.perlage) : null,
+    corpo: d.sliders?.corpo != null ? parseInt(d.sliders.corpo) : null,
+    equilibrio: d.sliders?.equilibrio != null ? parseInt(d.sliders.equilibrio) : null,
+    colore: d.colore || null,
+    evoluzione: d.evoluzione || null,
+    aromi: [...(d.aromiOn||[]), ...((d.aromiCustom||'').split(',').map(a=>a.trim()).filter(Boolean))],
+    sboccatura: (d.sboccatura || '').trim() || null,
+    data_degustazione: sessionMeta.data_degustazione || new Date().toISOString().split('T')[0],
+    tipo: (d.tipi && d.tipi.length) ? d.tipi : null
+  };
+}
+
+// Salvataggio di una degustazione multipla: crea la sessione + una riga
+// carnet_notes per ogni calice compilato, tutte collegate da sessione_id.
+// Le foto scattate restano per ora associate solo al calice attivo al
+// momento del salvataggio (gestione foto per-slot arriverà in seguito).
+async function saveMultiTasting(){
+  const saveBtn = document.getElementById('save-note-btn');
+  if (saveBtn) { saveBtn.textContent = 'Salvataggio...'; saveBtn.disabled = true; }
+
+  // Sincronizza lo slot attivo (i dati più recenti sono ancora nel form)
+  _tastingSlots[_tastingActiveIdx].data = _serializeNoteFormFields();
+
+  const candidates = [];
+  _tastingSlots.forEach((s, i) => { if (_formDataHasContent(s.data)) candidates.push({ idx: i, data: s.data }); });
+
+  if (candidates.length === 0) {
+    showNoteError('Compila almeno una bottiglia prima di salvare');
+    if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
+    return;
+  }
+  const incomplete = candidates.find(c => !c.data.maison || !c.data.cuvee || !c.data.rating);
+  if (incomplete) {
+    showNoteError('Completa la bottiglia '+(incomplete.idx+1)+' (maison, cuvée e punteggio sono obbligatori) prima di salvare');
+    if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
+    return;
+  }
+
+  if (!isPremium()) {
+    const { count } = await supa.from('carnet_notes').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+    if ((count || 0) + candidates.length > 3) {
+      if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
+      go('v-paywall');
+      return;
+    }
+  }
+
+  const sessionMeta = {
+    luogo: document.getElementById('session-luogo')?.value || '',
+    data_degustazione: document.getElementById('session-data')?.value || new Date().toISOString().split('T')[0]
+  };
+
+  try {
+    const { data: session, error: sessErr } = await supa
+      .from('carnet_sessioni')
+      .insert({
+        user_id: currentUser.id,
+        titolo: document.getElementById('session-titolo')?.value?.trim() || null,
+        luogo: sessionMeta.luogo || null,
+        data_degustazione: sessionMeta.data_degustazione
+      })
+      .select().single();
+    if (sessErr) throw sessErr;
+
+    // Foto: solo lo slot attivo (se ha foto pending/esistenti) le riceve, per ora
+    const allPhotoUrls = [];
+    for (const photo of _pendingPhotos) {
+      try {
+        const path = currentUser.id+'/'+Date.now()+'_'+Math.random().toString(36).substr(2,5)+'.'+photo.ext;
+        const { error: uploadError } = await supa.storage.from('carnet-photos').upload(path, photo.blob, { upsert: true, contentType: photo.blob.type });
+        if (!uploadError) {
+          const { data: urlData } = supa.storage.from('carnet-photos').getPublicUrl(path);
+          if (urlData?.publicUrl) allPhotoUrls.push(urlData.publicUrl);
+        }
+      } catch(e) { console.log('Photo upload error:', e); }
+    }
+    allPhotoUrls.push(..._existingPhotoUrls);
+
+    const rows = candidates.map(c => {
+      const nota = _notaFromSlotData(c.data, sessionMeta);
+      nota.sessione_id = session.id;
+      nota.user_id = currentUser.id;
+      if (c.idx === _tastingActiveIdx && allPhotoUrls.length) {
+        nota.foto_url = allPhotoUrls[0];
+        nota.foto_urls = allPhotoUrls;
+      }
+      return nota;
+    });
+
+    const { data: savedNotes, error: notesErr } = await supa.from('carnet_notes').insert(rows).select();
+    if (notesErr) throw notesErr;
+
+    if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
+    _resetTastingSlots();
+    resetPhotoStrip();
+    go('v-carnet'); // resetta i filtri, così il raggruppamento per sessione funziona subito dopo
+    await updateCarnetUI();
+    openCarnetSession(session.id);
+  } catch(e) {
+    console.log('saveMultiTasting error:', e);
+    alert('Errore nel salvataggio della degustazione: ' + (e.message || e));
+    if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
+  }
+}
+
 async function saveNote(editId = null){
   // Read from hidden input as reliable fallback
   const hiddenId = document.getElementById('edit-note-id');
   if (!editId && hiddenId && hiddenId.value) editId = hiddenId.value;
-  
+
+  // Degustazione multipla: percorso di salvataggio separato, non tocca il resto
+  if (!editId && _tastingSlots.length >= 2) { await saveMultiTasting(); return; }
+
   const saveBtn = document.getElementById('save-note-btn');
   if (saveBtn) { saveBtn.textContent = 'Salvataggio...'; saveBtn.disabled = true; }
 
@@ -2189,7 +2314,7 @@ async function loadCarnetNotes() {
   try {
     const { data, error } = await supa
       .from('carnet_notes')
-      .select('*')
+      .select('*, carnet_sessioni(id,titolo,luogo,data_degustazione)')
       .eq('user_id', currentUser.id)
       .order('data_degustazione', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false });
@@ -3451,40 +3576,136 @@ function renderCarnetNotes(notes) {
     return;
   }
 
-  const _tipoShort = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',nature:'Brut Nature',prestige:'Prestige'};
+  // Vista di default (nessun filtro attivo): raggruppa le note per sessione di
+  // degustazione multipla in una card sola. Con un filtro attivo (calice/tipo/
+  // ricerca) mostriamo invece le note singole come sempre — filtrare dentro un
+  // gruppo con attributi che variano da calice a calice non avrebbe un esito pulito.
+  const filtersActive = activeCaliceFilter > 0 || (activeTypeFilter && activeTypeFilter !== 'tutti') || !!activeSearchQuery;
 
-  listEl.innerHTML = '<div class="carnet-grid">' + filtered.map((note) => {
-    const isLocked = !!note._locked;
-    const tipi = inferTipoNota(note);
-    const tipoLabel = tipi.filter(t => t !== 'non_so').map(t => _tipoShort[t] || t).join(' · ');
-    const r = note.rating || 0;
-    const glasses = Array.from({length:5}, (_,i) =>
-      '<svg class="flute-icon" style="opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
-    ).join('') + (r >= 6 ? '<i class="ti ti-heart-filled" style="color:#E05252;font-size:13px;margin-left:3px;opacity:1;"></i>' : '');
-    const date = note.data_degustazione
-      ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short'})
-      : '';
-    const origIdx = allCarnetNotes.findIndex(n => n.id === note.id);
+  if (filtersActive) {
+    listEl.innerHTML = '<div class="carnet-grid">' + filtered.map(renderCarnetNoteCard).join('') + '</div>';
+    return;
+  }
 
-    return '<div class="carnet-note-card' + (isLocked ? ' locked' : '') + '" data-idx="'+origIdx+'" onclick="' + (isLocked ? "go('v-paywall')" : "openNoteDetail(window._carnetNotes[this.dataset.idx])") + '">'+
-      '<div class="cnc-img">'+
-        (note.foto_url
-          ? '<img src="'+note.foto_url+'" style="width:100%;height:100%;object-fit:cover;"/>'
-          : '<div class="cnc-img-ph"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>')+
-        (!isLocked && tipoLabel ? '<span class="cnc-tipo">'+tipoLabel+'</span>' : '')+
-        (!isLocked && note.annata ? '<span class="cnc-annata">'+note.annata+'</span>' : '')+
-        (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '')+
+  const sessions = new Map(); // sessione_id -> {meta, notes:[]}
+  const standalone = [];
+  filtered.forEach(n => {
+    if (n.sessione_id && n.carnet_sessioni) {
+      if (!sessions.has(n.sessione_id)) sessions.set(n.sessione_id, { id: n.sessione_id, meta: n.carnet_sessioni, notes: [] });
+      sessions.get(n.sessione_id).notes.push(n);
+    } else {
+      standalone.push(n);
+    }
+  });
+  window._carnetSessions = sessions;
+
+  const items = [];
+  sessions.forEach(s => items.push({ type: 'session', session: s }));
+  standalone.forEach(n => items.push({ type: 'note', note: n }));
+  items.sort((a, b) => {
+    const da = a.type === 'session' ? a.session.meta?.data_degustazione : a.note.data_degustazione;
+    const db = b.type === 'session' ? b.session.meta?.data_degustazione : b.note.data_degustazione;
+    return (db || '').localeCompare(da || '');
+  });
+
+  listEl.innerHTML = '<div class="carnet-grid">' + items.map(it =>
+    it.type === 'session' ? renderCarnetSessionCard(it.session) : renderCarnetNoteCard(it.note)
+  ).join('') + '</div>';
+}
+
+const _tipoShort = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',assemblage:'Assemblage',nature:'Brut Nature',prestige:'Prestige'};
+
+function renderCarnetNoteCard(note) {
+  const isLocked = !!note._locked;
+  const tipi = inferTipoNota(note);
+  const tipoLabel = tipi.filter(t => t !== 'non_so').map(t => _tipoShort[t] || t).join(' · ');
+  const r = note.rating || 0;
+  const glasses = Array.from({length:5}, (_,i) =>
+    '<svg class="flute-icon" style="opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
+  ).join('') + (r >= 6 ? '<i class="ti ti-heart-filled" style="color:#E05252;font-size:13px;margin-left:3px;opacity:1;"></i>' : '');
+  const date = note.data_degustazione
+    ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short'})
+    : '';
+  const origIdx = allCarnetNotes.findIndex(n => n.id === note.id);
+
+  return '<div class="carnet-note-card' + (isLocked ? ' locked' : '') + '" data-idx="'+origIdx+'" onclick="' + (isLocked ? "go('v-paywall')" : "openNoteDetail(window._carnetNotes[this.dataset.idx])") + '">'+
+    '<div class="cnc-img">'+
+      (note.foto_url
+        ? '<img src="'+note.foto_url+'" style="width:100%;height:100%;object-fit:cover;"/>'
+        : '<div class="cnc-img-ph"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>')+
+      (!isLocked && tipoLabel ? '<span class="cnc-tipo">'+tipoLabel+'</span>' : '')+
+      (!isLocked && note.annata ? '<span class="cnc-annata">'+note.annata+'</span>' : '')+
+      (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '')+
+    '</div>'+
+    '<div class="cnc-body">'+
+      '<div class="cnc-maison">'+(note.maison_nome||'&nbsp;')+'</div>'+
+      '<div class="cnc-cuvee">'+(note.cuvee_nome||'')+'</div>'+
+      (!isLocked ? '<div class="cnc-footer">'+
+        '<div class="cnc-glasses">'+glasses+'</div>'+
+        '<div class="cnc-date">'+date+'</div>'+
+      '</div>' : '')+
+    '</div>'+
+  '</div>';
+}
+
+function renderCarnetSessionCard(session) {
+  const notes = session.notes;
+  const photos = notes.map(n => n.foto_url).filter(Boolean).slice(0, 3);
+  const title = session.meta?.titolo || (notes[0]?.maison_nome ? 'Degustazione ' + notes[0].maison_nome : 'Degustazione multipla');
+  const date = session.meta?.data_degustazione
+    ? new Date(session.meta.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short'})
+    : '';
+  const anyLocked = notes.some(n => n._locked);
+
+  const imgHtml = photos.length > 0
+    ? '<div class="cnc-collage cnc-collage-'+photos.length+'">' + photos.map(p => '<img src="'+p+'"/>').join('') + '</div>'
+    : '<div class="cnc-img-ph"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>';
+
+  return '<div class="carnet-note-card carnet-session-card" onclick="'+(anyLocked ? "go('v-paywall')" : "openCarnetSession('"+session.id+"')")+'">'+
+    '<div class="cnc-img">'+ imgHtml +
+      '<span class="cnc-session-badge"><i class="ti ti-layers-intersect"></i> '+notes.length+'</span>'+
+      (anyLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '')+
+    '</div>'+
+    '<div class="cnc-body">'+
+      '<div class="cnc-maison">DEGUSTAZIONE MULTIPLA</div>'+
+      '<div class="cnc-cuvee">'+title+'</div>'+
+      '<div class="cnc-footer">'+
+        '<div class="cnc-date">'+notes.length+' Champagne'+(notes.length===1?'':'')+'</div>'+
+        '<div class="cnc-date">'+date+'</div>'+
       '</div>'+
-      '<div class="cnc-body">'+
-        '<div class="cnc-maison">'+(note.maison_nome||'&nbsp;')+'</div>'+
-        '<div class="cnc-cuvee">'+(note.cuvee_nome||'')+'</div>'+
-        (!isLocked ? '<div class="cnc-footer">'+
-          '<div class="cnc-glasses">'+glasses+'</div>'+
-          '<div class="cnc-date">'+date+'</div>'+
-        '</div>' : '')+
-      '</div>'+
-    '</div>';
-  }).join('')+'</div>';
+    '</div>'+
+  '</div>';
+}
+
+// Apre la vista di dettaglio di una sessione dal suo id (cache in window._carnetSessions)
+function openCarnetSession(sessionId) {
+  const s = window._carnetSessions?.get(sessionId);
+  if (!s) return;
+  go('v-carnet-session-detail');
+  renderCarnetSessionDetail(s);
+}
+
+function renderCarnetSessionDetail(session) {
+  const container = document.getElementById('session-detail-content');
+  if (!container) return;
+  const notes = [...session.notes].sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+  const title = session.meta?.titolo || 'Degustazione multipla';
+  const date = session.meta?.data_degustazione
+    ? new Date(session.meta.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})
+    : '';
+
+  let html = '<div style="padding:18px 16px 4px;">'+
+    '<div style="font-family:var(--serif);font-size:24px;color:var(--ink);font-weight:500;margin-bottom:6px;">'+title+'</div>'+
+    '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);display:flex;gap:12px;flex-wrap:wrap;">'+
+      (date ? '<span><i class="ti ti-calendar" style="margin-right:4px;"></i>'+date+'</span>' : '')+
+      (session.meta?.luogo ? '<span><i class="ti ti-map-pin" style="margin-right:4px;"></i>'+session.meta.luogo+'</span>' : '')+
+      '<span><i class="ti ti-layers-intersect" style="margin-right:4px;"></i>'+notes.length+' Champagne</span>'+
+    '</div>'+
+  '</div>';
+
+  html += '<div class="carnet-grid" style="padding-top:14px;">' + notes.map(renderCarnetNoteCard).join('') + '</div>';
+
+  container.innerHTML = html;
 }
 
 // Filtro calici
