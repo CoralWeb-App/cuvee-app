@@ -4021,7 +4021,17 @@ function renderCarnetSessionDetail(session) {
 // Filtro calici
 function setCaliceFilter(rating) {
   activeCaliceFilter = rating;
-  document.querySelectorAll('.calice-btn').forEach(b => b.classList.remove('on'));
+  // "Multiple" è un toggle indipendente e combinabile con un calice specifico
+  // (gestito da toggleMultiOnlyFilter) — cliccare un calice non deve toccarlo.
+  // "Tutti" invece è un reset vero e proprio: deve spegnere anche "Multiple",
+  // altrimenti il pulsante appare spento ma il filtro resta silenziosamente
+  // applicato (il bug segnalato).
+  document.querySelectorAll('.calice-btn:not(.multi-filter-btn)').forEach(b => b.classList.remove('on'));
+  if (rating === 0) {
+    activeMultiOnlyFilter = false;
+    const multiBtn = document.getElementById('cf-multi');
+    if (multiBtn) multiBtn.classList.remove('on');
+  }
   const btnId = rating === 0 ? 'cf-all' : 'cf-' + rating;
   const btn = document.getElementById(btnId);
   if (btn) btn.classList.add('on');
