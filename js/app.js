@@ -2724,6 +2724,22 @@ function openNoteDetail(note) {
   const container = document.getElementById('detail-content');
   if (!container) { go('v-carnet-detail'); return; }
 
+  // Se la nota appartiene a una degustazione multipla, "indietro" deve tornare
+  // a quella sessione (non alla lista generale del Carnet) — altrimenti da
+  // dentro una degustazione multipla, aprire una bottiglia e tornare indietro
+  // ti farebbe perdere il contesto e dovresti rientrare da capo.
+  const backBtn = document.getElementById('note-detail-back-btn');
+  const backLabel = document.getElementById('note-detail-back-label');
+  if (backBtn) {
+    if (note.sessione_id) {
+      backBtn.setAttribute('onclick', "openCarnetSession('" + note.sessione_id + "')");
+      if (backLabel) backLabel.textContent = 'Degustazione multipla';
+    } else {
+      backBtn.setAttribute('onclick', "go('v-carnet')");
+      if (backLabel) backLabel.textContent = 'Carnet';
+    }
+  }
+
   const _tipoLabel = {nv:'Sans Année',millesimato:'Millésimé',rose:'Rosé',blanc_de_blancs:'Blanc de Blancs',blanc_de_noirs:'Blanc de Noirs',assemblage:'Assemblage',prestige:'Prestige Cuvée',nature:'Brut Nature'};
   const tipoArr = Array.isArray(note.tipo) ? note.tipo : (note.tipo ? [note.tipo] : []);
   const tipoLabel = tipoArr.filter(t => t !== 'non_so').map(t => _tipoLabel[t]||t).join(' · ');
@@ -3862,11 +3878,12 @@ function renderCarnetSessionCard(session) {
 
   return '<div class="carnet-note-card carnet-session-card" onclick="'+(anyLocked ? "go('v-paywall')" : "openCarnetSession('"+session.id+"')")+'">'+
     '<div class="cnc-img">'+ imgHtml +
-      '<span class="cnc-session-badge"><i class="ti ti-layers-intersect"></i> '+notes.length+'</span>'+
+      '<span class="cnc-session-ribbon"><i class="ti ti-layers-intersect"></i> Multipla</span>'+
+      '<span class="cnc-session-badge"><i class="ti ti-glass-full"></i> '+notes.length+'</span>'+
       (anyLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '')+
     '</div>'+
     '<div class="cnc-body">'+
-      '<div class="cnc-maison">DEGUSTAZIONE MULTIPLA</div>'+
+      '<div class="cnc-maison"><i class="ti ti-layers-intersect"></i> DEGUSTAZIONE MULTIPLA</div>'+
       '<div class="cnc-cuvee">'+title+'</div>'+
       '<div class="cnc-footer">'+
         '<div class="cnc-date">'+notes.length+' Champagne'+(notes.length===1?'':'')+'</div>'+
@@ -3879,8 +3896,15 @@ function renderCarnetSessionCard(session) {
 // Apre la vista di dettaglio di una sessione dal suo id (cache in window._carnetSessions)
 let currentCarnetSessionId = null;
 function openCarnetSession(sessionId) {
-  const s = window._carnetSessions?.get(sessionId);
-  if (!s) return;
+  let s = window._carnetSessions?.get(sessionId);
+  if (!s) {
+    // Cache non ancora popolata (es. si arriva dal dettaglio di una nota senza
+    // essere passati prima dalla lista raggruppata): ricostruiscila al volo
+    // dalle note già caricate, che portano sempre con sé carnet_sessioni.
+    const notes = (allCarnetNotes || []).filter(n => n.sessione_id === sessionId);
+    if (!notes.length) return;
+    s = { id: sessionId, meta: notes[0].carnet_sessioni, notes };
+  }
   currentCarnetSessionId = sessionId;
   go('v-carnet-session-detail');
   renderCarnetSessionDetail(s);

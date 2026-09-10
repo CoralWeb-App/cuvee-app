@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=128"/>
+<link rel="stylesheet" href="css/style.css?v=129"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -3124,7 +3124,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ CARNET — DETTAGLIO NOTA ═══ -->
 <div class="view" id="v-carnet-detail">
   <div class="topbar">
-    <button class="back-btn" onclick="go('v-carnet')"><i class="ti ti-arrow-left"></i>Carnet</button>
+    <button class="back-btn" id="note-detail-back-btn" onclick="go('v-carnet')"><i class="ti ti-arrow-left"></i><span id="note-detail-back-label">Carnet</span></button>
     <div class="topbar-icons">
       <i class="ti ti-dots-vertical" style="cursor:pointer;font-size:24px;color:var(--ink-4);" onclick="openNoteMenu()"></i>
     </div>
@@ -3667,6 +3667,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=221"></script>
+<script src="js/app.js?v=222"></script>
 </body>
 </html>
