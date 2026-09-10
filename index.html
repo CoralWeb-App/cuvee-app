@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=126"/>
+<link rel="stylesheet" href="css/style.css?v=127"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2865,6 +2865,25 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <input type="hidden" id="edit-note-id" value=""/>
     <input type="hidden" id="note-bottiglia-id" value=""/>
 
+    <!-- SESSIONE DEGUSTAZIONE MULTIPLA — visibile solo dal 2° calice in poi -->
+    <div class="form-section tasting-session-header" id="tasting-session-header" style="display:none;">
+      <div class="form-section-title"><i class="ti ti-layers-intersect"></i> Degustazione multipla</div>
+      <div class="input-wrap">
+        <label class="input-label">Nome della degustazione</label>
+        <input class="input-field" id="session-titolo" type="text" placeholder="es. Verticale Krug, Cena tra amici…"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="input-wrap" style="min-width:0;margin-bottom:0;">
+          <label class="input-label">Luogo</label>
+          <input class="input-field" id="session-luogo" type="text" placeholder="es. Roma"/>
+        </div>
+        <div class="input-wrap" style="min-width:0;margin-bottom:0;">
+          <label class="input-label">Data</label>
+          <input class="input-field" id="session-data" type="date" style="color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none;width:100%;"/>
+        </div>
+      </div>
+    </div>
+
     <!-- FOTO -->
     <div class="form-section">
       <div class="form-section-title"><i class="ti ti-camera"></i> Foto della bottiglia</div>
@@ -2906,12 +2925,12 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <input class="input-field" id="note-dosage" type="text" placeholder="es. Brut, Extra Brut"/>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;" id="sboccatura-data-grid">
         <div class="input-wrap" style="min-width:0;">
           <label class="input-label">Sboccatura</label>
           <input class="input-field" id="note-sboccatura" type="text" placeholder="es. 03/2025"/>
         </div>
-        <div class="input-wrap" style="min-width:0;">
+        <div class="input-wrap" style="min-width:0;" id="data-deg-wrap">
           <label class="input-label">Data degustazione</label>
           <input class="input-field" id="note-data-deg" type="date" style="color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none;width:100%;"/>
         </div>
@@ -2929,7 +2948,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <button type="button" class="tipo-chip non-so" onclick="setNoteTipo(this,'non_so')">Non so</button>
         </div>
       </div>
-      <div class="input-wrap" style="margin-bottom:0;">
+      <div class="input-wrap" style="margin-bottom:0;" id="luogo-wrap">
         <label class="input-label">Occasione / Luogo</label>
         <input class="input-field" id="note-luogo" type="text" placeholder="es. Cena con amici, Roma · gennaio 2026"/>
       </div>
@@ -3634,6 +3653,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=216"></script>
+<script src="js/app.js?v=217"></script>
 </body>
 </html>

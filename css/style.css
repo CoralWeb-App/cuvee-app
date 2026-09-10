@@ -876,6 +876,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .slider-equilibrio .slider-val{background:#C97B94;}
 .slider-equilibrio .slider-label i{color:#C97B94;}
 
+/* Degustazione multipla — header sessione, distinto dal resto del form */
+.tasting-session-header{
+  background:linear-gradient(135deg,var(--gold-pale),var(--ivory));
+  border:1.5px solid var(--gold-border);
+}
+.tasting-session-header .form-section-title{color:#8a6a1e;}
+.tasting-session-header .form-section-title i{color:var(--gold);}
+#sboccatura-data-grid.single-col{grid-template-columns:1fr !important;}
+
 /* Degustazione multipla — FAB "+" e barra slot (WIP) */
 .tasting-fab-wrap{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:0;pointer-events:none;z-index:200;}
 .tasting-fab{

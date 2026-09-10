@@ -382,6 +382,10 @@ const TASTING_MAX_SLOTS = 50; // nessun limite reale nell'uso: solo un tetto di 
 function _resetTastingSlots(){
   _tastingSlots = [];
   _tastingActiveIdx = 0;
+  ['session-titolo','session-luogo','session-data'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   _renderTastingSlotBar();
 }
 
@@ -445,10 +449,46 @@ function _applyNoteFormFields(d){
   initAllSliders(null);
 }
 
+// Mostra/nasconde l'header di sessione (nome, luogo, data condivisi) quando
+// si entra/esce dalla modalità multipla, portando con sé i valori già inseriti
+// così non si perde nulla passando da un modo all'altro.
+function _updateTastingModeUI(){
+  const header = document.getElementById('tasting-session-header');
+  const dataWrap = document.getElementById('data-deg-wrap');
+  const luogoWrap = document.getElementById('luogo-wrap');
+  const grid = document.getElementById('sboccatura-data-grid');
+  if (!header) return;
+  const multi = _tastingSlots.length >= 2;
+  if (multi) {
+    const noteLuogo = document.getElementById('note-luogo');
+    const noteData = document.getElementById('note-data-deg');
+    const sessLuogo = document.getElementById('session-luogo');
+    const sessData = document.getElementById('session-data');
+    if (sessLuogo && !sessLuogo.value && noteLuogo?.value) sessLuogo.value = noteLuogo.value;
+    if (sessData && !sessData.value && noteData?.value) sessData.value = noteData.value;
+    header.style.display = 'block';
+    if (dataWrap) dataWrap.style.display = 'none';
+    if (luogoWrap) luogoWrap.style.display = 'none';
+    if (grid) grid.classList.add('single-col');
+  } else {
+    const noteLuogo = document.getElementById('note-luogo');
+    const noteData = document.getElementById('note-data-deg');
+    const sessLuogo = document.getElementById('session-luogo');
+    const sessData = document.getElementById('session-data');
+    if (noteLuogo && sessLuogo?.value) noteLuogo.value = sessLuogo.value;
+    if (noteData && sessData?.value) noteData.value = sessData.value;
+    header.style.display = 'none';
+    if (dataWrap) dataWrap.style.display = '';
+    if (luogoWrap) luogoWrap.style.display = '';
+    if (grid) grid.classList.remove('single-col');
+  }
+}
+
 function _renderTastingSlotBar(){
   const bar = document.getElementById('tasting-slotbar');
   const fab = document.getElementById('tasting-fab');
   if (!bar) return;
+  _updateTastingModeUI();
   if (_tastingSlots.length < 2) {
     bar.style.display = 'none';
     if (fab) fab.style.display = isAdmin() ? 'flex' : 'none';
@@ -966,7 +1006,7 @@ async function saveNote(editId = null){
     cuvee_nome: document.getElementById('note-cuvee')?.value?.trim() || '',
     annata: document.getElementById('note-annata')?.value?.trim() || '',
     dosage_testo: document.getElementById('note-dosage')?.value?.trim() || '',
-    luogo: document.getElementById('note-luogo')?.value?.trim() || '',
+    luogo: (_tastingSlots.length >= 2 ? document.getElementById('session-luogo')?.value : document.getElementById('note-luogo')?.value)?.trim() || '',
     rating: currentRating || null,
     note_libere: document.getElementById('note-text')?.value?.trim() || '',
     prezzo_pagato: document.getElementById('note-prezzo')?.value ? parseFloat(document.getElementById('note-prezzo').value) : null,
@@ -986,7 +1026,7 @@ async function saveNote(editId = null){
       return [...selected, ...custom];
     })(),
     sboccatura: document.getElementById('note-sboccatura')?.value?.trim() || null,
-    data_degustazione: document.getElementById('note-data-deg')?.value || new Date().toISOString().split('T')[0],
+    data_degustazione: (_tastingSlots.length >= 2 ? document.getElementById('session-data')?.value : document.getElementById('note-data-deg')?.value) || new Date().toISOString().split('T')[0],
     tipo: _noteTypes.length ? _noteTypes : null
   };
 
