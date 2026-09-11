@@ -68,6 +68,7 @@ function go(id){
     if(si) si.value = '';
     const clr = document.getElementById('carnet-search-clear');
     if(clr) clr.style.display = 'none';
+    toggleCarnetSearchBar(false);
     document.querySelectorAll('.calice-btn').forEach(b => b.classList.remove('on'));
     const allBtn = document.getElementById('cf-all');
     if(allBtn) allBtn.classList.add('on');
@@ -4094,6 +4095,30 @@ function clearCarnetSearch() {
   const clr = document.getElementById('carnet-search-clear');
   if (clr) clr.style.display = 'none';
   renderCarnetNotes(allCarnetNotes);
+}
+
+// La barra di ricerca del Carnet è nascosta di default (spazio libero per il
+// pulsante Confronta tra i filtri) e si apre/chiude toccando la lente in alto.
+function toggleCarnetSearchBar(opening) {
+  const bar = document.getElementById('carnet-search-bar');
+  const btn = document.getElementById('carnet-search-toggle-btn');
+  if (!bar) return;
+  const willOpen = typeof opening === 'boolean' ? opening : (bar.style.display === 'none');
+  bar.style.display = willOpen ? 'flex' : 'none';
+  if (btn) btn.classList.toggle('on', willOpen);
+  if (willOpen) {
+    const input = document.getElementById('carnet-search');
+    if (input) setTimeout(() => input.focus(), 50);
+  } else if (activeSearchQuery) {
+    // Chiudendo la barra con una ricerca attiva, la azzeriamo: altrimenti la
+    // lista resterebbe filtrata "in silenzio" senza che l'utente ne veda più il motivo.
+    const input = document.getElementById('carnet-search');
+    if (input) input.value = '';
+    activeSearchQuery = '';
+    const clr = document.getElementById('carnet-search-clear');
+    if (clr) clr.style.display = 'none';
+    renderCarnetNotes(allCarnetNotes);
+  }
 }
 
 // Menu contestuale nota

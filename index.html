@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=131"/>
+<link rel="stylesheet" href="css/style.css?v=132"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2773,15 +2773,12 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div id="carnet-count-label" style="font-family:var(--sans);font-size:14px;color:var(--ink-4);margin-top:1px;">Le tue note di degustazione</div>
     </div>
     <div class="topbar-icons">
-      <button onclick="openNewTastingMenu()" style="position:relative;width:36px;height:36px;border-radius:50%;background:#1E1208;border:2px solid var(--ivory);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 -3px 14px rgba(30,18,8,.16),0 3px 10px rgba(30,18,8,.18);flex-shrink:0;">
-        <i class="ti ti-notebook" style="font-size:17px;color:#C8A03A;"></i>
-        <span style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#C8A03A;color:#1E1208;border:2px solid var(--ivory);font-family:var(--sans);font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;">+</span>
-      </button>
+      <div class="topbar-avatar-btn" id="carnet-search-toggle-btn" onclick="toggleCarnetSearchBar()"><i class="ti ti-search" style="font-size:16px;color:var(--gold);"></i></div>
       <div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div>
     </div>
   </div>
-  <!-- SEARCH — sempre visibile -->
-  <div id="carnet-search-bar" class="carnet-search-bar">
+  <!-- SEARCH — nascosta finché non si tocca l'icona lente nella topbar -->
+  <div id="carnet-search-bar" class="carnet-search-bar" style="display:none;">
     <i class="ti ti-search"></i>
     <input id="carnet-search" type="text" placeholder="Cerca tra le tue degustazioni…" oninput="filterCarnet()"/>
     <i class="ti ti-x" id="carnet-search-clear" style="display:none;cursor:pointer;font-size:16px;color:var(--ink-5);" onclick="clearCarnetSearch()"></i>
@@ -3684,6 +3681,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=230"></script>
+<script src="js/app.js?v=231"></script>
 </body>
 </html>

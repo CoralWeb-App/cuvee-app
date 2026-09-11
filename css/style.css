@@ -79,6 +79,8 @@ html,body{
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;overflow:hidden;flex-shrink:0;
 }
+.topbar-avatar-btn.on{background:var(--gold);border-color:var(--gold);}
+.topbar-avatar-btn.on i{color:#1E1208 !important;}
 .back-btn{
   display:flex;align-items:center;gap:5px;
   background:none;border:none;cursor:pointer;
