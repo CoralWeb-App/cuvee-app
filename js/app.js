@@ -53,6 +53,9 @@ function go(id){
   if(id==='v-guida') updateGuidaHubPremiumUI();
   if(id==='v-paywall'){ loadPaywallOfferings(); }
   if(id==='v-scan-history') {
+    // Non azzerare la selezione se ci si entra già in modalità confronto
+    // (es. da "Scegli tra quelle già scansionate" nel risultato di una scansione).
+    if (!(compareMode && compareContext === 'scan-history')) exitCompareMode();
     const backLabels = { 'v-home':'Home', 'v-profile':'Il mio profilo' };
     const prevId = cur ? cur.id : 'v-home';
     const lbl = document.getElementById('scan-history-back-label');
@@ -1598,7 +1601,9 @@ function _buildScanHistoryCard(s, idx) {
   const scoreHtml = s.score_medio
     ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+s.score_medio+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
     : '';
-  return '<div class="scan-history-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openScanFromHistory("+idx+")") + '" style="display:flex;gap:0;background:' + (isLocked ? '#f2ead9' : 'var(--white)') + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+  const compareSelected = compareMode && compareContext === 'scan-history' && compareSelection.some(sel => sel.id === s.id);
+  return '<div class="scan-history-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-compare-id="' + s.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openScanFromHistory("+idx+")") + '" style="position:relative;display:flex;gap:0;background:' + (isLocked ? '#f2ead9' : 'var(--white)') + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+    '<div class="compare-check"><i class="ti ti-circle compare-check-off"></i><i class="ti ti-circle-check-filled compare-check-on"></i></div>' +
     '<div class="scan-history-photo" style="width:90px;flex-shrink:0;background:linear-gradient(150deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">' +
       photo +
       (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
@@ -1717,6 +1722,11 @@ async function renderScanHistoryUI() {
 function openScanFromHistory(idx) {
   const s = _scanHistoryCache && _scanHistoryCache[idx];
   if (!s || !s.result_json) return;
+  if (compareMode) {
+    if (s._locked) { go('v-paywall'); return; }
+    toggleCompareSelection(s.id, _scanToCompareObj(s.result_json, s.foto_url || null, s.id));
+    return;
+  }
   if (s._locked) { go('v-paywall'); return; }
   _scanResult = s.result_json;
   _scanPhotoDataUrl = s.foto_url || null;
@@ -2813,7 +2823,7 @@ async function resendVerification() {
 let currentNote = null;
 
 function openNoteDetail(note) {
-  if (compareMode) { toggleCompareSelection('nota', note.id, note); return; }
+  if (compareMode) { toggleCompareSelection(note.id, note); return; }
   currentNote = note;
   const container = document.getElementById('detail-content');
   if (!container) { go('v-carnet-detail'); return; }
@@ -3970,7 +3980,7 @@ function renderCarnetNoteCard(note) {
     ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short'})
     : '';
   const origIdx = allCarnetNotes.findIndex(n => n.id === note.id);
-  const compareSelected = compareMode && compareType === 'nota' && compareSelection.some(s => s.id === note.id);
+  const compareSelected = compareMode && compareContext === 'carnet' && compareSelection.some(s => s.id === note.id);
 
   return '<div class="carnet-note-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-idx="'+origIdx+'" data-compare-id="'+note.id+'" onclick="' + (isLocked ? "go('v-paywall')" : "openNoteDetail(window._carnetNotes[this.dataset.idx])") + '">'+
     '<div class="compare-check"><i class="ti ti-circle compare-check-off"></i><i class="ti ti-circle-check-filled compare-check-on"></i></div>'+
@@ -4139,8 +4149,8 @@ function toggleCarnetSearchBar(opening) {
 // meccanismo di selezione, stessa barra flottante, stessa tabella condivisa
 // (cambiano solo i campi mostrati, in base al tipo).
 let compareMode = false;
-let compareContext = null;  // 'carnet' | 'bottiglie' — la vista in cui è attiva la selezione
-let compareType = null;     // 'nota' | 'bottiglia' — il tipo di elemento selezionabile
+let compareContext = null;  // 'carnet' | 'bottiglie' | 'scan-history' — la vista in cui è attiva la selezione
+let compareType = null;     // 'nota' | 'bottiglia' — il tipo di elemento selezionabile (le scansioni sono adattate a 'bottiglia', riusano la stessa tabella)
 let compareSelection = [];  // [{id, obj}] nell'ordine di selezione
 const COMPARE_MIN = 2;
 const COMPARE_MAX_FREE = 2;
@@ -4150,29 +4160,43 @@ const COMPARE_MAX_FREE = 2;
 const COMPARE_MAX_PREMIUM = 6;
 function _compareMax() { return isPremium() ? COMPARE_MAX_PREMIUM : COMPARE_MAX_FREE; }
 
+// Un contesto per ogni schermata da cui si può avviare un confronto — tiene
+// insieme vista, pulsante da evidenziare, tipo di dato e classe della card,
+// così il resto del motore non deve più sapere "dove" si trova.
+const COMPARE_CONTEXTS = {
+  'carnet':        { viewId: 'v-carnet',       chipId: 'cf-compare',        type: 'nota',      cardClass: 'carnet-note-card' },
+  'bottiglie':     { viewId: 'v-bottiglie',    chipId: 'bott-compare-icon', type: 'bottiglia', cardClass: 'bott-card' },
+  'scan-history':  { viewId: 'v-scan-history', chipId: 'scan-compare-btn',  type: 'bottiglia', cardClass: 'scan-history-card' },
+};
+
 function toggleCompareMode(context) {
   if (compareMode && compareContext === context) { exitCompareMode(); return; }
   if (compareMode) exitCompareMode(); // cambio contesto raro, ma per sicurezza puliamo prima
+  const cfg = COMPARE_CONTEXTS[context];
+  if (!cfg) return;
   compareMode = true;
   compareContext = context;
-  compareType = context === 'carnet' ? 'nota' : 'bottiglia';
+  compareType = cfg.type;
   compareSelection = [];
-  const view = document.getElementById(context === 'carnet' ? 'v-carnet' : 'v-bottiglie');
+  const view = document.getElementById(cfg.viewId);
   if (view) view.classList.add('compare-mode');
-  const chip = document.getElementById(context === 'carnet' ? 'cf-compare' : 'bott-compare-icon');
+  const chip = document.getElementById(cfg.chipId);
   if (chip) chip.classList.add('on');
   updateCompareBar();
 }
 
 function exitCompareMode() {
   if (!compareMode) return;
-  const view = document.getElementById(compareContext === 'carnet' ? 'v-carnet' : 'v-bottiglie');
-  if (view) {
-    view.classList.remove('compare-mode');
-    view.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+  const cfg = COMPARE_CONTEXTS[compareContext];
+  if (cfg) {
+    const view = document.getElementById(cfg.viewId);
+    if (view) {
+      view.classList.remove('compare-mode');
+      view.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+    }
+    const chip = document.getElementById(cfg.chipId);
+    if (chip) chip.classList.remove('on');
   }
-  const chip = document.getElementById(compareContext === 'carnet' ? 'cf-compare' : 'bott-compare-icon');
-  if (chip) chip.classList.remove('on');
   compareMode = false;
   compareContext = null;
   compareType = null;
@@ -4180,7 +4204,7 @@ function exitCompareMode() {
   updateCompareBar();
 }
 
-function toggleCompareSelection(type, id, obj) {
+function toggleCompareSelection(id, obj) {
   if (!compareMode) return;
   const wasSelected = compareSelection.some(s => s.id === id);
   if (wasSelected) {
@@ -4193,8 +4217,8 @@ function toggleCompareSelection(type, id, obj) {
     }
     compareSelection.push({ id, obj });
   }
-  const cardSel = (type === 'nota' ? '.carnet-note-card' : '.bott-card') + '[data-compare-id="' + id + '"]';
-  const card = document.querySelector(cardSel);
+  const cfg = COMPARE_CONTEXTS[compareContext];
+  const card = cfg ? document.querySelector('.' + cfg.cardClass + '[data-compare-id="' + id + '"]') : null;
   if (card) card.classList.toggle('selected', !wasSelected);
   updateCompareBar();
 }
@@ -4249,7 +4273,7 @@ function renderCompareView(type, items) {
   const backLabel = document.getElementById('confronta-back-label');
   if (backLabel) {
     const prevId = stack.length ? stack[stack.length - 1] : null;
-    const labels = { 'v-carnet': 'Carnet', 'v-bottiglie': 'Champagne', 'v-carnet-session-detail': 'Degustazione' };
+    const labels = { 'v-carnet': 'Carnet', 'v-bottiglie': 'Champagne', 'v-carnet-session-detail': 'Degustazione', 'v-scan-history': 'Scansioni', 'v-scan-result': 'Scansione' };
     backLabel.textContent = labels[prevId] || 'Indietro';
   }
   const container = document.getElementById('confronta-content');
@@ -4367,6 +4391,37 @@ function _renderCompareBottiglia(items) {
     '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
     _compareRowsHtml(rows, gridStyle) +
   '</div>';
+}
+
+// Adatta il risultato "grezzo" di una scansione (in tempo reale o rilevato
+// dallo storico) alla stessa forma di una bottiglia di catalogo, così il
+// confronto riusa integralmente _renderCompareBottiglia senza bisogno di una
+// terza versione della tabella. Rispecchia gli stessi fallback result->b
+// (bottiglia agganciata) già usati in _renderScanResult.
+function _scanToCompareObj(result, photoUrl, id) {
+  result = result || {};
+  const b = result.matched_bottle || {};
+  const annata = result.is_sa ? null : (result.annata || b.annata || null);
+  const cuvee = result.cuvee || b.nome || '—';
+  const cuveeAlreadyHasYear = annata && String(cuvee).trim().endsWith(String(annata));
+  return {
+    id: id,
+    nome: cuvee + (!result.is_sa && annata && !cuveeAlreadyHasYear ? ' ' + annata : ''),
+    maison: { nome: result.maison || b.maison?.nome || '' },
+    is_millesimato: result.is_millesimato ?? b.is_millesimato ?? false,
+    annata: annata,
+    score_medio: result.score_medio != null ? result.score_medio : (b.score_medio ?? null),
+    dosaggio_tipo: result.dosage || b.dosaggio_tipo || null,
+    dosaggio_gl: result.dosaggio_gl ?? b.dosaggio_gl ?? null,
+    prezzo_min: result.prezzo_min ?? b.prezzo_min ?? null,
+    prezzo_max: result.prezzo_max ?? b.prezzo_max ?? null,
+    pct_pinot_noir: result.pct_pinot_noir ?? b.pct_pinot_noir ?? null,
+    pct_chardonnay: result.pct_chardonnay ?? b.pct_chardonnay ?? null,
+    pct_meunier: result.pct_meunier ?? b.pct_meunier ?? null,
+    maturazione_mesi: result.maturazione_mesi ?? b.maturazione_mesi ?? null,
+    provenienza_uve: result.provenienza_uve ?? b.provenienza_uve ?? null,
+    foto_url: photoUrl || b.foto_url || result.uploaded_photo_url || null,
+  };
 }
 
 // Menu contestuale nota
@@ -5923,7 +5978,7 @@ function _bottLoadMoreHTML() {
 // completo (cambio filtro/ricerca) e caricamento della pagina successiva col pulsante "Mostra altri".
 function _bottCardHTML(b, tipoLabel) {
   const isLocked = !!b._locked && !isPremium();
-  const compareSelected = compareMode && compareType === 'bottiglia' && compareSelection.some(s => s.id === b.id);
+  const compareSelected = compareMode && compareContext === 'bottiglie' && compareSelection.some(s => s.id === b.id);
   return '<div class="bott-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-compare-id="' + b.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
     '<div class="compare-check"><i class="ti ti-circle compare-check-off"></i><i class="ti ti-circle-check-filled compare-check-on"></i></div>' +
     '<div class="bott-card-img" style="min-height:88px;">' +
@@ -6322,7 +6377,7 @@ async function isBottigliaLocked(b) {
 async function openBottigliaDetail(bottId) {
   const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
   if (!b) return;
-  if (compareMode) { toggleCompareSelection('bottiglia', bottId, b); return; }
+  if (compareMode) { toggleCompareSelection(bottId, b); return; }
   if (await isBottigliaLocked(b)) { go('v-paywall'); return; }
   currentBottiglia = b;
 
@@ -6797,6 +6852,20 @@ async function _processScan(file, mode) {
       saveScanToHistory(result, dataUrl).catch(() => {});
     }
 
+    // Se questa scansione doveva completare un confronto avviato dalla
+    // schermata risultato ("Scansiona un'altra bottiglia"), saltiamo la
+    // normale pagina di risultato e apriamo subito il confronto tra le due.
+    if (_pendingCompareAnchor) {
+      const anchor = _pendingCompareAnchor;
+      _pendingCompareAnchor = null;
+      if (result.is_bottle !== false) {
+        openCompareView('bottiglia', [anchor, _scanToCompareObj(result, dataUrl, 'scan-' + Date.now())]);
+        return;
+      }
+      // scansione non valida (non è una bottiglia): il confronto pendente
+      // è già stato annullato sopra, prosegue nel flusso normale sotto
+    }
+
     if (mode === 'carnet') {
       _fillCarnetFromScan(result, dataUrl);
     } else {
@@ -6859,6 +6928,9 @@ function _showScanLimitModal(isPrem) {
 function closeScanLimitModal() {
   const modal = document.getElementById('scan-limit-modal');
   if (modal) modal.classList.remove('on');
+  // Se si stava per scansionare una seconda bottiglia da confrontare ma le
+  // scansioni sono finite, il confronto pendente non ha più senso: annullalo.
+  _pendingCompareAnchor = null;
 }
 
 // Mostra la pagina risultato scansione
@@ -7008,6 +7080,12 @@ function _renderScanResult(result, photoDataUrl) {
     + '</div>'
     // ── Card azioni (scheda completa + carnet, o solo carnet) ──
     + actionCards
+    // ── Confronta — azione a sé, separata dalle due sopra ──
+    + '<div style="margin:10px 14px 0;">'
+        + '<button onclick="openScanCompareMenu()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--white);border:1.5px solid var(--border-2);color:var(--ink-3);border-radius:var(--radius-md);padding:12px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;">'
+          + '<i class="ti ti-arrows-left-right"></i> Confronta con un\'altra bottiglia'
+        + '</button>'
+      + '</div>'
     // ── Note di degustazione ──
     + (noteDeg ? '<div class="form-section" style="margin:14px 14px 0;">'
         + '<div class="form-section-title"><i class="ti ti-notes"></i> Note di degustazione</div>'
@@ -7063,6 +7141,38 @@ function _renderScanResult(result, photoDataUrl) {
     + '<div style="height:30px;"></div>';
 
   if (!isChampagne) _showNotChampagneModal(result.not_champagne_type);
+}
+
+// ═══ CONFRONTA DA SCANSIONE ═══════════════════════════════════════════════
+function openScanCompareMenu() {
+  const overlay = document.getElementById('scan-compare-menu-overlay');
+  if (overlay) overlay.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeScanCompareMenu() {
+  const overlay = document.getElementById('scan-compare-menu-overlay');
+  if (overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// La bottiglia appena scansionata "in attesa" di un confronto — impostata
+// scegliendo una delle due opzioni del pop-up, consumata (e azzerata) non
+// appena arriva la seconda bottiglia da confrontare.
+let _pendingCompareAnchor = null;
+
+function scanAnotherToCompare() {
+  if (!_scanResult) return;
+  _pendingCompareAnchor = _scanToCompareObj(_scanResult, _scanPhotoDataUrl, '__scan_anchor__');
+  startScan('explore');
+}
+
+function pickFromHistoryToCompare() {
+  if (!_scanResult) return;
+  const anchor = _scanToCompareObj(_scanResult, _scanPhotoDataUrl, '__scan_anchor__');
+  toggleCompareMode('scan-history');
+  compareSelection = [{ id: '__scan_anchor__', obj: anchor }];
+  updateCompareBar();
+  go('v-scan-history');
 }
 
 // Popup "ti abbiamo beccato" — mostrato sopra il risultato scansione quando

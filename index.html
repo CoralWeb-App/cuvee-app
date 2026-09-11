@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=136"/>
+<link rel="stylesheet" href="css/style.css?v=137"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -3344,6 +3344,11 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
   </div>
   <div class="scroll">
+    <div class="compare-sticky-wrap">
+      <button class="compare-float-btn" id="scan-compare-btn" onclick="toggleCompareMode('scan-history')">
+        <i class="ti ti-arrows-left-right"></i> Confronta
+      </button>
+    </div>
     <div id="scan-history-list" style="padding:10px 14px 10px;"></div>
     <div id="scan-history-premium-banner" style="display:none;padding:10px 14px 20px;">
       <div onclick="go('v-paywall')" style="background:var(--ivory-2);border:1.5px solid var(--gold-border);border-radius:var(--radius-lg);padding:18px 17px;cursor:pointer;position:relative;overflow:hidden;">
@@ -3404,6 +3409,28 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div>
         <div>Degustazione multipla</div>
         <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);font-weight:400;margin-top:2px;">Più calici insieme — verticali, confronti tra bottiglie</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONFRONTA DA SCANSIONE ═══ -->
+<div id="scan-compare-menu-overlay" class="note-menu-overlay" style="display:none;" onclick="closeScanCompareMenu()">
+  <div class="note-menu-sheet" onclick="event.stopPropagation()">
+    <div class="note-menu-handle"></div>
+    <div style="padding:2px 22px 12px;font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;">Confronta con</div>
+    <div class="note-menu-item" onclick="closeScanCompareMenu();scanAnotherToCompare()">
+      <i class="ti ti-scan" style="color:var(--gold);"></i>
+      <div>
+        <div>Scansiona un'altra bottiglia</div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);font-weight:400;margin-top:2px;">Il confronto si apre appena finisce la scansione</div>
+      </div>
+    </div>
+    <div class="note-menu-item" onclick="closeScanCompareMenu();pickFromHistoryToCompare()">
+      <i class="ti ti-history" style="color:var(--gold);"></i>
+      <div>
+        <div>Scegli tra quelle già scansionate</div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);font-weight:400;margin-top:2px;">Dal tuo storico scansioni</div>
       </div>
     </div>
   </div>
@@ -3715,6 +3742,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=235"></script>
+<script src="js/app.js?v=236"></script>
 </body>
 </html>

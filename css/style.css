@@ -705,17 +705,23 @@ html,body{
 .compare-check-off{color:var(--ink-4);}
 .compare-check-on{display:none;color:var(--gold);}
 .carnet-note-card.selected .compare-check-off,
-.bott-card.selected .compare-check-off{display:none;}
+.bott-card.selected .compare-check-off,
+.scan-history-card.selected .compare-check-off{display:none;}
 .carnet-note-card.selected .compare-check-on,
-.bott-card.selected .compare-check-on{display:inline-block;}
+.bott-card.selected .compare-check-on,
+.scan-history-card.selected .compare-check-on{display:inline-block;}
 .carnet-note-card.selected,
-.bott-card.selected{outline:2.5px solid var(--gold);outline-offset:-2.5px;}
+.bott-card.selected,
+.scan-history-card.selected{outline:2.5px solid var(--gold);outline-offset:-2.5px;}
 #v-carnet.compare-mode .carnet-note-card:not(.carnet-session-card) .compare-check,
-#v-bottiglie.compare-mode .bott-card .compare-check{display:flex;}
+#v-bottiglie.compare-mode .bott-card .compare-check,
+#v-scan-history.compare-mode .scan-history-card .compare-check{display:flex;}
 #v-carnet.compare-mode .carnet-note-card.carnet-session-card,
 #v-carnet.compare-mode .carnet-note-card.locked{opacity:.4;pointer-events:none;}
-#v-bottiglie.compare-mode .bott-card.locked{opacity:.4;pointer-events:none;}
-#v-bottiglie.compare-mode .bott-card-add{display:none;}
+#v-bottiglie.compare-mode .bott-card.locked,
+#v-scan-history.compare-mode .scan-history-card.locked{opacity:.4;pointer-events:none;}
+#v-bottiglie.compare-mode .bott-card-add,
+#v-scan-history.compare-mode .scan-history-card button{display:none;}
 /* Confronta — pillola flottante sticky, staccata dai filtri e leggermente
    trasparente: resta visibile in cima mentre la lista scorre sotto di lei. */
 .compare-sticky-wrap{position:sticky;top:0;z-index:20;display:flex;justify-content:center;padding:10px 0 6px;pointer-events:none;}
