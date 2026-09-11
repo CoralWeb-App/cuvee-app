@@ -4340,6 +4340,10 @@ function _renderCompareNote(items) {
   }).join('');
 
   const rows = [
+    { label:'Tipo', cells: items.map(n => {
+      const tipi = inferTipoNota(n).filter(t => t !== 'non_so').map(t => _tipoShort[t] || t);
+      return tipi.length ? tipi.join(' · ') : null;
+    })},
     { label:'Annata', cells: items.map(n => n.annata || null) },
     { label:'Colore', cells: items.map(n => {
       if (!n.colore || !_coloreDef[n.colore]) return null;
@@ -4361,11 +4365,29 @@ function _renderCompareNote(items) {
   });
   rows.push({ label:'Data', cells: items.map(n => n.data_degustazione
     ? new Date(n.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}) : null) });
+  rows.push({ label:'Luogo', cells: items.map(n => n.luogo || null) });
+  rows.push({ label:'Sboccatura', cells: items.map(n => n.sboccatura || null) });
 
   return '<div class="confronta-scroll">' +
     '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
     _compareRowsHtml(rows, gridStyle) +
   '</div>';
+}
+
+// Testo breve per la finestra di degustazione — la stessa logica di
+// buildFinestraHTML/buildFinestraSAHTML ma come singola riga di testo,
+// più adatta a una cella di tabella che alla barra a calendario colorata.
+function _compareFinestraText(item) {
+  if (item.is_millesimato) {
+    const da = item.finestra_da, a = item.finestra_a;
+    if (!da && !a) return null;
+    if (da && a) return da + '–' + a;
+    return da ? 'da ' + da : 'entro ' + a;
+  }
+  const min = item.finestra_consumo_min_anni, max = item.finestra_consumo_max_anni;
+  if (min == null && max == null) return null;
+  if (min != null && max != null) return min === max ? 'entro ' + max + ' anni' : min + '–' + max + ' anni';
+  return min != null ? 'almeno ' + min + ' anni' : 'entro ' + max + ' anni';
 }
 
 function _renderCompareBottiglia(items) {
@@ -4397,6 +4419,9 @@ function _renderCompareBottiglia(items) {
     })},
     { label:'Sui lieviti', cells: items.map(b => b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null) },
     { label:'Provenienza uve', cells: items.map(b => b.provenienza_uve || null) },
+    { label:'Finestra di consumo', cells: items.map(b => _compareFinestraText(b)) },
+    { label:'Vinificazione', cells: items.map(b => b.vinificazione || null) },
+    { label:'Malolattica', cells: items.map(b => b.malolattica || null) },
   ];
 
   return '<div class="confronta-scroll">' +
@@ -4432,6 +4457,12 @@ function _scanToCompareObj(result, photoUrl, id) {
     pct_meunier: result.pct_meunier ?? b.pct_meunier ?? null,
     maturazione_mesi: result.maturazione_mesi ?? b.maturazione_mesi ?? null,
     provenienza_uve: result.provenienza_uve ?? b.provenienza_uve ?? null,
+    finestra_da: result.finestra_da ?? b.finestra_da ?? null,
+    finestra_a: result.finestra_a ?? b.finestra_a ?? null,
+    finestra_consumo_min_anni: result.finestra_consumo_min_anni ?? b.finestra_consumo_min_anni ?? null,
+    finestra_consumo_max_anni: result.finestra_consumo_max_anni ?? b.finestra_consumo_max_anni ?? null,
+    vinificazione: result.vinificazione ?? b.vinificazione ?? null,
+    malolattica: result.malolattica ?? b.malolattica ?? null,
     foto_url: photoUrl || b.foto_url || result.uploaded_photo_url || null,
   };
 }
