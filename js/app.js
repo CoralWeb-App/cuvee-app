@@ -29,7 +29,7 @@ function go(id){
   }
   // Viste protette: richiedono login
   const protectedViews = ['v-home','v-guida','v-maison','v-carnet','v-profile',
-    'v-detail','v-carnet-new','v-carnet-detail','v-carnet-session-detail','v-salvati','v-wishlist',
+    'v-detail','v-carnet-new','v-carnet-detail','v-carnet-session-detail','v-confronta','v-salvati','v-wishlist',
     'v-bottiglie','v-bottiglia-detail',
     'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne',
@@ -60,6 +60,7 @@ function go(id){
     renderScanHistoryUI();
   }
   if(id==='v-carnet'){
+    exitCompareMode();
     activeCaliceFilter = 0;
     activeSearchQuery = '';
     activeTypeFilter = 'tutti';
@@ -76,7 +77,7 @@ function go(id){
   }
   if(id.indexOf('v-zone-')===0) applyCruPremiumGating(id);
   if(id==='v-maison') loadAndRenderMaison();
-  if(id==='v-bottiglie') loadAndRenderBottiglie();
+  if(id==='v-bottiglie'){ exitCompareMode(); loadAndRenderBottiglie(); }
   if(id==='v-salvati') updateSalvatiUI();
   if(id==='v-subscription') loadSubscriptionScreen();
   if(id==='v-profile') updateScanStatsUI().catch(() => {});
@@ -89,7 +90,7 @@ function go(id){
 const CARNET_CENTRAL_BTN_VIEWS = ['v-carnet','v-carnet-new','v-carnet-detail','v-carnet-session-detail'];
 function updateBottomNav(id){
   // View senza bottom nav (fuori dall'app: splash, onboarding, auth, paywall)
-  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-age-gate-pre','v-complete-profile','v-carnet-new'];
+  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-age-gate-pre','v-complete-profile','v-carnet-new','v-confronta'];
   const nav = document.getElementById('shared-bottom-nav');
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 
@@ -2812,6 +2813,7 @@ async function resendVerification() {
 let currentNote = null;
 
 function openNoteDetail(note) {
+  if (compareMode) { toggleCompareSelection('nota', note.id, note); return; }
   currentNote = note;
   const container = document.getElementById('detail-content');
   if (!container) { go('v-carnet-detail'); return; }
@@ -3968,8 +3970,10 @@ function renderCarnetNoteCard(note) {
     ? new Date(note.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short'})
     : '';
   const origIdx = allCarnetNotes.findIndex(n => n.id === note.id);
+  const compareSelected = compareMode && compareType === 'nota' && compareSelection.some(s => s.id === note.id);
 
-  return '<div class="carnet-note-card' + (isLocked ? ' locked' : '') + '" data-idx="'+origIdx+'" onclick="' + (isLocked ? "go('v-paywall')" : "openNoteDetail(window._carnetNotes[this.dataset.idx])") + '">'+
+  return '<div class="carnet-note-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-idx="'+origIdx+'" data-compare-id="'+note.id+'" onclick="' + (isLocked ? "go('v-paywall')" : "openNoteDetail(window._carnetNotes[this.dataset.idx])") + '">'+
+    '<div class="compare-check"><i class="ti ti-circle compare-check-off"></i><i class="ti ti-circle-check-filled compare-check-on"></i></div>'+
     '<div class="cnc-img">'+
       (note.foto_url
         ? '<img src="'+note.foto_url+'" style="width:100%;height:100%;object-fit:cover;"/>'
@@ -4022,6 +4026,7 @@ function renderCarnetSessionCard(session) {
 // Apre la vista di dettaglio di una sessione dal suo id (cache in window._carnetSessions)
 let currentCarnetSessionId = null;
 function openCarnetSession(sessionId) {
+  if (compareMode) return; // le sessioni non sono selezionabili come singolo elemento: si confrontano le bottiglie al loro interno
   let s = window._carnetSessions?.get(sessionId);
   if (!s) {
     // Cache non ancora popolata (es. si arriva dal dettaglio di una nota senza
@@ -4053,6 +4058,14 @@ function renderCarnetSessionDetail(session) {
       '<span><i class="ti ti-layers-intersect" style="margin-right:4px;"></i>'+notes.length+' Champagne</span>'+
     '</div>'+
   '</div>';
+
+  if (notes.length >= 2) {
+    html += '<div style="padding:14px 16px 0;">'+
+      '<button onclick="quickCompareSession(\''+session.id+'\')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--gold-border);color:#8a6a1e;background:var(--gold-pale);border-radius:var(--radius-md);padding:11px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;">'+
+        '<i class="ti ti-arrows-left-right"></i> Confronta queste bottiglie'+
+      '</button>'+
+    '</div>';
+  }
 
   html += '<div class="carnet-grid" style="padding-top:14px;">' + notes.map(renderCarnetNoteCard).join('') + '</div>';
 
@@ -4119,6 +4132,234 @@ function toggleCarnetSearchBar(opening) {
     if (clr) clr.style.display = 'none';
     renderCarnetNotes(allCarnetNotes);
   }
+}
+
+// ═══ CONFRONTA — modalità selezione e schermata di confronto ═══════════════
+// Funziona sia sulle note del Carnet che sulle bottiglie del catalogo: stesso
+// meccanismo di selezione, stessa barra flottante, stessa tabella condivisa
+// (cambiano solo i campi mostrati, in base al tipo).
+let compareMode = false;
+let compareContext = null;  // 'carnet' | 'bottiglie' — la vista in cui è attiva la selezione
+let compareType = null;     // 'nota' | 'bottiglia' — il tipo di elemento selezionabile
+let compareSelection = [];  // [{id, obj}] nell'ordine di selezione
+const COMPARE_MIN = 2;
+const COMPARE_MAX_FREE = 2;
+const COMPARE_MAX_PREMIUM = 4;
+function _compareMax() { return isPremium() ? COMPARE_MAX_PREMIUM : COMPARE_MAX_FREE; }
+
+function toggleCompareMode(context) {
+  if (compareMode && compareContext === context) { exitCompareMode(); return; }
+  if (compareMode) exitCompareMode(); // cambio contesto raro, ma per sicurezza puliamo prima
+  compareMode = true;
+  compareContext = context;
+  compareType = context === 'carnet' ? 'nota' : 'bottiglia';
+  compareSelection = [];
+  const view = document.getElementById(context === 'carnet' ? 'v-carnet' : 'v-bottiglie');
+  if (view) view.classList.add('compare-mode');
+  const chip = document.getElementById(context === 'carnet' ? 'cf-compare' : 'bott-compare-icon');
+  if (chip) chip.classList.add('on');
+  updateCompareBar();
+}
+
+function exitCompareMode() {
+  if (!compareMode) return;
+  const view = document.getElementById(compareContext === 'carnet' ? 'v-carnet' : 'v-bottiglie');
+  if (view) {
+    view.classList.remove('compare-mode');
+    view.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+  }
+  const chip = document.getElementById(compareContext === 'carnet' ? 'cf-compare' : 'bott-compare-icon');
+  if (chip) chip.classList.remove('on');
+  compareMode = false;
+  compareContext = null;
+  compareType = null;
+  compareSelection = [];
+  updateCompareBar();
+}
+
+function toggleCompareSelection(type, id, obj) {
+  if (!compareMode) return;
+  const wasSelected = compareSelection.some(s => s.id === id);
+  if (wasSelected) {
+    compareSelection = compareSelection.filter(s => s.id !== id);
+  } else {
+    if (compareSelection.length >= _compareMax()) {
+      if (!isPremium()) go('v-paywall');
+      else showAppToast('Puoi confrontare al massimo ' + _compareMax() + ' elementi alla volta');
+      return;
+    }
+    compareSelection.push({ id, obj });
+  }
+  const cardSel = (type === 'nota' ? '.carnet-note-card' : '.bott-card') + '[data-compare-id="' + id + '"]';
+  const card = document.querySelector(cardSel);
+  if (card) card.classList.toggle('selected', !wasSelected);
+  updateCompareBar();
+}
+
+function updateCompareBar() {
+  const wrap = document.getElementById('compare-bar-wrap');
+  if (!wrap) return;
+  wrap.classList.toggle('show', compareMode);
+  if (!compareMode) return;
+  const n = compareSelection.length;
+  const max = _compareMax();
+  const lblEl = document.getElementById('compare-bar-label');
+  if (lblEl) {
+    lblEl.innerHTML = n === 0
+      ? 'Seleziona almeno 2 elementi da confrontare'
+      : '<strong>' + n + '</strong> selezionat' + (n === 1 ? 'o' : 'i') + ' · max ' + max;
+  }
+  const goBtn = document.getElementById('compare-bar-go');
+  if (goBtn) goBtn.disabled = n < COMPARE_MIN;
+}
+
+function compareBarGo() {
+  if (compareSelection.length < COMPARE_MIN) return;
+  const type = compareType;
+  const items = compareSelection.map(s => s.obj);
+  exitCompareMode();
+  openCompareView(type, items);
+}
+
+// Scorciatoia dal dettaglio di una degustazione multipla: confronta subito
+// tutte le bottiglie della sessione, senza passare dalla selezione manuale.
+function quickCompareSession(sessionId) {
+  const s = window._carnetSessions?.get(sessionId);
+  let notes = s ? [...s.notes] : (allCarnetNotes || []).filter(n => n.sessione_id === sessionId);
+  if (notes.length < 2) return;
+  notes.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+  const max = _compareMax();
+  const capped = notes.slice(0, max);
+  openCompareView('nota', capped);
+  if (notes.length > max) {
+    showAppToast('Confronto limitato alle prime ' + max + ' bottiglie su ' + notes.length + (isPremium() ? '' : ' — piano Free'));
+  }
+}
+
+function openCompareView(type, items) {
+  exitCompareMode();
+  go('v-confronta');
+  renderCompareView(type, items);
+}
+
+function renderCompareView(type, items) {
+  const backLabel = document.getElementById('confronta-back-label');
+  if (backLabel) {
+    const prevId = stack.length ? stack[stack.length - 1] : null;
+    const labels = { 'v-carnet': 'Carnet', 'v-bottiglie': 'Champagne', 'v-carnet-session-detail': 'Degustazione' };
+    backLabel.textContent = labels[prevId] || 'Indietro';
+  }
+  const container = document.getElementById('confronta-content');
+  if (!container) return;
+  container.innerHTML = type === 'nota' ? _renderCompareNote(items) : _renderCompareBottiglia(items);
+}
+
+function _compareGridStyle(n) {
+  return 'grid-template-columns:112px repeat(' + n + ', minmax(136px,1fr));';
+}
+function _compareRow(label, cells) {
+  return '<div class="confronta-cell label">' + label + '</div>' +
+    cells.map(c => '<div class="confronta-cell">' + (c != null ? c : '<span style="color:var(--ink-5);">—</span>') + '</div>').join('');
+}
+function _compareRowsHtml(rows, gridStyle) {
+  return rows.filter(r => r.cells.some(c => c != null)).map(r =>
+    '<div class="confronta-grid" style="' + gridStyle + '">' + _compareRow(r.label, r.cells) + '</div>'
+  ).join('');
+}
+
+function _renderCompareNote(items) {
+  const _coloreDef = {
+    paglierino_verdolino:{label:'Paglierino verdolino',hex:'#D9DE8A'},
+    paglierino:{label:'Paglierino',hex:'#EDDD82'},
+    giallo_dorato:{label:'Giallo dorato',hex:'#E8C34A'},
+    oro_intenso:{label:'Oro intenso',hex:'#D4A017'},
+    ambrato:{label:'Ambrato',hex:'#B8792E'},
+    rosa_pallido:{label:'Rosa pallido',hex:'#F0C4C0'},
+    rosa_salmone:{label:'Rosa salmone',hex:'#E89080'},
+    rosa_cerasuolo:{label:'Rosa cerasuolo',hex:'#C94F6D'}
+  };
+  const _evoLabel = { giovane:'Giovane e teso', apogeo:'Nel pieno della finestra', evoluto:'Evoluto' };
+  const gridStyle = _compareGridStyle(items.length);
+
+  const headerCells = items.map(note => {
+    const photo = note.foto_url
+      ? '<div class="confronta-photo"><img src="'+note.foto_url+'"/></div>'
+      : '<div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div></div>';
+    const r = note.rating || 0;
+    const glasses = Array.from({length:5},(_,i) =>
+      '<svg class="flute-icon" style="font-size:11px;opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
+    ).join('');
+    return '<div class="confronta-cell header">' + photo +
+      '<div class="confronta-item-maison">'+(note.maison_nome||'')+'</div>'+
+      '<div class="confronta-item-nome">'+(note.cuvee_nome||'')+'</div>'+
+      '<div style="display:flex;gap:1px;">'+glasses+'</div>'+
+    '</div>';
+  }).join('');
+
+  const rows = [
+    { label:'Annata', cells: items.map(n => n.annata || null) },
+    { label:'Colore', cells: items.map(n => {
+      if (!n.colore || !_coloreDef[n.colore]) return null;
+      const cd = _coloreDef[n.colore];
+      return '<span style="display:flex;align-items:center;gap:6px;"><span style="width:13px;height:13px;border-radius:50%;background:'+cd.hex+';border:1px solid rgba(0,0,0,.12);flex-shrink:0;"></span>'+cd.label+'</span>';
+    })},
+    { label:'Perlage', cells: items.map(n => n.perlage != null ? n.perlage + '/10' : null) },
+    { label:'Fase evolutiva', cells: items.map(n => (n.evoluzione && _evoLabel[n.evoluzione]) || null) },
+  ];
+  [
+    {key:'corpo', label:'Corpo'},
+    {key:'equilibrio', label:'Équilibre'},
+    {key:'acidite', label:'Acidité'},
+    {key:'effervescence', label:'Effervescence'},
+    {key:'complexite', label:'Complexité'},
+    {key:'longueur', label:'Longueur'},
+  ].forEach(s => {
+    rows.push({ label:s.label, cells: items.map(n => (n[s.key] != null && n[s.key] !== '') ? n[s.key] + '/10' : null) });
+  });
+  rows.push({ label:'Data', cells: items.map(n => n.data_degustazione
+    ? new Date(n.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}) : null) });
+
+  return '<div class="confronta-scroll">' +
+    '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
+    _compareRowsHtml(rows, gridStyle) +
+  '</div>';
+}
+
+function _renderCompareBottiglia(items) {
+  const gridStyle = _compareGridStyle(items.length);
+
+  const headerCells = items.map(b => {
+    const photo = b.foto_url
+      ? '<div class="confronta-photo"><img src="'+b.foto_url+'"/></div>'
+      : '<div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div></div>';
+    return '<div class="confronta-cell header">' + photo +
+      '<div class="confronta-item-maison">'+(b.maison?.nome||'')+'</div>'+
+      '<div class="confronta-item-nome">'+b.nome+'</div>'+
+    '</div>';
+  }).join('');
+
+  const rows = [
+    { label:'Tipo', cells: items.map(b => b.is_millesimato ? 'Millesimato' : 'Sans Année') },
+    { label:'Annata', cells: items.map(b => b.annata || null) },
+    { label:'Punteggio', cells: items.map(b => b.score_medio ? b.score_medio + ' · ' + scoreLabel(b.score_medio) : null) },
+    { label:'Dosaggio', cells: items.map(b => b.dosaggio_tipo ? b.dosaggio_tipo + (b.dosaggio_gl != null ? ' ('+b.dosaggio_gl+' g/l)' : '') : null) },
+    { label:'Prezzo', cells: items.map(b => b.prezzo_min ? 'da ' + b.prezzo_min + (b.prezzo_max ? '–'+b.prezzo_max : '') + ' €' : null) },
+    { label:'Uvaggio', cells: items.map(b => {
+      const parts = [
+        b.pct_pinot_noir ? 'Pinot Noir '+b.pct_pinot_noir+'%' : null,
+        b.pct_chardonnay ? 'Chardonnay '+b.pct_chardonnay+'%' : null,
+        b.pct_meunier ? 'Meunier '+b.pct_meunier+'%' : null,
+      ].filter(Boolean);
+      return parts.length ? parts.join(' · ') : null;
+    })},
+    { label:'Sui lieviti', cells: items.map(b => b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null) },
+    { label:'Provenienza uve', cells: items.map(b => b.provenienza_uve || null) },
+  ];
+
+  return '<div class="confronta-scroll">' +
+    '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
+    _compareRowsHtml(rows, gridStyle) +
+  '</div>';
 }
 
 // Menu contestuale nota
@@ -5675,7 +5916,9 @@ function _bottLoadMoreHTML() {
 // completo (cambio filtro/ricerca) e caricamento della pagina successiva col pulsante "Mostra altri".
 function _bottCardHTML(b, tipoLabel) {
   const isLocked = !!b._locked && !isPremium();
-  return '<div class="bott-card' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
+  const compareSelected = compareMode && compareType === 'bottiglia' && compareSelection.some(s => s.id === b.id);
+  return '<div class="bott-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-compare-id="' + b.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
+    '<div class="compare-check"><i class="ti ti-circle compare-check-off"></i><i class="ti ti-circle-check-filled compare-check-on"></i></div>' +
     '<div class="bott-card-img" style="min-height:88px;">' +
       (b.foto_url ? '<img src="' + b.foto_url + '" loading="lazy"/>' : '<svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>') +
       (isLocked ? '<div class="lock-over"><i class="ti ti-lock"></i>Premium</div>' : '') +
@@ -6072,6 +6315,7 @@ async function isBottigliaLocked(b) {
 async function openBottigliaDetail(bottId) {
   const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
   if (!b) return;
+  if (compareMode) { toggleCompareSelection('bottiglia', bottId, b); return; }
   if (await isBottigliaLocked(b)) { go('v-paywall'); return; }
   currentBottiglia = b;
 

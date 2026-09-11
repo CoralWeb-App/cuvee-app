@@ -697,8 +697,26 @@ html,body{
 
 /* ═══ CARNET DE DÉGUSTATION ═══ */
 .carnet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px 14px 6px;}
-.carnet-note-card{background:var(--white);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.carnet-note-card{position:relative;background:var(--white);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s;box-shadow:0 2px 12px rgba(0,0,0,.07);}
 .carnet-note-card:active{transform:scale(.97);}
+/* Confronta — spunta di selezione sulle card, attiva solo in modalità confronto */
+.compare-check{display:none;position:absolute;top:8px;left:8px;z-index:5;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.92);align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.18);}
+.compare-check i{font-size:18px;line-height:1;}
+.compare-check-off{color:var(--ink-4);}
+.compare-check-on{display:none;color:var(--gold);}
+.carnet-note-card.selected .compare-check-off,
+.bott-card.selected .compare-check-off{display:none;}
+.carnet-note-card.selected .compare-check-on,
+.bott-card.selected .compare-check-on{display:inline-block;}
+.carnet-note-card.selected,
+.bott-card.selected{outline:2.5px solid var(--gold);outline-offset:-2.5px;}
+#v-carnet.compare-mode .carnet-note-card:not(.carnet-session-card) .compare-check,
+#v-bottiglie.compare-mode .bott-card .compare-check{display:flex;}
+#v-carnet.compare-mode .carnet-note-card.carnet-session-card,
+#v-carnet.compare-mode .carnet-note-card.locked{opacity:.4;pointer-events:none;}
+#v-bottiglie.compare-mode .bott-card.locked{opacity:.4;pointer-events:none;}
+#v-bottiglie.compare-mode .bott-card-add{display:none;}
+.topbar-icons i.on{color:var(--gold);}
 /* CNC = Carnet Note Card sub-elements */
 .cnc-img{width:100%;aspect-ratio:3/4;overflow:hidden;position:relative;background:linear-gradient(150deg,#F8F2E6 0%,#EBD9B8 100%);}
 .cnc-img img{width:100%;height:100%;object-fit:cover;}
@@ -1089,7 +1107,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
 
 /* ═══ BOTTIGLIE ═══ */
-.bott-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin:0 14px 10px;overflow:hidden;cursor:pointer;display:flex;gap:0;}
+.bott-card{position:relative;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin:0 14px 10px;overflow:hidden;cursor:pointer;display:flex;gap:0;}
 .bott-card-img{width:88px;flex-shrink:0;background:var(--ivory-3);display:flex;align-items:center;justify-content:center;position:relative;}
 .bott-card-img i{font-size:26px;color:var(--ink-5);}
 .bott-card-img svg{width:26px;height:26px;color:var(--ink-5);}
@@ -1306,4 +1324,28 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .scan-limit-feat i{font-size:18px;color:var(--gold);width:22px;flex-shrink:0;}
 .scan-limit-feat svg{width:18px;height:18px;color:var(--gold);flex-shrink:0;}
 .scan-limit-skip{background:none;border:none;font-family:var(--sans);font-size:14px;color:var(--ink-4);cursor:pointer;padding:10px;text-align:center;width:100%;margin-top:4px;}
+
+/* ═══ CONFRONTA — barra flottante di selezione ═══ */
+.compare-bar-wrap{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(64px + env(safe-area-inset-bottom,0px) + 10px);width:calc(100% - 28px);max-width:400px;z-index:250;display:none;}
+.compare-bar-wrap.show{display:block;}
+.compare-bar{width:100%;background:#1E1208;border-radius:16px;border:2px solid var(--ivory);box-shadow:0 6px 20px rgba(30,18,8,.3);display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;}
+.compare-bar-label{flex:1;font-family:var(--sans);font-size:13.5px;color:var(--ivory-2);font-weight:500;}
+.compare-bar-label strong{color:#C8A03A;font-size:15px;}
+.compare-bar-cancel{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.compare-bar-cancel i{font-size:16px;color:var(--ivory-3);}
+.compare-bar-go{background:#C8A03A;color:#1E1208;border:none;border-radius:12px;padding:10px 18px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.compare-bar-go:disabled{opacity:.35;cursor:default;}
+
+/* ═══ CONFRONTA — tabella di confronto ═══ */
+.confronta-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-top:10px;}
+.confronta-grid{display:grid;width:max-content;min-width:100%;}
+.confronta-cell{padding:10px 12px;border-bottom:1px solid var(--border);font-family:var(--sans);font-size:13px;color:var(--ink-2);display:flex;align-items:center;min-width:0;}
+.confronta-cell.label{position:sticky;left:0;z-index:2;background:var(--ivory-2);font-weight:600;color:var(--ink-4);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;padding-right:8px;}
+.confronta-cell.header{flex-direction:column;align-items:flex-start;gap:6px;padding:14px 12px;background:var(--white);border-bottom:2px solid var(--gold);}
+.confronta-photo{width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:linear-gradient(150deg,#F8F2E6 0%,#EBD9B8 100%);}
+.confronta-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.confronta-photo-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+.confronta-photo-ph i{font-size:28px;color:rgba(184,146,42,.3);}
+.confronta-item-maison{font-family:var(--sans);font-size:10.5px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.confronta-item-nome{font-family:var(--serif);font-size:15px;color:var(--ink);font-weight:500;line-height:1.25;}
 
