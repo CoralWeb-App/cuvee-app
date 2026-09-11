@@ -378,6 +378,20 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
     </div>
 
+    <!-- CONFRONTA -->
+    <div onclick="openHomeCompareMenu()" style="margin:0 18px 12px;background:linear-gradient(135deg,#241C30,#332844);border:1px solid #4A3A5C;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:15px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(180,155,216,.35);box-shadow:0 2px 12px rgba(20,15,30,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="ti ti-arrows-left-right" style="font-size:24px;color:#B49BD8;"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:var(--serif);font-size:22px;color:#E4D8F0;font-weight:500;margin-bottom:5px;">Confronta</div>
+          <div style="font-family:var(--sans);font-size:14px;color:#9884B0;line-height:1.55;">Scansioni, degustazioni o catalogo — fianco a fianco, per scegliere meglio.</div>
+        </div>
+        <i class="ti ti-chevron-right" style="font-size:19px;color:#B49BD8;flex-shrink:0;"></i>
+      </div>
+    </div>
+
     <!-- BENTO: Guida wide + Produttori + Champagne -->
     <div style="padding:0 18px;display:flex;flex-direction:column;gap:10px;">
 
@@ -3436,6 +3450,35 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- ═══ CONFRONTA DA HOME ═══ -->
+<div id="home-compare-menu-overlay" class="note-menu-overlay" style="display:none;" onclick="closeHomeCompareMenu()">
+  <div class="note-menu-sheet" onclick="event.stopPropagation()">
+    <div class="note-menu-handle"></div>
+    <div style="padding:2px 22px 12px;font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;">Confronta</div>
+    <div class="note-menu-item" onclick="closeHomeCompareMenu();compareFromHome('scan-history')">
+      <i class="ti ti-scan" style="color:var(--gold);"></i>
+      <div>
+        <div>Le tue scansioni</div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);font-weight:400;margin-top:2px;">Dallo storico scansioni</div>
+      </div>
+    </div>
+    <div class="note-menu-item" onclick="closeHomeCompareMenu();compareFromHome('bottiglie')">
+      <svg width="22" height="22" viewBox="0 0 512 512" fill="var(--gold)"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>
+      <div>
+        <div>Champagne del catalogo</div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);font-weight:400;margin-top:2px;">Qualsiasi cuvée, anche mai assaggiata</div>
+      </div>
+    </div>
+    <div class="note-menu-item" onclick="closeHomeCompareMenu();compareFromHome('carnet')">
+      <i class="ti ti-notebook" style="color:var(--gold);"></i>
+      <div>
+        <div>Le tue degustazioni</div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--ink-5);font-weight:400;margin-top:2px;">Dal Carnet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- ═══ IL MIO ABBONAMENTO ═══ -->
 <div class="view" id="v-subscription">
@@ -3742,6 +3785,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=236"></script>
+<script src="js/app.js?v=237"></script>
 </body>
 </html>

@@ -4424,6 +4424,26 @@ function _scanToCompareObj(result, photoUrl, id) {
   };
 }
 
+// Card "Confronta" in Home: apre un menù per scegliere subito su quale
+// contesto confrontare, senza dover prima entrare nella pagina e cercare il
+// pulsante lì — arriva già con la selezione attiva, come l'avesse aperta da sé.
+function openHomeCompareMenu() {
+  const overlay = document.getElementById('home-compare-menu-overlay');
+  if (overlay) overlay.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeHomeCompareMenu() {
+  const overlay = document.getElementById('home-compare-menu-overlay');
+  if (overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+}
+function compareFromHome(context) {
+  const cfg = COMPARE_CONTEXTS[context];
+  if (!cfg) return;
+  go(cfg.viewId);
+  toggleCompareMode(context);
+}
+
 // Menu contestuale nota
 function openNoteMenu() {
   const overlay = document.getElementById('note-menu-overlay');
