@@ -4160,6 +4160,18 @@ const COMPARE_MAX_FREE = 2;
 const COMPARE_MAX_PREMIUM = 6;
 function _compareMax() { return isPremium() ? COMPARE_MAX_PREMIUM : COMPARE_MAX_FREE; }
 
+// Quando un utente Free tenta di selezionare oltre il limite, spieghiamo
+// prima il perché con un popup dedicato — mandarlo dritto al paywall senza
+// contesto lascerebbe l'utente a chiedersi cosa sia appena successo.
+function showCompareLimitModal() {
+  const modal = document.getElementById('compare-limit-modal');
+  if (modal) modal.classList.add('on');
+}
+function closeCompareLimitModal() {
+  const modal = document.getElementById('compare-limit-modal');
+  if (modal) modal.classList.remove('on');
+}
+
 // Un contesto per ogni schermata da cui si può avviare un confronto — tiene
 // insieme vista, pulsante da evidenziare, tipo di dato e classe della card,
 // così il resto del motore non deve più sapere "dove" si trova.
@@ -4211,7 +4223,7 @@ function toggleCompareSelection(id, obj) {
     compareSelection = compareSelection.filter(s => s.id !== id);
   } else {
     if (compareSelection.length >= _compareMax()) {
-      if (!isPremium()) go('v-paywall');
+      if (!isPremium()) showCompareLimitModal();
       else showAppToast('Puoi confrontare al massimo ' + _compareMax() + ' elementi alla volta');
       return;
     }
