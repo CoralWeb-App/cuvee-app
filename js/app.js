@@ -4298,16 +4298,37 @@ function _compareGridStyle(n) {
   // width:max-content (necessario per lo scroll orizzontale) una traccia 1fr
   // ha larghezza indefinita, e le foto senza un vincolo reale in pixel si
   // espandono alla loro dimensione originale invece di adattarsi alla colonna.
-  return 'grid-template-columns:112px repeat(' + n + ', 140px);';
+  return 'grid-template-columns:116px repeat(' + n + ', 138px);';
 }
 function _compareRow(label, cells) {
   return '<div class="confronta-cell label">' + label + '</div>' +
     cells.map(c => '<div class="confronta-cell">' + (c != null ? c : '<span style="color:var(--ink-5);">—</span>') + '</div>').join('');
 }
-function _compareRowsHtml(rows, gridStyle) {
-  return rows.filter(r => r.cells.some(c => c != null)).map(r =>
-    '<div class="confronta-grid" style="' + gridStyle + '">' + _compareRow(r.label, r.cells) + '</div>'
-  ).join('');
+// Righe raggruppate in sezioni con sottotitolo — una sezione senza righe
+// valorizzate sparisce del tutto, sottotitolo incluso. Lo striping delle
+// righe è continuo, a cavallo delle sezioni (non riparte da capo ad ognuna).
+function _compareSectionedHtml(sections, gridStyle) {
+  let idx = 0;
+  return sections.map(sec => {
+    const rows = sec.rows.filter(r => r.cells.some(c => c != null));
+    if (!rows.length) return '';
+    const rowsHtml = rows.map(r => {
+      const cls = 'confronta-grid' + (idx % 2 ? ' confronta-row-alt' : '');
+      idx++;
+      return '<div class="' + cls + '" style="' + gridStyle + '">' + _compareRow(r.label, r.cells) + '</div>';
+    }).join('');
+    return '<div class="confronta-grid" style="' + gridStyle + '"><div class="confronta-section-title"><span>' + sec.title + '</span></div></div>' + rowsHtml;
+  }).join('');
+}
+// Evidenzia il valore più alto tra quelli confrontati (es. punteggio) — solo
+// se ce n'è più di uno valorizzato e non sono tutti uguali, altrimenti
+// "evidenziare il migliore" non avrebbe alcun significato.
+function _compareWinnerBadge(value, allValues) {
+  const present = allValues.filter(v => v != null);
+  if (present.length < 2) return '';
+  const max = Math.max(...present);
+  if (value !== max || present.every(v => v === max)) return '';
+  return '<span class="confronta-winner-badge"><i class="ti ti-crown"></i>Il più alto</span>';
 }
 
 function _renderCompareNote(items) {
@@ -4323,54 +4344,62 @@ function _renderCompareNote(items) {
   };
   const _evoLabel = { giovane:'Giovane e teso', apogeo:'Nel pieno della finestra', evoluto:'Evoluto' };
   const gridStyle = _compareGridStyle(items.length);
+  const allScores = items.map(n => n.rating || null);
 
   const headerCells = items.map(note => {
     const photo = note.foto_url
-      ? '<div class="confronta-photo"><img src="'+note.foto_url+'"/></div>'
-      : '<div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div></div>';
+      ? '<div class="confronta-photo"><img src="'+note.foto_url+'"/>'
+      : '<div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div>';
+    const annataBadge = note.annata ? '<span class="confronta-photo-badge">'+note.annata+'</span>' : '';
     const r = note.rating || 0;
     const glasses = Array.from({length:5},(_,i) =>
-      '<svg class="flute-icon" style="font-size:11px;opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
+      '<svg class="flute-icon" style="font-size:12px;opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
     ).join('');
-    return '<div class="confronta-cell header">' + photo +
-      '<div class="confronta-item-maison">'+(note.maison_nome||'')+'</div>'+
-      '<div class="confronta-item-nome">'+(note.cuvee_nome||'')+'</div>'+
-      '<div style="display:flex;gap:1px;">'+glasses+'</div>'+
+    const winnerBadge = _compareWinnerBadge(note.rating || null, allScores);
+    return '<div class="confronta-cell header">' + photo + annataBadge + '</div>' +
+      '<div class="confronta-item-info">' +
+        '<div class="confronta-item-maison">'+(note.maison_nome||'')+'</div>'+
+        '<div class="confronta-item-nome">'+(note.cuvee_nome||'')+'</div>'+
+        '<div class="confronta-item-rating">'+glasses+'</div>'+
+        winnerBadge +
+      '</div>' +
     '</div>';
   }).join('');
 
-  const rows = [
-    { label:'Tipo', cells: items.map(n => {
-      const tipi = inferTipoNota(n).filter(t => t !== 'non_so').map(t => _tipoShort[t] || t);
-      return tipi.length ? tipi.join(' · ') : null;
-    })},
-    { label:'Annata', cells: items.map(n => n.annata || null) },
-    { label:'Colore', cells: items.map(n => {
-      if (!n.colore || !_coloreDef[n.colore]) return null;
-      const cd = _coloreDef[n.colore];
-      return '<span style="display:flex;align-items:center;gap:6px;"><span style="width:13px;height:13px;border-radius:50%;background:'+cd.hex+';border:1px solid rgba(0,0,0,.12);flex-shrink:0;"></span>'+cd.label+'</span>';
-    })},
-    { label:'Perlage', cells: items.map(n => n.perlage != null ? n.perlage + '/10' : null) },
-    { label:'Fase evolutiva', cells: items.map(n => (n.evoluzione && _evoLabel[n.evoluzione]) || null) },
+  const sections = [
+    { title:'Aspetto', rows: [
+      { label:'Tipo', cells: items.map(n => {
+        const tipi = inferTipoNota(n).filter(t => t !== 'non_so').map(t => _tipoShort[t] || t);
+        return tipi.length ? tipi.join(' · ') : null;
+      })},
+      { label:'Annata', cells: items.map(n => n.annata || null) },
+      { label:'Colore', cells: items.map(n => {
+        if (!n.colore || !_coloreDef[n.colore]) return null;
+        const cd = _coloreDef[n.colore];
+        return '<span style="display:flex;align-items:center;gap:6px;"><span style="width:13px;height:13px;border-radius:50%;background:'+cd.hex+';border:1px solid rgba(0,0,0,.12);flex-shrink:0;"></span>'+cd.label+'</span>';
+      })},
+      { label:'Perlage', cells: items.map(n => n.perlage != null ? n.perlage + '/10' : null) },
+      { label:'Fase evolutiva', cells: items.map(n => (n.evoluzione && _evoLabel[n.evoluzione]) || null) },
+    ]},
+    { title:'Sensoriale', rows: [
+      {key:'corpo', label:'Corpo'},
+      {key:'equilibrio', label:'Équilibre'},
+      {key:'acidite', label:'Acidité'},
+      {key:'effervescence', label:'Effervescence'},
+      {key:'complexite', label:'Complexité'},
+      {key:'longueur', label:'Longueur'},
+    ].map(s => ({ label:s.label, cells: items.map(n => (n[s.key] != null && n[s.key] !== '') ? n[s.key] + '/10' : null) })) },
+    { title:'Degustazione', rows: [
+      { label:'Data', cells: items.map(n => n.data_degustazione
+        ? new Date(n.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}) : null) },
+      { label:'Luogo', cells: items.map(n => n.luogo || null) },
+      { label:'Sboccatura', cells: items.map(n => n.sboccatura || null) },
+    ]},
   ];
-  [
-    {key:'corpo', label:'Corpo'},
-    {key:'equilibrio', label:'Équilibre'},
-    {key:'acidite', label:'Acidité'},
-    {key:'effervescence', label:'Effervescence'},
-    {key:'complexite', label:'Complexité'},
-    {key:'longueur', label:'Longueur'},
-  ].forEach(s => {
-    rows.push({ label:s.label, cells: items.map(n => (n[s.key] != null && n[s.key] !== '') ? n[s.key] + '/10' : null) });
-  });
-  rows.push({ label:'Data', cells: items.map(n => n.data_degustazione
-    ? new Date(n.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}) : null) });
-  rows.push({ label:'Luogo', cells: items.map(n => n.luogo || null) });
-  rows.push({ label:'Sboccatura', cells: items.map(n => n.sboccatura || null) });
 
   return '<div class="confronta-scroll">' +
-    '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
-    _compareRowsHtml(rows, gridStyle) +
+    '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;box-shadow:none;"></div>'+headerCells+'</div>' +
+    _compareSectionedHtml(sections, gridStyle) +
   '</div>';
 }
 
@@ -4392,41 +4421,60 @@ function _compareFinestraText(item) {
 
 function _renderCompareBottiglia(items) {
   const gridStyle = _compareGridStyle(items.length);
+  const allScores = items.map(b => b.score_medio || null);
 
   const headerCells = items.map(b => {
     const photo = b.foto_url
-      ? '<div class="confronta-photo"><img src="'+b.foto_url+'"/></div>'
-      : '<div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div></div>';
-    return '<div class="confronta-cell header">' + photo +
-      '<div class="confronta-item-maison">'+(b.maison?.nome||'')+'</div>'+
-      '<div class="confronta-item-nome">'+b.nome+'</div>'+
+      ? '<div class="confronta-photo"><img src="'+b.foto_url+'"/>'
+      : '<div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div>';
+    const annataBadge = b.annata ? '<span class="confronta-photo-badge">'+b.annata+'</span>' : '';
+    return '<div class="confronta-cell header">' + photo + annataBadge + '</div>' +
+      '<div class="confronta-item-info">' +
+        '<div class="confronta-item-maison">'+(b.maison?.nome||'')+'</div>'+
+        '<div class="confronta-item-nome">'+b.nome+'</div>'+
+      '</div>' +
     '</div>';
   }).join('');
 
-  const rows = [
-    { label:'Tipo', cells: items.map(b => b.is_millesimato ? 'Millesimato' : 'Sans Année') },
-    { label:'Annata', cells: items.map(b => b.annata || null) },
-    { label:'Punteggio', cells: items.map(b => b.score_medio ? b.score_medio + ' · ' + scoreLabel(b.score_medio) : null) },
-    { label:'Dosaggio', cells: items.map(b => b.dosaggio_tipo ? b.dosaggio_tipo + (b.dosaggio_gl != null ? ' ('+b.dosaggio_gl+' g/l)' : '') : null) },
-    { label:'Prezzo', cells: items.map(b => b.prezzo_min ? 'da ' + b.prezzo_min + (b.prezzo_max ? '–'+b.prezzo_max : '') + ' €' : null) },
-    { label:'Uvaggio', cells: items.map(b => {
-      const parts = [
-        b.pct_pinot_noir ? 'Pinot Noir '+b.pct_pinot_noir+'%' : null,
-        b.pct_chardonnay ? 'Chardonnay '+b.pct_chardonnay+'%' : null,
-        b.pct_meunier ? 'Meunier '+b.pct_meunier+'%' : null,
-      ].filter(Boolean);
-      return parts.length ? parts.join(' · ') : null;
-    })},
-    { label:'Sui lieviti', cells: items.map(b => b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null) },
-    { label:'Provenienza uve', cells: items.map(b => b.provenienza_uve || null) },
-    { label:'Finestra di consumo', cells: items.map(b => _compareFinestraText(b)) },
-    { label:'Vinificazione', cells: items.map(b => b.vinificazione || null) },
-    { label:'Malolattica', cells: items.map(b => b.malolattica || null) },
+  const sections = [
+    { title:'Scheda', rows: [
+      { label:'Tipo', cells: items.map(b => b.is_millesimato ? 'Millesimato' : 'Sans Année') },
+      { label:'Annata', cells: items.map(b => b.annata || null) },
+      { label:'Punteggio', cells: items.map(b => b.score_medio ? '<div>' +
+        scoreRingCard(b.score_medio) +
+        '<div style="font-family:var(--sans);font-size:11.5px;color:var(--ink-4);line-height:1.3;margin-top:5px;">'+scoreLabel(b.score_medio)+'</div>' +
+        _compareWinnerBadge(b.score_medio, allScores) +
+      '</div>' : null) },
+      { label:'Dosaggio', cells: items.map(b => b.dosaggio_tipo
+        ? '<div>' + dosagePill(b.dosaggio_tipo) + (b.dosaggio_gl != null ? '<div style="margin-top:5px;font-family:var(--sans);font-size:11.5px;color:var(--ink-4);">'+b.dosaggio_gl+' g/l</div>' : '') + '</div>'
+        : null) },
+      { label:'Prezzo', cells: items.map(b => (b.prezzo_min || b.fascia_prezzo) ? '<div style="display:flex;flex-direction:column;gap:4px;">' +
+        priceScale(b.fascia_prezzo, b.prezzo_min) +
+        (b.prezzo_min ? '<span style="font-family:var(--sans);font-size:11.5px;color:var(--ink-4);">da '+b.prezzo_min+(b.prezzo_max?'–'+b.prezzo_max:'')+' €</span>' : '') +
+      '</div>' : null) },
+    ]},
+    { title:'Composizione', rows: [
+      { label:'Uvaggio', cells: items.map(b => {
+        const parts = [
+          b.pct_pinot_noir ? 'Pinot Noir '+b.pct_pinot_noir+'%' : null,
+          b.pct_chardonnay ? 'Chardonnay '+b.pct_chardonnay+'%' : null,
+          b.pct_meunier ? 'Meunier '+b.pct_meunier+'%' : null,
+        ].filter(Boolean);
+        return parts.length ? parts.join(' · ') : null;
+      })},
+      { label:'Sui lieviti', cells: items.map(b => b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null) },
+      { label:'Provenienza uve', cells: items.map(b => b.provenienza_uve || null) },
+      { label:'Vinificazione', cells: items.map(b => b.vinificazione || null) },
+      { label:'Malolattica', cells: items.map(b => b.malolattica || null) },
+    ]},
+    { title:'Consumo', rows: [
+      { label:'Finestra', cells: items.map(b => _compareFinestraText(b)) },
+    ]},
   ];
 
   return '<div class="confronta-scroll">' +
-    '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
-    _compareRowsHtml(rows, gridStyle) +
+    '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;box-shadow:none;"></div>'+headerCells+'</div>' +
+    _compareSectionedHtml(sections, gridStyle) +
   '</div>';
 }
 
