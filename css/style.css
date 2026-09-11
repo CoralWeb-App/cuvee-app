@@ -81,6 +81,18 @@ html,body{
 }
 .topbar-avatar-btn.on{background:var(--gold);border-color:var(--gold);}
 .topbar-avatar-btn.on i{color:#1E1208 !important;}
+/* Stessa forma di .topbar-avatar-btn ma per pulsanti-icona che NON devono
+   mostrare la foto profilo — .topbar-avatar-btn viene riempito ovunque dal
+   JS che sincronizza l'avatar utente (querySelectorAll su quella classe),
+   quindi un pulsante come il toggle ricerca deve restarne fuori. */
+.topbar-icon-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--gold-pale);border:1.5px solid var(--gold-border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;overflow:hidden;flex-shrink:0;
+}
+.topbar-icon-btn.on{background:var(--gold);border-color:var(--gold);}
+.topbar-icon-btn.on i{color:#1E1208 !important;}
 .back-btn{
   display:flex;align-items:center;gap:5px;
   background:none;border:none;cursor:pointer;
