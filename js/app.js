@@ -83,6 +83,9 @@ function go(id){
   // Aggiorna tab attivo nella bottom nav condivisa
   updateBottomNav(id);
 }
+// Viste in cui il pulsante centrale deve proporre "nuova degustazione" invece
+// che "scansiona" — coincide con le viste già associate al tab Carnet.
+const CARNET_CENTRAL_BTN_VIEWS = ['v-carnet','v-carnet-new','v-carnet-detail','v-carnet-session-detail'];
 function updateBottomNav(id){
   // View senza bottom nav (fuori dall'app: splash, onboarding, auth, paywall)
   const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-age-gate-pre','v-complete-profile','v-carnet-new'];
@@ -101,6 +104,24 @@ function updateBottomNav(id){
     if(!el) return;
     el.classList.toggle('on', views.includes(id));
   });
+  // Pulsante centrale: nel Carnet la scansione non c'entra, propone piuttosto
+  // una nuova degustazione — stesso posto, stessa forma, icona e funzione diverse.
+  const badgeIcon = document.getElementById('bn-scan-badge-icon');
+  if(badgeIcon){
+    const inCarnet = CARNET_CENTRAL_BTN_VIEWS.includes(id);
+    badgeIcon.classList.toggle('ti-scan', !inCarnet);
+    badgeIcon.classList.toggle('ti-plus', inCarnet);
+  }
+}
+// Il pulsante centrale della bottom bar fa cose diverse a seconda di dove ci si trova:
+// scansiona una bottiglia ovunque, propone una nuova degustazione nel Carnet.
+function handleCentralNavClick(){
+  const cur = document.querySelector('.view.active');
+  if(cur && CARNET_CENTRAL_BTN_VIEWS.includes(cur.id)){
+    openNewTastingMenu();
+  } else {
+    startScan('explore');
+  }
 }
 function goBack(){
   if(stack.length>0){
