@@ -2327,7 +2327,6 @@ async function signOut() {
   currentBottFilters     = new Set();
   currentBottLetter      = 'tutti';
   currentBottSearch      = '';
-  currentBottPriceFilter = 'tutti';
   // Svuota stack navigazione
   stack.length = 0;
   // Nascondi bottom nav
@@ -5871,7 +5870,6 @@ let allBottiglie = [];
 let currentBottFilters = new Set();   // multi-select tipo
 let currentBottSearch = '';
 let currentBottLetter = 'tutti';
-let currentBottPriceFilter = 'tutti';
 let currentBottiglia = null;
 const BOTT_PAGE_SIZE = 50;
 let bottShownCount = BOTT_PAGE_SIZE;
@@ -6031,23 +6029,6 @@ function renderBottiglie() {
 
   if (currentBottLetter !== 'tutti') filtered = filtered.filter(b => bottInitial(b.nome) === currentBottLetter || bottInitial(b.maison?.nome) === currentBottLetter);
 
-  // Filtro per fascia prezzo
-  if (currentBottPriceFilter !== 'tutti') {
-    filtered = filtered.filter(b => {
-      const p = b.prezzo_min;
-      if (!p) return false;
-      switch (currentBottPriceFilter) {
-        case 'entry':       return p <= 50;
-        case 'media_gamma': return p > 50  && p <= 90;
-        case 'premium':     return p > 90  && p <= 130;
-        case 'alta_gamma':  return p > 130 && p <= 200;
-        case 'lusso':       return p > 200 && p <= 300;
-        case 'gran_lusso':  return p > 300;
-        default: return true;
-      }
-    });
-  }
-
   if (currentBottSearch) {
     const q = normalizeStr(currentBottSearch);
     const tipoLabelB = {'nv':'sans année','millesimato':'millésimé','prestige':'prestige cuvée','blanc_de_blancs':'blanc de blancs','blanc_de_noirs':'blanc de noirs','rose':'rosé','nature':'brut nature'};
@@ -6151,14 +6132,6 @@ function toggleBottFilter(el, filter) {
     const f = b.dataset.filter;
     const active = f === 'tutti' ? currentBottFilters.size === 0 : currentBottFilters.has(f);
     b.classList.toggle('on', active);
-  });
-  renderBottiglie();
-}
-
-function toggleBottPriceFilter(el, price) {
-  currentBottPriceFilter = price;
-  document.querySelectorAll('#bott-price-filters .f-btn').forEach(b => {
-    b.classList.toggle('on', b.dataset.price === price);
   });
   renderBottiglie();
 }

@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=139"/>
+<link rel="stylesheet" href="css/style.css?v=140"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2330,15 +2330,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
   <div class="filter-bar">
     <div class="filter-row" id="bott-letter-filters"></div>
-    <div class="filter-row" id="bott-price-filters" style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
-      <div class="f-btn on" data-price="tutti"       onclick="toggleBottPriceFilter(this,'tutti')">Tutti</div>
-      <div class="f-btn"    data-price="entry"        onclick="toggleBottPriceFilter(this,'entry')">€</div>
-      <div class="f-btn"    data-price="media_gamma"  onclick="toggleBottPriceFilter(this,'media_gamma')">€€</div>
-      <div class="f-btn"    data-price="premium"      onclick="toggleBottPriceFilter(this,'premium')">€€€</div>
-      <div class="f-btn"    data-price="alta_gamma"   onclick="toggleBottPriceFilter(this,'alta_gamma')">€€€€</div>
-      <div class="f-btn"    data-price="lusso"        onclick="toggleBottPriceFilter(this,'lusso')">€€€€€</div>
-      <div class="f-btn"    data-price="gran_lusso"   onclick="toggleBottPriceFilter(this,'gran_lusso')">€€€€€<span style="-webkit-text-stroke:0.5px currentColor;font-weight:700;">€</span></div>
-    </div>
   </div>
   <div class="scroll" id="bott-scroll">
     <div class="compare-sticky-wrap">
@@ -3802,6 +3793,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=240"></script>
+<script src="js/app.js?v=242"></script>
 </body>
 </html>
