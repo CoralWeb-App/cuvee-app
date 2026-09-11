@@ -2164,7 +2164,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:1px;" id="maison-count-label">Caricamento...</div>
     </div>
     <div class="topbar-icons">
-      <i class="ti ti-search" onclick="toggleMaisonSearch()" style="cursor:pointer;"></i>
+      <div class="topbar-icon-btn" id="maison-search-toggle-btn" onclick="toggleMaisonSearch()"><i class="ti ti-search" style="font-size:16px;color:var(--gold);"></i></div>
       <div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div>
     </div>
   </div>
@@ -2317,7 +2317,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div style="font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:1px;" id="bott-count-label">Caricamento...</div>
     </div>
     <div class="topbar-icons">
-      <i class="ti ti-search" onclick="toggleBottSearch()" style="cursor:pointer;"></i>
+      <div class="topbar-icon-btn" id="bott-search-toggle-btn" onclick="toggleBottSearch()"><i class="ti ti-search" style="font-size:16px;color:var(--gold);"></i></div>
       <div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div>
     </div>
   </div>
@@ -3802,6 +3802,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=239"></script>
+<script src="js/app.js?v=240"></script>
 </body>
 </html>

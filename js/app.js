@@ -5493,6 +5493,7 @@ function toggleMaisonSearch() {
   if (!wrap) return;
   const visible = wrap.style.display !== 'none';
   wrap.style.display = visible ? 'none' : 'block';
+  document.getElementById('maison-search-toggle-btn')?.classList.toggle('on', !visible);
   if (!visible) document.getElementById('maison-search-input')?.focus();
 }
 
@@ -6146,6 +6147,7 @@ function toggleBottSearch() {
   if (!wrap) return;
   const vis = wrap.style.display !== 'none';
   wrap.style.display = vis ? 'none' : 'block';
+  document.getElementById('bott-search-toggle-btn')?.classList.toggle('on', !vis);
   if (!vis) document.getElementById('bott-search-input')?.focus();
 }
 
