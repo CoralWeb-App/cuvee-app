@@ -716,7 +716,12 @@ html,body{
 #v-carnet.compare-mode .carnet-note-card.locked{opacity:.4;pointer-events:none;}
 #v-bottiglie.compare-mode .bott-card.locked{opacity:.4;pointer-events:none;}
 #v-bottiglie.compare-mode .bott-card-add{display:none;}
-.topbar-icons i.on{color:var(--gold);}
+/* Confronta — pillola flottante sticky, staccata dai filtri e leggermente
+   trasparente: resta visibile in cima mentre la lista scorre sotto di lei. */
+.compare-sticky-wrap{position:sticky;top:0;z-index:20;display:flex;justify-content:center;padding:10px 0 6px;pointer-events:none;}
+.compare-float-btn{pointer-events:auto;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1.5px solid var(--border-2);border-radius:20px;padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-3);box-shadow:0 2px 10px rgba(0,0,0,.10);cursor:pointer;white-space:nowrap;}
+.compare-float-btn i{font-size:15px;}
+.compare-float-btn.on{background:rgba(245,237,213,.92);border-color:var(--gold);color:#8a6a1e;}
 /* CNC = Carnet Note Card sub-elements */
 .cnc-img{width:100%;aspect-ratio:3/4;overflow:hidden;position:relative;background:linear-gradient(150deg,#F8F2E6 0%,#EBD9B8 100%);}
 .cnc-img img{width:100%;height:100%;object-fit:cover;}

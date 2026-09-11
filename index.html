@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=135"/>
+<link rel="stylesheet" href="css/style.css?v=136"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2304,7 +2304,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
     <div class="topbar-icons">
       <i class="ti ti-search" onclick="toggleBottSearch()" style="cursor:pointer;"></i>
-      <i class="ti ti-arrows-left-right" id="bott-compare-icon" onclick="toggleCompareMode('bottiglie')" style="cursor:pointer;"></i>
       <div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div>
     </div>
   </div>
@@ -2328,6 +2327,11 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </div>
   </div>
   <div class="scroll" id="bott-scroll">
+    <div class="compare-sticky-wrap">
+      <button class="compare-float-btn" id="bott-compare-icon" onclick="toggleCompareMode('bottiglie')">
+        <i class="ti ti-arrows-left-right"></i> Confronta
+      </button>
+    </div>
     <div id="bott-loading" style="padding:20px 14px;">
       <div style="height:88px;background:var(--ivory-3);border-radius:var(--radius-lg);margin-bottom:10px;"></div>
       <div style="height:88px;background:var(--ivory-3);border-radius:var(--radius-lg);margin-bottom:10px;"></div>
@@ -2788,9 +2792,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <button class="calice-btn multi-filter-btn" id="cf-multi" onclick="toggleMultiOnlyFilter(this)">
       <i class="ti ti-layers-intersect"></i> Multiple
     </button>
-    <button class="calice-btn compare-filter-btn" id="cf-compare" onclick="toggleCompareMode('carnet')">
-      <i class="ti ti-arrows-left-right"></i> Confronta
-    </button>
     <span class="carnet-filter-sep"></span>
     <button class="calice-btn on" id="cf-all" onclick="setCaliceFilter(0)">
       <svg class="flute-icon"><use href="#ti-flute"/></svg> Tutti
@@ -2815,6 +2816,11 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     </button>
   </div>
   <div class="scroll" id="carnet-list-scroll" style="background:var(--ivory-2);">
+    <div class="compare-sticky-wrap">
+      <button class="compare-float-btn" id="cf-compare" onclick="toggleCompareMode('carnet')">
+        <i class="ti ti-arrows-left-right"></i> Confronta
+      </button>
+    </div>
 
     <!-- Note caricate dinamicamente dal DB -->
     <div id="carnet-empty" style="padding:50px 24px;text-align:center;">
