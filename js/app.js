@@ -107,10 +107,14 @@ function updateBottomNav(id){
   // Pulsante centrale: nel Carnet la scansione non c'entra, propone piuttosto
   // una nuova degustazione — stesso posto, stessa forma, icona e funzione diverse.
   const badgeIcon = document.getElementById('bn-scan-badge-icon');
+  const bottleIcon = document.getElementById('bn-scan-icon-bottle');
+  const carnetIcon = document.getElementById('bn-scan-icon-carnet');
   if(badgeIcon){
     const inCarnet = CARNET_CENTRAL_BTN_VIEWS.includes(id);
     badgeIcon.classList.toggle('ti-scan', !inCarnet);
     badgeIcon.classList.toggle('ti-plus', inCarnet);
+    if(bottleIcon) bottleIcon.style.display = inCarnet ? 'none' : '';
+    if(carnetIcon) carnetIcon.style.display = inCarnet ? '' : 'none';
   }
 }
 // Il pulsante centrale della bottom bar fa cose diverse a seconda di dove ci si trova:
