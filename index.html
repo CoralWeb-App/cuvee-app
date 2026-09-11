@@ -2862,7 +2862,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-carnet-new">
   <div class="topbar">
     <button class="back-btn" onclick="cancelNoteForm()"><i class="ti ti-x"></i>Annulla</button>
-    <div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Nuova degustazione</div>
+    <div id="note-form-title" style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;flex:1;text-align:center;">Nuova degustazione</div>
     <button class="btn-sm" onclick="saveNote()" style="font-size:15px;">Salva</button>
   </div>
   <div class="scroll">
@@ -3693,6 +3693,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=227"></script>
+<script src="js/app.js?v=228"></script>
 </body>
 </html>

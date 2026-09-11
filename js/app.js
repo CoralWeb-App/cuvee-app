@@ -586,6 +586,18 @@ function _updateTastingModeUI(){
   const grid = document.getElementById('sboccatura-data-grid');
   if (!header) return;
   const multi = _tastingSlots.length >= 2;
+
+  // Titolo dinamico "Bottiglia N di M": senza, passare da uno slot all'altro
+  // sembra restare sulla stessa identica schermata, soprattutto se entrambi
+  // sono vuoti — il titolo in alto non scorre mai via (è fuori dall'area con
+  // lo scroll), quindi resta il riferimento sempre visibile.
+  const titleEl = document.getElementById('note-form-title');
+  if (titleEl) {
+    titleEl.textContent = multi
+      ? 'Bottiglia ' + (_tastingActiveIdx + 1) + ' di ' + _tastingSlots.length
+      : 'Nuova degustazione';
+  }
+
   if (multi) {
     const noteLuogo = document.getElementById('note-luogo');
     const noteData = document.getElementById('note-data-deg');
@@ -830,7 +842,7 @@ function checkAndNewNote(){
   document.querySelectorAll('#aromi-grid .aromi-pill').forEach(p => p.classList.remove('on'));
   setRating(0);
   resetPhotoStrip();
-  const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
+  const title = document.getElementById('note-form-title');
   if (title) title.textContent = 'Nuova degustazione';
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva nel Carnet';
@@ -893,7 +905,7 @@ function openNewNoteFromBottiglia(bottId) {
   resetPhotoStrip();
   if (b.foto_url) _existingPhotoUrls = [b.foto_url];
 
-  const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
+  const title = document.getElementById('note-form-title');
   if (title) title.textContent = 'Nuova degustazione';
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva nel Carnet';
@@ -3620,7 +3632,7 @@ function openEditNote(note) {
   currentEditId = note.id;
 
   // Update title and button
-  const title = document.querySelector('#v-carnet-new .topbar [style*="font-family:var(--serif)"]');
+  const title = document.getElementById('note-form-title');
   if (title) title.textContent = 'Modifica nota';
   const btn = document.getElementById('save-note-btn');
   if (btn) btn.textContent = 'Salva modifiche';
