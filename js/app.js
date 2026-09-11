@@ -4144,9 +4144,11 @@ let compareType = null;     // 'nota' | 'bottiglia' — il tipo di elemento sele
 let compareSelection = [];  // [{id, obj}] nell'ordine di selezione
 const COMPARE_MIN = 2;
 const COMPARE_MAX_FREE = 2;
-// La tabella scorre in orizzontale, quindi non c'è un vero limite tecnico a
-// quante bottiglie/degustazioni un utente Premium possa mettere a confronto.
-function _compareMax() { return isPremium() ? Infinity : COMPARE_MAX_FREE; }
+// Non è un limite "commerciale" come quello free: con troppe foto/colonne
+// caricate insieme la tabella diventa pesante da renderizzare (e poco
+// leggibile). 6 è un tetto ampio che in pratica non si incontra mai davvero.
+const COMPARE_MAX_PREMIUM = 6;
+function _compareMax() { return isPremium() ? COMPARE_MAX_PREMIUM : COMPARE_MAX_FREE; }
 
 function toggleCompareMode(context) {
   if (compareMode && compareContext === context) { exitCompareMode(); return; }
@@ -4185,7 +4187,8 @@ function toggleCompareSelection(type, id, obj) {
     compareSelection = compareSelection.filter(s => s.id !== id);
   } else {
     if (compareSelection.length >= _compareMax()) {
-      go('v-paywall'); // qui dentro solo i free possono sforare: per premium _compareMax() è infinito
+      if (!isPremium()) go('v-paywall');
+      else showAppToast('Puoi confrontare al massimo ' + _compareMax() + ' elementi alla volta');
       return;
     }
     compareSelection.push({ id, obj });
@@ -4207,7 +4210,7 @@ function updateCompareBar() {
   if (lblEl) {
     lblEl.innerHTML = n === 0
       ? 'Seleziona almeno 2 elementi da confrontare'
-      : '<strong>' + n + '</strong> selezionat' + (n === 1 ? 'o' : 'i') + (isFinite(max) ? ' · max ' + max : '');
+      : '<strong>' + n + '</strong> selezionat' + (n === 1 ? 'o' : 'i') + ' · max ' + max;
   }
   const goBtn = document.getElementById('compare-bar-go');
   if (goBtn) goBtn.disabled = n < COMPARE_MIN;
@@ -4232,7 +4235,7 @@ function quickCompareSession(sessionId) {
   const capped = notes.slice(0, max);
   openCompareView('nota', capped);
   if (notes.length > max) {
-    showAppToast('Confronto limitato alle prime ' + max + ' bottiglie su ' + notes.length + ' — piano Free');
+    showAppToast('Confronto limitato alle prime ' + max + ' bottiglie su ' + notes.length + (isPremium() ? '' : ' — piano Free'));
   }
 }
 
