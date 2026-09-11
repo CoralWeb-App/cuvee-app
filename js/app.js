@@ -4255,7 +4255,11 @@ function renderCompareView(type, items) {
 }
 
 function _compareGridStyle(n) {
-  return 'grid-template-columns:112px repeat(' + n + ', minmax(136px,1fr));';
+  // Colonne a larghezza fissa in pixel, non 1fr: dentro un contenitore a
+  // width:max-content (necessario per lo scroll orizzontale) una traccia 1fr
+  // ha larghezza indefinita, e le foto senza un vincolo reale in pixel si
+  // espandono alla loro dimensione originale invece di adattarsi alla colonna.
+  return 'grid-template-columns:112px repeat(' + n + ', 140px);';
 }
 function _compareRow(label, cells) {
   return '<div class="confronta-cell label">' + label + '</div>' +
