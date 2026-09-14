@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=144"/>
+<link rel="stylesheet" href="css/style.css?v=145"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -3794,6 +3794,16 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- Confronta: pannello "Leggi di più" per i testi lunghi -->
+<div id="confronta-text-modal" class="premium-lock-modal">
+  <div class="confronta-text-modal-inner">
+    <button class="confronta-text-modal-close" onclick="closeCompareTextModal()"><i class="ti ti-x"></i></button>
+    <div class="confronta-text-modal-label" id="confronta-text-modal-label"></div>
+    <div class="confronta-text-modal-title" id="confronta-text-modal-title"></div>
+    <div class="confronta-text-modal-body" id="confronta-text-modal-body"></div>
+  </div>
+</div>
+
 <!-- ═══ SCAN LIMIT MODAL ═══ -->
 <div id="scan-limit-modal">
   <div class="scan-limit-inner">
@@ -3915,6 +3925,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=246"></script>
+<script src="js/app.js?v=247"></script>
 </body>
 </html>

@@ -4321,20 +4321,38 @@ function _compareRow(label, cells) {
     cells.map(c => '<div class="confronta-cell">' + (c != null ? c : '<span style="color:var(--ink-5);">—</span>') + '</div>').join('');
 }
 // Righe raggruppate in sezioni con sottotitolo — una sezione senza righe
-// valorizzate sparisce del tutto, sottotitolo incluso. Lo striping delle
-// righe è continuo, a cavallo delle sezioni (non riparte da capo ad ognuna).
+// valorizzate sparisce del tutto, sottotitolo incluso.
 function _compareSectionedHtml(sections, gridStyle) {
-  let idx = 0;
   return sections.map(sec => {
     const rows = sec.rows.filter(r => r.cells.some(c => c != null));
     if (!rows.length) return '';
-    const rowsHtml = rows.map(r => {
-      const cls = 'confronta-grid' + (idx % 2 ? ' confronta-row-alt' : '');
-      idx++;
-      return '<div class="' + cls + '" style="' + gridStyle + '">' + _compareRow(r.label, r.cells) + '</div>';
-    }).join('');
-    return '<div class="confronta-grid" style="' + gridStyle + '"><div class="confronta-section-title"><span>' + sec.title + '</span></div></div>' + rowsHtml;
+    const rowsHtml = rows.map(r =>
+      '<div class="confronta-grid" style="' + gridStyle + '">' + _compareRow(r.label, r.cells) + '</div>'
+    ).join('');
+    return '<div class="confronta-grid" style="' + gridStyle + '"><div class="confronta-section-title"><span><i class="ti ' + sec.icon + '"></i>' + sec.title + '</span></div></div>' + rowsHtml;
   }).join('');
+}
+// Cella per testi liberi (provenienza, vinificazione, note, abbinamento...):
+// sotto una certa lunghezza il testo resta diretto in cella, altrimenti un
+// pulsante apre il testo completo in un pannello dedicato — più leggibile
+// e più bella a colpo d'occhio di un blocco di testo stipato in 138px.
+function _compareTextCell(text, label, itemTitle) {
+  if (!text) return null;
+  if (text.length <= 34) return '<span>' + text + '</span>';
+  const escAttr = s => String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  return '<button type="button" class="confronta-read-more" data-label="' + escAttr(label) + '" data-title="' + escAttr(itemTitle) + '" data-text="' + escAttr(text) + '" onclick="showCompareTextModal(this)"><i class="ti ti-notes"></i>Leggi</button>';
+}
+function showCompareTextModal(btn) {
+  const labelEl = document.getElementById('confronta-text-modal-label');
+  const titleEl = document.getElementById('confronta-text-modal-title');
+  const bodyEl = document.getElementById('confronta-text-modal-body');
+  if (labelEl) labelEl.textContent = btn.dataset.label || '';
+  if (titleEl) titleEl.textContent = btn.dataset.title || '';
+  if (bodyEl) bodyEl.textContent = btn.dataset.text || '';
+  document.getElementById('confronta-text-modal')?.classList.add('on');
+}
+function closeCompareTextModal() {
+  document.getElementById('confronta-text-modal')?.classList.remove('on');
 }
 
 function _renderCompareNote(items) {
@@ -4374,8 +4392,10 @@ function _renderCompareNote(items) {
     '</div>';
   }).join('');
 
+  const itemTitles = items.map(n => [n.maison_nome, n.cuvee_nome].filter(Boolean).join(' — '));
+
   const sections = [
-    { title:'Aspetto', rows: [
+    { title:'Aspetto', icon:'ti-eye', rows: [
       { label:'Tipo', cells: items.map(n => {
         const tipi = inferTipoNota(n).filter(t => t !== 'non_so').map(t => _tipoShort[t] || t);
         return tipi.length ? tipi.join(' · ') : null;
@@ -4389,19 +4409,28 @@ function _renderCompareNote(items) {
       { label:'Perlage', cells: items.map(n => n.perlage != null ? n.perlage + '/10' : null) },
       { label:'Fase evolutiva', cells: items.map(n => (n.evoluzione && _evoLabel[n.evoluzione]) || null) },
     ]},
-    { title:'Sensoriale', rows: [
-      {key:'corpo', label:'Corpo'},
-      {key:'equilibrio', label:'Équilibre'},
-      {key:'acidite', label:'Acidité'},
-      {key:'effervescence', label:'Effervescence'},
-      {key:'complexite', label:'Complexité'},
-      {key:'longueur', label:'Longueur'},
-    ].map(s => ({ label:s.label, cells: items.map(n => (n[s.key] != null && n[s.key] !== '') ? n[s.key] + '/10' : null) })) },
-    { title:'Degustazione', rows: [
+    { title:'Sensoriale', icon:'ti-adjustments', rows: [
+      ...[
+        {key:'corpo', label:'Corpo'},
+        {key:'equilibrio', label:'Équilibre'},
+        {key:'acidite', label:'Acidité'},
+        {key:'effervescence', label:'Effervescence'},
+        {key:'complexite', label:'Complexité'},
+        {key:'longueur', label:'Longueur'},
+      ].map(s => ({ label:s.label, cells: items.map(n => (n[s.key] != null && n[s.key] !== '') ? n[s.key] + '/10' : null) })),
+      { label:'Aromi', cells: items.map(n => (n.aromi && n.aromi.length)
+        ? '<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">'+n.aromi.map(a=>'<span style="background:var(--ivory-2);border:1px solid var(--border-2);border-radius:20px;padding:3px 8px;font-size:10.5px;color:var(--ink-3);">'+a+'</span>').join('')+'</div>'
+        : null) },
+    ]},
+    { title:'Degustazione', icon:'ti-calendar-event', rows: [
       { label:'Data', cells: items.map(n => n.data_degustazione
         ? new Date(n.data_degustazione).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}) : null) },
       { label:'Luogo', cells: items.map(n => n.luogo || null) },
       { label:'Sboccatura', cells: items.map(n => n.sboccatura || null) },
+      { label:'Prezzo pagato', cells: items.map(n => n.prezzo_pagato != null ? '€ '+n.prezzo_pagato : null) },
+    ]},
+    { title:'Note', icon:'ti-quote', rows: [
+      { label:'Note di degustazione', cells: items.map((n,i) => _compareTextCell(n.note_libere, 'Note di degustazione', itemTitles[i])) },
     ]},
   ];
 
@@ -4443,8 +4472,10 @@ function _renderCompareBottiglia(items) {
     '</div>';
   }).join('');
 
+  const itemTitles = items.map(b => [b.maison?.nome, b.nome].filter(Boolean).join(' — '));
+
   const sections = [
-    { title:'Scheda', rows: [
+    { title:'Scheda', icon:'ti-bottle', rows: [
       { label:'Tipo', cells: items.map(b => b.is_millesimato ? 'Millesimato' : 'Sans Année') },
       { label:'Annata', cells: items.map(b => b.annata || null) },
       { label:'Punteggio', cells: items.map(b => b.score_medio ? '<div>' +
@@ -4459,7 +4490,7 @@ function _renderCompareBottiglia(items) {
         (b.prezzo_min ? '<span style="font-family:var(--sans);font-size:11.5px;color:var(--ink-4);">da '+b.prezzo_min+(b.prezzo_max?'–'+b.prezzo_max:'')+' €</span>' : '') +
       '</div>' : null) },
     ]},
-    { title:'Composizione', rows: [
+    { title:'Composizione', icon:'ti-grain', rows: [
       { label:'Uvaggio', cells: items.map(b => {
         const parts = [
           b.pct_pinot_noir ? 'Pinot Noir '+b.pct_pinot_noir+'%' : null,
@@ -4469,12 +4500,16 @@ function _renderCompareBottiglia(items) {
         return parts.length ? parts.join(' · ') : null;
       })},
       { label:'Sui lieviti', cells: items.map(b => b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null) },
-      { label:'Provenienza uve', cells: items.map(b => b.provenienza_uve || null) },
-      { label:'Vinificazione', cells: items.map(b => b.vinificazione || null) },
-      { label:'Malolattica', cells: items.map(b => b.malolattica || null) },
+      { label:'Provenienza uve', cells: items.map((b,i) => _compareTextCell(b.provenienza_uve, 'Provenienza uve', itemTitles[i])) },
+      { label:'Vinificazione', cells: items.map((b,i) => _compareTextCell(b.vinificazione, 'Vinificazione', itemTitles[i])) },
+      { label:'Malolattica', cells: items.map((b,i) => _compareTextCell(b.malolattica, 'Malolattica', itemTitles[i])) },
     ]},
-    { title:'Consumo', rows: [
+    { title:'Consumo', icon:'ti-calendar-event', rows: [
       { label:'Finestra', cells: items.map(b => _compareFinestraText(b)) },
+    ]},
+    { title:'Note', icon:'ti-notes', rows: [
+      { label:'Note di degustazione', cells: items.map((b,i) => _compareTextCell(b.note_degustazione, 'Note di degustazione', itemTitles[i])) },
+      { label:'Abbinamento', cells: items.map((b,i) => _compareTextCell(b.abbinamento, 'Abbinamento', itemTitles[i])) },
     ]},
   ];
 

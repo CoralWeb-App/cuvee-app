@@ -1382,28 +1382,42 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .compare-bar-go:disabled{opacity:.35;cursor:default;}
 
 /* ═══ CONFRONTA — tabella di confronto ═══ */
-.confronta-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.confronta-grid{display:grid;width:max-content;min-width:100%;}
-.confronta-cell{padding:11px 13px;font-family:var(--sans);font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;min-width:0;overflow-wrap:break-word;word-break:break-word;background:var(--white);}
-.confronta-row-alt .confronta-cell{background:var(--ivory-2);}
-.confronta-cell.label{position:sticky;left:0;z-index:3;background:var(--ivory-2);font-weight:600;color:var(--ink-4);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding-right:10px;box-shadow:2px 0 6px -3px rgba(30,18,8,.18);}
+.confronta-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 14px 6px;}
+.confronta-grid{display:grid;width:max-content;min-width:100%;column-gap:10px;margin-bottom:9px;}
+.confronta-cell{padding:12px 10px;font-family:var(--sans);font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;overflow-wrap:break-word;word-break:break-word;background:var(--white);border-radius:13px;box-shadow:0 1px 5px rgba(30,18,8,.06);}
+.confronta-cell.label{position:sticky;left:0;z-index:3;background:var(--ivory-2);box-shadow:none;border-radius:0;font-weight:600;color:var(--ink-4);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:12px 10px 12px 0;justify-content:flex-start;text-align:left;}
 
 /* Card foto+nome in testa a ogni colonna — foto verticale a piena larghezza,
-   come ovunque nel resto dell'app, nessun margine bianco attorno */
-.confronta-cell.header{flex-direction:column;align-items:stretch;padding:0;background:var(--white);border-bottom:2px solid var(--gold);overflow:hidden;}
+   angoli arrotondati e ombra propria: ogni bottiglia è una card a sé,
+   staccata dalle altre da uno spazio reale (column-gap sopra) */
+.confronta-cell.header{flex-direction:column;align-items:stretch;padding:0;background:var(--white);overflow:hidden;}
 .confronta-photo{width:100%;aspect-ratio:2/3;position:relative;overflow:hidden;background:linear-gradient(150deg,#F8F2E6 0%,#EBD9B8 100%);}
 .confronta-photo img{width:100%;height:100%;object-fit:cover;display:block;}
 .confronta-photo-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
 .confronta-photo-ph i{font-size:32px;color:rgba(184,146,42,.3);}
 .confronta-photo-badge{position:absolute;top:8px;right:8px;background:rgba(184,146,42,.82);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);color:#fff;font-family:var(--sans);font-size:10.5px;font-weight:600;border-radius:5px;padding:3px 7px;line-height:1.4;}
-.confronta-item-info{padding:11px 12px 14px;}
+.confronta-item-info{padding:11px 12px 14px;text-align:center;}
 .confronta-item-maison{font-family:var(--sans);font-size:10.5px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .confronta-item-nome{font-family:var(--serif);font-size:15.5px;color:var(--ink);font-weight:500;line-height:1.3;margin-top:2px;}
-.confronta-item-rating{display:flex;gap:1px;margin-top:7px;}
+.confronta-item-rating{display:flex;gap:1px;margin-top:7px;justify-content:center;}
 .confronta-item-rating .flute-icon{font-size:12px;}
 
-/* Sottotitoli di sezione — a piena larghezza, ma l'etichetta resta ancorata
-   a sinistra durante lo scroll, come la colonna delle etichette */
-.confronta-section-title{grid-column:1/-1;background:var(--ivory-2);padding:17px 0 7px;}
-.confronta-section-title span{position:sticky;left:13px;font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--gold);}
+/* Titolo di sezione — stesso linguaggio delle card-sezione usate ovunque
+   nell'app (icona in pallino dorato + titolo in serif), ancorato a sinistra
+   durante lo scroll così resta sempre leggibile */
+.confronta-section-title{grid-column:1/-1;padding:20px 0 3px;margin-bottom:0;}
+.confronta-section-title span{position:sticky;left:0;display:inline-flex;align-items:center;gap:9px;font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink);}
+.confronta-section-title i{width:26px;height:26px;border-radius:50%;background:var(--gold-pale);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+
+/* Badge "Leggi di più" per i testi lunghi (provenienza, vinificazione,
+   note di degustazione, abbinamento...): al posto di stiparli nella colonna
+   stretta, un pulsante apre il testo completo in un pannello dedicato */
+.confronta-read-more{display:inline-flex;align-items:center;gap:5px;background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:20px;padding:7px 13px;font-family:var(--sans);font-size:12px;font-weight:600;color:#8a6a1e;cursor:pointer;}
+.confronta-read-more i{font-size:13px;}
+.confronta-text-modal-inner{width:100%;max-width:460px;background:var(--white);border-radius:22px 22px 0 0;padding:26px 22px calc(24px + env(safe-area-inset-bottom));position:relative;max-height:78vh;display:flex;flex-direction:column;}
+.confronta-text-modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--ivory-2);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.confronta-text-modal-close i{font-size:15px;color:var(--ink-3);}
+.confronta-text-modal-label{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;}
+.confronta-text-modal-title{font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:500;margin-bottom:14px;padding-right:30px;}
+.confronta-text-modal-body{font-family:var(--sans);font-size:15.5px;line-height:1.7;color:var(--ink-2);overflow-y:auto;white-space:pre-wrap;}
 
