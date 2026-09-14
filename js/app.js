@@ -4321,6 +4321,12 @@ function _compareGridStyle(n) {
   // espandono alla loro dimensione originale invece di adattarsi alla colonna.
   return 'grid-template-columns:116px repeat(' + n + ', 138px);';
 }
+// La card delle foto non ha la colonna etichetta (niente da mostrare lì):
+// parte già alla larghezza delle foto, e un margin-left:116px in CSS la
+// allinea comunque con le colonne dati sottostanti durante lo scroll.
+function _compareHeaderGridStyle(n) {
+  return 'grid-template-columns:repeat(' + n + ', 138px);';
+}
 function _compareRow(label, cells) {
   return '<div class="confronta-cell label">' + label + '</div>' +
     cells.map(c => '<div class="confronta-cell">' + (c != null ? c : '<span style="color:var(--ink-5);">—</span>') + '</div>').join('');
@@ -4448,7 +4454,7 @@ function _renderCompareNote(items) {
   ];
 
   return '<div class="confronta-scroll">' +
-    '<div class="confronta-header-card" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
+    '<div class="confronta-header-card" style="'+_compareHeaderGridStyle(items.length)+'">'+headerCells+'</div>' +
     _compareSectionedHtml(sections, gridStyle) +
   '</div>';
 }
@@ -4527,7 +4533,7 @@ function _renderCompareBottiglia(items) {
   ];
 
   return '<div class="confronta-scroll">' +
-    '<div class="confronta-header-card" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
+    '<div class="confronta-header-card" style="'+_compareHeaderGridStyle(items.length)+'">'+headerCells+'</div>' +
     _compareSectionedHtml(sections, gridStyle) +
   '</div>';
 }
