@@ -206,12 +206,7 @@ section{padding:110px 0;}
 .feature-icon svg{width:24px;height:24px;stroke:var(--gold-bright);}
 .feature-icon svg.fillicon{stroke:none;fill:currentColor;}
 .feature-icon i{font-size:23px;color:currentColor;}
-.feature-icon .scan-badge{
-  position:absolute;bottom:-3px;right:-3px;width:19px;height:19px;border-radius:50%;
-  background:var(--gold-bright);display:flex;align-items:center;justify-content:center;
-  border:2px solid var(--ink);
-}
-.feature-icon .scan-badge i{font-size:10px;color:var(--ink);}
+.feature-icon img{width:40px;height:40px;display:block;}
 .feature-card h3{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin:0 0 10px;}
 .feature-card p{font-size:14.5px;color:var(--text-muted);line-height:1.7;margin:0;}
 .feature-card.highlight{background:var(--ink);border-color:transparent;}
@@ -219,7 +214,6 @@ section{padding:110px 0;}
 .feature-card.highlight p{color:var(--text-on-dark-soft);}
 .feature-card.highlight .feature-icon{background:var(--gold-pale);color:var(--gold-deep);}
 .feature-card.highlight .feature-icon svg{stroke:var(--gold-deep);}
-.feature-card.highlight .feature-icon .scan-badge{border-color:var(--gold-pale);}
 
 /* ---------- SCAN SHOWCASE ---------- */
 .showcase{background:var(--ivory);}
@@ -407,8 +401,7 @@ footer{background:var(--ink);color:var(--text-on-dark-soft);padding:56px 0 32px;
     <div class="feature-grid">
       <div class="feature-card highlight reveal">
         <div class="feature-icon">
-          <svg viewBox="0 0 22 36" width="20" height="33" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="1" width="6" height="3" rx="1.5"/><line x1="8" y1="4" x2="8" y2="11"/><line x1="14" y1="4" x2="14" y2="11"/><line x1="7" y1="11" x2="15" y2="11"/><path d="M8 11 C5.5 12.5 4.5 14.5 4.5 17 L4.5 30 Q4.5 33 7.5 33 L14.5 33 Q17.5 33 17.5 30 L17.5 17 C17.5 14.5 16.5 12.5 14 11"/></svg>
-          <span class="scan-badge"><i class="ti ti-scan"></i></span>
+          <img src="screenshots/cuvee-champagne-pulsante-scansione.webp" alt="Icona del pulsante di scansione sommelier di Cuvée">
         </div>
         <h3>Scansione sommelier</h3>
         <p>Fotografa l'etichetta e ricevi in pochi secondi Maison, cuvée, annata, dosaggio, punteggio e finestra di consumo ideale.</p>
