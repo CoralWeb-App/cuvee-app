@@ -4319,16 +4319,6 @@ function _compareSectionedHtml(sections, gridStyle) {
     return '<div class="confronta-grid" style="' + gridStyle + '"><div class="confronta-section-title"><span>' + sec.title + '</span></div></div>' + rowsHtml;
   }).join('');
 }
-// Evidenzia il valore più alto tra quelli confrontati (es. punteggio) — solo
-// se ce n'è più di uno valorizzato e non sono tutti uguali, altrimenti
-// "evidenziare il migliore" non avrebbe alcun significato.
-function _compareWinnerBadge(value, allValues) {
-  const present = allValues.filter(v => v != null);
-  if (present.length < 2) return '';
-  const max = Math.max(...present);
-  if (value !== max || present.every(v => v === max)) return '';
-  return '<span class="confronta-winner-badge"><i class="ti ti-crown"></i>Il più alto</span>';
-}
 
 function _renderCompareNote(items) {
   const _coloreDef = {
@@ -4343,7 +4333,6 @@ function _renderCompareNote(items) {
   };
   const _evoLabel = { giovane:'Giovane e teso', apogeo:'Nel pieno della finestra', evoluto:'Evoluto' };
   const gridStyle = _compareGridStyle(items.length);
-  const allScores = items.map(n => n.rating || null);
 
   const headerCells = items.map(note => {
     const photo = note.foto_url
@@ -4353,19 +4342,17 @@ function _renderCompareNote(items) {
     const r = note.rating || 0;
     const glasses = Array.from({length:5},(_,i) =>
       '<svg class="flute-icon" style="font-size:12px;opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
-    ).join('');
-    // Oltre i 5 calici: stesso cuore rosso + "Fantastico!" usato ovunque nell'app.
-    const fantasticoBadge = r >= 6
-      ? '<div style="margin-top:4px;display:flex;align-items:center;gap:4px;"><i class="ti ti-heart-filled" style="font-size:12px;color:#E05252;"></i><span style="font-family:var(--sans);font-size:11px;color:#E05252;font-weight:700;">Fantastico!</span></div>'
+    ).join('') + (r >= 6 ? '<i class="ti ti-heart-filled" style="font-size:12px;color:#E05252;margin-left:3px;"></i>' : '');
+    // Oltre i 5 calici: stessa scritta "Fantastico!" usata ovunque nell'app, sotto ai calici (il cuore invece sta in riga con loro).
+    const fantasticoLabel = r >= 6
+      ? '<div style="margin-top:4px;font-family:var(--sans);font-size:11px;color:#E05252;font-weight:700;">Fantastico!</div>'
       : '';
-    const winnerBadge = _compareWinnerBadge(note.rating || null, allScores);
     return '<div class="confronta-cell header">' + photo + annataBadge + '</div>' +
       '<div class="confronta-item-info">' +
         '<div class="confronta-item-maison">'+(note.maison_nome||'')+'</div>'+
         '<div class="confronta-item-nome">'+(note.cuvee_nome||'')+'</div>'+
         '<div class="confronta-item-rating">'+glasses+'</div>'+
-        fantasticoBadge +
-        winnerBadge +
+        fantasticoLabel +
       '</div>' +
     '</div>';
   }).join('');
@@ -4425,7 +4412,6 @@ function _compareFinestraText(item) {
 
 function _renderCompareBottiglia(items) {
   const gridStyle = _compareGridStyle(items.length);
-  const allScores = items.map(b => b.score_medio || null);
 
   const headerCells = items.map(b => {
     const photo = b.foto_url
@@ -4447,7 +4433,6 @@ function _renderCompareBottiglia(items) {
       { label:'Punteggio', cells: items.map(b => b.score_medio ? '<div>' +
         scoreRingCard(b.score_medio) +
         '<div style="font-family:var(--sans);font-size:11.5px;color:var(--ink-4);line-height:1.3;margin-top:5px;">'+scoreLabel(b.score_medio)+'</div>' +
-        _compareWinnerBadge(b.score_medio, allScores) +
       '</div>' : null) },
       { label:'Dosaggio', cells: items.map(b => b.dosaggio_tipo
         ? '<div>' + dosagePill(b.dosaggio_tipo) + (b.dosaggio_gl != null ? '<div style="margin-top:5px;font-family:var(--sans);font-size:11.5px;color:var(--ink-4);">'+b.dosaggio_gl+' g/l</div>' : '') + '</div>'
