@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=142"/>
+<link rel="stylesheet" href="css/style.css?v=143"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -3667,6 +3667,133 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- ═══ POPUP FUNZIONI PREMIUM BLOCCATE — uno per motivo, non per singolo punto ═══ -->
+<div id="carnet-limit-modal" class="premium-lock-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closePremiumLockModal('carnet-limit-modal')" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-notebook"></i></div>
+    <div class="scan-limit-title">Hai raggiunto il limite del Carnet</div>
+    <div class="scan-limit-desc">Con il piano <strong>Free</strong> puoi tenere fino a <strong>3 degustazioni</strong> nel tuo Carnet. Con <strong>Cuvée Premium</strong>, nessun limite.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><i class="ti ti-infinity"></i><span>Degustazioni illimitate, comprese le verticali</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-arrows-left-right"></i><span>Confronta fino a 6 bottiglie insieme</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closePremiumLockModal('carnet-limit-modal');go('v-paywall');">Scopri Premium</button>
+    <button class="scan-limit-skip" onclick="closePremiumLockModal('carnet-limit-modal')">Torna all'app</button>
+  </div>
+</div>
+
+<div id="scan-history-limit-modal" class="premium-lock-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closePremiumLockModal('scan-history-limit-modal')" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-history"></i></div>
+    <div class="scan-limit-title">Scansione riservata a Premium</div>
+    <div class="scan-limit-desc">Con il piano <strong>Free</strong> restano visibili solo le ultime <strong>3 scansioni</strong> salvate. Con <strong>Cuvée Premium</strong>, storico illimitato.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><i class="ti ti-history"></i><span>Ritrova ogni bottiglia mai scansionata</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-sparkles"></i><span>100 scansioni sommelier al mese</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closePremiumLockModal('scan-history-limit-modal');go('v-paywall');">Scopri Premium</button>
+    <button class="scan-limit-skip" onclick="closePremiumLockModal('scan-history-limit-modal')">Torna all'app</button>
+  </div>
+</div>
+
+<div id="maison-limit-modal" class="premium-lock-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closePremiumLockModal('maison-limit-modal')" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-building-store"></i></div>
+    <div class="scan-limit-title">Produttore riservato a Premium</div>
+    <div class="scan-limit-desc">Questa maison fa parte del catalogo <strong>Premium</strong>. Con <strong>Cuvée Premium</strong> sblocchi tutti i produttori.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><i class="ti ti-building-store"></i><span>Tutte le maison, comprese le grandi prestige</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-map-2"></i><span>Zone e terroir di ogni produttore</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closePremiumLockModal('maison-limit-modal');go('v-paywall');">Scopri Premium</button>
+    <button class="scan-limit-skip" onclick="closePremiumLockModal('maison-limit-modal')">Torna all'app</button>
+  </div>
+</div>
+
+<div id="bottle-limit-modal" class="premium-lock-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closePremiumLockModal('bottle-limit-modal')" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-bottle"></i></div>
+    <div class="scan-limit-title">Bottiglia riservata a Premium</div>
+    <div class="scan-limit-desc">Questa cuvée fa parte del catalogo <strong>Premium</strong>. Con <strong>Cuvée Premium</strong> sblocchi il catalogo completo.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><i class="ti ti-bottle"></i><span>Migliaia di cuvée schedate</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-crown"></i><span>Tutte le Maison prestige</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closePremiumLockModal('bottle-limit-modal');go('v-paywall');">Scopri Premium</button>
+    <button class="scan-limit-skip" onclick="closePremiumLockModal('bottle-limit-modal')">Torna all'app</button>
+  </div>
+</div>
+
+<div id="guida-conservazione-limit-modal" class="premium-lock-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closePremiumLockModal('guida-conservazione-limit-modal')" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-temperature"></i></div>
+    <div class="scan-limit-title">Conservazione riservata a Premium</div>
+    <div class="scan-limit-desc">Temperatura, umidità e posizione: come conservare al meglio ogni bottiglia. Contenuto <strong>Premium</strong>.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><i class="ti ti-temperature"></i><span>Guida completa alla conservazione</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-books"></i><span>Tutte le sezioni avanzate della Guida</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closePremiumLockModal('guida-conservazione-limit-modal');go('v-paywall');">Scopri Premium</button>
+    <button class="scan-limit-skip" onclick="closePremiumLockModal('guida-conservazione-limit-modal')">Torna all'app</button>
+  </div>
+</div>
+
+<div id="guida-cru-limit-modal" class="premium-lock-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closePremiumLockModal('guida-cru-limit-modal')" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-award"></i></div>
+    <div class="scan-limit-title">Classificazione Cru riservata a Premium</div>
+    <div class="scan-limit-desc">Grand Cru, Premier Cru: la classificazione dei 320 comuni spiegata bene. Contenuto <strong>Premium</strong>.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><i class="ti ti-award"></i><span>Tutti i comuni classificati, zona per zona</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-books"></i><span>Tutte le sezioni avanzate della Guida</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closePremiumLockModal('guida-cru-limit-modal');go('v-paywall');">Scopri Premium</button>
+    <button class="scan-limit-skip" onclick="closePremiumLockModal('guida-cru-limit-modal')">Torna all'app</button>
+  </div>
+</div>
+
+<div id="guida-clos-limit-modal" class="premium-lock-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closePremiumLockModal('guida-clos-limit-modal')" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><i class="ti ti-fence"></i></div>
+    <div class="scan-limit-title">I Clos riservati a Premium</div>
+    <div class="scan-limit-desc">Le vigne murate leggendarie, dal Clos du Mesnil in poi. Contenuto <strong>Premium</strong>.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><i class="ti ti-fence"></i><span>Le schede di tutti i clos leggendari</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-books"></i><span>Tutte le sezioni avanzate della Guida</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closePremiumLockModal('guida-clos-limit-modal');go('v-paywall');">Scopri Premium</button>
+    <button class="scan-limit-skip" onclick="closePremiumLockModal('guida-clos-limit-modal')">Torna all'app</button>
+  </div>
+</div>
+
 <!-- ═══ SCAN LIMIT MODAL ═══ -->
 <div id="scan-limit-modal">
   <div class="scan-limit-inner">
@@ -3788,6 +3915,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=244"></script>
+<script src="js/app.js?v=245"></script>
 </body>
 </html>

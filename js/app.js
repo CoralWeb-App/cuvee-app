@@ -145,13 +145,16 @@ function goGuida(tab){
   go('v-guida-'+tab);
 }
 function goConservazione(){
-  go(isPremium() ? 'v-guida-conservazione' : 'v-paywall');
+  if (isPremium()) go('v-guida-conservazione');
+  else showPremiumLockModal('guida-conservazione-limit-modal');
 }
 function goCru(){
-  go(isPremium() ? 'v-guida-cru' : 'v-paywall');
+  if (isPremium()) go('v-guida-cru');
+  else showPremiumLockModal('guida-cru-limit-modal');
 }
 function goClos(){
-  go(isPremium() ? 'v-guida-clos' : 'v-paywall');
+  if (isPremium()) go('v-guida-clos');
+  else showPremiumLockModal('guida-clos-limit-modal');
 }
 // Chi ha già Premium non deve vedere badge/evidenza sui tile della guida
 // che gli appartengono già — quella grafica serve solo a chi deve ancora abbonarsi.
@@ -813,7 +816,7 @@ async function _countExistingFreeNotes(){
 
 async function quickNewNote(){
   if (!isPremium() && (await _countExistingFreeNotes()) >= FREE_NOTES_LIMIT) {
-    go('v-paywall');
+    showPremiumLockModal('carnet-limit-modal');
     return;
   }
   checkAndNewNote();
@@ -824,7 +827,7 @@ async function quickNewNote(){
 // d'occhio cosa significa "multipla" invece di doverla scoprire da soli.
 async function quickNewMultiTasting(){
   if (!isPremium() && (await _countExistingFreeNotes()) + 2 > FREE_NOTES_LIMIT) {
-    go('v-paywall');
+    showPremiumLockModal('carnet-limit-modal');
     return;
   }
   checkAndNewNote();
@@ -1298,7 +1301,7 @@ async function saveMultiTasting(){
     const { count } = await supa.from('carnet_notes').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
     if ((count || 0) + candidates.length > FREE_NOTES_LIMIT) {
       if (saveBtn) { saveBtn.textContent = 'Salva nel Carnet'; saveBtn.disabled = false; }
-      go('v-paywall');
+      showPremiumLockModal('carnet-limit-modal');
       return;
     }
   }
@@ -1602,7 +1605,7 @@ function _buildScanHistoryCard(s, idx) {
     ? '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--gold);">'+s.score_medio+'</span><span style="font-family:var(--sans);font-size:11px;color:var(--ink-5);">/100</span>'
     : '';
   const compareSelected = compareMode && compareContext === 'scan-history' && compareSelection.some(sel => sel.id === s.id);
-  return '<div class="scan-history-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-compare-id="' + s.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openScanFromHistory("+idx+")") + '" style="position:relative;display:flex;gap:0;background:' + (isLocked ? '#f2ead9' : 'var(--white)') + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+  return '<div class="scan-history-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-compare-id="' + s.id + '" onclick="' + (isLocked ? "showPremiumLockModal('scan-history-limit-modal')" : "openScanFromHistory("+idx+")") + '" style="position:relative;display:flex;gap:0;background:' + (isLocked ? '#f2ead9' : 'var(--white)') + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
     '<div class="compare-check"><i class="ti ti-circle compare-check-off"></i><i class="ti ti-circle-check-filled compare-check-on"></i></div>' +
     '<div class="scan-history-photo" style="width:90px;flex-shrink:0;background:linear-gradient(150deg,#1A1F2E,#252B3D);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">' +
       photo +
@@ -1723,11 +1726,11 @@ function openScanFromHistory(idx) {
   const s = _scanHistoryCache && _scanHistoryCache[idx];
   if (!s || !s.result_json) return;
   if (compareMode) {
-    if (s._locked) { go('v-paywall'); return; }
+    if (s._locked) { showPremiumLockModal('scan-history-limit-modal'); return; }
     toggleCompareSelection(s.id, _scanToCompareObj(s.result_json, s.foto_url || null, s.id));
     return;
   }
-  if (s._locked) { go('v-paywall'); return; }
+  if (s._locked) { showPremiumLockModal('scan-history-limit-modal'); return; }
   _scanResult = s.result_json;
   _scanPhotoDataUrl = s.foto_url || null;
   _showScanResultPage(s.result_json, s.foto_url || null);
@@ -2591,7 +2594,7 @@ async function saveCarnetNote(nota) {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', currentUser.id);
       if (count >= FREE_NOTES_LIMIT) {
-        go('v-paywall');
+        showPremiumLockModal('carnet-limit-modal');
         return;
       }
     }
@@ -3981,7 +3984,7 @@ function renderCarnetNoteCard(note) {
   const origIdx = allCarnetNotes.findIndex(n => n.id === note.id);
   const compareSelected = compareMode && compareContext === 'carnet' && compareSelection.some(s => s.id === note.id);
 
-  return '<div class="carnet-note-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-idx="'+origIdx+'" data-compare-id="'+note.id+'" onclick="' + (isLocked ? "go('v-paywall')" : "openNoteDetail(window._carnetNotes[this.dataset.idx])") + '">'+
+  return '<div class="carnet-note-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-idx="'+origIdx+'" data-compare-id="'+note.id+'" onclick="' + (isLocked ? "showPremiumLockModal('carnet-limit-modal')" : "openNoteDetail(window._carnetNotes[this.dataset.idx])") + '">'+
     '<div class="compare-check"><i class="ti ti-circle compare-check-off"></i><i class="ti ti-circle-check-filled compare-check-on"></i></div>'+
     '<div class="cnc-img">'+
       (note.foto_url
@@ -4015,7 +4018,7 @@ function renderCarnetSessionCard(session) {
     ? '<div class="cnc-collage cnc-collage-'+photos.length+'">' + photos.map(p => '<img src="'+p+'"/>').join('') + '</div>'
     : '<div class="cnc-img-ph"><svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg></div>';
 
-  return '<div class="carnet-note-card carnet-session-card" onclick="'+(anyLocked ? "go('v-paywall')" : "openCarnetSession('"+session.id+"')")+'">'+
+  return '<div class="carnet-note-card carnet-session-card" onclick="'+(anyLocked ? "showPremiumLockModal('carnet-limit-modal')" : "openCarnetSession('"+session.id+"')")+'">'+
     '<div class="cnc-img">'+ imgHtml +
       '<span class="cnc-session-ribbon"><i class="ti ti-layers-intersect"></i> Multipla</span>'+
       '<span class="cnc-session-badge"><i class="ti ti-glass-full"></i> '+notes.length+'</span>'+
@@ -4168,6 +4171,19 @@ function showCompareLimitModal() {
 }
 function closeCompareLimitModal() {
   const modal = document.getElementById('compare-limit-modal');
+  if (modal) modal.classList.remove('on');
+}
+
+// Popup dedicati per ogni funzione Premium bloccata (Carnet, Storico
+// scansioni, Maison, Bottiglia, sezioni della Guida) — al posto del
+// redirect diretto e senza contesto a v-paywall. Un'unica coppia di
+// funzioni generiche per tutti e 7, invece di ripeterle ognuna a sé.
+function showPremiumLockModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add('on');
+}
+function closePremiumLockModal(id) {
+  const modal = document.getElementById(id);
   if (modal) modal.classList.remove('on');
 }
 
@@ -4896,7 +4912,7 @@ function applyCruPremiumGating(viewId) {
     if (!lockCard) {
       lockCard = document.createElement('div');
       lockCard.className = 'cru-lock-card';
-      lockCard.onclick = () => go('v-paywall');
+      lockCard.onclick = () => showPremiumLockModal('guida-cru-limit-modal');
       grid.insertAdjacentElement('afterend', lockCard);
     }
     lockCard.innerHTML = '<i class="ti ti-lock"></i><span>+<strong>' + hidden.length + '</strong> comuni — sblocca con <strong>Premium</strong></span>';
@@ -5428,7 +5444,7 @@ function _maisonCardHTML(m, tipoBadge, tipoCategoria) {
   const zoneColor = m.zone?.colore || '#b8922a';
   const initial = maisonMonogram(m.nome);
 
-  return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openMaisonDetail('" + m.id + "')") + '">' +
+  return '<div class="maison-card' + (isLocked ? ' locked' : '') + '" data-id="' + m.id + '" onclick="' + (isLocked ? "showPremiumLockModal('maison-limit-modal')" : "openMaisonDetail('" + m.id + "')") + '">' +
     '<div class="maison-body">' +
       '<div class="maison-header-row">' +
         '<div class="maison-id">' +
@@ -5833,7 +5849,7 @@ async function loadDetailBottles(maisonId) {
       const foto = b.foto_url
         ? '<img src="' + b.foto_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">'
         : '<svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>';
-      return '<div class="bottle-row' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '" style="cursor:pointer;">' +
+      return '<div class="bottle-row' + (isLocked ? ' locked' : '') + '" onclick="' + (isLocked ? "showPremiumLockModal('bottle-limit-modal')" : "openBottigliaDetail('" + b.id + "')") + '" style="cursor:pointer;">' +
         '<div class="bottle-ph">' + foto + '</div>' +
         '<div class="bottle-info">' +
           '<div class="bottle-name">' + b.nome + '</div>' +
@@ -6062,7 +6078,7 @@ function _bottLoadMoreHTML() {
 function _bottCardHTML(b, tipoLabel) {
   const isLocked = !!b._locked && !isPremium();
   const compareSelected = compareMode && compareContext === 'bottiglie' && compareSelection.some(s => s.id === b.id);
-  return '<div class="bott-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-compare-id="' + b.id + '" onclick="' + (isLocked ? "go('v-paywall')" : "openBottigliaDetail('" + b.id + "')") + '">' +
+  return '<div class="bott-card' + (isLocked ? ' locked' : '') + (compareSelected ? ' selected' : '') + '" data-compare-id="' + b.id + '" onclick="' + (isLocked ? "showPremiumLockModal('bottle-limit-modal')" : "openBottigliaDetail('" + b.id + "')") + '">' +
     '<div class="compare-check"><i class="ti ti-circle compare-check-off"></i><i class="ti ti-circle-check-filled compare-check-on"></i></div>' +
     '<div class="bott-card-img" style="min-height:88px;">' +
       (b.foto_url ? '<img src="' + b.foto_url + '" loading="lazy"/>' : '<svg viewBox="0 0 512 512" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M217.6,0 L294.4,0 L294.4,76.8 C294.4,256 371.2,217.6 371.2,396.8 L371.2,512 L140.8,512 L140.8,396.8 C140.8,217.6 217.6,256 217.6,76.8 Z M335.057,240.943 L256,320 L176.943,240.943 L176.943,258.943 L256,338 L335.057,258.943 Z M204.8,396.8 L307.2,396.8 L307.2,435.2 L204.8,435.2 Z"/></svg>') +
@@ -6454,7 +6470,7 @@ async function openBottigliaDetail(bottId) {
   const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia;
   if (!b) return;
   if (compareMode) { toggleCompareSelection(bottId, b); return; }
-  if (await isBottigliaLocked(b)) { go('v-paywall'); return; }
+  if (await isBottigliaLocked(b)) { showPremiumLockModal('bottle-limit-modal'); return; }
   currentBottiglia = b;
 
   // Foto verticale cliccabile — riempie il contenitore senza barre nere

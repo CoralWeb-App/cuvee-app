@@ -1329,6 +1329,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #scan-not-champagne-modal.on{display:flex;}
 #compare-limit-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
 #compare-limit-modal.on{display:flex;}
+/* Popup dedicati per ogni funzione Premium bloccata (Carnet, Storico, Maison,
+   Bottiglia, sezioni Guida) — stessa base degli altri popup di limite sopra,
+   una sola regola condivisa invece di ripeterla per ognuno dei 7. */
+.premium-lock-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+.premium-lock-modal.on{display:flex;}
 #delete-account-modal{position:fixed;inset:0;z-index:9300;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
 #delete-account-modal.on{display:flex;}
 #bottle-photo-info-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
