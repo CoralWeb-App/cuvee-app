@@ -650,6 +650,14 @@ html,body{
 .zone-list-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin:0 14px 12px;overflow:hidden;cursor:pointer;transition:transform .15s;}
 .zone-list-card:active{transform:scale(.98);}
 .zone-list-ph{width:100%;height:110px;}
+/* Hero delle zone — gradiente nel colore proprio della zona che sfuma nel
+   marrone scuro del brand, con un profilo di colline astratto e qualche
+   bollicina: sostituisce la foto (mai scattata/reperita per queste 5 zone
+   francesi) con qualcosa di intenzionale invece di un placeholder vuoto. */
+.zone-hero{position:relative;overflow:hidden;display:flex;align-items:flex-end;background:linear-gradient(150deg,var(--zc) 0%,#1E1208 92%);}
+.zone-hero-hills{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.zone-hero-label{position:relative;z-index:1;font-family:var(--serif);color:#F5EFE4;font-weight:500;line-height:1.15;padding:0 16px 13px;font-size:19px;text-shadow:0 2px 10px rgba(0,0,0,.25);}
+.zone-detail-hero .zone-hero-label{font-size:27px;padding:0 20px 20px;}
 .zone-list-body{padding:15px 16px 17px;}
 .zone-list-header{display:flex;align-items:center;gap:10px;margin-bottom:6px;justify-content:space-between;}
 .zone-list-header-left{display:flex;align-items:center;gap:10px;min-width:0;}
@@ -672,7 +680,6 @@ html,body{
 .zone-kw{font-family:var(--sans);font-size:12px;border-radius:20px;padding:3px 9px;font-weight:500;border:0.5px solid;}
 /* ZONE DETAIL */
 .zone-detail-hero{height:190px;position:relative;flex-shrink:0;}
-.zone-detail-color-bar{height:5px;flex-shrink:0;}
 .zone-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:0 18px;margin-bottom:18px;}
 .zone-stat{background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:13px 15px;}
 .zone-stat-label{font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:4px;}

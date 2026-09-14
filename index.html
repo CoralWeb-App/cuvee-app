@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=140"/>
+<link rel="stylesheet" href="css/style.css?v=141"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -1016,7 +1016,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       <div class="section-label">Le 5 grandi zone · tocca per approfondire</div>
       <div style="padding:2px 14px 18px;font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.65;">La Champagne si divide in cinque grandi zone, ciascuna con suoli, esposizioni e uvaggi distinti. Ogni zona esprime uno stile preciso — è questa diversità, unita nell'assemblaggio, a rendere ogni maison inimitabile.</div>
       <div class="zone-list-card" onclick="go('v-zone-montagne')">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Montagne de Reims</span></div>
+        <div class="zone-hero zone-list-ph" style="--zc:#8B2635;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Montagne de Reims</div></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-list-header-left"><div class="zone-dot" style="background:#8B2635;"></div><div class="zone-list-name">Montagne de Reims</div></div><i class="ti ti-chevron-right zone-list-arrow"></i></div>
           <div class="zone-list-sub">Marne · ~9.600 ha</div>
@@ -1028,7 +1028,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-marne')">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Vallée de la Marne</span></div>
+        <div class="zone-hero zone-list-ph" style="--zc:#1E6E45;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Vallée de la Marne</div></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-list-header-left"><div class="zone-dot" style="background:#1E6E45;"></div><div class="zone-list-name">Vallée de la Marne</div></div><i class="ti ti-chevron-right zone-list-arrow"></i></div>
           <div class="zone-list-sub">Marne · ~5.200 ha</div>
@@ -1040,7 +1040,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-blancs')">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte des Blancs</span></div>
+        <div class="zone-hero zone-list-ph" style="--zc:#B8922A;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Côte des Blancs</div></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-list-header-left"><div class="zone-dot" style="background:#B8922A;"></div><div class="zone-list-name">Côte des Blancs</div></div><i class="ti ti-chevron-right zone-list-arrow"></i></div>
           <div class="zone-list-sub">Marne · ~3.500 ha</div>
@@ -1052,7 +1052,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-bar')">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte des Bar</span></div>
+        <div class="zone-hero zone-list-ph" style="--zc:#C05228;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Côte des Bar</div></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-list-header-left"><div class="zone-dot" style="background:#C05228;"></div><div class="zone-list-name">Côte des Bar</div></div><i class="ti ti-chevron-right zone-list-arrow"></i></div>
           <div class="zone-list-sub">Aube · ~7.000 ha</div>
@@ -1064,7 +1064,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
       </div>
       <div class="zone-list-card" onclick="go('v-zone-sezanne')" style="margin-bottom:20px;">
-        <div class="img-ph zone-list-ph"><i class="ti ti-photo" style="font-size:30px;"></i><span>Côte de Sézanne</span></div>
+        <div class="zone-hero zone-list-ph" style="--zc:#4A5D8F;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Côte de Sézanne</div></div>
         <div class="zone-list-body">
           <div class="zone-list-header"><div class="zone-list-header-left"><div class="zone-dot" style="background:#4A5D8F;"></div><div class="zone-list-name">Côte de Sézanne</div></div><i class="ti ti-chevron-right zone-list-arrow"></i></div>
           <div class="zone-list-sub">Marne · ~700 ha</div>
@@ -2602,8 +2602,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-zone-montagne">
   <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Montagne de Reims</span></div>
-    <div class="zone-detail-color-bar" style="background:#8B2635;"></div>
+    <div class="zone-hero zone-detail-hero" style="--zc:#8B2635;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Montagne de Reims</div></div>
     <div style="padding:17px 18px 0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#8B2635;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Montagne de Reims</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Nord-est della Champagne</div>
@@ -2640,8 +2639,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-zone-blancs">
   <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Côte des Blancs</span></div>
-    <div class="zone-detail-color-bar" style="background:#B8922A;"></div>
+    <div class="zone-hero zone-detail-hero" style="--zc:#B8922A;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Côte des Blancs</div></div>
     <div style="padding:17px 18px 0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#B8922A;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte des Blancs</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Sud di Épernay</div>
@@ -2678,8 +2676,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-zone-marne">
   <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Vallée de la Marne</span></div>
-    <div class="zone-detail-color-bar" style="background:#1E6E45;"></div>
+    <div class="zone-hero zone-detail-hero" style="--zc:#1E6E45;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Vallée de la Marne</div></div>
     <div style="padding:17px 18px 0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#1E6E45;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Vallée de la Marne</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · Da Épernay verso ovest</div>
@@ -2716,8 +2713,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-zone-bar">
   <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Côte des Bar · Aube</span></div>
-    <div class="zone-detail-color-bar" style="background:#C05228;"></div>
+    <div class="zone-hero zone-detail-hero" style="--zc:#C05228;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Côte des Bar · Aube</div></div>
     <div style="padding:17px 18px 0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#C05228;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte des Bar</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Aube · Sud-est della Champagne</div>
@@ -2750,8 +2746,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-zone-sezanne">
   <div class="topbar"><button class="back-btn" onclick="goGuida('zone')"><i class="ti ti-arrow-left"></i>Zone</button><div class="topbar-icons"><div class="topbar-avatar-btn" onclick="go('v-profile')"><i class="ti ti-user" style="font-size:16px;color:var(--gold);"></i></div></div></div>
   <div class="scroll">
-    <div class="img-ph zone-detail-hero"><i class="ti ti-photo" style="font-size:38px;"></i><span>Côte de Sézanne</span></div>
-    <div class="zone-detail-color-bar" style="background:#4A5D8F;"></div>
+    <div class="zone-hero zone-detail-hero" style="--zc:#4A5D8F;"><svg class="zone-hero-hills" viewBox="0 0 400 140" preserveAspectRatio="none"><circle cx="60" cy="28" r="2.2" fill="rgba(245,239,228,.65)"/><circle cx="150" cy="16" r="1.3" fill="rgba(245,239,228,.45)"/><circle cx="335" cy="34" r="1.8" fill="rgba(245,239,228,.55)"/><circle cx="255" cy="20" r="1.1" fill="rgba(245,239,228,.4)"/><path d="M0,90 C60,60 110,100 170,80 C230,60 280,95 340,75 C370,65 390,70 400,72 L400,140 L0,140 Z" fill="rgba(245,239,228,.10)"/><path d="M0,105 C70,80 130,115 190,95 C250,78 300,110 360,92 C380,86 390,88 400,90 L400,140 L0,140 Z" fill="rgba(245,239,228,.16)"/><path d="M0,122 C80,102 150,130 220,112 C280,98 330,124 400,108 L400,140 L0,140 Z" fill="rgba(245,239,228,.26)"/></svg><div class="zone-hero-label">Côte de Sézanne</div></div>
     <div style="padding:17px 18px 0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div class="zone-dot" style="background:#4A5D8F;width:16px;height:16px;"></div><div style="font-family:var(--serif);font-size:29px;color:var(--ink);font-weight:500;">Côte de Sézanne</div></div>
       <div style="font-family:var(--sans);font-size:15px;color:var(--ink-4);margin-bottom:14px;">Marne · A ovest della Côte des Blancs</div>
