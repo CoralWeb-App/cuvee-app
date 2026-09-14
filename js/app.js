@@ -4354,12 +4354,17 @@ function _renderCompareNote(items) {
     const glasses = Array.from({length:5},(_,i) =>
       '<svg class="flute-icon" style="font-size:12px;opacity:'+(i<Math.min(r,5)?'1':'0.18')+'"><use href="#ti-flute"/></svg>'
     ).join('');
+    // Oltre i 5 calici: stesso cuore rosso + "Fantastico!" usato ovunque nell'app.
+    const fantasticoBadge = r >= 6
+      ? '<div style="margin-top:4px;display:flex;align-items:center;gap:4px;"><i class="ti ti-heart-filled" style="font-size:12px;color:#E05252;"></i><span style="font-family:var(--sans);font-size:11px;color:#E05252;font-weight:700;">Fantastico!</span></div>'
+      : '';
     const winnerBadge = _compareWinnerBadge(note.rating || null, allScores);
     return '<div class="confronta-cell header">' + photo + annataBadge + '</div>' +
       '<div class="confronta-item-info">' +
         '<div class="confronta-item-maison">'+(note.maison_nome||'')+'</div>'+
         '<div class="confronta-item-nome">'+(note.cuvee_nome||'')+'</div>'+
         '<div class="confronta-item-rating">'+glasses+'</div>'+
+        fantasticoBadge +
         winnerBadge +
       '</div>' +
     '</div>';
