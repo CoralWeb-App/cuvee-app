@@ -1382,16 +1382,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .compare-bar-go:disabled{opacity:.35;cursor:default;}
 
 /* ═══ CONFRONTA — tabella di confronto ═══ */
-.confronta-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 14px 6px;}
-.confronta-grid{display:grid;width:max-content;min-width:100%;column-gap:10px;margin-bottom:9px;}
-.confronta-cell{padding:12px 10px;font-family:var(--sans);font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;overflow-wrap:break-word;word-break:break-word;background:var(--white);border-radius:13px;box-shadow:0 1px 5px rgba(30,18,8,.06);}
-.confronta-cell.label{position:sticky;left:0;z-index:3;background:var(--ivory-2);box-shadow:none;border-radius:0;font-weight:600;color:var(--ink-4);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:12px 10px 12px 0;justify-content:flex-start;text-align:left;}
+.confronta-title{padding:16px 16px 2px;}
+.confronta-title-h{font-family:var(--serif);font-size:24px;color:var(--ink);font-weight:500;}
+.confronta-title-sub{font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:2px;}
 
-/* Card foto+nome in testa a ogni colonna — foto verticale a piena larghezza,
-   angoli arrotondati e ombra propria: ogni bottiglia è una card a sé,
-   staccata dalle altre da uno spazio reale (column-gap sopra) */
-.confronta-cell.header{flex-direction:column;align-items:stretch;padding:0;background:var(--white);overflow:hidden;}
-.confronta-photo{width:100%;aspect-ratio:2/3;position:relative;overflow:hidden;background:linear-gradient(150deg,#F8F2E6 0%,#EBD9B8 100%);}
+.confronta-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 6px;}
+.confronta-cell{padding:13px 12px;font-family:var(--sans);font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;overflow-wrap:break-word;word-break:break-word;background:transparent;}
+.confronta-cell + .confronta-cell{border-left:1px solid var(--border);}
+.confronta-cell.label{position:sticky;left:0;z-index:3;background:var(--white);font-weight:600;color:var(--ink-4);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:13px 10px 13px 16px;justify-content:flex-start;text-align:left;box-shadow:2px 0 6px -3px rgba(30,18,8,.13);}
+.confronta-row-grid .confronta-cell:last-child{padding-right:16px;}
+
+/* Card foto — UNA card sola che contiene tutte le bottiglie: le foto restano
+   visualmente separate da un margine interno + un divisorio verticale tra
+   una colonna e l'altra, non da card multiple staccate */
+.confronta-header-card{display:grid;width:max-content;min-width:100%;background:var(--white);border-radius:18px;box-shadow:0 2px 10px rgba(30,18,8,.08);overflow:hidden;margin-bottom:16px;}
+.confronta-cell.header{flex-direction:column;align-items:stretch;padding:0;background:transparent;}
+.confronta-cell.header + .confronta-cell.header{border-left:1px solid var(--border);}
+.confronta-photo-wrap{padding:10px 10px 0;}
+.confronta-photo{width:100%;aspect-ratio:2/3;position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(150deg,#F8F2E6 0%,#EBD9B8 100%);}
 .confronta-photo img{width:100%;height:100%;object-fit:cover;display:block;}
 .confronta-photo-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
 .confronta-photo-ph i{font-size:32px;color:rgba(184,146,42,.3);}
@@ -1402,18 +1410,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .confronta-item-rating{display:flex;gap:1px;margin-top:7px;justify-content:center;}
 .confronta-item-rating .flute-icon{font-size:12px;}
 
-/* Titolo di sezione — stesso linguaggio delle card-sezione usate ovunque
-   nell'app (icona in pallino dorato + titolo in serif), ancorato a sinistra
-   durante lo scroll così resta sempre leggibile */
-.confronta-section-title{grid-column:1/-1;padding:20px 0 3px;margin-bottom:0;}
-.confronta-section-title span{position:sticky;left:0;display:inline-flex;align-items:center;gap:9px;font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink);}
+/* Card di sezione — UNA card sola per sezione (Aspetto, Sensoriale...),
+   con dentro tutte le righe divise da sottili linee, non tante piccole card
+   sparse. Stesso linguaggio delle card-sezione usate ovunque nell'app
+   (icona in pallino dorato + titolo in serif). */
+.confronta-section-card{width:max-content;min-width:100%;background:var(--white);border-radius:18px;box-shadow:0 2px 10px rgba(30,18,8,.08);overflow:hidden;margin-bottom:16px;}
+.confronta-section-title{padding:17px 16px 13px;border-bottom:1px solid var(--border);}
+.confronta-section-title span{display:inline-flex;align-items:center;gap:9px;font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink);}
 .confronta-section-title i{width:26px;height:26px;border-radius:50%;background:var(--gold-pale);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.confronta-row-grid{display:grid;}
+.confronta-row-grid + .confronta-row-grid{border-top:1px solid var(--border);}
 
-/* Badge "Leggi di più" per i testi lunghi (provenienza, vinificazione,
-   note di degustazione, abbinamento...): al posto di stiparli nella colonna
-   stretta, un pulsante apre il testo completo in un pannello dedicato */
-.confronta-read-more{display:inline-flex;align-items:center;gap:5px;background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:20px;padding:7px 13px;font-family:var(--sans);font-size:12px;font-weight:600;color:#8a6a1e;cursor:pointer;}
-.confronta-read-more i{font-size:13px;}
+/* Testo lungo (provenienza, vinificazione, note di degustazione,
+   abbinamento...): resta leggibile un estratto in cella, poi un pulsante
+   apre il testo integrale in un pannello dedicato */
+.confronta-text-preview{font-size:12.5px;line-height:1.45;}
+.confronta-read-more{display:inline-flex;align-items:center;gap:5px;background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:20px;padding:6px 12px;font-family:var(--sans);font-size:11.5px;font-weight:600;color:#8a6a1e;cursor:pointer;}
+.confronta-read-more i{font-size:12px;}
 .confronta-text-modal-inner{width:100%;max-width:460px;background:var(--white);border-radius:22px 22px 0 0;padding:26px 22px calc(24px + env(safe-area-inset-bottom));position:relative;max-height:78vh;display:flex;flex-direction:column;}
 .confronta-text-modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--ivory-2);display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .confronta-text-modal-close i{font-size:15px;color:var(--ink-3);}

@@ -4306,7 +4306,12 @@ function renderCompareView(type, items) {
   }
   const container = document.getElementById('confronta-content');
   if (!container) return;
-  container.innerHTML = type === 'nota' ? _renderCompareNote(items) : _renderCompareBottiglia(items);
+  const n = items.length;
+  const subtitle = type === 'nota'
+    ? (n === 1 ? '1 degustazione a confronto' : n + ' degustazioni a confronto')
+    : (n === 1 ? '1 bottiglia a confronto' : n + ' bottiglie a confronto');
+  const titleHtml = '<div class="confronta-title"><div class="confronta-title-h">Confronta</div><div class="confronta-title-sub">' + subtitle + '</div></div>';
+  container.innerHTML = titleHtml + (type === 'nota' ? _renderCompareNote(items) : _renderCompareBottiglia(items));
 }
 
 function _compareGridStyle(n) {
@@ -4320,27 +4325,35 @@ function _compareRow(label, cells) {
   return '<div class="confronta-cell label">' + label + '</div>' +
     cells.map(c => '<div class="confronta-cell">' + (c != null ? c : '<span style="color:var(--ink-5);">—</span>') + '</div>').join('');
 }
-// Righe raggruppate in sezioni con sottotitolo — una sezione senza righe
-// valorizzate sparisce del tutto, sottotitolo incluso.
+// Righe raggruppate in sezioni — ognuna è UNA card sola (non tante piccole
+// card per riga), con dentro tutte le righe separate da sottili divisori.
+// Una sezione senza righe valorizzate sparisce del tutto, titolo incluso.
 function _compareSectionedHtml(sections, gridStyle) {
   return sections.map(sec => {
     const rows = sec.rows.filter(r => r.cells.some(c => c != null));
     if (!rows.length) return '';
     const rowsHtml = rows.map(r =>
-      '<div class="confronta-grid" style="' + gridStyle + '">' + _compareRow(r.label, r.cells) + '</div>'
+      '<div class="confronta-row-grid" style="' + gridStyle + '">' + _compareRow(r.label, r.cells) + '</div>'
     ).join('');
-    return '<div class="confronta-grid" style="' + gridStyle + '"><div class="confronta-section-title"><span><i class="ti ' + sec.icon + '"></i>' + sec.title + '</span></div></div>' + rowsHtml;
+    return '<div class="confronta-section-card">' +
+      '<div class="confronta-section-title"><span><i class="ti ' + sec.icon + '"></i>' + sec.title + '</span></div>' +
+      rowsHtml +
+    '</div>';
   }).join('');
 }
 // Cella per testi liberi (provenienza, vinificazione, note, abbinamento...):
-// sotto una certa lunghezza il testo resta diretto in cella, altrimenti un
-// pulsante apre il testo completo in un pannello dedicato — più leggibile
-// e più bella a colpo d'occhio di un blocco di testo stipato in 138px.
+// i testi brevi restano interi in cella; quelli lunghi mostrano un estratto
+// leggibile + un pulsante che apre il testo integrale in un pannello dedicato
+// — mai un pulsante da solo al posto del contenuto.
 function _compareTextCell(text, label, itemTitle) {
   if (!text) return null;
-  if (text.length <= 34) return '<span>' + text + '</span>';
   const escAttr = s => String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-  return '<button type="button" class="confronta-read-more" data-label="' + escAttr(label) + '" data-title="' + escAttr(itemTitle) + '" data-text="' + escAttr(text) + '" onclick="showCompareTextModal(this)"><i class="ti ti-notes"></i>Leggi</button>';
+  if (text.length <= 70) return '<span>' + text + '</span>';
+  const snippet = text.slice(0, 70).trim() + '…';
+  return '<div style="display:flex;flex-direction:column;gap:7px;align-items:center;">' +
+    '<span class="confronta-text-preview">' + snippet + '</span>' +
+    '<button type="button" class="confronta-read-more" data-label="' + escAttr(label) + '" data-title="' + escAttr(itemTitle) + '" data-text="' + escAttr(text) + '" onclick="showCompareTextModal(this)"><i class="ti ti-notes"></i>Leggi tutto</button>' +
+  '</div>';
 }
 function showCompareTextModal(btn) {
   const labelEl = document.getElementById('confronta-text-modal-label');
@@ -4371,8 +4384,8 @@ function _renderCompareNote(items) {
 
   const headerCells = items.map(note => {
     const photo = note.foto_url
-      ? '<div class="confronta-photo"><img src="'+note.foto_url+'"/>'
-      : '<div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div>';
+      ? '<div class="confronta-photo-wrap"><div class="confronta-photo"><img src="'+note.foto_url+'"/>'
+      : '<div class="confronta-photo-wrap"><div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div>';
     const annataBadge = note.annata ? '<span class="confronta-photo-badge">'+note.annata+'</span>' : '';
     const r = note.rating || 0;
     const glasses = Array.from({length:5},(_,i) =>
@@ -4382,7 +4395,7 @@ function _renderCompareNote(items) {
     const fantasticoLabel = r >= 6
       ? '<div style="margin-top:4px;font-family:var(--sans);font-size:11px;color:#E05252;font-weight:700;">Fantastico!</div>'
       : '';
-    return '<div class="confronta-cell header">' + photo + annataBadge + '</div>' +
+    return '<div class="confronta-cell header">' + photo + annataBadge + '</div></div>' +
       '<div class="confronta-item-info">' +
         '<div class="confronta-item-maison">'+(note.maison_nome||'')+'</div>'+
         '<div class="confronta-item-nome">'+(note.cuvee_nome||'')+'</div>'+
@@ -4435,7 +4448,7 @@ function _renderCompareNote(items) {
   ];
 
   return '<div class="confronta-scroll">' +
-    '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;box-shadow:none;"></div>'+headerCells+'</div>' +
+    '<div class="confronta-header-card" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
     _compareSectionedHtml(sections, gridStyle) +
   '</div>';
 }
@@ -4461,10 +4474,10 @@ function _renderCompareBottiglia(items) {
 
   const headerCells = items.map(b => {
     const photo = b.foto_url
-      ? '<div class="confronta-photo"><img src="'+b.foto_url+'"/>'
-      : '<div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div>';
+      ? '<div class="confronta-photo-wrap"><div class="confronta-photo"><img src="'+b.foto_url+'"/>'
+      : '<div class="confronta-photo-wrap"><div class="confronta-photo"><div class="confronta-photo-ph"><i class="ti ti-bottle"></i></div>';
     const annataBadge = b.annata ? '<span class="confronta-photo-badge">'+b.annata+'</span>' : '';
-    return '<div class="confronta-cell header">' + photo + annataBadge + '</div>' +
+    return '<div class="confronta-cell header">' + photo + annataBadge + '</div></div>' +
       '<div class="confronta-item-info">' +
         '<div class="confronta-item-maison">'+(b.maison?.nome||'')+'</div>'+
         '<div class="confronta-item-nome">'+b.nome+'</div>'+
@@ -4514,7 +4527,7 @@ function _renderCompareBottiglia(items) {
   ];
 
   return '<div class="confronta-scroll">' +
-    '<div class="confronta-grid" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;box-shadow:none;"></div>'+headerCells+'</div>' +
+    '<div class="confronta-header-card" style="'+gridStyle+'"><div class="confronta-cell label" style="background:transparent;"></div>'+headerCells+'</div>' +
     _compareSectionedHtml(sections, gridStyle) +
   '</div>';
 }
