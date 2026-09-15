@@ -4312,6 +4312,24 @@ function renderCompareView(type, items) {
     : (n === 1 ? '1 bottiglia a confronto' : n + ' bottiglie a confronto');
   const titleHtml = '<div class="confronta-title"><div class="confronta-title-h">Confronta</div><div class="confronta-title-sub">' + subtitle + '</div></div>';
   container.innerHTML = titleHtml + (type === 'nota' ? _renderCompareNote(items) : _renderCompareBottiglia(items));
+
+  // Barra promemoria agganciata in alto: resta visibile anche quando le
+  // foto in testa scompaiono scorrendo, così si sa sempre chi si confronta.
+  const stickyRow = document.getElementById('confronta-sticky-row');
+  const stickyBar = document.getElementById('confronta-sticky-bar');
+  if (stickyRow && stickyBar) {
+    stickyRow.innerHTML = items.map(item => {
+      const photoUrl = item.foto_url;
+      const maison = type === 'nota' ? (item.maison_nome || '') : (item.maison?.nome || '');
+      const nome = type === 'nota' ? (item.cuvee_nome || '') : (item.nome || '');
+      const label = [maison, nome].filter(Boolean).join(' ');
+      const thumb = photoUrl
+        ? '<img src="'+photoUrl+'"/>'
+        : '<span class="ph"><i class="ti ti-bottle"></i></span>';
+      return '<div class="confronta-sticky-chip">'+thumb+'<span>'+(label || '—')+'</span></div>';
+    }).join('');
+    stickyBar.classList.toggle('show', items.length > 0);
+  }
 }
 
 function _compareGridStyle(n) {
