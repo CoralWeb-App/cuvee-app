@@ -7023,15 +7023,19 @@ async function _processScan(file, mode) {
     if (_pendingCompareAnchor) {
       const anchor = _pendingCompareAnchor;
       _pendingCompareAnchor = null;
-      if (result.is_bottle !== false) {
+      if (result.is_bottle !== false && result.is_wine !== false) {
         openCompareView('bottiglia', [anchor, _scanToCompareObj(result, dataUrl, 'scan-' + Date.now())]);
         return;
       }
-      // scansione non valida (non è una bottiglia): il confronto pendente
-      // è già stato annullato sopra, prosegue nel flusso normale sotto
+      // scansione non valida (non è una bottiglia, o non è vino): il
+      // confronto pendente è già stato annullato sopra, prosegue nel
+      // flusso normale sotto (mostra la pagina di blocco)
     }
 
-    if (mode === 'carnet') {
+    // Scansione bloccata (non è una bottiglia, o è una bottiglia ma non è
+    // vino): niente da precompilare nel carnet, si mostra sempre la pagina
+    // di blocco, indipendentemente dalla modalità di partenza.
+    if (mode === 'carnet' && result.is_bottle !== false && result.is_wine !== false) {
       _fillCarnetFromScan(result, dataUrl);
     } else {
       _showScanResultPage(result, dataUrl);
@@ -7115,8 +7119,8 @@ function _renderScanResult(result, photoDataUrl) {
   const container = document.getElementById('scan-result-content');
   if (!container) return;
 
-  if (result.is_bottle === false) {
-    container.innerHTML = _buildInvalidScanHTML(photoDataUrl);
+  if (result.is_bottle === false || result.is_wine === false) {
+    container.innerHTML = _buildInvalidScanHTML(photoDataUrl, result.not_champagne_type || null);
     return;
   }
 
@@ -7418,13 +7422,22 @@ async function confirmDeleteAccount() {
   }
 }
 
-// HTML per scan non valido (non è una bottiglia)
-function _buildInvalidScanHTML(photoDataUrl) {
+// HTML per scan non valido — nessuna bottiglia inquadrata, oppure una
+// bottiglia che non è vino (acqua, latte, birra, superalcolici...): in
+// entrambi i casi non c'è nulla da analizzare, ma il messaggio si adatta
+// a cosa è stato effettivamente riconosciuto (notWineType, se disponibile).
+function _buildInvalidScanHTML(photoDataUrl, notWineType) {
   const photoHtml = photoDataUrl
     ? '<div style="width:100px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#1E1208;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;opacity:.5;cursor:pointer;" onclick="openLightbox([\'' + photoDataUrl + '\'],0)">'
         + '<img src="' + photoDataUrl + '" style="width:100%;height:100%;object-fit:cover;">'
       + '</div>'
     : '';
+  const title = notWineType
+    ? 'Questo non è vino…'
+    : 'Mmm, qui non vedo nessuna bottiglia…';
+  const sub = notWineType
+    ? ('Ho riconosciuto <strong>' + notWineType + '</strong>, non una bottiglia di Champagne o vino.')
+    : 'Cuvée riconosce solo bottiglie di Champagne e vino. Punta la fotocamera su una bottiglia e riprova!';
   return '<div style="padding:24px 14px 0;">'
     + '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;">'
       + photoHtml
@@ -7433,17 +7446,17 @@ function _buildInvalidScanHTML(photoDataUrl) {
           + '<span style="font-family:var(--sans);font-size:11px;font-weight:500;color:var(--ink-4);letter-spacing:.3px;">Scansione non valida</span>'
         + '</div>'
         + '<div style="font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:600;font-style:italic;line-height:1.2;margin-bottom:8px;">'
-          + 'Mmm, qui non vedo nessuna bottiglia…'
+          + title
         + '</div>'
         + '<div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.6;">'
-          + 'Cuvée riconosce solo bottiglie e bevande. Punta la fotocamera su una bottiglia e riprova!'
+          + sub
         + '</div>'
       + '</div>'
     + '</div>'
     + '<div style="padding:16px 18px;background:var(--ivory-2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:18px;">'
-      + '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-style:italic;font-weight:600;margin-bottom:6px;">Solo bottiglie, per favore 🍾</div>'
+      + '<div style="font-family:var(--serif);font-size:17px;color:var(--ink);font-style:italic;font-weight:600;margin-bottom:6px;">Solo Champagne e vino, per favore 🍾</div>'
       + '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;">'
-        + 'Questa app è dedicata al mondo delle bollicine — inquadra una bottiglia di Champagne, vino o qualsiasi bevanda per iniziare.'
+        + 'Questa app è dedicata al mondo delle bollicine — inquadra una bottiglia di Champagne o di un altro vino per iniziare.'
       + '</div>'
     + '</div>'
     + '<button class="btn-outline" onclick="startScan(\'explore\')" style="width:100%;">'

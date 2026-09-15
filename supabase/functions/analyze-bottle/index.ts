@@ -396,6 +396,7 @@ serve(async (req) => {
       'Guarda questa immagine. Rispondi SOLO con JSON valido, zero testo extra:\n' +
       '{\n' +
       '  "is_bottle": true se vedi una bottiglia, false altrimenti,\n' +
+      '  "is_wine": true se la bottiglia contiene vino (fermo o spumante, Champagne o qualsiasi altra denominazione: Barolo, Bordeaux, Prosecco, Franciacorta, Cava, Cremant, Sekt, rosati, vini dolci ecc.), false se contiene qualsiasi cosa che NON sia vino (acqua, latte, birra, superalcolici/liquori, bibite, succhi ecc.) o se is_bottle=false. Sii conservativo: se l etichetta non è leggibile ma la forma/colore della bottiglia è chiaramente da vino, true comunque.\n' +
       '  "is_champagne": true se è Champagne AOC francese,\n' +
       '  "maison": "nome ESATTO del produttore come scritto sull etichetta (es. Krug, Henri Giraud, Moët & Chandon, Jacques Selosse). Se il produttore non è scritto sull etichetta (frequente per cuvée di prestigio: Cristal->Louis Roederer, Comtes de Champagne->Taittinger, Belle Epoque->Perrier-Jouët, Grande Cuvée/Clos du Mesnil->Krug, Cuvée Sir Winston Churchill->Pol Roger, La Grande Dame->Veuve Clicquot), deducilo dal nome della cuvée con la tua conoscenza enciclopedica invece di lasciarlo vuoto — non scrivere mai il nome della cuvée al posto del produttore. null solo se davvero non identificabile.",\n' +
       '  "cuvee": "nome ESATTO della cuvée come scritto sull etichetta SENZA maison. Includi codici alfanumerici (es. MV20, MV16, RD, R.D., P2, P3, VO, V.O., Clos du Mesnil, Grande Cuvée 173ème, Belle Epoque, Cristal, Blanc de Blancs). NON scrivere denominazioni territoriali (Grand Cru, Premier Cru, Aÿ, Reims ecc.) a meno che non siano parte del nome cuvée. SE la bottiglia ha un annata (is_sa=false), l anno va SEMPRE aggiunto alla fine del nome cuvée (es. \'Cristal 2013\', \'Comtes de Champagne 2012\', \'P2 2004\'), non solo nel campo annata separato. Se è Sans Année (is_sa=true) nessun anno nel nome. o null",\n' +
@@ -425,6 +426,55 @@ serve(async (req) => {
     } catch(e) {
       console.error('quick-check error:', e)
       // Se Haiku fallisce procediamo direttamente con Sonnet (nessun risparmio ma nessuna perdita)
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // STAGE 1b — BLOCCO ANTICIPATO: non è una bottiglia o non è vino
+    //   Se il quick-check economico è già sicuro che non serve a niente
+    //   approfondire (acqua, latte, birra, superalcolici, oggetto generico…)
+    //   ci fermiamo qui e risparmiamo la chiamata Sonnet, costosa e inutile.
+    //   La scansione conta comunque nella quota mensile dell'utente (riga
+    //   bottle_scans regolare), ma il frontend non la mostra nello storico
+    //   (si basa su is_bottle/is_wine per decidere cosa salvare lì).
+    // ════════════════════════════════════════════════════════════
+    if (quick.is_bottle === false || quick.is_wine === false) {
+      const costUsd = parseFloat(
+        (haikuInTok * PRICE_HAIKU_IN + haikuOutTok * PRICE_HAIKU_OUT).toFixed(6)
+      )
+      const { data: blockedScan } = await userSupa
+        .from('bottle_scans')
+        .insert({
+          user_id:              user.id,
+          is_champagne:         false,
+          detected_maison:      null,
+          detected_cuvee:       null,
+          detected_annata:      null,
+          detected_dosage:      null,
+          detected_tipo:        null,
+          confidence:           quick.confidence ?? 0,
+          not_champagne_type:   quick.not_champagne_type ?? null,
+          matched_bottle_id:    null,
+          new_bottle_id:        null,
+          result_json:          { ...quick, blocked_non_wine: true },
+          // ── Tracking costi ──
+          scan_type:            'blocked_non_wine',
+          haiku_input_tokens:   haikuInTok,
+          haiku_output_tokens:  haikuOutTok,
+          sonnet_input_tokens:  null,
+          sonnet_output_tokens: null,
+          cost_usd:             costUsd,
+        })
+        .select('id')
+        .single()
+
+      return json({
+        scan_id:            blockedScan?.id,
+        is_bottle:          quick.is_bottle ?? true,
+        is_champagne:       false,
+        is_wine:            false,
+        not_champagne_type: quick.not_champagne_type ?? null,
+        from_cache:         false,
+      })
     }
 
     // ════════════════════════════════════════════════════════════
