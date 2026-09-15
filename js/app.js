@@ -4627,37 +4627,38 @@ function closeNoteMenu() {
   document.body.style.overflow = '';
 }
 
-// Base della pagina pubblica di condivisione (edge function share-view) e
-// durata della finestra di condivisione di una nota: ogni tap su Condividi
-// la rinnova di altri 30 giorni da quel momento, riusando lo stesso link
-// se ne esiste già uno (così le copie già inviate restano valide).
-const SHARE_VIEW_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/share-view';
-const SHARE_DAYS = 30;
+// Condivisione — foto (quando disponibile) + testo breve + link di download,
+// tramite lo share-sheet nativo del sistema operativo. Nessun link pubblico,
+// nessun dato scritto da nessuna parte: solo quello che l'utente vede subito.
+const APP_STORE_URL = 'https://apps.apple.com/it/app/cuv%C3%A9e/id6806301961';
 
-async function _ensureNoteShareLink(note) {
-  const token = note.share_token || crypto.randomUUID();
-  const shareUntil = new Date(Date.now() + SHARE_DAYS * 24 * 60 * 60 * 1000).toISOString();
-  const { error } = await supa.from('carnet_notes').update({ share_token: token, share_until: shareUntil }).eq('id', note.id);
-  if (error) throw error;
-  note.share_token = token;
-  note.share_until = shareUntil;
-  return SHARE_VIEW_URL + '?type=nota&token=' + encodeURIComponent(token);
+async function _shareContent(photoUrl, text) {
+  if (navigator.share) {
+    const shareData = { text };
+    if (photoUrl && navigator.canShare) {
+      try {
+        const resp = await fetch(photoUrl);
+        const blob = await resp.blob();
+        const file = new File([blob], 'cuvee.jpg', { type: blob.type || 'image/jpeg' });
+        if (navigator.canShare({ files: [file] })) shareData.files = [file];
+      } catch(e) {
+        // Ignora errori foto — condividi solo testo
+      }
+    }
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch(e) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+  copyToClipboard(text);
 }
 
-// Condivisione nota — genera/rinnova il link pubblico (valido 30 giorni,
-// mostra solo i campi non privati: mai prezzo pagato o luogo) e lo passa
-// allo share-sheet nativo insieme al testo, così chi lo apre vede
-// un'anteprima vera invece di un messaggio senza nulla su cui cliccare.
+// Condivisione nota
 async function shareNote() {
   if (!currentNote) return;
   const note = currentNote;
-
-  let shareUrl = '';
-  try {
-    shareUrl = await _ensureNoteShareLink(note);
-  } catch(e) {
-    console.error('shareNote link error:', e);
-  }
 
   const glasses = '🥂'.repeat(note.rating || 0);
   const metaParts = [note.annata, note.dosage_testo].filter(Boolean).join(' · ');
@@ -4667,22 +4668,11 @@ async function shareNote() {
     glasses ? glasses : '',
     note.note_libere ? '"' + note.note_libere.substring(0, 200) + (note.note_libere.length > 200 ? '...' : '') + '"' : '',
     '',
-    'Via Cuvée — La guida italiana allo Champagne'
+    'Scarica Cuvée, l\'app italiana per lo Champagne: ' + APP_STORE_URL
   ].filter(Boolean).join('\n');
 
-  // Web Share API nativa del SO (iOS/Android share sheet)
-  if (navigator.share) {
-    try {
-      await navigator.share(shareUrl ? { text: testo, url: shareUrl } : { text: testo });
-    } catch(e) {
-      if (e.name !== 'AbortError') {
-        // Fallback: copia negli appunti
-        copyToClipboard(shareUrl ? testo + '\n' + shareUrl : testo);
-      }
-    }
-  } else {
-    copyToClipboard(shareUrl ? testo + '\n' + shareUrl : testo);
-  }
+  const photo = (Array.isArray(note.foto_urls) && note.foto_urls[0]) || note.foto_url || null;
+  await _shareContent(photo, testo);
 }
 
 function copyToClipboard(text) {
@@ -5683,22 +5673,16 @@ async function toggleDetailFavorite() {
   updateProfileCounters();
 }
 
-// Condivisione maison — dato di catalogo pubblico: il link punta
-// direttamente all'id (nessun token da generare, a differenza delle note).
-function shareMaison() {
+// Condivisione maison
+async function shareMaison() {
   if (!currentMaisonDetail) return;
   const m = currentMaisonDetail;
   const desc = m.descrizione ? (m.descrizione.length > 200 ? m.descrizione.substring(0,200) + '…' : m.descrizione) : '';
-  const shareUrl = SHARE_VIEW_URL + '?type=maison&id=' + encodeURIComponent(m.id);
   const text = '🍾 ' + m.nome + '\n' +
     [m.sede_comune, m.anno_fondazione ? 'fondata nel ' + m.anno_fondazione : ''].filter(Boolean).join(' · ') +
     (desc ? '\n\n' + desc : '') + '\n\n' +
-    'Via Cuvée — La guida italiana allo Champagne';
-  if (navigator.share) {
-    navigator.share({ text, url: shareUrl }).catch(() => {});
-  } else {
-    navigator.clipboard?.writeText(text + '\n' + shareUrl).then(() => alert('Copiato!'));
-  }
+    'Scarica Cuvée, l\'app italiana per lo Champagne: ' + APP_STORE_URL;
+  await _shareContent(m.foto_url || null, text);
 }
 
 function openMaisonDetail(maisonId) {
@@ -6790,21 +6774,15 @@ async function toggleWishlistDetail() {
   updateProfileCounters();
 }
 
-// Condivisione bottiglia — dato di catalogo pubblico: il link punta
-// direttamente all'id (nessun token da generare, a differenza delle note).
-function shareBottiglia() {
+// Condivisione bottiglia
+async function shareBottiglia() {
   if (!currentBottiglia) return;
   const b = currentBottiglia;
   const noteDeg = b.note_degustazione ? (b.note_degustazione.length > 150 ? b.note_degustazione.substring(0,150) + '…' : b.note_degustazione) : '';
-  const shareUrl = SHARE_VIEW_URL + '?type=bottiglia&id=' + encodeURIComponent(b.id);
   const text = '🍾 ' + b.nome + (b.maison?.nome ? '\n' + b.maison.nome : '') +
     (noteDeg ? '\n\n' + noteDeg : '') + '\n\n' +
-    'Via Cuvée — La guida italiana allo Champagne';
-  if (navigator.share) {
-    navigator.share({ title: b.nome, text, url: shareUrl }).catch(() => {});
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(text + '\n' + shareUrl);
-  }
+    'Scarica Cuvée, l\'app italiana per lo Champagne: ' + APP_STORE_URL;
+  await _shareContent(b.foto_url || null, text);
 }
 
 // ══════════════════════════════════════════════════════════════
