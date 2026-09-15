@@ -7043,7 +7043,7 @@ async function _processScan(file, mode) {
     if (mode === 'carnet' && result.is_bottle !== false && result.is_wine !== false) {
       _fillCarnetFromScan(result, dataUrl);
     } else {
-      _showScanResultPage(result, dataUrl);
+      _showScanResultPage(result, dataUrl, true);
     }
 
   } catch(err) {
@@ -7107,9 +7107,12 @@ function closeScanLimitModal() {
   _pendingCompareAnchor = null;
 }
 
-// Mostra la pagina risultato scansione
-function _showScanResultPage(result, photoDataUrl) {
-  _renderScanResult(result, photoDataUrl);
+// Mostra la pagina risultato scansione — isFreshScan true solo appena
+// dopo una scansione vera e propria, così il popup "non è Champagne" si
+// vede una volta sola e non ricompare ogni volta che si riapre la stessa
+// scansione dallo storico.
+function _showScanResultPage(result, photoDataUrl, isFreshScan) {
+  _renderScanResult(result, photoDataUrl, isFreshScan);
   // Nasconde il cestino (visibile solo se aperto dallo storico)
   _currentHistoryIdx = null;
   const btn = document.getElementById('scan-result-delete-btn');
@@ -7120,7 +7123,7 @@ function _showScanResultPage(result, photoDataUrl) {
 }
 
 // Costruisce l'HTML della pagina risultato
-function _renderScanResult(result, photoDataUrl) {
+function _renderScanResult(result, photoDataUrl, isFreshScan) {
   const container = document.getElementById('scan-result-content');
   if (!container) return;
 
@@ -7315,7 +7318,7 @@ function _renderScanResult(result, photoDataUrl) {
       })()
     + '<div style="height:30px;"></div>';
 
-  if (!isChampagne) _showNotChampagneModal(result.not_champagne_type);
+  if (!isChampagne && isFreshScan) _showNotChampagneModal(result.not_champagne_type);
 }
 
 // ═══ CONFRONTA DA SCANSIONE ═══════════════════════════════════════════════
