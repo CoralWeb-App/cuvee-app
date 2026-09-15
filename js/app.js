@@ -3084,6 +3084,7 @@ function openNoteDetail(note) {
         dosaggioGl, dosaggioTipo: dosage,
         maturazioneMesi, provenienzaUve, vinificazione, malolattica,
         produzioneBottiglie: prodBottiglie,
+        isChampagne: sr.is_champagne !== false,
       });
       if (!inner) return;
       innerHtml +=
@@ -4536,7 +4537,7 @@ function _renderCompareBottiglia(items) {
         ].filter(Boolean);
         return parts.length ? parts.join(' · ') : null;
       })},
-      { label:'Sui lieviti', cells: items.map(b => b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null) },
+      { label:'Affinamento', cells: items.map(b => b.maturazione_mesi ? b.maturazione_mesi + ' mesi' : null) },
       { label:'Provenienza uve', cells: items.map((b,i) => _compareTextCell(b.provenienza_uve, 'Provenienza uve', itemTitles[i])) },
       { label:'Vinificazione', cells: items.map((b,i) => _compareTextCell(b.vinificazione, 'Vinificazione', itemTitles[i])) },
       { label:'Malolattica', cells: items.map((b,i) => _compareTextCell(b.malolattica, 'Malolattica', itemTitles[i])) },
@@ -6472,9 +6473,13 @@ function buildSchedaTecnicaHTML(f) {
     ? uvaggiParts.reduce((max, u) => u.v > max.v ? u : max, uvaggiParts[0])
     : null;
 
+  // "Sui lieviti" è la permanenza prima della sboccatura, specifica del
+  // metodo champenoise: per qualsiasi altro vino (es. un Sassicaia che
+  // matura in barrique) la stessa cifra è affinamento, non lieviti.
+  const maturazioneLabel = f.isChampagne === false ? 'Mesi di affinamento' : 'Mesi sui lieviti';
   const statCards = [
     f.dosaggioGl != null ? { icon:'ti-droplet', value: f.dosaggioGl + ' g/l', label: f.dosaggioTipo || 'Dosaggio' } : (f.dosaggioTipo ? { icon:'ti-droplet', value: f.dosaggioTipo, label:'Dosaggio' } : null),
-    f.maturazioneMesi ? { icon:'ti-clock-hour-4', value: f.maturazioneMesi, label:'Mesi sui lieviti' } : null,
+    f.maturazioneMesi ? { icon:'ti-clock-hour-4', value: f.maturazioneMesi, label: maturazioneLabel } : null,
     uvaggioPrincipale ? { icon:'ti-glass-full', value: uvaggioPrincipale.v + '%', label: uvaggioPrincipale.l } : null,
   ].filter(Boolean);
 
@@ -7282,6 +7287,7 @@ function _renderScanResult(result, photoDataUrl) {
           dosaggioGl, dosaggioTipo: dosage,
           maturazioneMesi, provenienzaUve, vinificazione, malolattica,
           produzioneBottiglie: prodBottiglie,
+          isChampagne,
         });
         if (!inner) return '';
         return '<div class="form-section" style="margin:14px 14px 0;">'
