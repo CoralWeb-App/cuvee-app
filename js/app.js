@@ -4313,24 +4313,46 @@ function renderCompareView(type, items) {
     : (n === 1 ? '1 bottiglia a confronto' : n + ' bottiglie a confronto');
   const titleHtml = '<div class="confronta-title"><div class="confronta-title-h">Confronta</div><div class="confronta-title-sub">' + subtitle + '</div></div>';
   container.innerHTML = titleHtml + (type === 'nota' ? _renderCompareNote(items) : _renderCompareBottiglia(items));
+  _bindCompareStickyBadges(container);
+}
 
-  // Barra promemoria agganciata in alto: resta visibile anche quando le
-  // foto in testa scompaiono scorrendo, così si sa sempre chi si confronta.
-  const stickyRow = document.getElementById('confronta-sticky-row');
-  const stickyBar = document.getElementById('confronta-sticky-bar');
-  if (stickyRow && stickyBar) {
-    stickyRow.innerHTML = items.map(item => {
-      const photoUrl = item.foto_url;
-      const maison = type === 'nota' ? (item.maison_nome || '') : (item.maison?.nome || '');
-      const nome = type === 'nota' ? (item.cuvee_nome || '') : (item.nome || '');
-      const label = [maison, nome].filter(Boolean).join(' ');
-      const thumb = photoUrl
-        ? '<img src="'+photoUrl+'"/>'
-        : '<span class="ph"><i class="ti ti-bottle"></i></span>';
-      return '<div class="confronta-sticky-chip">'+thumb+'<span>'+(label || '—')+'</span></div>';
-    }).join('');
-    stickyBar.classList.toggle('show', items.length > 0);
-  }
+// Riga promemoria con miniatura+nome per colonna — stessa larghezza colonne
+// dell'header foto (_compareHeaderGridStyle, niente colonna etichetta:
+// l'allineamento con le colonne dati arriva dal margin-left:116px in CSS,
+// identico al trucco già usato per .confronta-header-card). Vive FUORI da
+// .confronta-scroll (che con overflow-x:auto diventa anche contenitore di
+// scroll verticale per via delle regole CSS su overflow-x/y, rompendo lo
+// sticky di un discendente): resta quindi agganciata in verticale al vero
+// scroll della pagina, e viene sincronizzata in orizzontale via JS in
+// _bindCompareStickyBadges(), che ne trasla il contenuto in base allo
+// scrollLeft di .confronta-scroll.
+function _compareStickyBadgesHtml(items, type) {
+  const chips = items.map(item => {
+    const photoUrl = type === 'nota'
+      ? ((Array.isArray(item.foto_urls) && item.foto_urls[0]) || item.foto_url || null)
+      : (item.foto_url || null);
+    const maison = type === 'nota' ? (item.maison_nome || '') : (item.maison?.nome || '');
+    const nome = type === 'nota' ? (item.cuvee_nome || '') : (item.nome || '');
+    const label = [maison, nome].filter(Boolean).join(' ') || '—';
+    const thumb = photoUrl
+      ? '<img src="'+photoUrl+'"/>'
+      : '<span class="ph"><i class="ti ti-bottle"></i></span>';
+    return '<div class="confronta-sticky-chip">'+thumb+'<span>'+label+'</span></div>';
+  }).join('');
+  return '<div class="confronta-sticky-badges-wrap"><div class="confronta-sticky-badges" style="'+_compareHeaderGridStyle(items.length)+'">'+chips+'</div></div>';
+}
+
+// Sincronizza la traslazione orizzontale della riga promemoria con lo
+// scroll di .confronta-scroll — va richiamata dopo aver inserito l'HTML
+// nel DOM (renderCompareView), non dentro le funzioni che costruiscono
+// solo stringhe HTML.
+function _bindCompareStickyBadges(container) {
+  const scrollEl = container.querySelector('.confronta-scroll');
+  const badgesEl = container.querySelector('.confronta-sticky-badges');
+  if (!scrollEl || !badgesEl) return;
+  scrollEl.addEventListener('scroll', () => {
+    badgesEl.style.transform = 'translateX(' + (-scrollEl.scrollLeft) + 'px)';
+  }, { passive: true });
 }
 
 function _compareGridStyle(n) {
@@ -4472,7 +4494,8 @@ function _renderCompareNote(items) {
     ]},
   ];
 
-  return '<div class="confronta-scroll">' +
+  return _compareStickyBadgesHtml(items, 'nota') +
+  '<div class="confronta-scroll">' +
     '<div class="confronta-header-card" style="'+_compareHeaderGridStyle(items.length)+'">'+headerCells+'</div>' +
     _compareSectionedHtml(sections, gridStyle) +
   '</div>';
@@ -4551,7 +4574,8 @@ function _renderCompareBottiglia(items) {
     ]},
   ];
 
-  return '<div class="confronta-scroll">' +
+  return _compareStickyBadgesHtml(items, 'bottiglia') +
+  '<div class="confronta-scroll">' +
     '<div class="confronta-header-card" style="'+_compareHeaderGridStyle(items.length)+'">'+headerCells+'</div>' +
     _compareSectionedHtml(sections, gridStyle) +
   '</div>';

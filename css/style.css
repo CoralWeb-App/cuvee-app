@@ -1386,19 +1386,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .confronta-title-h{font-family:var(--serif);font-size:24px;color:var(--ink);font-weight:500;}
 .confronta-title-sub{font-family:var(--sans);font-size:13px;color:var(--ink-4);margin-top:2px;}
 
-/* Barra promemoria — resta agganciata in alto mentre si scorre la pagina
-   verticalmente, così anche dopo che la card con le foto è sparita dalla
-   vista si sa sempre quali bottiglie/degustazioni si stanno confrontando.
-   Scroll orizzontale indipendente dalla tabella sottostante: con al più
-   6 elementi non serve tenerli sincronizzati, basta che restino compatti. */
-.confronta-sticky-bar{display:none;position:sticky;top:0;z-index:40;background:var(--ivory-2);border-bottom:1px solid var(--border-2);padding:10px 14px;}
-.confronta-sticky-bar.show{display:block;}
-.confronta-sticky-row{display:flex;gap:9px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.confronta-sticky-chip{display:flex;align-items:center;gap:7px;flex-shrink:0;background:var(--white);border:1px solid var(--border-2);border-radius:20px;padding:4px 13px 4px 4px;box-shadow:0 1px 4px rgba(30,18,8,.05);}
-.confronta-sticky-chip img{width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;display:block;}
-.confronta-sticky-chip .ph{width:24px;height:24px;border-radius:50%;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.confronta-sticky-chip .ph i{font-size:11px;color:var(--gold);}
-.confronta-sticky-chip span{font-family:var(--sans);font-size:12.5px;color:var(--ink-2);font-weight:600;white-space:nowrap;max-width:118px;overflow:hidden;text-overflow:ellipsis;}
+/* Riga promemoria — resta agganciata in verticale (position:sticky;top,
+   qui sì efficace: il wrapper è un fratello di .confronta-scroll, non un
+   suo discendente, quindi si aggancia al vero contenitore di scroll
+   verticale della pagina). Per l'asse orizzontale niente sticky (un
+   .confronta-scroll con overflow-x:auto rende "scrollabile" anche
+   l'asse verticale per via delle regole CSS su overflow-x/y, il che
+   romperebbe lo sticky se il badge vivesse al suo interno): il
+   contenuto interno viene invece traslato via JS in scrollCompareBadges(),
+   agganciato all'evento scroll di .confronta-scroll, così segue le
+   colonne in orizzontale restando comunque perfettamente allineato. */
+.confronta-sticky-badges-wrap{position:sticky;top:0;z-index:10;overflow:hidden;background:var(--ivory-2);padding:0 14px;}
+.confronta-sticky-badges{display:grid;margin-left:116px;padding:8px 0 10px;}
+.confronta-sticky-chip{display:flex;align-items:center;gap:6px;justify-content:center;overflow:hidden;min-width:0;padding:0 6px;}
+.confronta-sticky-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;display:block;}
+.confronta-sticky-chip .ph{width:22px;height:22px;border-radius:50%;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.confronta-sticky-chip .ph i{font-size:10px;color:var(--gold);}
+.confronta-sticky-chip span{font-family:var(--sans);font-size:11px;color:var(--ink-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 .confronta-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 6px;}
 .confronta-cell{padding:13px 12px;font-family:var(--sans);font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;overflow-wrap:break-word;word-break:break-word;background:transparent;}
