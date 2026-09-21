@@ -2681,8 +2681,8 @@ async function initAppVersionLabel() {
   if (!AppInfo) { block.remove(); return; }
   try {
     const info = await AppInfo.getInfo();
-    const webBuild = (document.querySelector('script[src*="app.js"]')?.src.match(/[?&]v=(\d+)/) || [])[1];
-    document.getElementById('app-version-label').textContent = info.version + (webBuild ? ' (' + webBuild + ')' : '');
+    // Versione e numero di build dell'app installata, come li mostra l'App Store (es. 1.0.3 (8))
+    document.getElementById('app-version-label').textContent = info.version + (info.build ? ' (' + info.build + ')' : '');
   } catch(e) {
     console.log('App.getInfo error:', e);
     block.remove();
@@ -5330,7 +5330,7 @@ function _paintUnreadBadge(count) {
   _syncAppIconBadge(count);
 }
 
-// Numero sull'icona: con il plugin nativo "Badge" (build 1.0.4 in poi) è esatto; con le build precedenti si può
+// Numero sull'icona: con il plugin nativo "Badge" (build 1.0.3 (8) in poi) è esatto; con le build precedenti si può
 // solo azzerarlo (e svuotare il Centro Notifiche) quando non resta nulla da leggere.
 async function _syncAppIconBadge(count) {
   if (!_pushSupported()) return;
