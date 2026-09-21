@@ -2451,6 +2451,8 @@ function updateProfileUI(profile) {
       premBadge.style.display = 'none';
     }
   }
+
+  updateDeletionUI(profile);
 }
 
 // Ritaglia al centro in quadrato poi ridimensiona — ideale per avatar circolari
@@ -5350,19 +5352,10 @@ async function deactivateAndRefresh() {
 }
 
 async function confirmCancelPremium() {
-  const isNative = window.Capacitor?.isNativePlatform?.();
-  const platform = window.Capacitor?.getPlatform?.();
   // Un abbonamento IAP reale non si può disdire con una chiamata dall'app:
   // Apple/Google richiedono che la disdetta avvenga nella loro schermata di
   // gestione abbonamenti di sistema. Ce li apre direttamente.
-  if (isNative && platform === 'ios') {
-    window.location.href = 'itms-apps://apps.apple.com/account/subscriptions';
-    return;
-  }
-  if (isNative && platform === 'android') {
-    window.location.href = 'https://play.google.com/store/account/subscriptions';
-    return;
-  }
+  if (_openStoreSubscriptions()) return;
   // Sito da browser, senza IAP reale: comportamento di test come sempre.
   if (!confirm('Sei sicuro di voler disdire il Premium?')) return;
   await deactivateAndRefresh();
@@ -7397,22 +7390,96 @@ function closeNotChampagneModal() {
 }
 
 // ═══ ELIMINAZIONE ACCOUNT ═══
-// Testo del modale differenziato: chi ha un Premium attivo deve sapere che lo
-// perde insieme a tutto il resto, senza rimborso dei giorni/mesi residui.
+// Free (e Premium regalati dall'admin): eliminazione immediata. Premium a pagamento: la richiesta viene
+// PROGRAMMATA e l'account si elimina alla scadenza reale dell'abbonamento (lo decide il server).
+// Il riepilogo minimo dell'account resta 30 giorni, poi sparisce da solo.
 const DELETE_ACCOUNT_EDGE_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/delete-account';
+let _deleteFlowV2 = false;
+let _deleteModalMode = 'now';
 
-function openDeleteAccountModal() {
+// La versione nuova della funzione risponde "ok:v2" a OPTIONS. Le versioni vecchie eliminano l'account a
+// qualsiasi POST autenticato, quindi la disponibilità della cancellazione programmata si verifica SEMPRE
+// con OPTIONS (mai con un POST) prima di prometterla all'utente o di inviare azioni nuove come "cancel".
+async function _deleteFlowSupportsScheduling() {
+  if (_deleteFlowV2) return true;
+  try {
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 4000);
+    const r = await fetch(DELETE_ACCOUNT_EDGE_URL, { method: 'OPTIONS', signal: ctl.signal });
+    clearTimeout(to);
+    _deleteFlowV2 = r.ok && (await r.text()).trim() === 'ok:v2';
+  } catch (e) { _deleteFlowV2 = false; }
+  return _deleteFlowV2;
+}
+
+function _payingPremiumUntil(p) {
+  if (!p || p.is_premium !== true || p.premium_source !== 'revenuecat' || !p.premium_until) return null;
+  const d = new Date(p.premium_until);
+  return d.getTime() > Date.now() ? d : null;
+}
+function _fmtLongDate(d) {
+  return new Date(d).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function _openStoreSubscriptions() {
+  const isNative = window.Capacitor?.isNativePlatform?.();
+  const platform = window.Capacitor?.getPlatform?.();
+  if (isNative && platform === 'ios') { window.location.href = 'itms-apps://apps.apple.com/account/subscriptions'; return true; }
+  if (isNative && platform === 'android') { window.location.href = 'https://play.google.com/store/account/subscriptions'; return true; }
+  return false;
+}
+function openManageSubscriptions() {
+  if (!_openStoreSubscriptions()) window.open('https://apps.apple.com/account/subscriptions', '_blank', 'noopener');
+}
+
+async function openDeleteAccountModal() {
   if (!currentUser) return;
-  const desc = document.getElementById('delete-account-desc');
-  const ack  = document.getElementById('delete-account-ack');
-  const btn  = document.getElementById('delete-account-confirm-btn');
+  const p = currentUser.profile;
+  if (p?.deletion_requested_at) return;
+
+  const scheduling = await _deleteFlowSupportsScheduling();
+  const until = scheduling ? _payingPremiumUntil(p) : null;
+  _deleteModalMode = until ? 'scheduled' : 'now';
+
+  const title  = document.getElementById('delete-account-title');
+  const desc   = document.getElementById('delete-account-desc');
+  const ack    = document.getElementById('delete-account-ack');
+  const ackTxt = document.getElementById('delete-account-ack-text');
+  const btn    = document.getElementById('delete-account-confirm-btn');
+  const manage = document.getElementById('delete-account-manage-btn');
   if (ack) ack.checked = false;
-  if (btn) { btn.disabled = true; btn.classList.remove('ready'); btn.textContent = 'Elimina definitivamente'; }
-  if (desc) {
-    desc.innerHTML = isPremium()
+  if (btn) { btn.disabled = true; btn.classList.remove('ready'); }
+  if (manage) manage.style.display = 'none';
+
+  const summary = 'Dopo l\'eliminazione conserviamo per 30 giorni solo un breve riepilogo (email, data di iscrizione, numero di scansioni) per statistiche interne e prevenzione abusi; poi viene cancellato anche quello.';
+
+  if (!scheduling) {
+    // Funzione lato server non ancora aggiornata: comportamento storico, con il suo avviso
+    if (title) title.textContent = 'Eliminare il tuo account?';
+    if (desc) desc.innerHTML = isPremium()
       ? 'Hai un <strong>abbonamento Premium attivo</strong>: eliminando l\'account lo perderai insieme a tutto il resto — <strong>nessun rimborso</strong> per i giorni o mesi già pagati e non ancora utilizzati. Perderai anche Storico scansioni, Carnet de dégustation e tutte le foto caricate. L\'operazione non può essere annullata.'
       : 'Perderai per sempre lo Storico scansioni, il Carnet de dégustation e tutte le foto caricate. L\'operazione non può essere annullata.';
+    if (ackTxt) ackTxt.textContent = 'Ho capito che l\'operazione è definitiva e che tutti i miei dati verranno cancellati.';
+    if (btn) btn.textContent = 'Elimina definitivamente';
+  } else if (until) {
+    const renewalOff = p.cancel_at_period_end === true;
+    if (title) title.textContent = 'Programmare l\'eliminazione?';
+    if (desc) desc.innerHTML =
+      'Hai un abbonamento Premium attivo fino al <strong>' + _fmtLongDate(until) + '</strong>. Il tuo account resterà utilizzabile fino a quella data; poi verrà eliminato insieme a Storico scansioni, Carnet de dégustation e a tutte le foto caricate.'
+      + (renewalOff
+        ? '<br><br>Il rinnovo automatico è già disattivato: non ci saranno nuovi addebiti.'
+        : '<br><br><strong>Attenzione:</strong> eliminare l\'account non annulla l\'abbonamento. Per non essere addebitato di nuovo, annulla il rinnovo dalle impostazioni abbonamenti; se il rinnovo resta attivo, l\'eliminazione slitta alla nuova scadenza.')
+      + '<br><br>Puoi annullare la richiesta in qualsiasi momento prima della scadenza. ' + summary;
+    if (ackTxt) ackTxt.textContent = 'Ho capito: l\'account verrà eliminato alla scadenza dell\'abbonamento e i contenuti non saranno recuperabili.';
+    if (btn) btn.textContent = 'Programma l\'eliminazione';
+    if (manage && !renewalOff) manage.style.display = 'block';
+  } else {
+    if (title) title.textContent = 'Eliminare il tuo account?';
+    if (desc) desc.innerHTML =
+      'Il tuo account verrà eliminato <strong>subito</strong>, insieme a Storico scansioni, Carnet de dégustation e a tutte le foto caricate. L\'operazione non può essere annullata.<br><br>' + summary;
+    if (ackTxt) ackTxt.textContent = 'Ho capito che l\'operazione è definitiva e che tutti i miei contenuti verranno cancellati.';
+    if (btn) btn.textContent = 'Elimina definitivamente';
   }
+
   const modal = document.getElementById('delete-account-modal');
   if (modal) modal.classList.add('on');
 }
@@ -7427,36 +7494,88 @@ function _toggleDeleteAccountBtn() {
   btn.disabled = !ack.checked;
   btn.classList.toggle('ready', ack.checked);
 }
+
+async function _callDeleteAccount(action) {
+  const { data: sessionData } = await supa.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) throw new Error('Sessione non valida');
+  const resp = await fetch(DELETE_ACCOUNT_EDGE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ action }),
+  });
+  const result = await resp.json().catch(() => ({}));
+  if (!resp.ok || result.error) throw new Error(result?.error || 'Errore durante l\'operazione');
+  return result;
+}
+
 async function confirmDeleteAccount() {
   const ack = document.getElementById('delete-account-ack');
   const btn = document.getElementById('delete-account-confirm-btn');
   if (!ack?.checked || !currentUser) return;
 
+  const label = btn.textContent;
   btn.disabled = true;
-  btn.textContent = 'Eliminazione in corso...';
+  btn.textContent = _deleteModalMode === 'scheduled' ? 'Programmazione in corso...' : 'Eliminazione in corso...';
 
   try {
-    const { data: sessionData } = await supa.auth.getSession();
-    const token = sessionData?.session?.access_token;
-    if (!token) throw new Error('Sessione non valida');
-
-    const resp = await fetch(DELETE_ACCOUNT_EDGE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    });
-    const result = await resp.json().catch(() => ({}));
-    if (!resp.ok || result.error) throw new Error(result?.error || 'Errore durante l\'eliminazione');
-
+    const result = await _callDeleteAccount('delete');
     closeDeleteAccountModal();
+
+    if (result.scheduled) {
+      if (currentUser.profile) currentUser.profile.deletion_requested_at = new Date().toISOString();
+      updateDeletionUI();
+      const when = result.scheduled_for ? _fmtLongDate(result.scheduled_for) : null;
+      const renewalOff = currentUser.profile?.cancel_at_period_end === true;
+      alert('Eliminazione programmata.' + (when ? ' Il tuo account resterà attivo fino al ' + when + ', poi verrà eliminato.' : '')
+        + (renewalOff ? '' : '\n\nRicordati di annullare il rinnovo dell\'abbonamento dalle impostazioni abbonamenti, altrimenti l\'eliminazione slitta alla prossima scadenza.'));
+      return;
+    }
+
     currentUser = null;
     await supa.auth.signOut();
     go('v-splash');
-    alert('Il tuo account e tutti i tuoi dati sono stati eliminati definitivamente.');
+    alert('Il tuo account e i tuoi contenuti sono stati eliminati definitivamente.');
   } catch(e) {
     console.log('Delete account error:', e);
     btn.disabled = false;
-    btn.textContent = 'Elimina definitivamente';
-    alert('Non è stato possibile eliminare l\'account. Riprova tra qualche istante.\n' + (e.message || ''));
+    btn.textContent = label;
+    alert('Non è stato possibile completare l\'operazione. Riprova tra qualche istante.\n' + (e.message || ''));
+  }
+}
+
+async function cancelAccountDeletion() {
+  if (!currentUser) return;
+  const btn = document.getElementById('profile-deletion-cancel-btn');
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Annullamento...'; }
+  try {
+    if (!(await _deleteFlowSupportsScheduling())) throw new Error('Servizio momentaneamente non disponibile');
+    await _callDeleteAccount('cancel');
+    if (currentUser.profile) currentUser.profile.deletion_requested_at = null;
+    updateDeletionUI();
+    showAppToast('Eliminazione annullata: il tuo account resta attivo', 3500);
+  } catch(e) {
+    console.log('Cancel deletion error:', e);
+    alert('Non è stato possibile annullare l\'eliminazione. Riprova tra qualche istante.\n' + (e.message || ''));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+  }
+}
+
+function updateDeletionUI(profile) {
+  const p = profile || currentUser?.profile;
+  const pending = !!p?.deletion_requested_at;
+  const banner = document.getElementById('profile-deletion-banner');
+  const row = document.getElementById('profile-delete-account-row');
+  if (banner) banner.style.display = pending ? 'block' : 'none';
+  if (row) row.style.display = pending ? 'none' : 'block';
+  if (!pending) return;
+  const txt = document.getElementById('profile-deletion-text');
+  if (txt) {
+    txt.textContent = isPremium() && p.premium_until
+      ? 'Il tuo account resterà attivo fino al ' + _fmtLongDate(p.premium_until) + ', poi verrà eliminato insieme a tutti i tuoi dati. Puoi annullare quando vuoi prima di quella data.'
+      : 'Il tuo abbonamento è terminato: l\'account verrà eliminato a breve.';
   }
 }
 

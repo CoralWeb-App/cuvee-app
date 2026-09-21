@@ -676,6 +676,7 @@
           <button class="adm-filter active" onclick="filterUtenti('all', this)">Tutti</button>
           <button class="adm-filter" onclick="filterUtenti('premium', this)">Premium</button>
           <button class="adm-filter" onclick="filterUtenti('free', this)">Free</button>
+          <button class="adm-filter" onclick="filterUtenti('deleted', this)"><i class="ti ti-user-off"></i> Cancellati <span id="utenti-deleted-count" style="opacity:.75"></span></button>
         </div>
 
         <!-- SPLIT LAYOUT: list + detail panel -->
@@ -686,7 +687,7 @@
             <div class="adm-table-wrap">
               <table class="adm-table">
                 <thead>
-                  <tr>
+                  <tr id="utenti-thead">
                     <th>UTENTE</th>
                     <th>PIANO</th>
                     <th>SCAN</th>
@@ -1098,7 +1099,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=23"></script>
+<script src="js/admin.js?v=26"></script>
 
 </body>
 </html>

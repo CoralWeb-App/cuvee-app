@@ -196,7 +196,11 @@ function showView(id) {
   if (id === 'bottiglie')    { bottigliaPage = 1; renderBottiglie() }
   if (id === 'maison')       { maisonSearch = ''; maisonTipoFilter = ''; maisonStatusFilter = ''; maisonSort = 'nome'; maisonLetterFilter = ''; loadMaison() }
   if (id === 'glossario')    { glossarioSearch = ''; glossarioLetterFilter = ''; loadGlossarioAdmin() }
-  if (id === 'utenti')       { utentiPage = 1; utentiFilter = 'all'; utentiSearch = ''; renderUtenti() }
+  if (id === 'utenti') {
+    utentiPage = 1; utentiFilter = 'all'; utentiSearch = ''
+    document.querySelectorAll('#view-utenti .adm-filter').forEach((b, i) => b.classList.toggle('active', i === 0))
+    renderUtenti()
+  }
   if (id === 'abbonamenti')  loadAbbonamenti()
   if (id === 'notifiche')    loadNotifiche()
   if (id === 'stats')        loadStats()
@@ -2413,14 +2417,26 @@ async function deleteNotifica(id, title) {
 // ══════════════════════════════════════════════════════
 // UTENTI
 // ══════════════════════════════════════════════════════
+const UTENTI_HEAD = {
+  users:   ['UTENTE', 'PIANO', 'SCAN', 'CARNET', 'REGISTRATO'],
+  deleted: ['UTENTE', 'STATO', 'PIANO', 'ATTIVITÀ', 'CANCELLAZIONE', 'REGISTRO'],
+}
+function setUtentiHead(mode) {
+  const tr = document.getElementById('utenti-thead')
+  if (tr) tr.innerHTML = UTENTI_HEAD[mode].map(h => `<th>${h}</th>`).join('')
+}
+
 async function renderUtenti() {
   const tbody = document.getElementById('utenti-tbody')
   if (!tbody) return
+  if (utentiFilter === 'deleted') return renderUtentiCancellati()
+  setUtentiHead('users')
+  refreshDeletedCount()
   tbody.innerHTML = loadingRow(5)
   try {
     let query = supa
       .from('users')
-      .select('id, email, is_premium, premium_until, is_admin, created_at', { count: 'exact' })
+      .select('id, email, is_premium, premium_until, is_admin, created_at, deletion_requested_at', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range((utentiPage-1)*PER_PAGE, utentiPage*PER_PAGE - 1)
 
@@ -2456,7 +2472,7 @@ async function renderUtenti() {
             </div>
           </div>
         </td>
-        <td>${prem ? '<span class="adm-badge premium"><i class="ti ti-crown"></i> PREMIUM</span>' : '<span class="adm-badge free">FREE</span>'}</td>
+        <td>${prem ? '<span class="adm-badge premium"><i class="ti ti-crown"></i> PREMIUM</span>' : '<span class="adm-badge free">FREE</span>'}${u.deletion_requested_at ? ' <span class="adm-badge pending" title="Ha chiesto di eliminare l\'account: verrà eliminato alla scadenza dell\'abbonamento"><i class="ti ti-clock"></i> CANC. PROGRAMMATA</span>' : ''}</td>
         <td class="adm-mono">${scanCounts[u.id] ?? 0}</td>
         <td class="adm-mono">-</td>
         <td class="adm-time-cell">${fmtDate(u.created_at)}</td>
@@ -2475,12 +2491,235 @@ function filterUtenti(filter, btn) {
   utentiFilter = filter
   document.querySelectorAll('#view-utenti .adm-filter').forEach(b => b.classList.remove('active'))
   btn.classList.add('active')
+  closeUserDetail()
   utentiPage = 1; renderUtenti()
 }
 
 function searchUtenti(val) {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => { utentiSearch = val.trim(); utentiPage = 1; renderUtenti() }, 400)
+}
+
+// ── CANCELLATI: registro degli account eliminati (30 giorni) ──────────
+const DELETE_ACCOUNT_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/delete-account'
+let deletedCache = []
+let deleteFlowV2 = false
+
+// La Edge Function aggiornata risponde "ok:v2" a OPTIONS. Le versioni vecchie eliminano a QUALSIASI POST:
+// per questo la disponibilità di "programma"/"annulla" si verifica solo con OPTIONS, mai con un POST.
+async function deleteFlowSupportsScheduling() {
+  if (deleteFlowV2) return true
+  try {
+    const ctl = new AbortController()
+    const to = setTimeout(() => ctl.abort(), 4000)
+    const r = await fetch(DELETE_ACCOUNT_URL, { method: 'OPTIONS', signal: ctl.signal })
+    clearTimeout(to)
+    deleteFlowV2 = r.ok && (await r.text()).trim() === 'ok:v2'
+  } catch (e) { deleteFlowV2 = false }
+  return deleteFlowV2
+}
+
+async function callDeleteAccount(body) {
+  const { data: { session } } = await supa.auth.getSession()
+  const token = session?.access_token
+  if (!token) throw new Error('Sessione admin non valida')
+  const resp = await fetch(DELETE_ACCOUNT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify(body),
+  })
+  const result = await resp.json().catch(() => ({}))
+  if (!resp.ok || result.error) throw new Error(result?.error || 'Errore durante l\'operazione')
+  return result
+}
+
+function isRegistryMissing(error) {
+  return error && (error.code === 'PGRST205' || error.code === '42P01' || /deleted_users/.test(error.message || ''))
+}
+
+async function refreshDeletedCount() {
+  const el = document.getElementById('utenti-deleted-count')
+  if (!el) return
+  try {
+    const { count, error } = await supa.from('deleted_users').select('*', { count: 'exact', head: true })
+      .or(`status.eq.scheduled,purge_at.gt.${new Date().toISOString()}`)
+    if (error) throw error
+    el.textContent = count ? `(${count})` : ''
+  } catch (e) { el.textContent = '' }
+}
+
+const DELETED_BY_LABEL = { user: 'dall\'utente', admin: 'da admin', dashboard: 'da Supabase' }
+const daysUntil = (iso) => Math.max(0, Math.ceil((new Date(iso) - Date.now()) / 86400000))
+
+function deletedStateBadges(d) {
+  const state = d.status === 'scheduled'
+    ? '<span class="adm-badge pending"><i class="ti ti-clock"></i> PROGRAMMATA</span>'
+    : '<span class="adm-badge inactive">ELIMINATO</span>'
+  const back = d.returned_at
+    ? ` <span class="adm-badge active" title="Si è registrato di nuovo il ${fmtDate(d.returned_at)}"><i class="ti ti-arrow-back-up"></i> TORNATO</span>`
+    : ''
+  return state + back
+}
+
+async function renderUtentiCancellati() {
+  const tbody = document.getElementById('utenti-tbody')
+  setUtentiHead('deleted')
+  refreshDeletedCount()
+  tbody.innerHTML = loadingRow(6)
+  try {
+    let query = supa
+      .from('deleted_users')
+      .select('*', { count: 'exact' })
+      .or(`status.eq.scheduled,purge_at.gt.${new Date().toISOString()}`)
+      .order('deleted_at', { ascending: false, nullsFirst: true })
+      .order('created_at', { ascending: false })
+      .range((utentiPage-1)*PER_PAGE, utentiPage*PER_PAGE - 1)
+    if (utentiSearch) query = query.ilike('email', `%${utentiSearch}%`)
+
+    const { data, count, error } = await query
+    if (error) throw error
+    deletedCache = data
+
+    const cnt = document.getElementById('utenti-count')
+    if (cnt) cnt.textContent = (count ?? 0).toLocaleString('it') + ' account cancellati · il riepilogo resta 30 giorni'
+
+    tbody.innerHTML = !data.length
+      ? `<tr><td colspan="6"><div style="padding:32px;text-align:center;color:var(--text-3)">Nessun account cancellato negli ultimi 30 giorni</div></td></tr>`
+      : data.map(d => {
+          const scheduled = d.status === 'scheduled'
+          const when = scheduled
+            ? `prevista ${d.scheduled_for ? fmtDate(d.scheduled_for) : 'a breve'}`
+            : `${fmtDate(d.deleted_at)} · ${DELETED_BY_LABEL[d.deleted_by] || '-'}`
+          return `<tr class="adm-table-row adm-utente-row" onclick="showDeletedDetail('${d.id}')" style="cursor:pointer">
+            <td>
+              <div class="adm-user-cell">
+                <div class="adm-user-avatar">${(d.email ?? '?')[0].toUpperCase()}</div>
+                <div>
+                  <div class="adm-user-name">${esc(d.email ?? '-')}</div>
+                  <div class="adm-user-sub">${d.full_name ? esc(d.full_name) + ' · ' : ''}iscritto ${fmtDate(d.registered_at)}</div>
+                </div>
+              </div>
+            </td>
+            <td>${deletedStateBadges(d)}</td>
+            <td>${d.was_premium ? '<span class="adm-badge premium"><i class="ti ti-crown"></i> PREMIUM</span>' : '<span class="adm-badge free">FREE</span>'}</td>
+            <td class="adm-time-cell">${d.scan_count ?? 0} scan · ${d.carnet_count ?? 0} carnet</td>
+            <td class="adm-time-cell">${when}</td>
+            <td class="adm-time-cell">${scheduled ? '-' : 'tra ' + daysUntil(d.purge_at) + ' gg'}</td>
+          </tr>`
+        }).join('')
+
+    renderPagination('utenti-pagination', utentiPage, Math.ceil((count??0)/PER_PAGE), 'utentiGoToPage')
+    const fc = document.getElementById('utenti-footer-count')
+    if (fc) fc.textContent = count ? `Mostrando ${Math.min((utentiPage-1)*PER_PAGE+1,count)}–${Math.min(utentiPage*PER_PAGE,count)} di ${count.toLocaleString('it')}` : ''
+  } catch(e) {
+    tbody.innerHTML = isRegistryMissing(e)
+      ? `<tr><td colspan="6"><div style="padding:28px 24px;color:var(--text-2);font-size:13px;line-height:1.6"><strong style="color:var(--amber)">Registro non ancora attivo.</strong> Esegui lo script SQL della migrazione su Supabase (crea la tabella <code class="adm-code">deleted_users</code>): finché non c'è, gli account eliminati non vengono elencati qui.</div></td></tr>`
+      : errorRow(6, e.message)
+  }
+}
+
+function showDeletedDetail(id) {
+  const d = deletedCache.find(x => x.id === id)
+  if (!d) return
+  document.querySelectorAll('.adm-utente-row').forEach(r => r.classList.remove('selected'))
+  const row = document.querySelector(`.adm-utente-row[onclick*="${id}"]`)
+  if (row) row.classList.add('selected')
+
+  const panel = document.getElementById('user-detail-panel')
+  if (!panel) return
+  panel.classList.add('visible')
+
+  const scheduled = d.status === 'scheduled'
+  const endRef = d.deleted_at || d.requested_at || new Date().toISOString()
+  const activeDays = d.registered_at ? Math.max(0, Math.round((new Date(endRef) - new Date(d.registered_at)) / 86400000)) : null
+  const row2 = (label, val) => `<div class="adm-ud-row"><span class="adm-ud-label">${label}</span><span class="adm-ud-val">${val}</span></div>`
+
+  panel.innerHTML = `
+    <div class="adm-ud-inner">
+      <div class="adm-ud-topbar"><button class="adm-ud-close" onclick="closeUserDetail()"><i class="ti ti-x"></i></button></div>
+
+      <div class="adm-ud-header">
+        <div class="adm-ud-avatar">${(d.email ?? '?')[0].toUpperCase()}</div>
+        ${d.full_name ? `<div style="font-size:13px;color:var(--text);margin-bottom:4px;font-weight:500">${esc(d.full_name)}</div>` : ''}
+        <div class="adm-ud-email">${esc(d.email ?? '-')}</div>
+        <div class="adm-ud-badges">
+          ${deletedStateBadges(d)}
+          ${d.was_premium ? '<span class="adm-badge premium" style="margin-left:4px"><i class="ti ti-crown"></i> PREMIUM</span>' : ''}
+        </div>
+      </div>
+
+      <div class="adm-ud-stats">
+        <div class="adm-ud-stat"><div class="adm-ud-stat-val">${d.scan_count ?? 0}</div><div class="adm-ud-stat-label">Scansioni</div></div>
+        <div class="adm-ud-stat"><div class="adm-ud-stat-val">${d.carnet_count ?? 0}</div><div class="adm-ud-stat-label">Carnet</div></div>
+        <div class="adm-ud-stat"><div class="adm-ud-stat-val">${d.favorites_count ?? 0}</div><div class="adm-ud-stat-label">Preferiti</div></div>
+      </div>
+
+      <div class="adm-ud-section">
+        <div class="adm-ud-section-title">CANCELLAZIONE</div>
+        ${row2('Richiesta il', fmtDate(d.requested_at))}
+        ${scheduled
+          ? row2('Eliminazione', `<span style="color:var(--amber)">alla scadenza · ${d.scheduled_for ? fmtDate(d.scheduled_for) : 'a breve'}</span>`)
+          : row2('Eliminato il', fmtDate(d.deleted_at))}
+        ${row2('Richiesta da', ({ user: 'utente', admin: 'admin', dashboard: 'Supabase (manuale)' })[d.deleted_by] || '-')}
+        ${scheduled
+          ? row2('Registro', '30 gg dopo l\'eliminazione')
+          : row2('Scheda rimossa tra', `${daysUntil(d.purge_at)} gg (${fmtDate(d.purge_at)})`)}
+      </div>
+
+      <div class="adm-ud-section">
+        <div class="adm-ud-section-title">PROFILO</div>
+        ${row2('Iscritto il', fmtDate(d.registered_at))}
+        ${activeDays !== null ? row2('Rimasto iscritto', `${activeDays} giorni`) : ''}
+        ${row2('Ultima attività', d.last_activity_at ? fmtDate(d.last_activity_at) : 'nessuna')}
+        ${d.was_premium ? row2('Piano', esc(d.subscription_plan || '-') + (d.premium_source ? ` · ${esc(d.premium_source)}` : '')) : ''}
+        ${d.was_premium && d.premium_from ? row2('Premium dal', fmtDate(d.premium_from)) : ''}
+        ${d.was_premium && d.premium_until ? row2('Premium fino al', fmtDate(d.premium_until)) : ''}
+      </div>
+
+      ${d.returned_at ? `
+      <div class="adm-ud-section">
+        <div class="adm-ud-section-title">SI È REGISTRATO DI NUOVO</div>
+        ${row2('Il', fmtDate(d.returned_at))}
+        <button class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;margin-top:6px" onclick="showUserDetail('${d.returned_user_id}')">
+          <i class="ti ti-user-search"></i> Apri il nuovo account
+        </button>
+      </div>` : ''}
+
+      <div class="adm-ud-actions">
+        ${scheduled ? `
+          <button class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center" onclick="cancelScheduledDeletion('${d.user_id}')">
+            <i class="ti ti-arrow-back-up"></i> Annulla eliminazione
+          </button>
+          <button class="adm-btn adm-btn-reject" style="width:100%;justify-content:center;margin-top:6px" onclick="deleteUserAccountModal('${d.user_id}','${esc(d.email ?? '').replace(/'/g, "\\'")}', false, '', true)">
+            <i class="ti ti-trash"></i> Elimina ora
+          </button>` : `
+          <button class="adm-btn adm-btn-reject" style="width:100%;justify-content:center" onclick="removeDeletedCard('${d.id}')">
+            <i class="ti ti-eraser"></i> Rimuovi dal registro adesso
+          </button>`}
+      </div>
+    </div>`
+}
+
+async function removeDeletedCard(id) {
+  if (!confirm('Rimuovere adesso questa scheda dal registro? Non è recuperabile.')) return
+  try {
+    const { error } = await supa.from('deleted_users').delete().eq('id', id)
+    if (error) throw error
+    showToast('Scheda rimossa dal registro')
+    closeUserDetail()
+    renderUtenti()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+async function cancelScheduledDeletion(userId) {
+  if (!confirm('Annullare l\'eliminazione programmata? L\'account resterà attivo.')) return
+  try {
+    if (!(await deleteFlowSupportsScheduling())) throw new Error('Aggiorna prima la Edge Function "delete-account" su Supabase')
+    await callDeleteAccount({ action: 'cancel', target_user_id: userId })
+    showToast('Eliminazione annullata ✓')
+    closeUserDetail()
+    renderUtenti()
+  } catch(e) { showToast(e.message, 'error') }
 }
 
 // ── USER DETAIL PANEL ─────────────────────────────────
@@ -2516,6 +2755,8 @@ async function showUserDetail(userId) {
     const prem = isPremiumActive(u)
     const initial = (u.email ?? '?')[0].toUpperCase()
     const displayName = u.display_name ?? u.full_name ?? u.nome ?? null
+    const pendingDeletion = !!u.deletion_requested_at
+    const paying = u.is_premium === true && u.premium_source === 'revenuecat' && !!u.premium_until && new Date(u.premium_until) > new Date()
 
     // Scansioni mensili: usa l'override manuale se impostato, altrimenti il conteggio reale
     const scanLimit    = prem ? 100 : 3
@@ -2623,6 +2864,16 @@ async function showUserDetail(userId) {
           </div>` : ''}
         </div>
 
+        ${pendingDeletion ? `
+        <div class="adm-ud-section">
+          <div class="adm-ud-section-title">ELIMINAZIONE PROGRAMMATA</div>
+          <div class="adm-ud-row"><span class="adm-ud-label">Richiesta il</span><span class="adm-ud-val">${fmtDate(u.deletion_requested_at)}</span></div>
+          <div class="adm-ud-row"><span class="adm-ud-label">Eliminazione</span><span class="adm-ud-val" style="color:var(--amber)">${prem && u.premium_until ? 'alla scadenza · ' + fmtDate(u.premium_until) : 'a breve'}</span></div>
+          <button class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;margin-top:6px" onclick="cancelScheduledDeletion('${u.id}')">
+            <i class="ti ti-arrow-back-up"></i> Annulla eliminazione
+          </button>
+        </div>` : ''}
+
         <div class="adm-ud-actions">
           <button class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center" onclick="editUserModal('${u.id}')">
             <i class="ti ti-edit"></i> Modifica profilo
@@ -2638,7 +2889,7 @@ async function showUserDetail(userId) {
                 <i class="ti ti-crown"></i> Attiva premium
               </button>`
           }
-          <button class="adm-btn adm-btn-reject" style="width:100%;justify-content:center;margin-top:6px" onclick="deleteUserAccountModal('${u.id}','${esc(u.email ?? '').replace(/'/g, "\\'")}')">
+          <button class="adm-btn adm-btn-reject" style="width:100%;justify-content:center;margin-top:6px" onclick="deleteUserAccountModal('${u.id}','${esc(u.email ?? '').replace(/'/g, "\\'")}', ${paying}, '${paying ? u.premium_until : ''}', ${pendingDeletion})">
             <i class="ti ti-trash"></i> Elimina account
           </button>
         </div>
@@ -2679,51 +2930,73 @@ async function revokeUserPremium(userId) {
   } catch(e) { showToast(e.message, 'error') }
 }
 
-// ── ELIMINAZIONE ACCOUNT (stessa Edge Function usata dall'app per
-// l'autoeliminazione — qui passiamo target_user_id: la function verifica
-// lato server che il chiamante sia admin prima di eliminare un altro utente) ──
-function deleteUserAccountModal(userId, email) {
+// ── ELIMINAZIONE ACCOUNT (stessa Edge Function usata dall'app: passiamo target_user_id e la function
+// verifica lato server che il chiamante sia admin). Premium a pagamento: di default la cancellazione
+// viene PROGRAMMATA alla scadenza dell'abbonamento; l'admin può forzare l'eliminazione immediata. ──
+async function deleteUserAccountModal(userId, email, paying = false, until = '', pending = false) {
+  const scheduling = await deleteFlowSupportsScheduling()
+  const who = `<strong>${esc(email || '')}</strong>`
+  const summaryNote = 'Resta per 30 giorni un riepilogo minimo (email, iscrizione, numero di scansioni) nella tab Cancellati, poi sparisce.'
+  let intro, choice = ''
+
+  if (pending) {
+    intro = `L'eliminazione di ${who} è già programmata. Se continui, l'account viene eliminato <strong>adesso</strong>, senza attendere la scadenza dell'abbonamento: profilo, storico scansioni, Carnet de dégustation e tutte le foto. ${summaryNote}`
+  } else if (paying && scheduling) {
+    intro = `${who} ha un <strong>abbonamento a pagamento</strong> attivo fino al <strong>${fmtDate(until)}</strong>. Scegli come procedere. ${summaryNote}`
+    choice = `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <label style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border-2);border-radius:8px;cursor:pointer">
+          <input type="radio" name="del-user-mode" value="auto" checked style="margin-top:2px;accent-color:var(--gold)">
+          <span style="font-size:12.5px;color:var(--text-2);line-height:1.5"><strong style="color:var(--text)">Programma alla scadenza (consigliato)</strong><br>L'utente usa l'app fino al ${fmtDate(until)}, poi l'account viene eliminato con tutti i dati.</span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border-2);border-radius:8px;cursor:pointer">
+          <input type="radio" name="del-user-mode" value="now" style="margin-top:2px;accent-color:var(--red)">
+          <span style="font-size:12.5px;color:var(--text-2);line-height:1.5"><strong style="color:var(--text)">Elimina subito</strong><br>Perde subito l'accesso e il periodo già pagato. L'abbonamento Apple resta attivo finché l'utente non lo annulla.</span>
+        </label>
+      </div>`
+  } else if (paying) {
+    intro = `${who} ha un <strong>abbonamento a pagamento</strong> attivo fino al <strong>${fmtDate(until)}</strong>, ma la Edge Function <code class="adm-code">delete-account</code> non è ancora aggiornata: l'eliminazione sarebbe <strong>immediata</strong> e perderebbe il periodo pagato. Aggiorna prima la funzione per abilitare la cancellazione programmata.`
+  } else {
+    intro = `Elimina definitivamente l'account ${who}: profilo, storico scansioni, Carnet de dégustation e tutte le foto caricate (avatar, scansioni, carnet). L'utente perde l'accesso subito. ${scheduling ? summaryNote : ''}`
+  }
+
   const html = `
     <div class="adm-edit-form">
       <div style="background:rgba(226,75,74,.08);border:1px solid rgba(226,75,74,.3);border-radius:8px;padding:14px 16px;margin-bottom:16px;">
-        <div style="color:var(--red);font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="ti ti-alert-triangle"></i> Operazione irreversibile</div>
-        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6;">Elimina definitivamente l'account <strong>${esc(email || '')}</strong>: profilo, storico scansioni, Carnet de dégustation e tutte le foto caricate (avatar, scansioni, carnet). L'utente perde l'accesso subito e i dati non sono recuperabili — esattamente come "Elimina account" dentro l'app.</div>
+        <div style="color:var(--red);font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="ti ti-alert-triangle"></i> ${pending || !paying || !scheduling ? 'Operazione irreversibile' : 'Account con abbonamento attivo'}</div>
+        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6;">${intro}</div>
       </div>
+      ${choice}
       <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;cursor:pointer;">
         <input type="checkbox" id="del-user-ack" onchange="const b=document.getElementById('del-user-confirm-btn');b.disabled=!this.checked;b.style.opacity=this.checked?'1':'.5';" style="width:17px;height:17px;margin-top:1px;flex-shrink:0;accent-color:var(--red);">
-        <span style="font-size:12.5px;color:var(--text-2);line-height:1.5;">Ho capito che l'eliminazione è definitiva e non recuperabile.</span>
+        <span style="font-size:12.5px;color:var(--text-2);line-height:1.5;">Ho capito che i contenuti eliminati non sono recuperabili.</span>
       </label>
       <div class="adm-modal-actions">
         <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
-        <button class="adm-btn adm-btn-reject" id="del-user-confirm-btn" disabled style="opacity:.5" onclick="confirmDeleteUserAccount('${userId}')">
-          <i class="ti ti-trash"></i> Elimina definitivamente
+        <button class="adm-btn adm-btn-reject" id="del-user-confirm-btn" disabled style="opacity:.5" onclick="confirmDeleteUserAccount('${userId}', ${pending})">
+          <i class="ti ti-trash"></i> Conferma
         </button>
       </div>
     </div>`
   openModal('Elimina account', html)
 }
 
-async function confirmDeleteUserAccount(userId) {
+async function confirmDeleteUserAccount(userId, pending = false) {
   const btn = document.getElementById('del-user-confirm-btn')
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Eliminazione in corso...' }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> In corso...' }
   try {
-    const { data: { session } } = await supa.auth.getSession()
-    const token = session?.access_token
-    if (!token) throw new Error('Sessione admin non valida')
-    const resp = await fetch('https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/delete-account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ target_user_id: userId })
-    })
-    const result = await resp.json().catch(() => ({}))
-    if (!resp.ok || result.error) throw new Error(result?.error || 'Errore durante l\'eliminazione')
+    const picked = document.querySelector('input[name="del-user-mode"]:checked')?.value
+    const mode = pending ? 'now' : (picked || 'auto')
+    const result = await callDeleteAccount({ target_user_id: userId, action: 'delete', mode })
     closeModal()
     closeUserDetail()
-    showToast('Account eliminato definitivamente')
+    showToast(result.scheduled
+      ? `Eliminazione programmata per il ${fmtDate(result.scheduled_for)} ✓`
+      : 'Account eliminato definitivamente')
     renderUtenti()
   } catch(e) {
     showToast(e.message, 'error')
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-trash"></i> Elimina definitivamente' }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-trash"></i> Conferma' }
   }
 }
 

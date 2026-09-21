@@ -2590,7 +2590,19 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
     </div>
     <div style="padding:0 18px;margin-bottom:8px;"><button class="btn-outline" onclick="signOut()" style="border:1px solid var(--border-2);color:var(--ink-4);border-radius:var(--radius-md);padding:12px;">Esci dall'account</button></div>
-    <div style="padding:0 18px;margin-bottom:8px;"><button onclick="openDeleteAccountModal()" style="width:100%;background:none;border:none;color:#B4442E;font-family:var(--sans);font-size:13px;padding:9px;cursor:pointer;">Elimina account</button></div>
+    <div id="profile-deletion-banner" style="display:none;padding:0 18px;margin-bottom:12px;">
+      <div style="background:#FBF3E4;border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:14px 16px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <i class="ti ti-alert-triangle" style="font-size:20px;color:#B8860B;flex-shrink:0;margin-top:1px;"></i>
+          <div>
+            <div style="font-family:var(--sans);font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px;">Eliminazione account programmata</div>
+            <div id="profile-deletion-text" style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.5;"></div>
+          </div>
+        </div>
+        <button class="btn-outline" id="profile-deletion-cancel-btn" onclick="cancelAccountDeletion()" style="width:100%;margin-top:12px;border:1px solid var(--border-2);color:var(--ink-3);border-radius:var(--radius-md);padding:12px;">Annulla eliminazione</button>
+      </div>
+    </div>
+    <div id="profile-delete-account-row" style="padding:0 18px;margin-bottom:8px;"><button onclick="openDeleteAccountModal()" style="width:100%;background:none;border:none;color:#B4442E;font-family:var(--sans);font-size:13px;padding:9px;cursor:pointer;">Elimina account</button></div>
     <div style="padding:0 18px 24px;text-align:center;font-family:var(--sans);font-size:13px;color:var(--ink-5);"><span id="app-version-block">Cuvée v<span id="app-version-label">1.0</span> · </span>© 2026 · <a href="https://cuvee-champagne.coralweb.it/privacy-policy.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">Privacy</a> · <a href="https://cuvee-champagne.coralweb.it/termini-e-condizioni.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">Termini</a> · <a href="https://coralweb.it" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">coralweb.it</a></div>
   </div>
   
@@ -3852,14 +3864,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 <!-- ═══ DELETE ACCOUNT MODAL ═══ -->
 <div id="delete-account-modal">
-  <div class="scan-limit-inner">
+  <div class="scan-limit-inner" style="max-height:88vh;overflow-y:auto;">
     <div class="scan-limit-emoji">⚠️</div>
-    <div class="scan-limit-title">Eliminare il tuo account?</div>
-    <div class="scan-limit-desc" id="delete-account-desc">Perderai per sempre lo Storico scansioni, il Carnet de dégustation e tutte le foto caricate. L'operazione non può essere annullata.</div>
+    <div class="scan-limit-title" id="delete-account-title">Eliminare il tuo account?</div>
+    <div class="scan-limit-desc" id="delete-account-desc" style="text-align:left;">Perderai per sempre lo Storico scansioni, il Carnet de dégustation e tutte le foto caricate. L'operazione non può essere annullata.</div>
+    <button class="btn-outline" id="delete-account-manage-btn" onclick="openManageSubscriptions()" style="display:none;width:100%;margin:0 0 14px;border:1px solid var(--border-2);color:var(--ink-3);border-radius:var(--radius-md);padding:12px;">Apri gestione abbonamenti</button>
     <div class="scan-limit-sep"></div>
     <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;cursor:pointer;">
       <input type="checkbox" id="delete-account-ack" onchange="_toggleDeleteAccountBtn()" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:#B4442E;">
-      <span style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.5;">Ho capito che l'operazione è definitiva e che tutti i miei dati verranno cancellati.</span>
+      <span id="delete-account-ack-text" style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.5;">Ho capito che l'operazione è definitiva e che tutti i miei dati verranno cancellati.</span>
     </label>
     <button class="btn-gold" id="delete-account-confirm-btn" onclick="confirmDeleteAccount()" disabled style="width:100%;margin-top:0;background:#B4442E;opacity:.4;">Elimina definitivamente</button>
     <button class="scan-limit-skip" onclick="closeDeleteAccountModal()">Annulla</button>
@@ -3925,6 +3938,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=257"></script>
+<script src="js/app.js?v=259"></script>
 </body>
 </html>
