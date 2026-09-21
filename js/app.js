@@ -43,6 +43,7 @@ function go(id){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const target=document.getElementById(id);
   if(target){target.classList.add('active');}
+  _trackPushEngagement(id);
   const scrl=document.querySelector('#'+id+' .scroll');
   if(scrl)scrl.scrollTo(0,0);
   // Load dynamic data when entering certain views
@@ -5121,11 +5122,28 @@ async function onEnablePushClick() {
   if (ok) showAppToast('Notifiche attivate', 3000);
 }
 
-// Richiesta "morbida" una sola volta, subito dopo la prima scansione riuscita: è il momento in cui l'app
-// ha appena mostrato il proprio valore. Se l'utente rifiuta, resta la scheda nella pagina Notifiche.
+// Richiesta "morbida" una sola volta, quando l'utente ha già esplorato l'app: appena ha aperto due sezioni
+// diverse (Guida, Produttori, Champagne, Carnet...), in qualunque momento e in qualunque sessione. Non
+// dipende dalla prima scansione, che un utente senza bottiglie a portata di mano può fare molto più tardi.
+// Se rifiuta, resta la scheda nella pagina Notifiche.
+const PUSH_SECTIONS_KEY = 'cuvee_push_sections';
+const PUSH_SECTION_VIEWS = ['v-guida', 'v-maison', 'v-bottiglie', 'v-carnet', 'v-scan-history', 'v-salvati', 'v-wishlist', 'v-confronta'];
+
+function _trackPushEngagement(viewId) {
+  if (!PUSH_SECTION_VIEWS.includes(viewId) || !_pushSupported() || !currentUser) return;
+  try {
+    if (localStorage.getItem(PUSH_PROMPTED_KEY)) return;
+    const seen = JSON.parse(localStorage.getItem(PUSH_SECTIONS_KEY) || '[]');
+    if (!seen.includes(viewId)) { seen.push(viewId); localStorage.setItem(PUSH_SECTIONS_KEY, JSON.stringify(seen)); }
+    if (seen.length >= 2) setTimeout(maybeSoftAskPush, 1500);
+  } catch(e) {}
+}
+
 async function maybeSoftAskPush() {
   if (!_pushSupported() || !currentUser) return;
-  if (document.querySelector('.view.active')?.id !== 'v-scan-result') return;
+  // Solo mentre l'utente sta guardando una sezione, e mai sopra un altro popup
+  if (!PUSH_SECTION_VIEWS.includes(document.querySelector('.view.active')?.id)) return;
+  if (document.querySelector('#welcome-modal.on, #delete-account-modal.on, #scan-not-champagne-modal.on, #notification-detail-modal.on, #push-prompt-modal.on')) return;
   try { if (localStorage.getItem(PUSH_PROMPTED_KEY)) return; } catch(e) { return; }
   let perm = null;
   try { perm = await _pushPlugin().checkPermissions(); } catch(e) { return; }
@@ -7250,7 +7268,6 @@ function closeScanLimitModal() {
 // scansione dallo storico.
 function _showScanResultPage(result, photoDataUrl, isFreshScan) {
   _renderScanResult(result, photoDataUrl, isFreshScan);
-  if (isFreshScan && result.is_bottle !== false && result.is_wine !== false && result.is_champagne !== false) setTimeout(maybeSoftAskPush, 2500);
   // Nasconde il cestino (visibile solo se aperto dallo storico)
   _currentHistoryIdx = null;
   const btn = document.getElementById('scan-result-delete-btn');
