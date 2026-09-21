@@ -7450,8 +7450,6 @@ async function openDeleteAccountModal() {
   if (btn) { btn.disabled = true; btn.classList.remove('ready'); }
   if (manage) manage.style.display = 'none';
 
-  const summary = 'Dopo l\'eliminazione conserviamo per 30 giorni solo un breve riepilogo (email, data di iscrizione, numero di scansioni) per statistiche interne e prevenzione abusi; poi viene cancellato anche quello.';
-
   if (!scheduling) {
     // Funzione lato server non ancora aggiornata: comportamento storico, con il suo avviso
     if (title) title.textContent = 'Eliminare il tuo account?';
@@ -7468,14 +7466,14 @@ async function openDeleteAccountModal() {
       + (renewalOff
         ? '<br><br>Il rinnovo automatico è già disattivato: non ci saranno nuovi addebiti.'
         : '<br><br><strong>Attenzione:</strong> eliminare l\'account non annulla l\'abbonamento. Per non essere addebitato di nuovo, annulla il rinnovo dalle impostazioni abbonamenti; se il rinnovo resta attivo, l\'eliminazione slitta alla nuova scadenza.')
-      + '<br><br>Puoi annullare la richiesta in qualsiasi momento prima della scadenza. ' + summary;
+      + '<br><br>Puoi annullare la richiesta in qualsiasi momento prima della scadenza.';
     if (ackTxt) ackTxt.textContent = 'Ho capito: l\'account verrà eliminato alla scadenza dell\'abbonamento e i contenuti non saranno recuperabili.';
     if (btn) btn.textContent = 'Programma l\'eliminazione';
     if (manage && !renewalOff) manage.style.display = 'block';
   } else {
     if (title) title.textContent = 'Eliminare il tuo account?';
     if (desc) desc.innerHTML =
-      'Il tuo account verrà eliminato <strong>subito</strong>, insieme a Storico scansioni, Carnet de dégustation e a tutte le foto caricate. L\'operazione non può essere annullata.<br><br>' + summary;
+      'Il tuo account verrà eliminato <strong>subito</strong>, insieme a Storico scansioni, Carnet de dégustation e a tutte le foto caricate. L\'operazione non può essere annullata.';
     if (ackTxt) ackTxt.textContent = 'Ho capito che l\'operazione è definitiva e che tutti i miei contenuti verranno cancellati.';
     if (btn) btn.textContent = 'Elimina definitivamente';
   }
