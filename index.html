@@ -279,7 +279,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div id="push-enable-card" style="display:none;padding:16px 18px 0;">
       <div style="background:var(--white);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:16px;">
         <div style="display:flex;gap:12px;align-items:flex-start;">
-          <i class="ti ti-bell-ringing" style="font-size:24px;color:var(--gold);flex-shrink:0;margin-top:1px;"></i>
+          <i class="ti ti-bell" style="font-size:24px;color:var(--gold);flex-shrink:0;margin-top:1px;"></i>
           <div>
             <div style="font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:600;margin-bottom:4px;" id="push-card-title">Ricevi le novità sul telefono</div>
             <div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.55;" id="push-card-text">Nuove cuvée, funzioni e aggiornamenti importanti, direttamente sulla schermata del telefono. Puoi disattivarle quando vuoi.</div>
@@ -3894,7 +3894,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <!-- ═══ PUSH: richiesta soft del permesso (mostrata una sola volta dopo la prima scansione) ═══ -->
 <div id="push-prompt-modal">
   <div class="scan-limit-inner">
-    <div class="scan-limit-emoji">🔔</div>
+    <div class="scan-limit-icon-badge"><i class="ti ti-bell"></i></div>
     <div class="scan-limit-title">Vuoi restare aggiornato?</div>
     <div class="scan-limit-desc">Ti avviseremo solo per novità utili: nuove cuvée in catalogo, funzioni nuove e aggiornamenti importanti. Puoi disattivare le notifiche quando vuoi dalle Impostazioni del telefono.</div>
     <div class="scan-limit-sep"></div>
