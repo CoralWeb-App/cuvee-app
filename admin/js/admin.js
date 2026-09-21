@@ -173,6 +173,11 @@ function fmtTipo(t) {
            blanc_de_noirs:'Blanc de Noirs', rose:'Rosé' }[t] ?? (t ?? '-')
 }
 
+// Premium "attivo" = flag acceso E scadenza non passata. Il solo flag può restare vero dopo la scadenza
+// (finché l'app o il webhook non lo riallineano), quindi i conteggi devono guardare anche la data.
+const activePremium = (q) => q.eq('is_premium', true).or(`premium_until.is.null,premium_until.gt.${new Date().toISOString()}`)
+const notActivePremium = (q) => q.or(`is_premium.eq.false,is_premium.is.null,premium_until.lte.${new Date().toISOString()}`)
+
 function isPremiumActive(u) {
   return u.is_premium === true && (!u.premium_until || new Date(u.premium_until) > new Date())
 }
@@ -615,7 +620,7 @@ async function loadDashboard() {
       supa.from('foto_bottiglia_pending').select('*', { count:'exact', head:true }).eq('status', 'pending'),
       supa.from('bottle_scans').select('*', { count:'exact', head:true }).gte('created_at', todayStart.toISOString()),
       supa.from('bottle_scans').select('*', { count:'exact', head:true }),
-      supa.from('users').select('*', { count:'exact', head:true }).eq('is_premium', true),
+      activePremium(supa.from('users').select('*', { count:'exact', head:true })),
     ])
     const cPending = (cPendingBottiglie ?? 0) + (cPendingMaison ?? 0) + (cPendingFoto ?? 0)
 
@@ -2440,8 +2445,8 @@ async function renderUtenti() {
       .order('created_at', { ascending: false })
       .range((utentiPage-1)*PER_PAGE, utentiPage*PER_PAGE - 1)
 
-    if (utentiFilter === 'premium') query = query.eq('is_premium', true)
-    if (utentiFilter === 'free')    query = query.eq('is_premium', false)
+    if (utentiFilter === 'premium') query = activePremium(query)
+    if (utentiFilter === 'free')    query = notActivePremium(query)
     if (utentiSearch) {
       const n = norm(utentiSearch)
       query = query.ilike('email', `%${utentiSearch}%`)
@@ -3487,7 +3492,7 @@ async function loadStats() {
       supa.from('maison').select('*', { count:'exact', head:true }).eq('needs_review', false).eq('is_published', true),
       supa.from('maison').select('*', { count:'exact', head:true }).eq('needs_review', true),
       supa.from('users').select('*', { count:'exact', head:true }),
-      supa.from('users').select('*', { count:'exact', head:true }).eq('is_premium', true),
+      activePremium(supa.from('users').select('*', { count:'exact', head:true })),
       supa.from('users').select('*', { count:'exact', head:true }).eq('newsletter_opt_in', true),
       supa.from('wishlist').select('*', { count:'exact', head:true }),
     ])
