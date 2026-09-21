@@ -96,7 +96,7 @@ function go(id){
 const CARNET_CENTRAL_BTN_VIEWS = ['v-carnet','v-carnet-new','v-carnet-detail','v-carnet-session-detail'];
 function updateBottomNav(id){
   // View senza bottom nav (fuori dall'app: splash, onboarding, auth, paywall)
-  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-age-gate-pre','v-complete-profile','v-carnet-new','v-confronta'];
+  const noNav = ['v-splash','v-onb','v-reg','v-login','v-success','v-paywall','v-age-gate','v-age-gate-pre','v-complete-profile','v-carnet-new','v-confronta','v-cantina'];
   const nav = document.getElementById('shared-bottom-nav');
   if(nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
 

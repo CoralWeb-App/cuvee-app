@@ -219,7 +219,11 @@ function cvRenderInfo() {
   const extra = [];
   if (b.price != null) extra.push('€ ' + Number(b.price).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
   if (b.purchased_at) extra.push('acquistata il ' + new Date(b.purchased_at + 'T12:00:00').toLocaleDateString('it-IT'));
-  el.innerHTML = '<div class="cv-info-top"><div><div class="cv-maison">' + cvEsc(b.maison) + '</div><div class="cv-cuvee">' + cvEsc(b.cuvee) + '</div></div><button class="cv-x" data-a="close" aria-label="Chiudi">×</button></div>' +
+  const th = (field, label) => b[field]
+    ? '<button class="cv-th" data-a="photo" data-f="' + field + '" aria-label="' + label + '"><img src="' + cvEsc(b[field]) + '" alt="' + label + '"></button>'
+    : '<button class="cv-th empty" data-a="photo" data-f="' + field + '" aria-label="Aggiungi ' + label + '"><i class="ti ti-camera-plus"></i><span>' + label + '</span></button>';
+  el.innerHTML = '<div class="cv-info-top"><div style="flex:1;min-width:0;"><div class="cv-maison">' + cvEsc(b.maison) + '</div><div class="cv-cuvee">' + cvEsc(b.cuvee) + '</div></div>' +
+    '<div class="cv-ths">' + th('photo_url', 'Fronte') + th('photo_back_url', 'Retro') + '</div><button class="cv-x" data-a="close" aria-label="Chiudi">×</button></div>' +
     '<div class="cv-tags"><span class="cv-tag"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + t.dot + ';margin-right:5px"></i>' + t.label + '</span><span class="cv-tag">' + cvEsc(cvYearText(b)) + '</span>' +
     extra.map(x => '<span class="cv-tag">' + cvEsc(x) + '</span>').join('') + '</div>' +
     (b.notes ? '<div class="cv-pos" style="color:var(--ink-4);font-style:italic;">“' + cvEsc(b.notes.length > 90 ? b.notes.slice(0, 90) + '…' : b.notes) + '”</div>' : '') +
@@ -237,6 +241,7 @@ cvEl('cv-info').addEventListener('click', e => {
     case 'add': cvStartAdd({ unit: u, row: r, col: c }); break;
     case 'move': if (b) { CV.moveId = b.id; CV.sel = null; cvRefresh(false); } break;
     case 'open': if (b) cvStappa(b); break;
+    case 'photo': if (b) cvPhotoTap(b, a.dataset.f); break;
     case 'remove': if (b) cvRemove(b); break;
   }
 });
@@ -269,7 +274,7 @@ async function cvDeleteBottle(b) {
 async function cvRemove(b) {
   const i = await cvAsk('Rimuovere la bottiglia?', '«' + b.cuvee + '» esce dalla cantina. Non finisce nel Carnet.', [{ label: 'Rimuovi', cls: 'danger' }]);
   if (i !== 0) return;
-  if (await cvDeleteBottle(b)) { cvToast('Bottiglia rimossa'); cvRefresh(true); }
+  if (await cvDeleteBottle(b)) { cvToast('Bottiglia rimossa'); cvRefresh(true); cvDeleteOwnPhotos([b.photo_url, b.photo_back_url]); }
 }
 async function cvStappa(b) {
   const i = await cvAsk('Stappata!', '«' + b.cuvee + '» esce dalla cantina. Vuoi scrivere subito la nota di degustazione?',
@@ -277,8 +282,8 @@ async function cvStappa(b) {
   if (i < 0) return;
   if (!(await cvDeleteBottle(b))) return;
   cvRefresh(true);
-  if (i === 0) await cvOpenCarnet(b);
-  else cvToast('Bottiglia tolta dalla cantina');
+  if (i === 0) await cvOpenCarnet(b);   // la foto resta: la usa la nota del Carnet
+  else { cvToast('Bottiglia tolta dalla cantina'); cvDeleteOwnPhotos([b.photo_url, b.photo_back_url]); }
 }
 async function cvOpenCarnet(b) {
   try { await ensureBottiglieLoaded(); } catch (_) { /* si prosegue con i dati della cantina */ }
@@ -290,6 +295,61 @@ async function cvOpenCarnet(b) {
   openNewNoteFromBottiglia('cellar-tmp');
   const hid = document.getElementById('note-bottiglia-id'); if (hid) hid.value = '';
   currentBottiglia = prev;
+}
+
+/* ───────── Foto ───────── */
+const cvReadFile = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+function cvPickPhoto(cb) {
+  const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
+  i.onchange = async () => {
+    const f = i.files && i.files[0]; if (!f) return;
+    try { cb(await _compressDataUrl(await cvReadFile(f), 1200, 0.8)); } catch (_) { cvToast('Non riesco a leggere la foto'); }
+  };
+  i.click();
+}
+async function cvUploadPhoto(dataUrl) {
+  const blob = await (await fetch(dataUrl)).blob();
+  const path = currentUser.id + '/cellar_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7) + '.jpg';
+  const { error } = await supa.storage.from('carnet-photos').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+  if (error) throw error;
+  return supa.storage.from('carnet-photos').getPublicUrl(path).data.publicUrl;
+}
+// Percorso di una foto caricata da qui (solo quelle: mai le foto del catalogo o del Carnet)
+function cvOwnPath(url) {
+  if (!url) return null;
+  const m = '/carnet-photos/', i = url.indexOf(m); if (i < 0) return null;
+  let p; try { p = decodeURIComponent(url.slice(i + m.length).split('?')[0]); } catch (_) { return null; }
+  return p.startsWith(currentUser.id + '/cellar_') ? p : null;
+}
+// Toglie dallo spazio le foto non più usate da nessuna bottiglia della cantina
+async function cvDeleteOwnPhotos(urls) {
+  const inUse = new Set();
+  CV.bottles.forEach(b => { inUse.add(b.photo_url); inUse.add(b.photo_back_url); });
+  const paths = [...new Set(urls)].filter(u => u && !inUse.has(u)).map(cvOwnPath).filter(Boolean);
+  if (paths.length) { try { await supa.storage.from('carnet-photos').remove(paths); } catch (_) { /* resta un file inutilizzato, non è un problema */ } }
+}
+async function cvSetPhoto(b, field, dataUrl) {
+  const old = b[field]; let url = null;
+  if (dataUrl) { try { url = await cvUploadPhoto(dataUrl); } catch (e) { cvToast('Foto non caricata: ' + cvErrText(e)); return false; } }
+  const { error } = await supa.from('cellar_bottles').update({ [field]: url }).eq('id', b.id);
+  if (error) { cvToast(cvErrText(error)); if (url) cvDeleteOwnPhotos([url]); return false; }
+  b[field] = url; cvRefresh(false); cvDeleteOwnPhotos([old]);
+  return true;
+}
+function cvPhotoTap(b, field) {
+  if (!b[field]) { cvPickPhoto(d => cvSetPhoto(b, field, d)); return; }
+  const label = field === 'photo_url' ? 'Fronte' : 'Controetichetta';
+  const ov = document.createElement('div'); ov.className = 'cv-photo';
+  ov.innerHTML = '<img src="' + cvEsc(b[field]) + '" alt="' + label + '"><div class="cv-photo-bar"><span>' + label + ' · ' + cvEsc(b.cuvee) + '</span><div>' +
+    '<button data-a="change">Cambia foto</button><button data-a="remove">Rimuovi</button><button data-a="close">Chiudi</button></div></div>';
+  document.body.appendChild(ov);
+  ov.onclick = async e => {
+    const a = e.target.closest('[data-a]');
+    if (!a && e.target.tagName !== 'IMG' && e.target !== ov) return;
+    if (a && a.dataset.a === 'change') { cvPickPhoto(async d => { if (await cvSetPhoto(b, field, d)) ov.remove(); }); return; }
+    if (a && a.dataset.a === 'remove') { if (await cvSetPhoto(b, field, null)) ov.remove(); return; }
+    ov.remove();
+  };
 }
 
 /* ───────── Schede a comparsa ───────── */
@@ -364,11 +424,14 @@ function cvPrefillFromScan(r) {
     const t = String(r.not_champagne_type || '').toLowerCase();
     kind = /ross/.test(t) ? 'rosso' : /bianc/.test(t) ? 'bianco' : 'spumante';
   } else if (/ros[eé]/i.test(String(r.tipo || m.tipo || ''))) kind = 'rose';
-  const photo = r.uploaded_photo_url || m.foto_url || null;
+  // La foto scattata dall'utente ha la precedenza; altrimenti quella già salvata in catalogo
+  const own = (typeof _scanPhotoDataUrl === 'string' && _scanPhotoDataUrl) || '';
+  const fallback = [r.uploaded_photo_url, m.foto_url].find(u => u && /^https?:/.test(u)) || null;
   return {
     maison: r.maison || (m.maison && m.maison.nome) || '', cuvee: r.cuvee || m.nome || '',
     year: r.is_sa ? 'NV' : String(r.annata || m.annata || ''), kind,
-    catalog_id: r.matched_bottle_id || m.id || null, photo_url: photo && /^https?:/.test(photo) ? photo : null
+    catalog_id: r.matched_bottle_id || m.id || null,
+    photo_url: /^https?:/.test(own) ? own : fallback, photo_data: /^data:image/.test(own) ? own : null
   };
 }
 // Punti d'ingresso dal catalogo e dalla scansione
@@ -392,9 +455,15 @@ function cvOpenForm(pre) {
   if (!CV.cellars.length) { cvOpenBuilder('new', { then: () => cvOpenForm(pre) }); return; }
   const F = {
     maison: pre.maison || '', cuvee: pre.cuvee || '', year: pre.year || '', kind: pre.kind || 'champagne', qty: 1,
+    front: { url: pre.photo_url || null, data: pre.photo_data || null }, back: { data: null },
     price: '', date: '', notes: '', cellar: CV.cellars.some(c => c.id === CV.cur) ? CV.cur : CV.cellars[0].id
   };
   const target = CV.target && CV.v && CV.v.id === F.cellar ? CV.target : null;
+  const phTile = (which, label) => {
+    const p = F[which], src = p.data || p.url;
+    return '<div class="cv-ph' + (src ? ' has' : '') + '" data-ph="' + which + '">' + (src ? '<img src="' + cvEsc(src) + '" alt="' + label + '">' : '<i class="ti ti-camera-plus"></i><span>Aggiungi foto</span>') +
+      '<em>' + label + '</em>' + (src ? '<button class="cv-ph-x" data-phx="' + which + '" aria-label="Rimuovi foto">×</button>' : '') + '</div>';
+  };
   const draw = () => {
     const where = target ? 'Nel posto scelto: ' + cvPosText(target.unit, target.row, target.col) : 'Nel primo posto libero della cantina';
     cvSheet('<h2>Dettagli bottiglia</h2>' +
@@ -403,6 +472,7 @@ function cvOpenForm(pre) {
       '<label class="cv-lab">Annata (NV se senza annata)</label><input type="text" id="cvf-year" value="' + cvEsc(F.year) + '" maxlength="12" placeholder="Es. 2013 oppure NV" autocomplete="off">' +
       '<label class="cv-lab">Tipo</label><div class="cv-kinds">' + Object.entries(CV_TYPES).map(([k, t]) =>
         '<button data-k="' + k + '" class="' + (F.kind === k ? 'on' : '') + '"><i style="background:' + t.dot + '"></i>' + t.label + '</button>').join('') + '</div>' +
+      '<label class="cv-lab">Foto</label><div class="cv-phs">' + phTile('front', 'Fronte') + phTile('back', 'Controetichetta') + '</div>' +
       '<div class="cv-qty"><span>Quante bottiglie</span><div><button data-q="-1" ' + (F.qty <= 1 ? 'disabled' : '') + ' aria-label="Meno">−</button><b>' + F.qty + '</b><button data-q="1" ' + (F.qty >= 60 ? 'disabled' : '') + ' aria-label="Più">+</button></div></div>' +
       '<div class="cv-two"><div><label class="cv-lab">Prezzo pagato (€)</label><input type="text" inputmode="decimal" id="cvf-price" value="' + cvEsc(F.price) + '" placeholder="Facoltativo"></div>' +
       '<div><label class="cv-lab">Data d\'acquisto</label><input type="date" id="cvf-date" value="' + cvEsc(F.date) + '"></div></div>' +
@@ -419,6 +489,8 @@ function cvOpenForm(pre) {
     };
     sh.onchange = e => { if (e.target.id === 'cvf-cellar') { F.cellar = e.target.value; CV.cur = F.cellar; CV.v = cvBuildView(); draw(); } };
     sh.onclick = async e => {
+      const px = e.target.closest('[data-phx]'); if (px) { F[px.dataset.phx] = {}; draw(); return; }
+      const ph = e.target.closest('[data-ph]'); if (ph) { cvPickPhoto(d => { F[ph.dataset.ph] = { data: d }; draw(); }); return; }
       const k = e.target.closest('[data-k]'); if (k) { F.kind = k.dataset.k; draw(); return; }
       const q = e.target.closest('[data-q]'); if (q) { F.qty = Math.max(1, Math.min(60, F.qty + +q.dataset.q)); draw(); return; }
       if (e.target.id === 'cvf-save') await save();
@@ -431,12 +503,17 @@ function cvOpenForm(pre) {
     const priceRaw = F.price.trim().replace(',', '.');
     if (priceRaw && !(Number(priceRaw) >= 0)) { cvToast('Il prezzo non è valido'); return; }
     const btn = cvEl('cvf-save'); btn.disabled = true; btn.textContent = 'Aggiungo…';
-    const bottle = { maison, cuvee, year, kind: F.kind, catalog_id: pre.catalog_id || '', photo_url: pre.photo_url || '', price: priceRaw, purchased_at: F.date, notes: F.notes.trim() };
+    let front = F.front.url || '', back = '';
+    try {
+      if (F.front.data) front = await cvUploadPhoto(F.front.data);
+      if (F.back.data) back = await cvUploadPhoto(F.back.data);
+    } catch (e) { cvToast('Foto non caricata: ' + cvErrText(e)); btn.disabled = false; btn.textContent = 'Aggiungi in cantina'; return; }
+    const bottle = { maison, cuvee, year, kind: F.kind, catalog_id: pre.catalog_id || '', photo_url: front, photo_back_url: back, price: priceRaw, purchased_at: F.date, notes: F.notes.trim() };
     const t = target && target.unit ? target : null;
     const { data, error } = await supa.rpc('cellar_add_bottles', {
       p_cellar: F.cellar, p_unit: t ? t.unit : null, p_row: t ? t.row : null, p_col: t ? t.col : null, p_bottle: bottle, p_qty: F.qty
     });
-    if (error) { cvToast(cvErrText(error)); btn.disabled = false; btn.textContent = 'Aggiungi in cantina'; return; }
+    if (error) { cvToast(cvErrText(error)); btn.disabled = false; btn.textContent = 'Aggiungi in cantina'; cvDeleteOwnPhotos([F.front.data ? front : '', back]); return; }
     const placed = typeof data === 'number' ? data : F.qty;
     try { await cvLoad(true); } catch (_) { /* la lista si aggiorna alla prossima apertura */ }
     CV.cur = F.cellar; CV.sel = null; CV.moveId = null; CV.target = null; CV.scanTarget = null;
@@ -531,9 +608,11 @@ function cvOpenBuilder(mode, opts) {
     const n = CV.bottles.filter(x => x.cellar_id === CV.v.id).length;
     const i = await cvAsk('Eliminare la cantina?', '«' + CV.v.name + '»' + (n ? ' e le sue ' + n + ' bottiglie' : '') + ' verranno eliminate. Non si può annullare.', [{ label: 'Elimina cantina', cls: 'danger' }]);
     if (i !== 0) { draw(); return; }
+    const photos = CV.bottles.filter(x => x.cellar_id === CV.v.id).flatMap(x => [x.photo_url, x.photo_back_url]);
     const { error } = await supa.from('cellars').delete().eq('id', CV.v.id);
     if (error) { cvToast(cvErrText(error)); return; }
     CV.cur = null; try { await cvLoad(true); } catch (_) { /* vedi sopra */ }
+    cvDeleteOwnPhotos(photos);
     CV.sel = null; cvToast('Cantina eliminata'); cvRefresh(true);
   };
   draw();
