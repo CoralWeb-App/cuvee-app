@@ -2370,6 +2370,7 @@ async function loadUserProfile() {
     updateProfileUI(currentUser.profile);
     updatePremiumUI();
     initPush();
+    _touchLastSeen();
 
     // Load counts in background - don't block
     updateCarnetUI().catch(() => {});
@@ -5169,7 +5170,7 @@ function _paintEnableCard(prefix, state) {
     if (btn) btn.style.display = 'none';
   } else {
     if (title) title.textContent = 'Ricevi le novità sul telefono';
-    if (text) text.textContent = 'Nuove cuvée, funzioni e aggiornamenti importanti, direttamente sulla schermata del telefono. Puoi disattivarle quando vuoi.';
+    if (text) text.textContent = 'Novità, suggerimenti e offerte su Cuvée, direttamente sulla schermata del telefono. Puoi disattivarle quando vuoi da Profilo → Impostazioni → Notifiche.';
     if (btn) { btn.style.display = 'block'; btn.disabled = false; }
   }
 }
@@ -5210,7 +5211,7 @@ async function updatePushSettings() {
   } else {
     _paintEnableCard('pns', state);
   }
-  if (note) note.textContent = 'Le notifiche ti avvisano solo di novità utili. Il messaggio resta sempre consultabile dalla campanella nella Home. La scelta vale per questo telefono.';
+  if (note) note.textContent = 'Le notifiche ti avvisano di novità, suggerimenti e offerte, anche in base a come usi l\'app. Ogni messaggio resta consultabile dalla campanella nella Home. La scelta vale per questo telefono.';
 }
 
 async function onEnablePushClick(btn) {
@@ -5264,19 +5265,58 @@ async function acceptPushPrompt() {
   if (await enablePush()) showAppToast('Notifiche attivate', 3000);
 }
 
-let _notificationsCache = [];
+let _notificationsCache = [];   // messaggi per tutti + messaggi personali (id "p:<uuid>"), dal più recente
 let _readNotifIds = new Set();
+let _currentNotifDetail = null;
+
+// Azioni che un pulsante dentro un messaggio può eseguire. L'elenco è fisso: dal pannello si sceglie l'azione tra
+// queste e si personalizza solo il testo del pulsante.
+const NOTIFICATION_ACTIONS = {
+  scan:      () => startScan('explore'),
+  new_note:  () => checkAndNewNote(),
+  carnet:    () => go('v-carnet'),
+  premium:   () => go(isPremium() ? 'v-subscription' : 'v-paywall'),
+  catalog:   () => go('v-bottiglie'),
+  producers: () => go('v-maison'),
+  guide:     () => go('v-guida'),
+  glossary:  () => go('v-guida-glossario'),
+  home:      () => go('v-home'),
+};
+const NOTIFICATION_ACTION_LABELS = {
+  scan: 'Scansiona una bottiglia', new_note: 'Nuova degustazione', carnet: 'Apri il Carnet', premium: 'Scopri Premium',
+  catalog: 'Esplora gli Champagne', producers: 'Esplora i Produttori', guide: 'Apri la Guida', glossary: 'Apri il Glossario', home: 'Vai alla Home',
+};
+function runNotificationAction(action) { const fn = NOTIFICATION_ACTIONS[action]; if (fn) fn(); }
+
+const _escNotif = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Messaggi personali (notifiche automatiche): gli ultimi 60 giorni. Se la tabella non c'è ancora, semplicemente non ce ne sono.
+async function _fetchPersonal() {
+  if (!currentUser) return [];
+  try {
+    const since = new Date(Date.now() - 60 * 86400000).toISOString();
+    const { data, error } = await supa.from('personal_notifications')
+      .select('id, title, body, cta_label, cta_action, created_at, read_at')
+      .eq('user_id', currentUser.id).gte('created_at', since).order('created_at', { ascending: false });
+    return error ? [] : (data || []);
+  } catch(e) { return []; }
+}
+const _personalToItem = (r) => ({ id: 'p:' + r.id, personal: true, title: r.title, body: r.body, created_at: r.created_at, cta_label: r.cta_label, cta_action: r.cta_action });
 
 async function _fetchUnreadActiveIds() {
   const { data: active, error: e1 } = await supa.from('notifications').select('id').eq('is_active', true);
   if (e1) throw e1;
   const activeIds = (active || []).map(n => n.id);
-  if (!activeIds.length) return [];
-  const { data: reads, error: e2 } = await supa.from('notification_reads')
-    .select('notification_id').eq('user_id', currentUser.id);
-  if (e2) throw e2;
-  const readSet = new Set((reads || []).map(r => r.notification_id));
-  return activeIds.filter(id => !readSet.has(id));
+  let unread = [];
+  if (activeIds.length) {
+    const { data: reads, error: e2 } = await supa.from('notification_reads')
+      .select('notification_id').eq('user_id', currentUser.id);
+    if (e2) throw e2;
+    const readSet = new Set((reads || []).map(r => r.notification_id));
+    unread = activeIds.filter(id => !readSet.has(id));
+  }
+  const personal = await _fetchPersonal();
+  return unread.concat(personal.filter(r => !r.read_at).map(r => 'p:' + r.id));
 }
 
 // Numero dei messaggi non letti: cerchietto rosso sulla campanella in Home e sull'icona dell'app.
@@ -5310,8 +5350,16 @@ async function checkUnreadNotifications() {
   } catch(e) { console.log('checkUnreadNotifications error:', e); }
 }
 
+// Ultimo accesso dell'utente (serve alle notifiche di "ritorno"): al massimo una volta ogni 30 minuti
+let _lastSeenPing = 0;
+function _touchLastSeen() {
+  if (!currentUser || Date.now() - _lastSeenPing < 30 * 60000) return;
+  _lastSeenPing = Date.now();
+  supa.rpc('touch_last_seen').then(({ error }) => { if (error) console.log('touch_last_seen error:', error.message); });
+}
+
 // Tornando nell'app da un'altra, il numero si riallinea (nel frattempo possono essere arrivati messaggi)
-document.addEventListener('visibilitychange', () => { if (!document.hidden && currentUser) checkUnreadNotifications(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && currentUser) { checkUnreadNotifications(); _touchLastSeen(); } });
 
 async function renderNotificationsUI() {
   const listEl = document.getElementById('notifications-list');
@@ -5324,11 +5372,14 @@ async function renderNotificationsUI() {
       .eq('is_active', true)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    _notificationsCache = data || [];
+    const personal = await _fetchPersonal();
+    _notificationsCache = (data || []).concat(personal.map(_personalToItem))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const { data: reads, error: e2 } = await supa.from('notification_reads')
       .select('notification_id').eq('user_id', currentUser.id);
     if (e2) throw e2;
     _readNotifIds = new Set((reads || []).map(r => r.notification_id));
+    personal.filter(r => r.read_at).forEach(r => _readNotifIds.add('p:' + r.id));
     renderNotificationsList();
     updatePushCard();
   } catch(e) {
@@ -5357,11 +5408,11 @@ function renderNotificationsList() {
     + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;">'
     + '<div style="display:flex;align-items:center;gap:7px;min-width:0;">'
     + (isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:#B4442E;flex-shrink:0;"></span>' : '')
-    + '<div style="font-family:var(--sans);font-size:14.5px;font-weight:' + (isUnread ? '600' : '500') + ';color:' + (isUnread ? 'var(--ink)' : 'var(--ink-3)') + ';">' + n.title + '</div>'
+    + '<div style="font-family:var(--sans);font-size:14.5px;font-weight:' + (isUnread ? '600' : '500') + ';color:' + (isUnread ? 'var(--ink)' : 'var(--ink-3)') + ';">' + _escNotif(n.title) + '</div>'
     + '</div>'
     + '<div style="font-family:var(--sans);font-size:11.5px;color:var(--ink-5);white-space:nowrap;flex-shrink:0;padding-top:1px;">' + new Date(n.created_at).toLocaleDateString('it-IT', {day:'numeric', month:'short'}) + '</div>'
     + '</div>'
-    + '<div style="font-family:var(--sans);font-size:13.5px;color:var(--ink-4);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + n.body + '</div>'
+    + '<div style="font-family:var(--sans);font-size:13.5px;color:var(--ink-4);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + _escNotif(n.body) + '</div>'
     + '<div style="font-family:var(--sans);font-size:12px;color:' + (isUnread ? 'var(--gold)' : 'var(--ink-5)') + ';font-weight:600;margin-top:8px;">Leggi tutto <i class="ti ti-chevron-right" style="font-size:11px;"></i></div>'
     + '</div>'
   );
@@ -5388,7 +5439,11 @@ async function markAllNotificationsRead() {
   unreadIds.forEach(id => _readNotifIds.add(id));
   renderNotificationsList();
   _paintUnreadBadge(0);
-  const rows = unreadIds.map(id => ({ user_id: currentUser.id, notification_id: id }));
+  const broadcastIds = unreadIds.filter(id => !String(id).startsWith('p:'));
+  const personalIds = unreadIds.filter(id => String(id).startsWith('p:')).map(id => id.slice(2));
+  personalIds.forEach(pid => supa.rpc('mark_personal_read', { p_id: pid }).then(({ error }) => { if (error) console.log('mark_personal_read error:', error.message); }));
+  if (!broadcastIds.length) return;
+  const rows = broadcastIds.map(id => ({ user_id: currentUser.id, notification_id: id }));
   const { error } = await supa.from('notification_reads').upsert(rows, { onConflict: 'user_id,notification_id' });
   if (error) console.log('markAllNotificationsRead error:', error);
 }
@@ -5396,18 +5451,38 @@ async function markAllNotificationsRead() {
 function openNotificationDetail(id) {
   const n = _notificationsCache.find(x => x.id === id);
   if (!n) return;
+  _currentNotifDetail = n;
   document.getElementById('notif-detail-title').textContent = n.title;
   document.getElementById('notif-detail-date').textContent = new Date(n.created_at).toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
   document.getElementById('notif-detail-body').textContent = n.body;
+  const cta = document.getElementById('notif-detail-cta');
+  if (cta) {
+    const ok = !!(n.cta_action && NOTIFICATION_ACTIONS[n.cta_action]);
+    cta.style.display = ok ? 'block' : 'none';
+    if (ok) cta.textContent = n.cta_label || NOTIFICATION_ACTION_LABELS[n.cta_action] || 'Apri';
+  }
   document.getElementById('notification-detail-modal').classList.add('on');
 
   if (currentUser && !_readNotifIds.has(id)) {
     _readNotifIds.add(id);
     renderNotificationsList();
     _paintUnreadBadge(_notificationsCache.filter(x => !_readNotifIds.has(x.id)).length);
-    supa.from('notification_reads').upsert({ user_id: currentUser.id, notification_id: id }, { onConflict: 'user_id,notification_id' })
-      .then(({ error }) => { if (error) console.log('mark notification read error:', error); });
+    if (n.personal) {
+      supa.rpc('mark_personal_read', { p_id: id.slice(2) }).then(({ error }) => { if (error) console.log('mark_personal_read error:', error.message); });
+    } else {
+      supa.from('notification_reads').upsert({ user_id: currentUser.id, notification_id: id }, { onConflict: 'user_id,notification_id' })
+        .then(({ error }) => { if (error) console.log('mark notification read error:', error); });
+    }
   }
+}
+
+// Pulsante dentro il messaggio: registra il clic (per le statistiche delle automatiche) ed esegue l'azione
+function runNotificationCta() {
+  const n = _currentNotifDetail;
+  if (!n?.cta_action) return;
+  closeNotificationDetailModal();
+  if (n.personal) supa.rpc('mark_personal_clicked', { p_id: n.id.slice(2) }).then(({ error }) => { if (error) console.log('mark_personal_clicked error:', error.message); });
+  runNotificationAction(n.cta_action);
 }
 function closeNotificationDetailModal() {
   document.getElementById('notification-detail-modal').classList.remove('on');

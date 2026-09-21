@@ -2277,6 +2277,7 @@ async function createGlossario() {
 async function loadNotifiche() {
   const tbody = document.getElementById('notifiche-tbody')
   if (!tbody) return
+  loadAutoRules()
   tbody.innerHTML = loadingRow(5)
   try {
     const { data, error } = await supa
@@ -2319,6 +2320,148 @@ async function loadNotifiche() {
         </td>
       </tr>`).join('')
   } catch(e) { tbody.innerHTML = errorRow(5, e.message) }
+}
+
+// Azioni che un pulsante dentro un messaggio può eseguire (stesso elenco dell'app: l'azione si sceglie da qui,
+// non si scrive a mano, così ogni pulsante funziona sempre)
+const CTA_ACTIONS = {
+  scan: 'Scansiona una bottiglia', new_note: 'Nuova degustazione', carnet: 'Apri il Carnet', premium: 'Scopri Premium',
+  catalog: 'Esplora gli Champagne', producers: 'Esplora i Produttori', guide: 'Apri la Guida', glossary: 'Apri il Glossario', home: 'Vai alla Home',
+}
+const ctaOptions = (selected) => `<option value="">Nessun pulsante</option>` +
+  Object.entries(CTA_ACTIONS).map(([k, v]) => `<option value="${k}" ${k === selected ? 'selected' : ''}>${esc(v)}</option>`).join('')
+
+const AUTOMATIONS_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/run-automations'
+
+async function loadAutoRules() {
+  const box = document.getElementById('auto-rules')
+  if (!box) return
+  try {
+    const { data: rules, error } = await supa.from('auto_notifications').select('*').order('sort', { ascending: true })
+    if (error) throw error
+    if (!rules.length) { box.innerHTML = '<div style="color:var(--text-3);font-size:12px">Nessuna regola trovata.</div>'; return }
+
+    const count = async (table, filter) => {
+      let q = supa.from(table).select('*', { count: 'exact', head: true })
+      q = filter(q)
+      const { count: c } = await q
+      return c ?? 0
+    }
+    const stats = {}
+    await Promise.all(rules.map(async r => {
+      const [sent, opened, clicked] = await Promise.all([
+        count('auto_notification_log', q => q.eq('key', r.key)),
+        count('personal_notifications', q => q.eq('auto_key', r.key).eq('is_test', false).not('read_at', 'is', null)),
+        count('personal_notifications', q => q.eq('auto_key', r.key).eq('is_test', false).not('clicked_at', 'is', null)),
+      ])
+      stats[r.key] = { sent, opened, clicked }
+    }))
+    window.__autoRules = Object.fromEntries(rules.map(r => [r.key, r]))
+    const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '-'
+
+    box.innerHTML = rules.map(r => {
+      const st = stats[r.key]
+      return `<div class="adm-auto-card ${r.enabled ? 'on' : ''}">
+        <div class="adm-auto-top">
+          <div>
+            <div class="adm-auto-name">${esc(r.name)}</div>
+            <div class="adm-auto-desc">${esc(r.description)}</div>
+          </div>
+          <label class="adm-switch" title="${r.enabled ? 'Attiva' : 'Spenta'}"><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleAutoRule('${r.key}', this)"><span></span></label>
+        </div>
+        <div class="adm-auto-msg">
+          <div class="adm-auto-msg-t">${esc(r.title)}</div>
+          <div class="adm-auto-msg-b">${esc(r.body)}</div>
+          <span class="adm-auto-msg-c">${esc(r.cta_label)} → ${esc(CTA_ACTIONS[r.cta_action] || r.cta_action)}</span>
+        </div>
+        <div class="adm-auto-stats">
+          <span>Inviate <b>${st.sent}</b></span>
+          <span>Aperte <b>${st.opened}</b> (${pct(st.opened, st.sent)})</span>
+          <span>Pulsante <b>${st.clicked}</b> (${pct(st.clicked, st.sent)})</span>
+        </div>
+        <div class="adm-auto-actions">
+          <button class="adm-btn adm-btn-ghost" onclick="editAutoRule('${r.key}')"><i class="ti ti-pencil"></i> Modifica testo</button>
+          <button class="adm-btn adm-btn-ghost" onclick="testAutoRule('${r.key}', this)"><i class="ti ti-device-mobile"></i> Prova su di me</button>
+        </div>
+      </div>`
+    }).join('')
+  } catch (e) {
+    box.innerHTML = /auto_notifications|PGRST205|42P01/.test(e.message || '') || e.code === 'PGRST205'
+      ? `<div style="color:var(--text-2);font-size:12.5px;line-height:1.6"><strong style="color:var(--amber)">Notifiche automatiche non ancora attive.</strong> Esegui lo script SQL delle automatiche su Supabase: crea le regole che compaiono qui.</div>`
+      : `<div style="color:var(--red);font-size:12px;font-family:var(--mono)">${esc(e.message)}</div>`
+  }
+}
+
+async function toggleAutoRule(key, el) {
+  const enable = el.checked
+  if (enable && !confirm('Attivare questa notifica automatica?\n\nDalla prossima ora utile (10:00–20:00) la riceveranno tutti gli utenti che rispettano la regola. Puoi spegnerla quando vuoi.')) { el.checked = false; return }
+  el.disabled = true
+  try {
+    const { error } = await supa.from('auto_notifications').update({ enabled: enable, updated_at: new Date().toISOString() }).eq('key', key)
+    if (error) throw error
+    showToast(enable ? 'Notifica automatica attivata ✓' : 'Notifica automatica spenta')
+  } catch (e) { el.checked = !enable; showToast(e.message, 'error') }
+  el.disabled = false
+  loadAutoRules()
+}
+
+function editAutoRule(key) {
+  const r = (window.__autoRules || {})[key]
+  if (!r) return
+  const html = `
+    <div class="adm-edit-form">
+      <div class="adm-edit-grid">
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label class="adm-form-label">Titolo</label>
+          <input class="adm-form-input" type="text" id="ar-title" maxlength="80" value="${esc(r.title)}">
+        </div>
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label class="adm-form-label">Messaggio</label>
+          <textarea class="adm-form-input" rows="4" id="ar-body" maxlength="500">${esc(r.body)}</textarea>
+        </div>
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label class="adm-form-label">Testo del pulsante</label>
+          <input class="adm-form-input" type="text" id="ar-cta" maxlength="30" value="${esc(r.cta_label)}">
+          <div style="font-size:11.5px;color:var(--text-3);margin-top:6px">Il pulsante apre sempre: <strong>${esc(CTA_ACTIONS[r.cta_action] || r.cta_action)}</strong>. L'azione è fissa, cambia solo il testo.</div>
+        </div>
+      </div>
+      <div class="adm-modal-actions">
+        <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
+        <button class="adm-btn adm-btn-primary" onclick="saveAutoRule('${key}')"><i class="ti ti-device-floppy"></i> Salva</button>
+      </div>
+    </div>`
+  openModal('Modifica: ' + r.name, html)
+}
+
+async function saveAutoRule(key) {
+  const title = document.getElementById('ar-title')?.value.trim()
+  const body = document.getElementById('ar-body')?.value.trim()
+  const cta = document.getElementById('ar-cta')?.value.trim()
+  if (!title || !body || !cta) { showToast('Titolo, messaggio e testo del pulsante sono obbligatori', 'error'); return }
+  try {
+    const { error } = await supa.from('auto_notifications').update({ title, body, cta_label: cta, updated_at: new Date().toISOString() }).eq('key', key)
+    if (error) throw error
+    closeModal(); showToast('Testo aggiornato ✓'); loadAutoRules()
+  } catch (e) { showToast(e.message, 'error') }
+}
+
+async function testAutoRule(key, btn) {
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Invio...' }
+  try {
+    const { data: { session } } = await supa.auth.getSession()
+    if (!session?.access_token) throw new Error('Sessione admin non valida')
+    const resp = await fetch(AUTOMATIONS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ action: 'test', key }),
+    })
+    const r = await resp.json().catch(() => ({}))
+    if (resp.status === 404 && !r.error) throw new Error('Funzione run-automations non ancora pubblicata su Supabase')
+    if (!resp.ok || r.error) throw new Error(r.error || 'Errore durante la prova')
+    const sent = r.push?.sent ?? 0
+    showToast(sent ? `Prova inviata: guarda il telefono e la campanella nell'app (${sent} ${sent === 1 ? 'dispositivo' : 'dispositivi'})` : 'Messaggio creato nella tua campanella (nessun dispositivo con push attive)')
+  } catch (e) { showToast(e.message, 'error') }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-mobile"></i> Prova su di me' }
 }
 
 const PUSH_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/send-push'
@@ -2364,6 +2507,14 @@ async function openNewNotificaModal() {
         <div class="adm-form-field" style="grid-column:1/-1">
           <label class="adm-form-label">Messaggio</label>
           <textarea class="adm-form-input" rows="5" id="nn-body" maxlength="2000" placeholder="Testo del messaggio che vedrà l'utente..."></textarea>
+        </div>
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label class="adm-form-label">PULSANTE (facoltativo)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <select class="adm-form-input" id="nn-cta-action">${ctaOptions('')}</select>
+            <input class="adm-form-input" type="text" id="nn-cta-label" maxlength="30" placeholder="Testo del pulsante">
+          </div>
+          <div style="font-size:11.5px;color:var(--text-3);margin-top:6px">L'azione si sceglie dall'elenco e funziona sempre; il testo del pulsante lo scrivi tu.</div>
         </div>
         <div class="adm-form-field" style="grid-column:1/-1">
           <label style="display:flex;gap:10px;align-items:center;cursor:pointer;font-size:13px;color:var(--text-2)">
@@ -2430,7 +2581,11 @@ async function createNotifica() {
   const btn = document.getElementById('nn-send-btn')
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Invio...' }
   try {
-    const { data: created, error } = await supa.from('notifications').insert({ title, body, is_active: true }).select('id').single()
+    const ctaAction = document.getElementById('nn-cta-action')?.value || null
+    const ctaLabel = (document.getElementById('nn-cta-label')?.value || '').trim() || (ctaAction ? CTA_ACTIONS[ctaAction] : null)
+    const row = { title, body, is_active: true }
+    if (ctaAction) { row.cta_action = ctaAction; row.cta_label = ctaLabel }   // solo se scelto: senza l'SQL delle automatiche le colonne non esistono ancora
+    const { data: created, error } = await supa.from('notifications').insert(row).select('id').single()
     if (error) throw error
     let pushMsg = ''
     if (wantPush) {
@@ -2451,6 +2606,7 @@ async function editNotifica(id) {
   try {
     const { data: n, error } = await supa.from('notifications').select('*').eq('id', id).single()
     if (error) throw error
+    window.__notifHasCta = 'cta_action' in n
     const html = `
       <div class="adm-edit-form">
         <div class="adm-edit-grid">
@@ -2461,6 +2617,13 @@ async function editNotifica(id) {
           <div class="adm-form-field" style="grid-column:1/-1">
             <label class="adm-form-label">Messaggio</label>
             <textarea class="adm-form-input" rows="5" id="nn-body">${esc(n.body)}</textarea>
+          </div>
+          <div class="adm-form-field" style="grid-column:1/-1">
+            <label class="adm-form-label">PULSANTE (facoltativo)</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <select class="adm-form-input" id="nn-cta-action">${ctaOptions(n.cta_action || '')}</select>
+              <input class="adm-form-input" type="text" id="nn-cta-label" maxlength="30" value="${esc(n.cta_label || '')}" placeholder="Testo del pulsante">
+            </div>
           </div>
         </div>
         <div class="adm-modal-actions">
@@ -2480,7 +2643,11 @@ async function saveNotifica(id) {
   if (!title) { showToast('Il titolo è obbligatorio', 'error'); return }
   if (!body)  { showToast('Il messaggio è obbligatorio', 'error'); return }
   try {
-    const { error } = await supa.from('notifications').update({ title, body }).eq('id', id)
+    const ctaAction = document.getElementById('nn-cta-action')?.value || null
+    const ctaLabel = (document.getElementById('nn-cta-label')?.value || '').trim() || (ctaAction ? CTA_ACTIONS[ctaAction] : null)
+    const upd = { title, body }
+    if (ctaAction || window.__notifHasCta) { upd.cta_action = ctaAction; upd.cta_label = ctaAction ? ctaLabel : null }
+    const { error } = await supa.from('notifications').update(upd).eq('id', id)
     if (error) throw error
     closeModal()
     showToast('Notifica aggiornata ✓')

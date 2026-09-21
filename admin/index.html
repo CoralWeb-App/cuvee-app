@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="css/admin.css?v=10">
+  <link rel="stylesheet" href="css/admin.css?v=11">
 </head>
 <body>
 
@@ -636,6 +636,16 @@
           </div>
         </div>
 
+        <!-- Notifiche automatiche -->
+        <div class="adm-auto-section">
+          <div class="adm-auto-head">
+            <div class="adm-auto-title"><i class="ti ti-robot"></i> Notifiche automatiche</div>
+            <div class="adm-auto-sub">Partono da sole, solo di giorno (10:00–20:00). Ogni utente riceve al massimo 1 notifica automatica ogni 3 giorni e 2 a settimana, e mai lo stesso messaggio due volte.</div>
+          </div>
+          <div id="auto-rules" class="adm-auto-grid"><div class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</div></div>
+        </div>
+
+        <div class="adm-auto-title" style="margin:26px 0 10px"><i class="ti ti-speakerphone"></i> Notifiche manuali</div>
         <div class="adm-table-wrap">
           <table class="adm-table">
             <thead>
@@ -1099,7 +1109,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=30"></script>
+<script src="js/admin.js?v=31"></script>
 
 </body>
 </html>

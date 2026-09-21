@@ -282,7 +282,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <i class="ti ti-bell" style="font-size:24px;color:var(--gold);flex-shrink:0;margin-top:1px;"></i>
           <div>
             <div style="font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:600;margin-bottom:4px;" id="push-card-title">Ricevi le novità sul telefono</div>
-            <div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.55;" id="push-card-text">Nuove cuvée, funzioni e aggiornamenti importanti, direttamente sulla schermata del telefono. Puoi disattivarle quando vuoi.</div>
+            <div style="font-family:var(--sans);font-size:13px;color:var(--ink-3);line-height:1.55;" id="push-card-text">Novità, suggerimenti e offerte su Cuvée, direttamente sulla schermata del telefono. Puoi disattivarle quando vuoi da Profilo → Impostazioni → Notifiche.</div>
           </div>
         </div>
         <button class="btn-gold" id="push-card-btn" onclick="onEnablePushClick(this)" style="width:100%;margin-top:14px;">Attiva le notifiche</button>
@@ -3930,7 +3930,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="scan-limit-inner">
     <div class="scan-limit-icon-badge"><i class="ti ti-bell"></i></div>
     <div class="scan-limit-title">Vuoi restare aggiornato?</div>
-    <div class="scan-limit-desc">Ti avviseremo solo per novità utili: nuove cuvée in catalogo, funzioni nuove e aggiornamenti importanti. Puoi disattivare le notifiche quando vuoi dalle Impostazioni del telefono.</div>
+    <div class="scan-limit-desc">Ti avviseremo di novità, suggerimenti e offerte: nuove cuvée in catalogo, funzioni nuove e proposte per usare al meglio Cuvée. Puoi disattivare le notifiche quando vuoi da Profilo → Impostazioni → Notifiche.</div>
     <div class="scan-limit-sep"></div>
     <button class="btn-gold" onclick="acceptPushPrompt()" style="width:100%;margin-top:0;">Attiva le notifiche</button>
     <button class="scan-limit-skip" onclick="dismissPushPrompt()">Più tardi</button>
@@ -3948,6 +3948,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div style="text-align:center;font-family:var(--sans);font-size:12px;color:var(--ink-5);margin-bottom:16px;" id="notif-detail-date"></div>
     <div class="scan-limit-sep"></div>
     <div style="font-family:var(--sans);font-size:14.5px;color:var(--ink-2);line-height:1.65;white-space:pre-line;" id="notif-detail-body"></div>
+    <button class="btn-gold" id="notif-detail-cta" onclick="runNotificationCta()" style="display:none;width:100%;margin-top:20px;"></button>
   </div>
 </div>
 
@@ -3996,6 +3997,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=269"></script>
+<script src="js/app.js?v=270"></script>
 </body>
 </html>

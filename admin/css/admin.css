@@ -2352,3 +2352,30 @@ input[type="date"].adm-form-input { color-scheme: dark; }
   .adm-utenti-list   { overflow: visible; }
   .adm-user-detail.visible { width: 100%; height: 480px; }
 }
+
+
+/* ── Notifiche automatiche ─────────────────────────── */
+.adm-auto-section { margin-bottom: 8px; }
+.adm-auto-head { margin-bottom: 14px; }
+.adm-auto-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text); }
+.adm-auto-title i { color: var(--gold); font-size: 17px; }
+.adm-auto-sub { font-size: 12px; color: var(--text-3); margin-top: 6px; line-height: 1.6; max-width: 760px; }
+.adm-auto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.adm-auto-card { background: var(--surface-2, var(--surface)); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.adm-auto-card.on { border-color: rgba(200,160,58,.45); }
+.adm-auto-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.adm-auto-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.adm-auto-desc { font-size: 11.5px; color: var(--text-3); line-height: 1.5; margin-top: 3px; }
+.adm-auto-msg { background: var(--bg, #0d0d0f); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.adm-auto-msg-t { font-size: 13px; font-weight: 600; color: var(--text); }
+.adm-auto-msg-b { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-top: 3px; }
+.adm-auto-msg-c { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 600; color: var(--gold); border: 1px solid rgba(200,160,58,.4); border-radius: 6px; padding: 3px 9px; }
+.adm-auto-stats { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.adm-auto-stats b { color: var(--text); font-weight: 600; }
+.adm-auto-actions { display: flex; gap: 8px; margin-top: 2px; }
+.adm-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; display: inline-block; }
+.adm-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.adm-switch span { position: absolute; inset: 0; background: var(--surface-3, #2a2a2e); border: 1px solid var(--border-2, #3a3a3e); border-radius: 22px; cursor: pointer; transition: background .2s; }
+.adm-switch span::before { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.adm-switch input:checked + span { background: var(--gold); border-color: var(--gold); }
+.adm-switch input:checked + span::before { transform: translateX(18px); }

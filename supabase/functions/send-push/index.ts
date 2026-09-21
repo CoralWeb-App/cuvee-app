@@ -117,6 +117,35 @@ async function loadTokens(db: Db, audience: string, callerId: string): Promise<T
   return rows.filter((r) => (audience === 'premium') === ids.has(r.user_id))
 }
 
+function safeEqual(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false
+  let r = 0
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return r === 0
+}
+function jwtRole(token: string): string | null {
+  try {
+    const part = token.split('.')[1]
+    if (!part) return null
+    const role = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/'))).role
+    return typeof role === 'string' ? role : null
+  } catch (_) { return null }
+}
+// Chiunque presenti la chiave segreta del progetto (stesso criterio di delete-account)
+async function isSystemCaller(bearer: string, url: string, envService: string): Promise<boolean> {
+  if (!bearer) return false
+  if (safeEqual(bearer, envService)) return true
+  if (jwtRole(bearer) !== 'service_role' && !bearer.startsWith('sb_secret_')) return false
+  try {
+    const { error } = await createClient(url, bearer).auth.admin.listUsers({ page: 1, perPage: 1 })
+    return !error
+  } catch (_) { return false }
+}
+
+interface Plan { row: TokenRow; title: string; body: string; notificationId?: string }
+const isUuid = (s: unknown): s is string =>
+  typeof s === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)
+
 // Accorcia al limite tagliando su una parola intera e aggiungendo i puntini
 export function clip(text: string, max: number): string {
   const t = text.replace(/\s+/g, ' ').trim()
@@ -156,8 +185,21 @@ async function unreadByUser(db: Db, userIds: string[]): Promise<Map<string, numb
         if (!data || data.length < 1000) break
       }
     }
+    // Messaggi personali (notifiche automatiche) non ancora letti
+    const personal = new Map<string, number>()
+    const since = new Date(Date.now() - 60 * 86_400_000).toISOString()
+    for (let i = 0; i < userIds.length; i += 200) {
+      const chunk = userIds.slice(i, i + 200)
+      for (let from = 0; ; from += 1000) {
+        const { data, error: e3 } = await db.from('personal_notifications').select('user_id')
+          .in('user_id', chunk).is('read_at', null).gte('created_at', since).order('created_at', { ascending: true }).range(from, from + 999)
+        if (e3) return null
+        for (const r of data ?? []) personal.set(r.user_id, (personal.get(r.user_id) ?? 0) + 1)
+        if (!data || data.length < 1000) break
+      }
+    }
     const out = new Map<string, number>()
-    for (const id of userIds) out.set(id, Math.max(0, activeIds.size - (readCount.get(id) ?? 0)))
+    for (const id of userIds) out.set(id, Math.max(0, activeIds.size - (readCount.get(id) ?? 0)) + (personal.get(id) ?? 0))
     return out
   } catch (_) { return null }
 }
@@ -168,44 +210,78 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) return json({ error: 'Non autorizzato' }, 401)
     const SUPA_URL = Deno.env.get('SUPABASE_URL')!
-    const db = createClient(SUPA_URL, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-    const userSupa = createClient(SUPA_URL, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } })
-    const { data: { user }, error: authErr } = await userSupa.auth.getUser()
-    if (authErr || !user) return json({ error: 'Non autorizzato' }, 401)
-    const { data: caller } = await db.from('users').select('is_admin').eq('id', user.id).maybeSingle()
-    if (!caller?.is_admin) return json({ error: 'Solo gli admin possono inviare notifiche' }, 403)
+    const SUPA_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const db = createClient(SUPA_URL, SUPA_SERVICE)
+
+    const bearer = authHeader.replace(/^Bearer\s+/i, '').trim()
+    const system = await isSystemCaller(bearer, SUPA_URL, SUPA_SERVICE)
+    let callerId = ''
+    if (!system) {
+      const userSupa = createClient(SUPA_URL, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } })
+      const { data: { user }, error: authErr } = await userSupa.auth.getUser()
+      if (authErr || !user) return json({ error: 'Non autorizzato' }, 401)
+      const { data: caller } = await db.from('users').select('is_admin').eq('id', user.id).maybeSingle()
+      if (!caller?.is_admin) return json({ error: 'Solo gli admin possono inviare notifiche' }, 403)
+      callerId = user.id
+    }
 
     let body: Record<string, unknown> = {}
     try { body = (await req.json()) ?? {} } catch (_) { return json({ error: 'Richiesta non valida' }, 400) }
-    const title = String(body.title ?? '').trim()
-    const message = String(body.body ?? '').trim()
-    const audience = String(body.audience ?? 'all')
-    const notificationId = typeof body.notification_id === 'string' ? body.notification_id : undefined
-    if (!title || !message) return json({ error: 'Titolo e messaggio sono obbligatori' }, 400)
-    if (title.length > INPUT_MAX_TITLE) return json({ error: `Titolo troppo lungo (max ${INPUT_MAX_TITLE} caratteri)` }, 400)
-    if (message.length > INPUT_MAX_BODY) return json({ error: `Messaggio troppo lungo (max ${INPUT_MAX_BODY} caratteri)` }, 400)
-    if (!['all', 'premium', 'free', 'test'].includes(audience)) return json({ error: 'Destinatari non validi' }, 400)
 
     const pem = Deno.env.get('APNS_KEY_P8')
     const keyId = Deno.env.get('APNS_KEY_ID')
     const teamId = Deno.env.get('APNS_TEAM_ID')
     const topic = Deno.env.get('APNS_BUNDLE_ID') ?? 'com.coralweb.cuvee'
-    if (!pem || !keyId || !teamId) return json({ error: 'Chiave APNs non configurata nei secret di Supabase' }, 500)
 
-    const tokens = await loadTokens(db, audience, user.id)
-    if (!tokens.length) return json({ success: true, total: 0, sent: 0, failed: 0, removed: 0, note: 'Nessun dispositivo registrato per questi destinatari' })
+    // ── Piano di invio: chi riceve cosa ──
+    let plans: Plan[] = []
+    if (system) {
+      // Messaggi personali (notifiche automatiche): ognuno con il proprio testo e il proprio collegamento
+      const raw = Array.isArray(body.deliveries) ? body.deliveries : []
+      const deliveries = new Map<string, { title: string; body: string; notification_id?: string }>()
+      for (const d of raw as Array<Record<string, unknown>>) {
+        if (!isUuid(d?.user_id) || !String(d?.title ?? '').trim() || !String(d?.body ?? '').trim()) continue
+        deliveries.set(d.user_id, { title: String(d.title), body: String(d.body), notification_id: typeof d.notification_id === 'string' ? d.notification_id : undefined })
+        if (deliveries.size >= 1000) break
+      }
+      if (!deliveries.size) return json({ success: true, total: 0, sent: 0, failed: 0, removed: 0, note: 'Nessun destinatario' })
+      if (!pem || !keyId || !teamId) return json({ error: 'Chiave APNs non configurata nei secret di Supabase' }, 500)
+      const ids = [...deliveries.keys()]
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data, error } = await db.from('push_tokens').select('token, user_id, environment').in('user_id', ids.slice(i, i + 200))
+        if (error) return json({ error: 'Lettura dispositivi: ' + error.message }, 500)
+        for (const row of (data ?? []) as TokenRow[]) {
+          const d = deliveries.get(row.user_id)!
+          plans.push({ row, title: d.title, body: d.body, notificationId: d.notification_id })
+        }
+      }
+    } else {
+      const title = String(body.title ?? '').trim()
+      const message = String(body.body ?? '').trim()
+      const audience = String(body.audience ?? 'all')
+      const notificationId = typeof body.notification_id === 'string' ? body.notification_id : undefined
+      if (!title || !message) return json({ error: 'Titolo e messaggio sono obbligatori' }, 400)
+      if (title.length > INPUT_MAX_TITLE) return json({ error: `Titolo troppo lungo (max ${INPUT_MAX_TITLE} caratteri)` }, 400)
+      if (message.length > INPUT_MAX_BODY) return json({ error: `Messaggio troppo lungo (max ${INPUT_MAX_BODY} caratteri)` }, 400)
+      if (!['all', 'premium', 'free', 'test'].includes(audience)) return json({ error: 'Destinatari non validi' }, 400)
+      if (!pem || !keyId || !teamId) return json({ error: 'Chiave APNs non configurata nei secret di Supabase' }, 500)
+      const tokens = await loadTokens(db, audience, callerId)
+      plans = tokens.map((row) => ({ row, title, body: message, notificationId }))
+    }
+
+    if (!plans.length) return json({ success: true, total: 0, sent: 0, failed: 0, removed: 0, note: 'Nessun dispositivo registrato per questi destinatari' })
 
     let jwt: string
-    try { jwt = await makeProviderToken(pem, keyId, teamId) } catch (e) { return json({ error: 'Chiave APNs non valida: ' + (e as Error).message }, 500) }
+    try { jwt = await makeProviderToken(pem!, keyId!, teamId!) } catch (e) { return json({ error: 'Chiave APNs non valida: ' + (e as Error).message }, 500) }
 
-    const unread = await unreadByUser(db, [...new Set(tokens.map((t) => t.user_id))])
-    const payloadFor = (t: TokenRow) => buildPayload(title, message, notificationId, unread?.get(t.user_id))
+    const unread = await unreadByUser(db, [...new Set(plans.map((p) => p.row.user_id))])
     let sent = 0, removed = 0
     const failures: Record<string, number> = {}
     let fatal: string | null = null
 
-    for (let i = 0; i < tokens.length && !fatal; i += CONCURRENCY) {
-      const results = await Promise.all(tokens.slice(i, i + CONCURRENCY).map((t) => deliver(db, jwt, topic, t, payloadFor(t))))
+    for (let i = 0; i < plans.length && !fatal; i += CONCURRENCY) {
+      const results = await Promise.all(plans.slice(i, i + CONCURRENCY).map((p) =>
+        deliver(db, jwt, topic, p.row, buildPayload(p.title, p.body, p.notificationId, unread?.get(p.row.user_id)))))
       for (const r of results) {
         if (r.ok) { sent++; continue }
         if (r.removed) removed++
@@ -218,8 +294,8 @@ serve(async (req) => {
       }
     }
 
-    if (fatal) return json({ error: fatal, total: tokens.length, sent, failures }, 502)
-    return json({ success: true, total: tokens.length, sent, failed: tokens.length - sent - removed, removed, failures })
+    if (fatal) return json({ error: fatal, total: plans.length, sent, failures }, 502)
+    return json({ success: true, total: plans.length, sent, failed: plans.length - sent - removed, removed, failures })
   } catch (e) {
     return json({ error: (e as Error).message || 'Errore durante l\'invio' }, 500)
   }
