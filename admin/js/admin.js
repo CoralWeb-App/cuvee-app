@@ -2453,12 +2453,16 @@ async function renderUtenti() {
     const cnt = document.getElementById('utenti-count')
     if (cnt) cnt.textContent = (count ?? 0).toLocaleString('it') + ' utenti registrati'
 
-    const ids = data.map(u => u.id)
-    const scanCounts = {}
-    if (ids.length) {
-      const { data: sc } = await supa.from('bottle_scans').select('user_id').in('user_id', ids)
-      if (sc) sc.forEach(s => { scanCounts[s.user_id] = (scanCounts[s.user_id] || 0) + 1 })
-    }
+    // Conteggi esatti per utente (non righe scaricate: il limite di 1000 righe per richiesta falserebbe i totali)
+    const scanCounts = {}, carnetCounts = {}
+    await Promise.all(data.map(async u => {
+      const [s, c] = await Promise.all([
+        supa.from('bottle_scans').select('*', { count: 'exact', head: true }).eq('user_id', u.id),
+        supa.from('carnet_notes').select('*', { count: 'exact', head: true }).eq('user_id', u.id),
+      ])
+      scanCounts[u.id] = s.count ?? 0
+      carnetCounts[u.id] = c.count ?? 0
+    }))
 
     tbody.innerHTML = data.map(u => {
       const prem = isPremiumActive(u)
@@ -2474,7 +2478,7 @@ async function renderUtenti() {
         </td>
         <td>${prem ? '<span class="adm-badge premium"><i class="ti ti-crown"></i> PREMIUM</span>' : '<span class="adm-badge free">FREE</span>'}${u.deletion_requested_at ? ' <span class="adm-badge pending" title="Ha chiesto di eliminare l\'account: verrà eliminato alla scadenza dell\'abbonamento"><i class="ti ti-clock"></i> CANC. PROGRAMMATA</span>' : ''}</td>
         <td class="adm-mono">${scanCounts[u.id] ?? 0}</td>
-        <td class="adm-mono">-</td>
+        <td class="adm-mono">${carnetCounts[u.id] ?? 0}</td>
         <td class="adm-time-cell">${fmtDate(u.created_at)}</td>
       </tr>`
     }).join('')
