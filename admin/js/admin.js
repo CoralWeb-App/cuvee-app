@@ -2271,8 +2271,8 @@ async function createGlossario() {
 
 // ══════════════════════════════════════════════════════
 // NOTIFICHE
-// Comunicazioni broadcast lette dagli utenti nell'app (nessun invio push,
-// solo un centro notifiche in-app: l'utente vede il badge e legge il messaggio).
+// Comunicazioni broadcast: centro notifiche in-app (badge + messaggio) e, a scelta, anche notifica push
+// sul telefono tramite la Edge Function send-push (invio diretto ad Apple APNs).
 // ══════════════════════════════════════════════════════
 async function loadNotifiche() {
   const tbody = document.getElementById('notifiche-tbody')
@@ -2286,7 +2286,10 @@ async function loadNotifiche() {
     if (error) throw error
 
     const sub = document.getElementById('notifiche-subtitle')
-    if (sub) sub.textContent = (data || []).length + ' notifiche inviate'
+    if (sub) {
+      sub.textContent = (data || []).length + ' notifiche inviate'
+      pushDeviceCount().then(n => { if (n !== null) sub.textContent += ` · ${n} dispositivi con push attive` })
+    }
 
     if (!data || !data.length) {
       tbody.innerHTML = `<tr><td colspan="5"><div style="padding:32px;text-align:center;color:var(--text-3)">Nessuna notifica ancora inviata</div></td></tr>`
@@ -2318,41 +2321,133 @@ async function loadNotifiche() {
   } catch(e) { tbody.innerHTML = errorRow(5, e.message) }
 }
 
-function openNewNotificaModal() {
+const PUSH_URL = 'https://wlfxgbmffvhuqmqjiuqo.supabase.co/functions/v1/send-push'
+
+async function pushDeviceCount() {
+  try {
+    const { count, error } = await supa.from('push_tokens').select('*', { count: 'exact', head: true })
+    return error ? null : (count ?? 0)
+  } catch (e) { return null }
+}
+
+async function callSendPush(body) {
+  const { data: { session } } = await supa.auth.getSession()
+  const token = session?.access_token
+  if (!token) throw new Error('Sessione admin non valida')
+  const resp = await fetch(PUSH_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify(body),
+  })
+  const result = await resp.json().catch(() => ({}))
+  if (resp.status === 404) throw new Error('Funzione send-push non ancora pubblicata su Supabase')
+  if (!resp.ok || result.error) throw new Error(result?.error || 'Errore durante l\'invio della push')
+  return result
+}
+
+function describePushResult(r) {
+  if (!r.total) return r.note || 'Nessun dispositivo registrato per questi destinatari'
+  let msg = `Push inviata a ${r.sent} di ${r.total} dispositivi`
+  if (r.removed) msg += ` · ${r.removed} non più validi rimossi`
+  if (r.failed) msg += ` · ${r.failed} non riusciti`
+  return msg
+}
+
+async function openNewNotificaModal() {
   const html = `
     <div class="adm-edit-form">
       <div class="adm-edit-grid">
         <div class="adm-form-field" style="grid-column:1/-1">
           <label class="adm-form-label">Titolo</label>
-          <input class="adm-form-input" type="text" id="nn-title" placeholder="es. Nuova funzione disponibile">
+          <input class="adm-form-input" type="text" id="nn-title" maxlength="80" placeholder="es. Nuova funzione disponibile">
         </div>
         <div class="adm-form-field" style="grid-column:1/-1">
           <label class="adm-form-label">Messaggio</label>
-          <textarea class="adm-form-input" rows="5" id="nn-body" placeholder="Testo del messaggio che vedrà l'utente..."></textarea>
+          <textarea class="adm-form-input" rows="5" id="nn-body" maxlength="1000" placeholder="Testo del messaggio che vedrà l'utente..." oninput="updatePushCounter()"></textarea>
+        </div>
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label style="display:flex;gap:10px;align-items:center;cursor:pointer;font-size:13px;color:var(--text-2)">
+            <input type="checkbox" id="nn-push" checked onchange="document.getElementById('nn-push-opts').style.display = this.checked ? 'block' : 'none'" style="width:16px;height:16px;accent-color:var(--gold)">
+            Invia anche come notifica push sul telefono
+          </label>
+        </div>
+        <div class="adm-form-field" id="nn-push-opts" style="grid-column:1/-1">
+          <label class="adm-form-label">DESTINATARI DELLA PUSH</label>
+          <select class="adm-form-input" id="nn-audience">
+            <option value="all">Tutti gli utenti</option>
+            <option value="premium">Solo Premium</option>
+            <option value="free">Solo Free</option>
+          </select>
+          <div id="nn-push-hint" style="font-size:11.5px;color:var(--text-3);margin-top:6px;line-height:1.5"></div>
         </div>
       </div>
       <div class="adm-modal-actions">
         <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
-        <button class="adm-btn adm-btn-primary" onclick="createNotifica()">
+        <button class="adm-btn adm-btn-ghost" id="nn-test-btn" onclick="sendTestPush()" title="Invia la sola push ai tuoi dispositivi, senza pubblicare la notifica">
+          <i class="ti ti-device-mobile"></i> Prova su di me
+        </button>
+        <button class="adm-btn adm-btn-primary" id="nn-send-btn" onclick="createNotifica()">
           <i class="ti ti-send"></i> Invia
         </button>
       </div>
     </div>`
   openModal('Nuova notifica', html)
+  updatePushCounter()
+  pushDeviceCount().then(n => {
+    const el = document.getElementById('nn-push-hint')
+    if (el && n !== null) el.dataset.devices = n
+    updatePushCounter()
+  })
+}
+
+function updatePushCounter() {
+  const el = document.getElementById('nn-push-hint')
+  if (!el) return
+  const len = (document.getElementById('nn-body')?.value || '').length
+  const devices = el.dataset.devices
+  const tooLong = len > 240
+  el.innerHTML = (devices !== undefined ? `${devices} dispositivi con push attive. ` : '')
+    + `Nella push il messaggio è limitato a 240 caratteri (ora ${len}).`
+    + (tooLong ? ' <strong style="color:var(--red)">Troppo lungo per la push: accorcialo o togli la spunta.</strong>' : '')
+}
+
+async function sendTestPush() {
+  const title = document.getElementById('nn-title')?.value.trim()
+  const body  = document.getElementById('nn-body')?.value.trim()
+  if (!title || !body) { showToast('Scrivi titolo e messaggio per la prova', 'error'); return }
+  const btn = document.getElementById('nn-test-btn')
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Invio...' }
+  try {
+    showToast(describePushResult(await callSendPush({ title, body, audience: 'test' })))
+  } catch (e) { showToast(e.message, 'error') }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-mobile"></i> Prova su di me' }
 }
 
 async function createNotifica() {
   const title = document.getElementById('nn-title')?.value.trim()
   const body  = document.getElementById('nn-body')?.value.trim()
+  const wantPush = document.getElementById('nn-push')?.checked
+  const audience = document.getElementById('nn-audience')?.value || 'all'
   if (!title) { showToast('Il titolo è obbligatorio', 'error'); return }
   if (!body)  { showToast('Il messaggio è obbligatorio', 'error'); return }
+  if (wantPush && body.length > 240) { showToast('Messaggio troppo lungo per la push (max 240 caratteri)', 'error'); return }
+  const btn = document.getElementById('nn-send-btn')
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Invio...' }
   try {
-    const { error } = await supa.from('notifications').insert({ title, body, is_active: true })
+    const { data: created, error } = await supa.from('notifications').insert({ title, body, is_active: true }).select('id').single()
     if (error) throw error
+    let pushMsg = ''
+    if (wantPush) {
+      try { pushMsg = ' · ' + describePushResult(await callSendPush({ title, body, audience, notification_id: created?.id })) }
+      catch (pe) { closeModal(); showToast('Notifica pubblicata, ma la push non è partita: ' + pe.message, 'error'); loadNotifiche(); return }
+    }
     closeModal()
-    showToast('Notifica inviata ✓')
+    showToast('Notifica inviata ✓' + pushMsg)
     loadNotifiche()
-  } catch(e) { showToast(e.message, 'error') }
+  } catch(e) {
+    showToast(e.message, 'error')
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-send"></i> Invia' }
+  }
 }
 
 async function editNotifica(id) {

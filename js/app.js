@@ -2309,6 +2309,7 @@ async function submitNewPassword() {
 
 // LOGOUT
 async function signOut() {
+  await unregisterPush();
   try {
     await supa.auth.signOut();
   } catch(e) {
@@ -2365,6 +2366,7 @@ async function loadUserProfile() {
 
     updateProfileUI(currentUser.profile);
     updatePremiumUI();
+    initPush();
 
     // Load counts in background - don't block
     updateCarnetUI().catch(() => {});
@@ -5026,6 +5028,117 @@ function applyCruPremiumGating(viewId) {
 // Lette/non lette è per-notifica (tabella notification_reads): una notifica
 // risulta letta solo quando l'utente apre proprio quella card, non quando
 // visita semplicemente l'elenco.
+// ═══ NOTIFICHE PUSH (direttamente con Apple, senza servizi di terzi) ═══
+// Il plugin nativo esiste solo nelle build iOS che lo includono: nel browser e nelle versioni vecchie
+// dell'app _pushSupported() è falso e tutto questo resta inattivo.
+const PUSH_PROMPTED_KEY = 'cuvee_push_prompted';
+let _pushToken = null;
+let _pushListenersBound = false;
+
+function _pushPlugin() { return window.Capacitor?.Plugins?.PushNotifications || null; }
+function _pushSupported() {
+  return !!(window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === 'ios' && _pushPlugin());
+}
+
+async function _savePushToken() {
+  if (!currentUser || !_pushToken) return;
+  try {
+    const { error } = await supa.rpc('register_push_token', { p_token: _pushToken, p_platform: 'ios' });
+    if (error) console.log('register_push_token error:', error.message);
+  } catch(e) { console.log('register_push_token error:', e); }
+}
+
+function _bindPushListeners() {
+  const P = _pushPlugin();
+  if (_pushListenersBound || !P) return;
+  _pushListenersBound = true;
+  P.addListener('registration', (t) => { _pushToken = t?.value || null; _savePushToken(); });
+  P.addListener('registrationError', (e) => console.log('Push registration error:', e));
+  // App aperta: nessun banner di sistema, quindi un avviso discreto e il pallino sulla campanella
+  P.addListener('pushNotificationReceived', (n) => {
+    checkUnreadNotifications();
+    showAppToast(n?.title || 'Nuova notifica da Cuvée', 3500);
+  });
+  P.addListener('pushNotificationActionPerformed', () => { if (currentUser) go('v-notifications'); });
+}
+
+// Se l'utente ha già dato il permesso, il telefono si registra a ogni avvio (il token può cambiare)
+async function initPush() {
+  if (!_pushSupported() || !currentUser) return;
+  _bindPushListeners();
+  try {
+    const perm = await _pushPlugin().checkPermissions();
+    if (perm.receive === 'granted') await _pushPlugin().register();
+  } catch(e) { console.log('initPush error:', e); }
+}
+
+async function enablePush() {
+  if (!_pushSupported()) return false;
+  _bindPushListeners();
+  const P = _pushPlugin();
+  try {
+    let perm = await P.checkPermissions();
+    if (perm.receive === 'prompt' || perm.receive === 'prompt-with-rationale') perm = await P.requestPermissions();
+    if (perm.receive !== 'granted') return false;
+    await P.register();
+    return true;
+  } catch(e) { console.log('enablePush error:', e); return false; }
+}
+
+// All'uscita dall'account il telefono non deve più ricevere le notifiche di quell'utente
+async function unregisterPush() {
+  if (!_pushToken) return;
+  try { await supa.rpc('unregister_push_token', { p_token: _pushToken }); } catch(e) { console.log('unregisterPush error:', e); }
+}
+
+async function updatePushCard() {
+  const card = document.getElementById('push-enable-card');
+  if (!card) return;
+  if (!_pushSupported()) { card.style.display = 'none'; return; }
+  let state = 'prompt';
+  try { state = (await _pushPlugin().checkPermissions()).receive; } catch(e) {}
+  const title = document.getElementById('push-card-title');
+  const text = document.getElementById('push-card-text');
+  const btn = document.getElementById('push-card-btn');
+  if (state === 'granted') { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  if (state === 'denied') {
+    if (title) title.textContent = 'Notifiche disattivate';
+    if (text) text.textContent = 'Per riceverle, attivale da Impostazioni del telefono → Cuvée → Notifiche.';
+    if (btn) btn.style.display = 'none';
+  } else {
+    if (title) title.textContent = 'Ricevi le novità sul telefono';
+    if (text) text.textContent = 'Nuove cuvée, funzioni e aggiornamenti importanti, direttamente sulla schermata del telefono. Puoi disattivarle quando vuoi.';
+    if (btn) { btn.style.display = 'block'; btn.disabled = false; }
+  }
+}
+
+async function onEnablePushClick() {
+  const btn = document.getElementById('push-card-btn');
+  if (btn) btn.disabled = true;
+  const ok = await enablePush();
+  await updatePushCard();
+  if (ok) showAppToast('Notifiche attivate', 3000);
+}
+
+// Richiesta "morbida" una sola volta, subito dopo la prima scansione riuscita: è il momento in cui l'app
+// ha appena mostrato il proprio valore. Se l'utente rifiuta, resta la scheda nella pagina Notifiche.
+async function maybeSoftAskPush() {
+  if (!_pushSupported() || !currentUser) return;
+  if (document.querySelector('.view.active')?.id !== 'v-scan-result') return;
+  try { if (localStorage.getItem(PUSH_PROMPTED_KEY)) return; } catch(e) { return; }
+  let perm = null;
+  try { perm = await _pushPlugin().checkPermissions(); } catch(e) { return; }
+  if (perm.receive !== 'prompt' && perm.receive !== 'prompt-with-rationale') return;
+  try { localStorage.setItem(PUSH_PROMPTED_KEY, '1'); } catch(e) {}
+  document.getElementById('push-prompt-modal')?.classList.add('on');
+}
+function closePushPrompt() { document.getElementById('push-prompt-modal')?.classList.remove('on'); }
+async function acceptPushPrompt() {
+  closePushPrompt();
+  if (await enablePush()) showAppToast('Notifiche attivate', 3000);
+}
+
 let _notificationsCache = [];
 let _readNotifIds = new Set();
 
@@ -5054,6 +5167,7 @@ async function checkUnreadNotifications() {
 async function renderNotificationsUI() {
   const listEl = document.getElementById('notifications-list');
   if (!listEl) return;
+  updatePushCard();
   listEl.innerHTML = '<div style="padding:60px 20px;text-align:center;font-family:var(--sans);font-size:14px;color:var(--ink-4);">Caricamento…</div>';
   try {
     const { data, error } = await supa.from('notifications')
@@ -5067,6 +5181,7 @@ async function renderNotificationsUI() {
     if (e2) throw e2;
     _readNotifIds = new Set((reads || []).map(r => r.notification_id));
     renderNotificationsList();
+    updatePushCard();
   } catch(e) {
     listEl.innerHTML = '<div style="padding:40px 24px;text-align:center;color:#B4442E;font-family:var(--sans);font-size:13px;">Errore nel caricamento delle notifiche.</div>';
     console.log('renderNotificationsUI error:', e);
@@ -7135,6 +7250,7 @@ function closeScanLimitModal() {
 // scansione dallo storico.
 function _showScanResultPage(result, photoDataUrl, isFreshScan) {
   _renderScanResult(result, photoDataUrl, isFreshScan);
+  if (isFreshScan && result.is_bottle !== false && result.is_wine !== false && result.is_champagne !== false) setTimeout(maybeSoftAskPush, 2500);
   // Nasconde il cestino (visibile solo se aperto dallo storico)
   _currentHistoryIdx = null;
   const btn = document.getElementById('scan-result-delete-btn');

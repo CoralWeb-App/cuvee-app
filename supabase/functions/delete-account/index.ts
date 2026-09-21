@@ -24,7 +24,7 @@ const FLOW_VERSION = 'ok:v2'
 const USER_STORAGE_BUCKETS = ['avatars', 'scan-photos', 'carnet-photos']
 
 // Tabelle con una colonna user_id che referenzia l'account da eliminare.
-const USER_DATA_TABLES = ['bottle_scans', 'scan_history', 'carnet_notes', 'favorites', 'wishlist']
+const USER_DATA_TABLES = ['bottle_scans', 'scan_history', 'carnet_notes', 'favorites', 'wishlist', 'push_tokens']
 
 const RETENTION_DAYS = 30
 const DAY_MS = 86_400_000
