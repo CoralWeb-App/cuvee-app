@@ -43,7 +43,7 @@ function go(id){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const target=document.getElementById(id);
   if(target){target.classList.add('active');}
-  _trackPushEngagement(id);
+  try { _trackPushEngagement(id); } catch(e) {}
   const scrl=document.querySelector('#'+id+' .scroll');
   if(scrl)scrl.scrollTo(0,0);
   // Load dynamic data when entering certain views
@@ -2678,7 +2678,8 @@ async function initAppVersionLabel() {
   if (!AppInfo) { block.remove(); return; }
   try {
     const info = await AppInfo.getInfo();
-    document.getElementById('app-version-label').textContent = info.version;
+    const webBuild = (document.querySelector('script[src*="app.js"]')?.src.match(/[?&]v=(\d+)/) || [])[1];
+    document.getElementById('app-version-label').textContent = info.version + (webBuild ? ' (' + webBuild + ')' : '');
   } catch(e) {
     console.log('App.getInfo error:', e);
     block.remove();
@@ -5129,20 +5130,24 @@ async function onEnablePushClick() {
 const PUSH_SECTIONS_KEY = 'cuvee_push_sections';
 const PUSH_SECTION_VIEWS = ['v-guida', 'v-maison', 'v-bottiglie', 'v-carnet', 'v-scan-history', 'v-salvati', 'v-wishlist', 'v-confronta'];
 
+// Il popup può comparire sulle sezioni e sulla Home: chi ha già visto due sezioni e passa dalla Home (o
+// cambia sezione prima che scatti il timer) lo riceve comunque alla schermata successiva.
+const PUSH_PROMPT_VIEWS = PUSH_SECTION_VIEWS.concat(['v-home']);
+
 function _trackPushEngagement(viewId) {
-  if (!PUSH_SECTION_VIEWS.includes(viewId) || !_pushSupported() || !currentUser) return;
+  if (!PUSH_PROMPT_VIEWS.includes(viewId) || !_pushSupported() || !currentUser) return;
   try {
     if (localStorage.getItem(PUSH_PROMPTED_KEY)) return;
     const seen = JSON.parse(localStorage.getItem(PUSH_SECTIONS_KEY) || '[]');
-    if (!seen.includes(viewId)) { seen.push(viewId); localStorage.setItem(PUSH_SECTIONS_KEY, JSON.stringify(seen)); }
-    if (seen.length >= 2) setTimeout(maybeSoftAskPush, 1500);
+    if (PUSH_SECTION_VIEWS.includes(viewId) && !seen.includes(viewId)) { seen.push(viewId); localStorage.setItem(PUSH_SECTIONS_KEY, JSON.stringify(seen)); }
+    if (seen.length >= 2) setTimeout(maybeSoftAskPush, 1200);
   } catch(e) {}
 }
 
 async function maybeSoftAskPush() {
   if (!_pushSupported() || !currentUser) return;
   // Solo mentre l'utente sta guardando una sezione, e mai sopra un altro popup
-  if (!PUSH_SECTION_VIEWS.includes(document.querySelector('.view.active')?.id)) return;
+  if (!PUSH_PROMPT_VIEWS.includes(document.querySelector('.view.active')?.id)) return;
   if (document.querySelector('#welcome-modal.on, #delete-account-modal.on, #scan-not-champagne-modal.on, #notification-detail-modal.on, #push-prompt-modal.on')) return;
   try { if (localStorage.getItem(PUSH_PROMPTED_KEY)) return; } catch(e) { return; }
   let perm = null;
