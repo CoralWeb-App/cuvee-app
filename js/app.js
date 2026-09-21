@@ -34,7 +34,7 @@ function go(id){
     'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne',
     'v-guida-metodo','v-guida-glossario','v-guida-conservazione','v-guida-zone','v-guida-cru','v-guida-clos','v-guida-uve','v-guida-dosaggi','v-guida-service','v-guida-formati',
-    'v-notifications'];
+    'v-notifications','v-notif-settings'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
   }
@@ -50,6 +50,7 @@ function go(id){
   if(id==='v-onb'){ onbIdx=0; onbApplySlide(onbData[0]); }
   if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); checkWelcomeNotification(); }
   if(id==='v-notifications') renderNotificationsUI();
+  if(id==='v-notif-settings') updatePushSettings();
   if(id==='v-guida-glossario') loadGlossario();
   if(id==='v-guida') updateGuidaHubPremiumUI();
   if(id==='v-paywall'){ loadPaywallOfferings(); }
@@ -5130,7 +5131,7 @@ function _ensurePushToken() {
   });
 }
 
-// Interruttore nella pagina Notifiche. iOS non permette all'app di revocare il permesso di sistema, quindi
+// Interruttore nella schermata Profilo → Impostazioni → Notifiche. iOS non permette all'app di revocare il permesso di sistema, quindi
 // "disattiva" toglie questo telefono dal server (niente più push) e ricorda la scelta; "attiva" lo rimette.
 async function onPushToggle(el) {
   const wantOn = el.checked;
@@ -5149,31 +5150,17 @@ async function onPushToggle(el) {
     }
   } finally {
     el.disabled = false;
-    updatePushCard();
+    await updatePushSettings();
+    await updatePushCard();
   }
 }
 
-async function updatePushCard() {
-  const card = document.getElementById('push-enable-card');
-  const toggleCard = document.getElementById('push-toggle-card');
+function _paintEnableCard(prefix, state) {
+  const card = document.getElementById(prefix + '-enable-card');
+  const title = document.getElementById(prefix + '-card-title');
+  const text = document.getElementById(prefix + '-card-text');
+  const btn = document.getElementById(prefix + '-card-btn');
   if (!card) return;
-  if (!_pushSupported()) { card.style.display = 'none'; if (toggleCard) toggleCard.style.display = 'none'; return; }
-  let state = 'prompt';
-  try { state = (await _pushPlugin().checkPermissions()).receive; } catch(e) {}
-  const title = document.getElementById('push-card-title');
-  const text = document.getElementById('push-card-text');
-  const btn = document.getElementById('push-card-btn');
-  if (state === 'granted') {
-    card.style.display = 'none';
-    if (toggleCard) {
-      const on = !_pushOptedOut();
-      toggleCard.style.display = 'block';
-      document.getElementById('push-toggle').checked = on;
-      document.getElementById('push-toggle-sub').textContent = on ? 'Attive su questo telefono' : 'Disattivate su questo telefono';
-    }
-    return;
-  }
-  if (toggleCard) toggleCard.style.display = 'none';
   card.style.display = 'block';
   if (state === 'denied') {
     if (title) title.textContent = 'Notifiche disattivate';
@@ -5186,11 +5173,50 @@ async function updatePushCard() {
   }
 }
 
-async function onEnablePushClick() {
-  const btn = document.getElementById('push-card-btn');
+async function _pushState() {
+  if (!_pushSupported()) return null;
+  try { return (await _pushPlugin().checkPermissions()).receive; } catch(e) { return 'prompt'; }
+}
+
+// Pagina Notifiche (campanella in Home): solo un invito ad attivarle se non lo sono ancora. Lo spegnimento
+// non è qui, ma in Profilo → Impostazioni → Notifiche.
+async function updatePushCard() {
+  const card = document.getElementById('push-enable-card');
+  if (!card) return;
+  const state = await _pushState();
+  if (state === null || state === 'granted') { card.style.display = 'none'; return; }
+  _paintEnableCard('push', state);
+}
+
+// Schermata dedicata in Profilo → Impostazioni → Notifiche: qui si attivano e si disattivano
+async function updatePushSettings() {
+  const enableCard = document.getElementById('pns-enable-card');
+  const toggleCard = document.getElementById('pns-toggle-card');
+  const note = document.getElementById('pns-note');
+  if (!enableCard || !toggleCard) return;
+  const state = await _pushState();
+  enableCard.style.display = 'none';
+  toggleCard.style.display = 'none';
+  if (state === null) {
+    if (note) note.textContent = 'Le notifiche push sono disponibili nell\'app per iPhone.';
+    return;
+  }
+  if (state === 'granted') {
+    const on = !_pushOptedOut();
+    toggleCard.style.display = 'block';
+    document.getElementById('pns-toggle').checked = on;
+    document.getElementById('pns-toggle-sub').textContent = on ? 'Attive su questo telefono' : 'Disattivate su questo telefono';
+  } else {
+    _paintEnableCard('pns', state);
+  }
+  if (note) note.textContent = 'Le notifiche ti avvisano solo di novità utili. Il messaggio resta sempre consultabile dalla campanella nella Home. La scelta vale per questo telefono.';
+}
+
+async function onEnablePushClick(btn) {
   if (btn) btn.disabled = true;
   const ok = await enablePush();
   await updatePushCard();
+  await updatePushSettings();
   if (ok) showAppToast('Notifiche attivate', 3000);
 }
 
