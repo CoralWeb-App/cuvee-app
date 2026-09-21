@@ -2312,6 +2312,7 @@ async function submitNewPassword() {
 // LOGOUT
 async function signOut() {
   await unregisterPush();
+  _paintUnreadBadge(0);
   try {
     await supa.auth.signOut();
   } catch(e) {
@@ -5278,15 +5279,39 @@ async function _fetchUnreadActiveIds() {
   return activeIds.filter(id => !readSet.has(id));
 }
 
+// Numero dei messaggi non letti: cerchietto rosso sulla campanella in Home e sull'icona dell'app.
+// Un'unica funzione lo aggiorna ovunque, così i due numeri non possono mai divergere.
+function _paintUnreadBadge(count) {
+  const dot = document.getElementById('notif-badge-dot');
+  if (dot) {
+    dot.textContent = count > 9 ? '9+' : String(count);
+    dot.classList.toggle('show', count > 0);
+  }
+  _syncAppIconBadge(count);
+}
+
+// Numero sull'icona: con il plugin nativo "Badge" (build 1.0.4 in poi) è esatto; con le build precedenti si può
+// solo azzerarlo (e svuotare il Centro Notifiche) quando non resta nulla da leggere.
+async function _syncAppIconBadge(count) {
+  if (!_pushSupported()) return;
+  const n = _pushOptedOut() ? 0 : count;
+  try {
+    const B = window.Capacitor?.Plugins?.Badge;
+    if (B) await B.set({ count: n });
+    if (n === 0) await _pushPlugin().removeAllDeliveredNotifications();
+  } catch(e) { /* il permesso "numero sull'icona" potrebbe non essere concesso: nessun problema */ }
+}
+
 async function checkUnreadNotifications() {
   if (!currentUser) return;
-  const dot = document.getElementById('notif-badge-dot');
-  if (!dot) return;
   try {
     const unread = await _fetchUnreadActiveIds();
-    dot.classList.toggle('show', unread.length > 0);
+    _paintUnreadBadge(unread.length);
   } catch(e) { console.log('checkUnreadNotifications error:', e); }
 }
+
+// Tornando nell'app da un'altra, il numero si riallinea (nel frattempo possono essere arrivati messaggi)
+document.addEventListener('visibilitychange', () => { if (!document.hidden && currentUser) checkUnreadNotifications(); });
 
 async function renderNotificationsUI() {
   const listEl = document.getElementById('notifications-list');
@@ -5362,8 +5387,7 @@ async function markAllNotificationsRead() {
   if (!unreadIds.length) return;
   unreadIds.forEach(id => _readNotifIds.add(id));
   renderNotificationsList();
-  const dot = document.getElementById('notif-badge-dot');
-  if (dot) dot.classList.remove('show');
+  _paintUnreadBadge(0);
   const rows = unreadIds.map(id => ({ user_id: currentUser.id, notification_id: id }));
   const { error } = await supa.from('notification_reads').upsert(rows, { onConflict: 'user_id,notification_id' });
   if (error) console.log('markAllNotificationsRead error:', error);
@@ -5380,8 +5404,7 @@ function openNotificationDetail(id) {
   if (currentUser && !_readNotifIds.has(id)) {
     _readNotifIds.add(id);
     renderNotificationsList();
-    const dot = document.getElementById('notif-badge-dot');
-    if (dot && !_notificationsCache.some(x => !_readNotifIds.has(x.id))) dot.classList.remove('show');
+    _paintUnreadBadge(_notificationsCache.filter(x => !_readNotifIds.has(x.id)).length);
     supa.from('notification_reads').upsert({ user_id: currentUser.id, notification_id: id }, { onConflict: 'user_id,notification_id' })
       .then(({ error }) => { if (error) console.log('mark notification read error:', error); });
   }

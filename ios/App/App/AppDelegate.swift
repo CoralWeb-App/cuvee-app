@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -48,5 +49,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                           sessionRole: connectingSceneSession.role)
         config.delegateClass = SceneDelegate.self
         return config
+    }
+}
+
+// Numero rosso sull'icona dell'app: il plugin push di Capacitor sa solo azzerarlo, qui si imposta il valore esatto
+// (messaggi non letti). Vive nel target dell'app, quindi non serve alcuna dipendenza esterna.
+@objc(BadgePlugin)
+public class BadgePlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "BadgePlugin"
+    public let jsName = "Badge"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "set", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func set(_ call: CAPPluginCall) {
+        let count = max(0, call.getInt("count") ?? 0)
+        DispatchQueue.main.async {
+            if #available(iOS 16.0, *) {
+                UNUserNotificationCenter.current().setBadgeCount(count) { _ in call.resolve() }
+            } else {
+                UIApplication.shared.applicationIconBadgeNumber = count
+                call.resolve()
+            }
+        }
+    }
+}
+
+class AppViewController: CAPBridgeViewController {
+    override open func capacitorDidLoad() {
+        bridge?.registerPluginInstance(BadgePlugin())
     }
 }

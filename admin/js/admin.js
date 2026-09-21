@@ -2363,7 +2363,7 @@ async function openNewNotificaModal() {
         </div>
         <div class="adm-form-field" style="grid-column:1/-1">
           <label class="adm-form-label">Messaggio</label>
-          <textarea class="adm-form-input" rows="5" id="nn-body" maxlength="1000" placeholder="Testo del messaggio che vedrà l'utente..." oninput="updatePushCounter()"></textarea>
+          <textarea class="adm-form-input" rows="5" id="nn-body" maxlength="2000" placeholder="Testo del messaggio che vedrà l'utente..."></textarea>
         </div>
         <div class="adm-form-field" style="grid-column:1/-1">
           <label style="display:flex;gap:10px;align-items:center;cursor:pointer;font-size:13px;color:var(--text-2)">
@@ -2403,12 +2403,9 @@ async function openNewNotificaModal() {
 function updatePushCounter() {
   const el = document.getElementById('nn-push-hint')
   if (!el) return
-  const len = (document.getElementById('nn-body')?.value || '').length
   const devices = el.dataset.devices
-  const tooLong = len > 240
-  el.innerHTML = (devices !== undefined ? `${devices} dispositivi con push attive. ` : '')
-    + `Nella push il messaggio è limitato a 240 caratteri (ora ${len}).`
-    + (tooLong ? ' <strong style="color:var(--red)">Troppo lungo per la push: accorcialo o togli la spunta.</strong>' : '')
+  el.textContent = (devices !== undefined ? `${devices} dispositivi con push attive. ` : '')
+    + 'Nella push compare solo l\'inizio del messaggio; il testo completo si legge dentro l\'app.'
 }
 
 async function sendTestPush() {
@@ -2430,7 +2427,6 @@ async function createNotifica() {
   const audience = document.getElementById('nn-audience')?.value || 'all'
   if (!title) { showToast('Il titolo è obbligatorio', 'error'); return }
   if (!body)  { showToast('Il messaggio è obbligatorio', 'error'); return }
-  if (wantPush && body.length > 240) { showToast('Messaggio troppo lungo per la push (max 240 caratteri)', 'error'); return }
   const btn = document.getElementById('nn-send-btn')
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Invio...' }
   try {

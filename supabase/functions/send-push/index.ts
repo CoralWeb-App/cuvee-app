@@ -12,8 +12,12 @@ const json = (data: unknown, status = 200) =>
 const APNS_HOST = { production: 'https://api.push.apple.com', sandbox: 'https://api.sandbox.push.apple.com' } as const
 type Env = keyof typeof APNS_HOST
 const CONCURRENCY = 25
-const MAX_TITLE = 80
-const MAX_BODY = 240
+// Nella push compare solo l'inizio del testo: il messaggio completo si legge dentro l'app. Questi sono i
+// limiti di ciò che si mostra nella notifica di sistema, non del messaggio.
+const PUSH_TITLE_CHARS = 65
+const PUSH_BODY_CHARS = 110
+const INPUT_MAX_TITLE = 200
+const INPUT_MAX_BODY = 2000
 
 // deno-lint-ignore no-explicit-any
 type Db = any
@@ -113,8 +117,49 @@ async function loadTokens(db: Db, audience: string, callerId: string): Promise<T
   return rows.filter((r) => (audience === 'premium') === ids.has(r.user_id))
 }
 
-export function buildPayload(title: string, body: string, notificationId?: string): string {
-  return JSON.stringify({ aps: { alert: { title, body }, sound: 'default' }, ...(notificationId ? { notification_id: notificationId } : {}) })
+// Accorcia al limite tagliando su una parola intera e aggiungendo i puntini
+export function clip(text: string, max: number): string {
+  const t = text.replace(/\s+/g, ' ').trim()
+  if (t.length <= max) return t
+  const cut = t.slice(0, max)
+  const lastSpace = cut.lastIndexOf(' ')
+  const base = lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut
+  return base.replace(/[\s,;:.\-–—]+$/, '') + '…'
+}
+
+export function buildPayload(title: string, body: string, notificationId?: string, badge?: number): string {
+  return JSON.stringify({
+    aps: {
+      alert: { title: clip(title, PUSH_TITLE_CHARS), body: clip(body, PUSH_BODY_CHARS) },
+      sound: 'default',
+      ...(typeof badge === 'number' ? { badge } : {}),
+    },
+    ...(notificationId ? { notification_id: notificationId } : {}),
+  })
+}
+
+// Numero da mostrare sull'icona dell'app: messaggi attivi che quell'utente non ha ancora letto.
+// Se la lettura fallisce si omette il numero (meglio nessun numero che uno sbagliato).
+async function unreadByUser(db: Db, userIds: string[]): Promise<Map<string, number> | null> {
+  try {
+    const { data: active, error } = await db.from('notifications').select('id').eq('is_active', true)
+    if (error) return null
+    const activeIds = new Set<string>((active ?? []).map((r: { id: string }) => r.id))
+    const readCount = new Map<string, number>()
+    for (let i = 0; i < userIds.length; i += 200) {
+      const chunk = userIds.slice(i, i + 200)
+      for (let from = 0; ; from += 1000) {
+        const { data, error: e2 } = await db.from('notification_reads').select('user_id, notification_id')
+          .in('user_id', chunk).order('read_at', { ascending: true }).range(from, from + 999)
+        if (e2) return null
+        for (const r of data ?? []) if (activeIds.has(r.notification_id)) readCount.set(r.user_id, (readCount.get(r.user_id) ?? 0) + 1)
+        if (!data || data.length < 1000) break
+      }
+    }
+    const out = new Map<string, number>()
+    for (const id of userIds) out.set(id, Math.max(0, activeIds.size - (readCount.get(id) ?? 0)))
+    return out
+  } catch (_) { return null }
 }
 
 serve(async (req) => {
@@ -137,8 +182,8 @@ serve(async (req) => {
     const audience = String(body.audience ?? 'all')
     const notificationId = typeof body.notification_id === 'string' ? body.notification_id : undefined
     if (!title || !message) return json({ error: 'Titolo e messaggio sono obbligatori' }, 400)
-    if (title.length > MAX_TITLE) return json({ error: `Titolo troppo lungo (max ${MAX_TITLE} caratteri)` }, 400)
-    if (message.length > MAX_BODY) return json({ error: `Messaggio troppo lungo per una push (max ${MAX_BODY} caratteri)` }, 400)
+    if (title.length > INPUT_MAX_TITLE) return json({ error: `Titolo troppo lungo (max ${INPUT_MAX_TITLE} caratteri)` }, 400)
+    if (message.length > INPUT_MAX_BODY) return json({ error: `Messaggio troppo lungo (max ${INPUT_MAX_BODY} caratteri)` }, 400)
     if (!['all', 'premium', 'free', 'test'].includes(audience)) return json({ error: 'Destinatari non validi' }, 400)
 
     const pem = Deno.env.get('APNS_KEY_P8')
@@ -153,13 +198,14 @@ serve(async (req) => {
     let jwt: string
     try { jwt = await makeProviderToken(pem, keyId, teamId) } catch (e) { return json({ error: 'Chiave APNs non valida: ' + (e as Error).message }, 500) }
 
-    const payload = buildPayload(title, message, notificationId)
+    const unread = await unreadByUser(db, [...new Set(tokens.map((t) => t.user_id))])
+    const payloadFor = (t: TokenRow) => buildPayload(title, message, notificationId, unread?.get(t.user_id))
     let sent = 0, removed = 0
     const failures: Record<string, number> = {}
     let fatal: string | null = null
 
     for (let i = 0; i < tokens.length && !fatal; i += CONCURRENCY) {
-      const results = await Promise.all(tokens.slice(i, i + CONCURRENCY).map((t) => deliver(db, jwt, topic, t, payload)))
+      const results = await Promise.all(tokens.slice(i, i + CONCURRENCY).map((t) => deliver(db, jwt, topic, t, payloadFor(t))))
       for (const r of results) {
         if (r.ok) { sent++; continue }
         if (r.removed) removed++
