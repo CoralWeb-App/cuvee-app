@@ -531,7 +531,7 @@ function cvOpenBuilder(mode, opts) {
   const isNew = mode === 'new';
   if (!isNew && !CV.v) return;
   const D = isNew
-    ? { name: CV.cellars.length ? 'Nuova cantina' : 'Casa', units: [{ id: null, kind: 'rack', name: 'Scaffale', cols: 8, rows: 6 }] }
+    ? { name: CV.cellars.length ? 'Nuova cantina' : 'Casa', units: [{ id: null, kind: 'fridge', name: 'Cantinetta', cols: 6, rows: 4 }] }
     : { name: CV.v.name, units: CV.v.units.map(u => ({ id: u.id, kind: u.kind, name: u.name, cols: u.cols, rows: u.rows })) };
   const seats = () => D.units.reduce((n, u) => n + u.cols * u.rows, 0);
   // Bottiglie che, con le nuove misure, non avrebbero più un posto
@@ -544,14 +544,14 @@ function cvOpenBuilder(mode, opts) {
     });
     return n;
   };
-  const presets = [['Scaffale 8×6', [['rack', 8, 6]]], ['Cantinetta 6×4', [['fridge', 6, 4]]], ['Scaffale + cantinetta', [['rack', 8, 6], ['fridge', 6, 4]]]];
+  const presets = [['Cantinetta 6×4', [['fridge', 6, 4]]], ['Scaffale 8×6', [['rack', 8, 6]]], ['Cantinetta + scaffale', [['fridge', 6, 4], ['rack', 8, 6]]]];
   const draw = () => {
     const tot = seats(), over = tot > CV_LIM.seats, lost = lostCount();
     let h = '<h2>' + (isNew ? 'Nuova cantina' : 'Modifica cantina') + '</h2><input type="text" id="cvb-name" value="' + cvEsc(D.name) + '" maxlength="30" aria-label="Nome della cantina">';
     if (isNew) h += '<div class="cv-presets">' + presets.map((p, i) => '<button data-a="preset" data-i="' + i + '">' + p[0] + '</button>').join('') + '</div>';
     D.units.forEach((u, i) => {
       const fr = u.kind === 'fridge';
-      h += '<div class="cv-bu"><div class="cv-bu-top"><div class="cv-kseg"><button data-a="kind" data-i="' + i + '" data-v="rack" class="' + (fr ? '' : 'on') + '">Scaffale</button><button data-a="kind" data-i="' + i + '" data-v="fridge" class="' + (fr ? 'on' : '') + '">Cantinetta</button></div>' +
+      h += '<div class="cv-bu"><div class="cv-bu-top"><div class="cv-kseg"><button data-a="kind" data-i="' + i + '" data-v="fridge" class="' + (fr ? 'on' : '') + '">Cantinetta</button><button data-a="kind" data-i="' + i + '" data-v="rack" class="' + (fr ? '' : 'on') + '">Scaffale</button></div>' +
         '<div class="cv-bu-links">' + (D.units.length < CV_LIM.units ? '<button class="cv-link" data-a="dup" data-i="' + i + '">Duplica</button>' : '') + (D.units.length > 1 ? '<button class="cv-link red" data-a="del" data-i="' + i + '">Rimuovi</button>' : '') + '</div></div>' +
         '<input type="text" data-name="' + i + '" value="' + cvEsc(u.name) + '" maxlength="30" aria-label="Nome dell\'elemento" style="margin-bottom:8px">' +
         '<div class="cv-steps">' +
@@ -640,6 +640,7 @@ async function cvSetView(v) {
   CV.view = v;
   cvEl('cv-seg2d').classList.toggle('on', v === '2d'); cvEl('cv-seg3d').classList.toggle('on', v === '3d');
   cvEl('cv-view2d').hidden = v !== '2d'; cvEl('cv-view3d').hidden = v !== '3d';
+  if (v === '3d') cvRenderThemes();
   if (v !== '3d') { if (CV.T3) CV.T3.active = false; return; }
   const stage = cvEl('cv-stage');
   try {
@@ -705,6 +706,29 @@ function cvPlaqueTex(text) {
   }, 1, 1);
 }
 
+const CV_THEMES = {
+  brick:    { label: 'Mattoni', swatch: '#a5533a', brick: true, skirt: 0x3d2815, exposure: 1.15, cls: '' },
+  ivory:    { label: 'Chiaro',  swatch: '#e6dfd2', wall: 0xf1ebdf, floor: 0xc2b6a3, skirt: 0xfaf6ee, exposure: .95, cls: 'cv-th-ivory' },
+  graphite: { label: 'Scuro',   swatch: '#33353c', wall: 0x1e2025, floor: 0x141518, skirt: 0x34363d, exposure: .72, cls: 'cv-th-graphite' }
+};
+function cvTheme() {
+  let k = 'brick'; try { k = localStorage.getItem('cuvee_cv_theme') || 'brick'; } catch (_) { /* si usa quello di default */ }
+  return CV_THEMES[k] ? k : 'brick';
+}
+function cvRenderThemes() {
+  const cur = cvTheme();
+  cvEl('cv-themes').innerHTML = '<span>Sfondo</span>' + Object.entries(CV_THEMES).map(([k, t]) =>
+    '<button data-th="' + k + '" class="' + (k === cur ? 'on' : '') + '"><i style="background:' + t.swatch + '"></i>' + t.label + '</button>').join('');
+  const st = cvEl('cv-stage');
+  Object.values(CV_THEMES).forEach(t => { if (t.cls) st.classList.remove(t.cls); });
+  if (CV_THEMES[cur].cls) st.classList.add(CV_THEMES[cur].cls);
+}
+cvEl('cv-themes').addEventListener('click', e => {
+  const b = e.target.closest('[data-th]'); if (!b) return;
+  try { localStorage.setItem('cuvee_cv_theme', b.dataset.th); } catch (_) { /* vale solo per questa sessione */ }
+  cvRenderThemes();
+  if (CV.T3) { CV.T3.renderer.toneMappingExposure = CV_THEMES[cvTheme()].exposure; cvBuild3D(); cvUpdateSel3D(false); }
+});
 const CV_UNIT_GAP = .3, CV_ZB = -.5, CV_WALL_H = 1.5, CV_ROOM_D = 1.55;
 
 function cvInit3D() {
@@ -714,7 +738,7 @@ function cvInit3D() {
   catch (e) { el.insertAdjacentHTML('afterbegin', '<div class="cv-nogl">La vista 3D non è disponibile su questo dispositivo.</div>'); return false; }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = CV_THEMES[cvTheme()].exposure;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   el.insertBefore(renderer.domElement, el.firstChild);
 
@@ -815,16 +839,22 @@ function cvBuild3D() {
   const Wr = Math.max(total + .7, 1.7); T.Wr = Wr;
   const WH = Math.max(CV_WALL_H, Math.max(...dims.map(d => d.h)) + .4); T.wallH = WH;
 
-  const brick = (rx, ry) => { const t = cvBrickTex(); t.repeat.set(rx, ry); T.textures.push(t); return new THREE.MeshStandardMaterial({ map: t, roughness: .95 }); };
+  const th = CV_THEMES[cvTheme()];
+  const brick = (rx, ry) => {
+    if (!th.brick) return new THREE.MeshStandardMaterial({ color: th.wall, roughness: .95 });
+    const t = cvBrickTex(); t.repeat.set(rx, ry); T.textures.push(t); return new THREE.MeshStandardMaterial({ map: t, roughness: .95 });
+  };
   const back = new THREE.Mesh(new THREE.PlaneGeometry(Wr, WH), brick(Wr / 1.17, WH / 1.2)); back.position.set(0, WH / 2, CV_ZB); back.receiveShadow = true; back.userData.own = true; room.add(back);
   [-1, 1].forEach(sd => {
     const w = new THREE.Mesh(new THREE.PlaneGeometry(CV_ROOM_D, WH), brick(CV_ROOM_D / 1.17, WH / 1.2));
     w.rotation.y = -sd * Math.PI / 2; w.position.set(sd * Wr / 2, WH / 2, CV_ZB + CV_ROOM_D / 2); w.receiveShadow = true; w.userData.own = true; room.add(w);
   });
-  const ft = cvTileTex(); ft.repeat.set(Wr / .6, CV_ROOM_D / .6); T.textures.push(ft);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(Wr, CV_ROOM_D), new THREE.MeshStandardMaterial({ map: ft, roughness: .85 }));
+  let floorMat;
+  if (th.brick) { const ft = cvTileTex(); ft.repeat.set(Wr / .6, CV_ROOM_D / .6); T.textures.push(ft); floorMat = new THREE.MeshStandardMaterial({ map: ft, roughness: .85 }); }
+  else floorMat = new THREE.MeshStandardMaterial({ color: th.floor, roughness: .9 });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(Wr, CV_ROOM_D), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, CV_ZB + CV_ROOM_D / 2); floor.receiveShadow = true; floor.userData.own = true; room.add(floor);
-  box(Wr, .09, .03, woodDark, 0, .045, CV_ZB + .015, room, false);
+  box(Wr, .09, .03, th.brick ? woodDark : new THREE.MeshStandardMaterial({ color: th.skirt, roughness: .8 }), 0, .045, CV_ZB + .015, room, false);
 
   // Lampada a sospensione
   const lampY = WH - .2;

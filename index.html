@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=155"/>
+<link rel="stylesheet" href="css/style.css?v=157"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2511,6 +2511,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <div class="cv-legend" id="cv-legend"></div>
         <div id="cv-view2d"></div>
         <div id="cv-view3d" hidden>
+          <div class="cv-themes" id="cv-themes"></div>
           <div id="cv-stage">
             <div class="cv-hint3d">Trascina per ruotare · pizzica per avvicinare · tocca una bottiglia</div>
             <div class="cv-cam"><button onclick="cvCam('over')">Insieme</button><button onclick="cvCam('front')">Frontale</button></div>
@@ -4062,7 +4063,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=274"></script>
-<script src="js/cantina.js?v=2"></script>
+<script src="js/app.js?v=275"></script>
+<script src="js/cantina.js?v=6"></script>
 </body>
 </html>
