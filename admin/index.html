@@ -686,6 +686,8 @@
           <button class="adm-filter active" onclick="filterUtenti('all', this)">Tutti</button>
           <button class="adm-filter" onclick="filterUtenti('premium', this)">Premium</button>
           <button class="adm-filter" onclick="filterUtenti('free', this)">Free</button>
+          <button class="adm-filter" onclick="filterUtenti('push_on', this)"><i class="ti ti-bell-ringing"></i> Push attive</button>
+          <button class="adm-filter" onclick="filterUtenti('push_off', this)"><i class="ti ti-bell-off"></i> Senza push</button>
           <button class="adm-filter" onclick="filterUtenti('deleted', this)"><i class="ti ti-user-off"></i> Cancellati <span id="utenti-deleted-count" style="opacity:.75"></span></button>
         </div>
 
@@ -700,13 +702,14 @@
                   <tr id="utenti-thead">
                     <th>UTENTE</th>
                     <th>PIANO</th>
+                    <th>PUSH</th>
                     <th>SCAN</th>
                     <th>CARNET</th>
                     <th>REGISTRATO</th>
                   </tr>
                 </thead>
                 <tbody id="utenti-tbody">
-                  <tr><td colspan="5" class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</td></tr>
+                  <tr><td colspan="6" class="adm-loading"><i class="ti ti-loader-2 spin"></i> Caricamento...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1109,7 +1112,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=31"></script>
+<script src="js/admin.js?v=32"></script>
 
 </body>
 </html>

@@ -2681,7 +2681,7 @@ async function deleteNotifica(id, title) {
 // UTENTI
 // ══════════════════════════════════════════════════════
 const UTENTI_HEAD = {
-  users:   ['UTENTE', 'PIANO', 'SCAN', 'CARNET', 'REGISTRATO'],
+  users:   ['UTENTE', 'PIANO', 'PUSH', 'SCAN', 'CARNET', 'REGISTRATO'],
   deleted: ['UTENTE', 'STATO', 'PIANO', 'ATTIVITÀ', 'CANCELLAZIONE', 'REGISTRO'],
 }
 function setUtentiHead(mode) {
@@ -2689,32 +2689,48 @@ function setUtentiHead(mode) {
   if (tr) tr.innerHTML = UTENTI_HEAD[mode].map(h => `<th>${h}</th>`).join('')
 }
 
+// Il campo push_enabled esiste solo dopo lo script SQL: se manca, l'elenco funziona lo stesso (senza colonna e filtri push)
+let pushColMissing = false
+const pushBadge = (on) => on
+  ? '<span class="adm-badge active" title="Ha almeno un telefono con le notifiche push attive"><i class="ti ti-bell-ringing"></i> ATTIVE</span>'
+  : '<span class="adm-badge inactive" title="Nessun telefono registrato per le notifiche push">NO</span>'
+
 async function renderUtenti() {
   const tbody = document.getElementById('utenti-tbody')
   if (!tbody) return
   if (utentiFilter === 'deleted') return renderUtentiCancellati()
   setUtentiHead('users')
   refreshDeletedCount()
-  tbody.innerHTML = loadingRow(5)
+  const isPushFilter = utentiFilter === 'push_on' || utentiFilter === 'push_off'
+  if (isPushFilter && pushColMissing) {
+    tbody.innerHTML = `<tr><td colspan="6"><div style="padding:28px 24px;color:var(--text-2);font-size:13px;line-height:1.6"><strong style="color:var(--amber)">Filtro non ancora attivo.</strong> Esegui lo script SQL del campo <code class="adm-code">push_enabled</code> su Supabase per usare i filtri push.</div></td></tr>`
+    return
+  }
+  tbody.innerHTML = loadingRow(6)
   try {
     let query = supa
       .from('users')
-      .select('id, email, is_premium, premium_until, is_admin, created_at, deletion_requested_at', { count: 'exact' })
+      .select('id, email, is_premium, premium_until, is_admin, created_at, deletion_requested_at' + (pushColMissing ? '' : ', push_enabled'), { count: 'exact' })
       .order('created_at', { ascending: false })
       .range((utentiPage-1)*PER_PAGE, utentiPage*PER_PAGE - 1)
 
     if (utentiFilter === 'premium') query = activePremium(query)
     if (utentiFilter === 'free')    query = notActivePremium(query)
+    if (utentiFilter === 'push_on')  query = query.eq('push_enabled', true)
+    if (utentiFilter === 'push_off') query = query.eq('push_enabled', false)
     if (utentiSearch) {
       const n = norm(utentiSearch)
       query = query.ilike('email', `%${utentiSearch}%`)
     }
 
     const { data, count, error } = await query
-    if (error) throw error
+    if (error) {
+      if (!pushColMissing && /push_enabled/.test(error.message || '')) { pushColMissing = true; return renderUtenti() }
+      throw error
+    }
 
     const cnt = document.getElementById('utenti-count')
-    if (cnt) cnt.textContent = (count ?? 0).toLocaleString('it') + ' utenti registrati'
+    if (cnt) cnt.textContent = (count ?? 0).toLocaleString('it') + (utentiFilter === 'push_on' ? ' utenti con push attive' : utentiFilter === 'push_off' ? ' utenti senza push' : ' utenti registrati')
 
     // Conteggi esatti per utente (non righe scaricate: il limite di 1000 righe per richiesta falserebbe i totali)
     const scanCounts = {}, carnetCounts = {}
@@ -2740,6 +2756,7 @@ async function renderUtenti() {
           </div>
         </td>
         <td>${prem ? '<span class="adm-badge premium"><i class="ti ti-crown"></i> PREMIUM</span>' : '<span class="adm-badge free">FREE</span>'}${u.deletion_requested_at ? ' <span class="adm-badge pending" title="Ha chiesto di eliminare l\'account: verrà eliminato alla scadenza dell\'abbonamento"><i class="ti ti-clock"></i> CANC. PROGRAMMATA</span>' : ''}</td>
+        <td>${pushColMissing ? '<span class="adm-mono" style="color:var(--text-3)">-</span>' : pushBadge(u.push_enabled === true)}</td>
         <td class="adm-mono">${scanCounts[u.id] ?? 0}</td>
         <td class="adm-mono">${carnetCounts[u.id] ?? 0}</td>
         <td class="adm-time-cell">${fmtDate(u.created_at)}</td>
@@ -2749,7 +2766,7 @@ async function renderUtenti() {
     renderPagination('utenti-pagination', utentiPage, Math.ceil((count??0)/PER_PAGE), 'utentiGoToPage')
     const fc = document.getElementById('utenti-footer-count')
     if (fc) fc.textContent = `Mostrando ${Math.min((utentiPage-1)*PER_PAGE+1,count??0)}–${Math.min(utentiPage*PER_PAGE,count??0)} di ${(count??0).toLocaleString('it')}`
-  } catch(e) { tbody.innerHTML = errorRow(5, e.message) }
+  } catch(e) { tbody.innerHTML = errorRow(6, e.message) }
 }
 
 function utentiGoToPage(p) { utentiPage = p; renderUtenti() }
@@ -3112,6 +3129,10 @@ async function showUserDetail(userId) {
             <span class="adm-ud-label">Registrato</span>
             <span class="adm-ud-val">${fmtDate(u.created_at)}</span>
           </div>
+          ${'push_enabled' in u ? `<div class="adm-ud-row">
+            <span class="adm-ud-label">Notifiche push</span>
+            <span class="adm-ud-val" style="color:${u.push_enabled ? 'var(--green, #3ecf8e)' : 'var(--text-3)'}">${u.push_enabled ? 'Attive' : 'Non attive'}</span>
+          </div>` : ''}
           ${u.is_premium ? `
           <div class="adm-ud-row">
             <span class="adm-ud-label">Premium dal</span>
