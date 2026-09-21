@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=153"/>
+<link rel="stylesheet" href="css/style.css?v=154"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -435,6 +435,20 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div style="font-family:var(--sans);font-size:14px;color:#9884B0;line-height:1.55;">Scansioni, degustazioni o catalogo — fianco a fianco, per scegliere meglio.</div>
         </div>
         <i class="ti ti-chevron-right" style="font-size:19px;color:#B49BD8;flex-shrink:0;"></i>
+      </div>
+    </div>
+
+    <!-- LA MIA CANTINA (solo admin, per ora) -->
+    <div id="home-cantina-card" onclick="go('v-cantina')" style="display:none;margin:0 18px 12px;background:linear-gradient(135deg,#2C1719,#43242A);border:1px solid #5E343B;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:15px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(214,150,160,.35);box-shadow:0 2px 12px rgba(30,10,14,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="ti ti-building-warehouse" style="font-size:24px;color:#D89AA4;"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:var(--serif);font-size:22px;color:#F0DADD;font-weight:500;margin-bottom:5px;">La mia cantina</div>
+          <div style="font-family:var(--sans);font-size:14px;color:#B98790;line-height:1.55;">Le tue bottiglie al loro posto, in mappa e in 3D.</div>
+        </div>
+        <i class="ti ti-chevron-right" style="font-size:19px;color:#D89AA4;flex-shrink:0;"></i>
       </div>
     </div>
 
@@ -2434,6 +2448,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <i class="ti ti-notebook" style="font-size:17px;"></i> Aggiungi al Carnet
       </button>
     </div>
+    <div id="bott-detail-cellar-wrap" style="display:none;margin:8px 14px 0;">
+      <button onclick="cvAddFromCatalog(currentBottiglia.id)" style="width:100%;background:var(--white);border:1px solid var(--gold-border);border-radius:12px;padding:13px;font-family:var(--sans);font-size:16px;color:var(--ink-2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="ti ti-building-warehouse" style="font-size:18px;color:var(--gold);"></i> Metti in cantina</button>
+    </div>
     <!-- VINI DI BASE / ASSEMBLAGGIO -->
     <div id="bott-detail-assembl-section" style="display:none;">
       <div class="assembl-header">
@@ -2461,6 +2478,36 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
     <div style="height:36px;"></div>
   </div>
+</div>
+
+<!-- ═══ CANTINA PERSONALE (per ora solo admin) ═══ -->
+<div class="view" id="v-cantina">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Indietro</button>
+    <div class="topbar-icons"><button class="cv-top-btn" id="cv-edit-btn" onclick="cvOpenBuilder('edit')" style="display:none;">Modifica</button></div>
+  </div>
+  <div class="scroll" id="cv-scroll">
+    <div class="cv-body">
+      <div class="cv-title">La mia cantina</div>
+      <div class="cv-chips" id="cv-chips"></div>
+      <div id="cv-main">
+        <div class="cv-stats" id="cv-stats"></div>
+        <div class="cv-seg"><button id="cv-seg2d" class="on" onclick="cvSetView('2d')">Mappa 2D</button><button id="cv-seg3d" onclick="cvSetView('3d')">Vista 3D</button></div>
+        <div class="cv-legend" id="cv-legend"></div>
+        <div id="cv-view2d"></div>
+        <div id="cv-view3d" hidden>
+          <div id="cv-stage">
+            <div class="cv-hint3d">Trascina per ruotare · pizzica per avvicinare · tocca una bottiglia</div>
+            <div class="cv-cam"><button onclick="cvCam('over')">Insieme</button><button onclick="cvCam('front')">Frontale</button></div>
+          </div>
+        </div>
+        <div id="cv-unplaced"></div>
+      </div>
+      <div id="cv-empty"></div>
+      <div style="height:230px;"></div>
+    </div>
+  </div>
+  <div class="cv-info" id="cv-info" hidden></div>
 </div>
 
 <!-- ═══ PAYWALL ═══ -->
@@ -3925,6 +3972,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   </div>
 </div>
 
+<!-- ═══ CANTINA: schede a comparsa ═══ -->
+<div class="cv-sheet-bg" id="cv-sheet-bg" hidden><div class="cv-sheet" id="cv-sheet"></div></div>
+
 <!-- ═══ PUSH: richiesta soft del permesso (mostrata una sola volta dopo la prima scansione) ═══ -->
 <div id="push-prompt-modal">
   <div class="scan-limit-inner">
@@ -3997,6 +4047,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=271"></script>
+<script src="js/app.js?v=272"></script>
+<script src="js/cantina.js?v=1"></script>
 </body>
 </html>

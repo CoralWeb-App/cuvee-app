@@ -34,7 +34,7 @@ function go(id){
     'v-subscription','v-paywall','v-scan-history','v-age-gate','v-complete-profile',
     'v-zone-montagne','v-zone-blancs','v-zone-marne','v-zone-bar','v-zone-sezanne',
     'v-guida-metodo','v-guida-glossario','v-guida-conservazione','v-guida-zone','v-guida-cru','v-guida-clos','v-guida-uve','v-guida-dosaggi','v-guida-service','v-guida-formati',
-    'v-notifications','v-notif-settings'];
+    'v-notifications','v-notif-settings','v-cantina'];
   if(protectedViews.includes(id) && !currentUser){
     id = 'v-splash';
   }
@@ -48,9 +48,10 @@ function go(id){
   if(scrl)scrl.scrollTo(0,0);
   // Load dynamic data when entering certain views
   if(id==='v-onb'){ onbIdx=0; onbApplySlide(onbData[0]); }
-  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); checkWelcomeNotification(); }
+  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); checkWelcomeNotification(); if(typeof cvUpdateEntry==='function') cvUpdateEntry(); }
   if(id==='v-notifications') renderNotificationsUI();
   if(id==='v-notif-settings') updatePushSettings();
+  if(id==='v-cantina' && typeof cvEnter === 'function') cvEnter();
   if(id==='v-guida-glossario') loadGlossario();
   if(id==='v-guida') updateGuidaHubPremiumUI();
   if(id==='v-paywall'){ loadPaywallOfferings(); }
@@ -6931,6 +6932,9 @@ async function openBottigliaDetail(bottId) {
     }
   }
 
+  const cellarWrap = document.getElementById('bott-detail-cellar-wrap');
+  if (cellarWrap) cellarWrap.style.display = (typeof cvEnabled === 'function' && cvEnabled()) ? 'block' : 'none';
+
   // Wishlist icon
   const wishIcon = document.getElementById('bott-detail-wish-icon');
   if (wishIcon) {
@@ -7616,6 +7620,7 @@ function _renderScanResult(result, photoDataUrl, isFreshScan) {
     + '</div>'
     // ── Card azioni (scheda completa + carnet, o solo carnet) ──
     + actionCards
+    + ((typeof cvEnabled === 'function' && cvEnabled()) ? '<div style="margin:10px 14px 0;"><button onclick="cvAddFromScan()" style="width:100%;background:var(--white);border:1px solid var(--gold-border);border-radius:12px;padding:13px;font-family:var(--sans);font-size:16px;color:var(--ink-2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="ti ti-building-warehouse" style="font-size:18px;color:var(--gold);"></i> Metti in cantina</button></div>' : '')
     // ── Confronta — azione a sé, separata dalle due sopra ──
     + '<div style="margin:10px 14px 0;">'
         + '<button onclick="openScanCompareMenu()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--white);border:1.5px solid var(--border-2);color:var(--ink-3);border-radius:var(--radius-md);padding:12px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;">'
