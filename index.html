@@ -3899,7 +3899,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="scan-limit-desc">Ti avviseremo solo per novità utili: nuove cuvée in catalogo, funzioni nuove e aggiornamenti importanti. Puoi disattivare le notifiche quando vuoi dalle Impostazioni del telefono.</div>
     <div class="scan-limit-sep"></div>
     <button class="btn-gold" onclick="acceptPushPrompt()" style="width:100%;margin-top:0;">Attiva le notifiche</button>
-    <button class="scan-limit-skip" onclick="closePushPrompt()">Più tardi</button>
+    <button class="scan-limit-skip" onclick="dismissPushPrompt()">Più tardi</button>
   </div>
 </div>
 
@@ -3962,6 +3962,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=263"></script>
+<script src="js/app.js?v=264"></script>
 </body>
 </html>

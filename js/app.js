@@ -5153,11 +5153,15 @@ async function maybeSoftAskPush() {
   let perm = null;
   try { perm = await _pushPlugin().checkPermissions(); } catch(e) { return; }
   if (perm.receive !== 'prompt' && perm.receive !== 'prompt-with-rationale') return;
-  try { localStorage.setItem(PUSH_PROMPTED_KEY, '1'); } catch(e) {}
   document.getElementById('push-prompt-modal')?.classList.add('on');
 }
+// La richiesta si considera "fatta" solo quando l'utente sceglie uno dei due pulsanti: se chiude l'app
+// senza rispondere, la volta dopo ricompare.
+function _markPushPrompted() { try { localStorage.setItem(PUSH_PROMPTED_KEY, '1'); } catch(e) {} }
 function closePushPrompt() { document.getElementById('push-prompt-modal')?.classList.remove('on'); }
+function dismissPushPrompt() { _markPushPrompted(); closePushPrompt(); }
 async function acceptPushPrompt() {
+  _markPushPrompted();
   closePushPrompt();
   if (await enablePush()) showAppToast('Notifiche attivate', 3000);
 }
