@@ -87,6 +87,21 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div id="app">
 
 <!-- ═══ SPLASH ═══ -->
+<!-- Icona cantina (cantinetta con bottiglie), usata con <svg class="ic-cantina"><use href="#ic-cantina"/></svg> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-cantina" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.5" y="2" width="17" height="19.5" rx="2.5"/>
+    <path d="M3.5 11.75h17"/>
+    <g fill="currentColor" stroke="none">
+      <rect x="7.4" y="5" width="1.2" height="2.4"/><rect x="6.5" y="7" width="3" height="4" rx="1"/>
+      <rect x="11.4" y="5" width="1.2" height="2.4"/><rect x="10.5" y="7" width="3" height="4" rx="1"/>
+      <rect x="15.4" y="5" width="1.2" height="2.4"/><rect x="14.5" y="7" width="3" height="4" rx="1"/>
+      <rect x="7.4" y="13.3" width="1.2" height="2.4"/><rect x="6.5" y="15.3" width="3" height="4.2" rx="1"/>
+      <rect x="11.4" y="13.3" width="1.2" height="2.4"/><rect x="10.5" y="15.3" width="3" height="4.2" rx="1"/>
+      <rect x="15.4" y="13.3" width="1.2" height="2.4"/><rect x="14.5" y="15.3" width="3" height="4.2" rx="1"/>
+    </g>
+  </symbol>
+</svg>
 <div class="view active" id="v-splash">
   <div class="splash-top">
     <div class="splash-bubbles">
@@ -407,20 +422,17 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
     </div>
 
-    <!-- SCANSIONI — storico scan -->
-    <div onclick="go('v-scan-history')" style="margin:0 18px 12px;background:linear-gradient(135deg,#1A1F2E,#252B3D);border:1px solid #323A52;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
+    <!-- LA MIA CANTINA (solo admin, per ora) -->
+    <div id="home-cantina-card" onclick="go('v-cantina')" style="display:none;margin:0 18px 12px;background:linear-gradient(135deg,#2C1719,#43242A);border:1px solid #5E343B;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
       <div style="display:flex;align-items:center;gap:15px;">
-        <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(100,150,220,.35);box-shadow:0 2px 12px rgba(15,20,40,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="ti ti-scan" style="font-size:24px;color:#8BA8E0;"></i>
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(214,150,160,.35);box-shadow:0 2px 12px rgba(30,10,14,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg class="ic-cantina" style="width:28px;height:28px;color:#D89AA4;"><use href="#ic-cantina"/></svg>
         </div>
         <div style="flex:1;">
-          <div style="font-family:var(--serif);font-size:22px;color:#D4E0F4;font-weight:500;margin-bottom:5px;">Storico scansioni</div>
-          <div style="font-family:var(--sans);font-size:14px;color:#8A9AC0;line-height:1.55;">Ritrova ogni bottiglia scansionata — analisi, scheda e note.</div>
+          <div style="font-family:var(--serif);font-size:22px;color:#F0DADD;font-weight:500;margin-bottom:5px;">La mia cantina</div>
+          <div style="font-family:var(--sans);font-size:14px;color:#B98790;line-height:1.55;">Le tue bottiglie al loro posto, in mappa e in 3D.</div>
         </div>
-        <i class="ti ti-chevron-right" style="font-size:19px;color:#8BA8E0;flex-shrink:0;"></i>
-      </div>
-      <div style="margin-top:10px;">
-        <span id="home-scan-count" style="font-family:var(--sans);font-size:12px;color:#6A80AA;"></span>
+        <i class="ti ti-chevron-right" style="font-size:19px;color:#D89AA4;flex-shrink:0;"></i>
       </div>
     </div>
 
@@ -438,17 +450,20 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </div>
     </div>
 
-    <!-- LA MIA CANTINA (solo admin, per ora) -->
-    <div id="home-cantina-card" onclick="go('v-cantina')" style="display:none;margin:0 18px 12px;background:linear-gradient(135deg,#2C1719,#43242A);border:1px solid #5E343B;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
+    <!-- SCANSIONI — storico scan -->
+    <div onclick="go('v-scan-history')" style="margin:0 18px 12px;background:linear-gradient(135deg,#1A1F2E,#252B3D);border:1px solid #323A52;border-radius:var(--radius-lg);padding:20px 18px 17px;cursor:pointer;">
       <div style="display:flex;align-items:center;gap:15px;">
-        <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(214,150,160,.35);box-shadow:0 2px 12px rgba(30,10,14,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="ti ti-building-warehouse" style="font-size:24px;color:#D89AA4;"></i>
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(100,150,220,.35);box-shadow:0 2px 12px rgba(15,20,40,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="ti ti-scan" style="font-size:24px;color:#8BA8E0;"></i>
         </div>
         <div style="flex:1;">
-          <div style="font-family:var(--serif);font-size:22px;color:#F0DADD;font-weight:500;margin-bottom:5px;">La mia cantina</div>
-          <div style="font-family:var(--sans);font-size:14px;color:#B98790;line-height:1.55;">Le tue bottiglie al loro posto, in mappa e in 3D.</div>
+          <div style="font-family:var(--serif);font-size:22px;color:#D4E0F4;font-weight:500;margin-bottom:5px;">Storico scansioni</div>
+          <div style="font-family:var(--sans);font-size:14px;color:#8A9AC0;line-height:1.55;">Ritrova ogni bottiglia scansionata — analisi, scheda e note.</div>
         </div>
-        <i class="ti ti-chevron-right" style="font-size:19px;color:#D89AA4;flex-shrink:0;"></i>
+        <i class="ti ti-chevron-right" style="font-size:19px;color:#8BA8E0;flex-shrink:0;"></i>
+      </div>
+      <div style="margin-top:10px;">
+        <span id="home-scan-count" style="font-family:var(--sans);font-size:12px;color:#6A80AA;"></span>
       </div>
     </div>
 
@@ -2449,7 +2464,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
       </button>
     </div>
     <div id="bott-detail-cellar-wrap" style="display:none;margin:8px 14px 0;">
-      <button onclick="cvAddFromCatalog(currentBottiglia.id)" style="width:100%;background:var(--white);border:1px solid var(--gold-border);border-radius:12px;padding:13px;font-family:var(--sans);font-size:16px;color:var(--ink-2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="ti ti-building-warehouse" style="font-size:18px;color:var(--gold);"></i> Metti in cantina</button>
+      <button onclick="cvAddFromCatalog(currentBottiglia.id)" style="width:100%;background:var(--white);border:1px solid var(--gold-border);border-radius:12px;padding:13px;font-family:var(--sans);font-size:16px;color:var(--ink-2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><svg class="ic-cantina" style="width:20px;height:20px;color:var(--gold);"><use href="#ic-cantina"/></svg> Metti in cantina</button>
     </div>
     <!-- VINI DI BASE / ASSEMBLAGGIO -->
     <div id="bott-detail-assembl-section" style="display:none;">
@@ -4047,7 +4062,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=273"></script>
+<script src="js/app.js?v=274"></script>
 <script src="js/cantina.js?v=2"></script>
 </body>
 </html>

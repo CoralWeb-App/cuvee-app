@@ -7620,7 +7620,7 @@ function _renderScanResult(result, photoDataUrl, isFreshScan) {
     + '</div>'
     // ── Card azioni (scheda completa + carnet, o solo carnet) ──
     + actionCards
-    + ((typeof cvEnabled === 'function' && cvEnabled()) ? '<div style="margin:10px 14px 0;"><button onclick="cvAddFromScan()" style="width:100%;background:var(--white);border:1px solid var(--gold-border);border-radius:12px;padding:13px;font-family:var(--sans);font-size:16px;color:var(--ink-2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="ti ti-building-warehouse" style="font-size:18px;color:var(--gold);"></i> Metti in cantina</button></div>' : '')
+    + ((typeof cvEnabled === 'function' && cvEnabled()) ? '<div style="margin:10px 14px 0;"><button onclick="cvAddFromScan()" style="width:100%;background:var(--white);border:1px solid var(--gold-border);border-radius:12px;padding:13px;font-family:var(--sans);font-size:16px;color:var(--ink-2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><svg class="ic-cantina" style="width:20px;height:20px;color:var(--gold);"><use href="#ic-cantina"/></svg> Metti in cantina</button></div>' : '')
     // ── Confronta — azione a sé, separata dalle due sopra ──
     + '<div style="margin:10px 14px 0;">'
         + '<button onclick="openScanCompareMenu()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--white);border:1.5px solid var(--border-2);color:var(--ink-3);border-radius:var(--radius-md);padding:12px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;">'
