@@ -59,6 +59,29 @@ function safeEqual(a: string, b: string): boolean {
   return r === 0
 }
 
+function jwtRole(token: string): string | null {
+  try {
+    const part = token.split('.')[1]
+    if (!part) return null
+    const role = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/'))).role
+    return typeof role === 'string' ? role : null
+  } catch (_) { return null }
+}
+
+// Chiamante di sistema = chiunque presenti la chiave segreta del progetto. Nei progetti che usano le nuove
+// API key la variabile d'ambiente può non coincidere con la chiave che si copia dalla dashboard (formato
+// diverso), quindi oltre al confronto diretto si prova la chiave: solo una chiave segreta valida può
+// elencare gli utenti. I token utente (ruolo "authenticated") non vengono nemmeno provati.
+async function isSystemCaller(bearer: string, url: string, envService: string): Promise<boolean> {
+  if (!bearer) return false
+  if (safeEqual(bearer, envService)) return true
+  if (jwtRole(bearer) !== 'service_role' && !bearer.startsWith('sb_secret_')) return false
+  try {
+    const { error } = await createClient(url, bearer).auth.admin.listUsers({ page: 1, perPage: 1 })
+    return !error
+  } catch (_) { return false }
+}
+
 // "Premium a pagamento" = abbonamento reale (RevenueCat) ancora in corso. I Premium
 // concessi a mano dall'admin non hanno pagato nulla e si eliminano subito come i Free.
 function payingUntil(p: Profile | null): Date | null {
@@ -337,7 +360,7 @@ serve(async (req) => {
 
     // ── Chiamate di sistema (webhook RevenueCat, job giornaliero): autenticate con la service key ──
     const bearer = authHeader.replace(/^Bearer\s+/i, '').trim()
-    if (safeEqual(bearer, SUPA_SERVICE)) {
+    if (await isSystemCaller(bearer, SUPA_URL, SUPA_SERVICE)) {
       if (action === 'ping') return json({ ok: true, version: 2 })
       if (action === 'sweep') return json({ success: true, ...(await runSweep(adminSupa)) })
       if (action === 'execute' && isUuid(target)) {

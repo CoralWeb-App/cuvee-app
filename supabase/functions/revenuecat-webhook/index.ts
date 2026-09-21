@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
       // L'abbonamento è davvero finito: si esegue la cancellazione programmata (la funzione ricontrolla tutto)
       const r = await fetch(`${SUPA_URL}/functions/v1/delete-account`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPA_SERVICE}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPA_SERVICE}`, apikey: SUPA_SERVICE },
         body: JSON.stringify({ action: 'execute', target_user_id: p.id }),
       })
       // Un errore qui fa ritentare RevenueCat (5 tentativi); l'operazione è idempotente
