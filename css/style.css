@@ -1346,6 +1346,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #delete-account-modal.on{display:flex;}
 #push-prompt-modal{position:fixed;inset:0;z-index:9300;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
 #push-prompt-modal.on{display:flex;}
+.push-switch{position:relative;width:50px;height:30px;flex-shrink:0;display:inline-block;}
+.push-switch input{opacity:0;width:0;height:0;position:absolute;}
+.push-switch span{position:absolute;inset:0;background:var(--ivory-3);border:1px solid var(--border-2);border-radius:30px;transition:background .2s;cursor:pointer;}
+.push-switch span::before{content:'';position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(30,18,8,.3);transition:transform .2s;}
+.push-switch input:checked + span{background:#B8983A;border-color:#B8983A;}
+.push-switch input:checked + span::before{transform:translateX(20px);}
+.push-switch input:disabled + span{opacity:.5;cursor:default;}
 #bottle-photo-info-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
 #bottle-photo-info-modal.on{display:flex;}
 #notification-detail-modal{position:fixed;inset:0;z-index:9200;background:rgba(14,10,4,.88);display:none;align-items:center;justify-content:center;padding:24px;}

@@ -5034,6 +5034,8 @@ function applyCruPremiumGating(viewId) {
 // Il plugin nativo esiste solo nelle build iOS che lo includono: nel browser e nelle versioni vecchie
 // dell'app _pushSupported() è falso e tutto questo resta inattivo.
 const PUSH_PROMPTED_KEY = 'cuvee_push_prompted_v2';
+const PUSH_OPTOUT_KEY = 'cuvee_push_optout';   // scelta "disattiva" fatta nell'app, valida per questo telefono
+let _pushTokenWaiters = [];
 let _pushToken = null;
 let _pushListenersBound = false;
 
@@ -5054,7 +5056,11 @@ function _bindPushListeners() {
   const P = _pushPlugin();
   if (_pushListenersBound || !P) return;
   _pushListenersBound = true;
-  P.addListener('registration', (t) => { _pushToken = t?.value || null; _savePushToken(); });
+  P.addListener('registration', (t) => {
+    _pushToken = t?.value || null;
+    _pushTokenWaiters.splice(0).forEach(fn => fn(_pushToken));
+    if (!_pushOptedOut()) _savePushToken();
+  });
   P.addListener('registrationError', (e) => console.log('Push registration error:', e));
   // App aperta: nessun banner di sistema, quindi un avviso discreto e il pallino sulla campanella
   P.addListener('pushNotificationReceived', (n) => {
@@ -5064,10 +5070,15 @@ function _bindPushListeners() {
   P.addListener('pushNotificationActionPerformed', () => { if (currentUser) go('v-notifications'); });
 }
 
-// Se l'utente ha già dato il permesso, il telefono si registra a ogni avvio (il token può cambiare)
+function _pushOptedOut() { try { return localStorage.getItem(PUSH_OPTOUT_KEY) === '1'; } catch(e) { return false; } }
+function _setPushOptedOut(v) { try { v ? localStorage.setItem(PUSH_OPTOUT_KEY, '1') : localStorage.removeItem(PUSH_OPTOUT_KEY); } catch(e) {} }
+
+// Se l'utente ha già dato il permesso (e non ha disattivato le push dall'app), il telefono si registra
+// a ogni avvio: il token può cambiare
 async function initPush() {
   if (!_pushSupported() || !currentUser) return;
   _bindPushListeners();
+  if (_pushOptedOut()) return;
   try {
     const perm = await _pushPlugin().checkPermissions();
     if (perm.receive === 'granted') await _pushPlugin().register();
@@ -5077,6 +5088,7 @@ async function initPush() {
 async function enablePush() {
   if (!_pushSupported()) return false;
   _bindPushListeners();
+  _setPushOptedOut(false);
   const P = _pushPlugin();
   try {
     let perm = await P.checkPermissions();
@@ -5093,16 +5105,64 @@ async function unregisterPush() {
   try { await supa.rpc('unregister_push_token', { p_token: _pushToken }); } catch(e) { console.log('unregisterPush error:', e); }
 }
 
+// Il telefono di un utente che ha disattivato le push dall'app: serve il suo token per toglierlo dal server.
+// Se l'app non l'ha ancora ricevuto in questa sessione, lo si richiede al sistema e si attende.
+function _ensurePushToken() {
+  if (_pushToken) return Promise.resolve(_pushToken);
+  const P = _pushPlugin();
+  if (!P) return Promise.resolve(null);
+  _bindPushListeners();
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), 4000);
+    _pushTokenWaiters.push((t) => { clearTimeout(timer); resolve(t); });
+    P.register().catch(() => { clearTimeout(timer); resolve(null); });
+  });
+}
+
+// Interruttore nella pagina Notifiche. iOS non permette all'app di revocare il permesso di sistema, quindi
+// "disattiva" toglie questo telefono dal server (niente più push) e ricorda la scelta; "attiva" lo rimette.
+async function onPushToggle(el) {
+  const wantOn = el.checked;
+  el.disabled = true;
+  try {
+    if (wantOn) {
+      const ok = await enablePush();
+      if (!ok) el.checked = false;
+      else showAppToast('Notifiche attivate', 3000);
+    } else {
+      _setPushOptedOut(true);
+      const tk = await _ensurePushToken();
+      if (tk) { try { await supa.rpc('unregister_push_token', { p_token: tk }); } catch(e) { console.log('unregister error:', e); } }
+      _pushToken = null;
+      showAppToast('Notifiche disattivate su questo telefono', 3000);
+    }
+  } finally {
+    el.disabled = false;
+    updatePushCard();
+  }
+}
+
 async function updatePushCard() {
   const card = document.getElementById('push-enable-card');
+  const toggleCard = document.getElementById('push-toggle-card');
   if (!card) return;
-  if (!_pushSupported()) { card.style.display = 'none'; return; }
+  if (!_pushSupported()) { card.style.display = 'none'; if (toggleCard) toggleCard.style.display = 'none'; return; }
   let state = 'prompt';
   try { state = (await _pushPlugin().checkPermissions()).receive; } catch(e) {}
   const title = document.getElementById('push-card-title');
   const text = document.getElementById('push-card-text');
   const btn = document.getElementById('push-card-btn');
-  if (state === 'granted') { card.style.display = 'none'; return; }
+  if (state === 'granted') {
+    card.style.display = 'none';
+    if (toggleCard) {
+      const on = !_pushOptedOut();
+      toggleCard.style.display = 'block';
+      document.getElementById('push-toggle').checked = on;
+      document.getElementById('push-toggle-sub').textContent = on ? 'Attive su questo telefono' : 'Disattivate su questo telefono';
+    }
+    return;
+  }
+  if (toggleCard) toggleCard.style.display = 'none';
   card.style.display = 'block';
   if (state === 'denied') {
     if (title) title.textContent = 'Notifiche disattivate';
