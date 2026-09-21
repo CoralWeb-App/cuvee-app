@@ -5067,11 +5067,22 @@ function _bindPushListeners() {
     checkUnreadNotifications();
     showAppToast(n?.title || 'Nuova notifica da Cuvée', 3500);
   });
-  P.addListener('pushNotificationActionPerformed', () => { if (currentUser) go('v-notifications'); });
+  P.addListener('pushNotificationActionPerformed', (a) => { if (currentUser) _openFromPush(a?.notification?.data?.notification_id); });
 }
 
 function _pushOptedOut() { try { return localStorage.getItem(PUSH_OPTOUT_KEY) === '1'; } catch(e) { return false; } }
 function _setPushOptedOut(v) { try { v ? localStorage.setItem(PUSH_OPTOUT_KEY, '1') : localStorage.removeItem(PUSH_OPTOUT_KEY); } catch(e) {} }
+
+// Toccando una notifica si apre la pagina Notifiche e, se la push è collegata a un messaggio, direttamente
+// quel messaggio (attende che l'elenco sia caricato).
+async function _openFromPush(notificationId) {
+  go('v-notifications');
+  if (!notificationId) return;
+  for (let i = 0; i < 30; i++) {
+    if (_notificationsCache.some(n => n.id === notificationId)) { openNotificationDetail(notificationId); return; }
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
 
 // Se l'utente ha già dato il permesso (e non ha disattivato le push dall'app), il telefono si registra
 // a ogni avvio: il token può cambiare
