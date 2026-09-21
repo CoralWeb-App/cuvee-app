@@ -5033,7 +5033,7 @@ function applyCruPremiumGating(viewId) {
 // ═══ NOTIFICHE PUSH (direttamente con Apple, senza servizi di terzi) ═══
 // Il plugin nativo esiste solo nelle build iOS che lo includono: nel browser e nelle versioni vecchie
 // dell'app _pushSupported() è falso e tutto questo resta inattivo.
-const PUSH_PROMPTED_KEY = 'cuvee_push_prompted';
+const PUSH_PROMPTED_KEY = 'cuvee_push_prompted_v2';
 let _pushToken = null;
 let _pushListenersBound = false;
 
