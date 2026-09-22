@@ -302,6 +302,7 @@ function cvRenderInfo() {
   }
   const t = CV_TYPES[b.kind] || CV_TYPES.champagne;
   const extra = [];
+  if (b.sboccatura) extra.push('sboccatura ' + b.sboccatura);
   if (b.price != null) extra.push('€ ' + Number(b.price).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
   if (b.purchased_at) extra.push('acquistata il ' + new Date(b.purchased_at + 'T12:00:00').toLocaleDateString('it-IT'));
   const th = (field, label) => b[field]
@@ -375,14 +376,18 @@ async function cvStappa(b) {
 }
 async function cvOpenCarnet(b) {
   try { await ensureBottiglieLoaded(); } catch (_) { /* si prosegue con i dati della cantina */ }
-  if (b.catalog_id && allBottiglie.find(x => x.id === b.catalog_id)) { openNewNoteFromBottiglia(b.catalog_id); return; }
-  // Bottiglia non in catalogo: si usa lo stesso percorso, con una scheda "finta" e senza legarla al catalogo
-  const prev = currentBottiglia;
-  currentBottiglia = { id: 'cellar-tmp', nome: b.cuvee, annata: (b.year && b.year !== 'NV') ? b.year : null, maison: { nome: b.maison },
-    tipo: b.kind === 'rose' ? 'rose' : null, dosaggio_tipo: '', foto_url: b.photo_url || null };
-  openNewNoteFromBottiglia('cellar-tmp');
-  const hid = document.getElementById('note-bottiglia-id'); if (hid) hid.value = '';
-  currentBottiglia = prev;
+  if (b.catalog_id && allBottiglie.find(x => x.id === b.catalog_id)) openNewNoteFromBottiglia(b.catalog_id);
+  else {
+    // Bottiglia non in catalogo: si usa lo stesso percorso, con una scheda "finta" e senza legarla al catalogo
+    const prev = currentBottiglia;
+    currentBottiglia = { id: 'cellar-tmp', nome: b.cuvee, annata: (b.year && b.year !== 'NV') ? b.year : null, maison: { nome: b.maison },
+      tipo: b.kind === 'rose' ? 'rose' : null, dosaggio_tipo: '', foto_url: b.photo_url || null };
+    openNewNoteFromBottiglia('cellar-tmp');
+    const hid = document.getElementById('note-bottiglia-id'); if (hid) hid.value = '';
+    currentBottiglia = prev;
+  }
+  // La sboccatura, se la conoscevamo già dalla cantina, non va persa passando al Carnet
+  if (b.sboccatura) { const el = document.getElementById('note-sboccatura'); if (el) el.value = b.sboccatura; }
 }
 
 /* ───────── Foto ───────── */
@@ -549,7 +554,7 @@ function cvOpenForm(pre) {
   const F = {
     maison: pre.maison || '', cuvee: pre.cuvee || '', year: pre.year || '', kind: pre.kind || 'champagne', qty: 1,
     front: { url: pre.photo_url || null, data: pre.photo_data || null }, back: { data: null },
-    price: '', date: '', notes: '', cellar: CV.cellars.some(c => c.id === CV.cur) ? CV.cur : CV.cellars[0].id
+    sboccatura: '', price: '', date: '', notes: '', cellar: CV.cellars.some(c => c.id === CV.cur) ? CV.cur : CV.cellars[0].id
   };
   const target = CV.target && CV.v && CV.v.id === F.cellar ? CV.target : null;
   const phTile = (which, label) => {
@@ -563,6 +568,7 @@ function cvOpenForm(pre) {
       '<label class="cv-lab">Maison o produttore</label><input type="text" id="cvf-maison" value="' + cvEsc(F.maison) + '" maxlength="80" autocomplete="off">' +
       '<label class="cv-lab">Cuvée o nome del vino</label><input type="text" id="cvf-cuvee" value="' + cvEsc(F.cuvee) + '" maxlength="120" autocomplete="off">' +
       '<label class="cv-lab">Annata (NV se senza annata)</label><input type="text" id="cvf-year" value="' + cvEsc(F.year) + '" maxlength="12" placeholder="Es. 2013 oppure NV" autocomplete="off">' +
+      '<label class="cv-lab">Sboccatura (se la conosci)</label><input type="text" id="cvf-sboccatura" value="' + cvEsc(F.sboccatura) + '" maxlength="20" placeholder="Es. 03/2025" autocomplete="off">' +
       '<label class="cv-lab">Tipo</label><div class="cv-kinds">' + Object.entries(CV_TYPES).map(([k, t]) =>
         '<button data-k="' + k + '" class="' + (F.kind === k ? 'on' : '') + '"><i style="background:' + t.dot + '"></i>' + t.label + '</button>').join('') + '</div>' +
       '<label class="cv-lab">Foto</label><div class="cv-phs">' + phTile('front', 'Fronte') + phTile('back', 'Controetichetta') + '</div>' +
@@ -577,7 +583,8 @@ function cvOpenForm(pre) {
     sh.oninput = e => {
       const id = e.target.id;
       if (id === 'cvf-maison') F.maison = e.target.value; else if (id === 'cvf-cuvee') F.cuvee = e.target.value;
-      else if (id === 'cvf-year') F.year = e.target.value; else if (id === 'cvf-price') F.price = e.target.value;
+      else if (id === 'cvf-year') F.year = e.target.value; else if (id === 'cvf-sboccatura') F.sboccatura = e.target.value;
+      else if (id === 'cvf-price') F.price = e.target.value;
       else if (id === 'cvf-date') F.date = e.target.value; else if (id === 'cvf-notes') F.notes = e.target.value;
     };
     sh.onchange = e => { if (e.target.id === 'cvf-cellar') { F.cellar = e.target.value; CV.cur = F.cellar; CV.v = cvBuildView(); draw(); } };
@@ -601,7 +608,7 @@ function cvOpenForm(pre) {
       if (F.front.data) front = await cvUploadPhoto(F.front.data);
       if (F.back.data) back = await cvUploadPhoto(F.back.data);
     } catch (e) { cvToast('Foto non caricata: ' + cvErrText(e)); btn.disabled = false; btn.textContent = 'Aggiungi in cantina'; return; }
-    const bottle = { maison, cuvee, year, kind: F.kind, catalog_id: pre.catalog_id || '', photo_url: front, photo_back_url: back, price: priceRaw, purchased_at: F.date, notes: F.notes.trim() };
+    const bottle = { maison, cuvee, year, kind: F.kind, catalog_id: pre.catalog_id || '', photo_url: front, photo_back_url: back, sboccatura: F.sboccatura.trim(), price: priceRaw, purchased_at: F.date, notes: F.notes.trim() };
     const t = target && target.unit ? target : null;
     const { data, error } = await supa.rpc('cellar_add_bottles', {
       p_cellar: F.cellar, p_unit: t ? t.unit : null, p_row: t ? t.row : null, p_col: t ? t.col : null, p_bottle: bottle, p_qty: F.qty
