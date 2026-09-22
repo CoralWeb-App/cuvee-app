@@ -68,6 +68,15 @@ function cvDemoView() {
 // nel pannello di test del Profilo, vede esattamente l'anteprima che vedrà un utente free
 const cvCanEdit = () => typeof isPremium === 'function' && isPremium();
 function cvLock() { const m = cvEl('cellar-lock-modal'); if (m) m.classList.add('on'); }
+// Solo la prima volta che un non-Premium entra nell'anteprima: chiarisce che non è la sua cantina vera
+const CV_INTRO_KEY = 'cuvee_cv_intro_seen_v1';
+function cvMaybeShowIntro() {
+  let seen = false;
+  try { seen = localStorage.getItem(CV_INTRO_KEY) === '1'; } catch (_) { /* niente memoria: la mostriamo comunque */ }
+  if (seen) return;
+  try { localStorage.setItem(CV_INTRO_KEY, '1'); } catch (_) { /* pazienza, ricomparirà la prossima volta */ }
+  const m = cvEl('cellar-intro-modal'); if (m) m.classList.add('on');
+}
 
 const cvEl = id => document.getElementById(id);
 const cvEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -135,6 +144,7 @@ async function cvEnter() {
     cvEl('cv-empty').innerHTML = '';
     cvRefresh(true);
     if (CV.view === '3d') cvSetView('3d');
+    cvMaybeShowIntro();
     return;
   }
   try { await cvLoad(); }
@@ -894,6 +904,7 @@ function cvApplyFullscreenUI() {
   cvEl('cv-stage').classList.toggle('cv-stage-fs', CV.fs);
   cvEl('cv-info').classList.toggle('cv-info-fs', CV.fs);
   const icon = cvEl('cv-fs-icon'); if (icon) icon.className = 'ti ' + (CV.fs ? 'ti-arrows-minimize' : 'ti-arrows-maximize');
+  const label = cvEl('cv-fs-label'); if (label) label.textContent = CV.fs ? 'Riduci' : 'Schermo intero';
   const btn = cvEl('cv-fs-btn'); if (btn) btn.setAttribute('aria-label', CV.fs ? 'Esci da schermo intero' : 'Schermo intero');
   cvResize3D();
 }

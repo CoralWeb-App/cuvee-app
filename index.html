@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=160"/>
+<link rel="stylesheet" href="css/style.css?v=161"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2514,7 +2514,8 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="cv-themes" id="cv-themes"></div>
           <div id="cv-stage">
             <div class="cv-hint3d">Trascina per ruotare · pizzica per avvicinare · tocca una bottiglia</div>
-            <div class="cv-cam"><button onclick="cvCam('over')">Insieme</button><button onclick="cvCam('front')">Frontale</button><button onclick="cvToggleFullscreen()" id="cv-fs-btn" aria-label="Schermo intero"><i class="ti ti-arrows-maximize" id="cv-fs-icon"></i></button></div>
+            <button class="cv-fs-close" id="cv-fs-close" onclick="cvToggleFullscreen()" aria-label="Chiudi schermo intero"><i class="ti ti-x"></i></button>
+            <div class="cv-cam"><button onclick="cvCam('over')">Insieme</button><button onclick="cvCam('front')">Frontale</button><button class="cv-cam-fs" onclick="cvToggleFullscreen()" id="cv-fs-btn" aria-label="Schermo intero"><i class="ti ti-arrows-maximize" id="cv-fs-icon"></i><span id="cv-fs-label">Schermo intero</span></button></div>
           </div>
         </div>
         <div id="cv-unplaced"></div>
@@ -2527,6 +2528,25 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
   <div class="cv-premium-cta" id="cv-premium-cta" hidden>
     <div class="cv-premium-cta-txt"><b>Sblocca Cuvée Premium</b><span>Gestisci le tue bottiglie senza limiti: più cantine, per casa o per il tuo ristorante.</span></div>
     <button class="cv-btn gold" onclick="go('v-paywall')">Sblocca Premium</button>
+  </div>
+</div>
+
+<!-- ═══ CANTINA: avviso all'ingresso in anteprima (solo la prima volta) ═══ -->
+<div id="cellar-intro-modal" class="premium-lock-modal">
+  <div class="scan-limit-inner" style="position:relative;">
+    <button onclick="closePremiumLockModal('cellar-intro-modal')" style="position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--ivory-3);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <i class="ti ti-x" style="font-size:16px;color:var(--ink-4);"></i>
+    </button>
+    <div class="scan-limit-icon-badge"><svg class="ic-cantina" style="width:26px;height:26px;color:#C8A03A;"><use href="#ic-cantina"/></svg></div>
+    <div class="scan-limit-title">Questa non è la tua cantina</div>
+    <div class="scan-limit-desc">È un esempio, per farti vedere come potrebbe essere: mappa 2D, vista 3D, tutto esplorabile. La <strong>tua</strong> cantina, con le tue bottiglie vere, si sblocca con <strong>Cuvée Premium</strong>.</div>
+    <div class="scan-limit-sep"></div>
+    <div class="scan-limit-features">
+      <div class="scan-limit-feat"><svg class="ic-cantina" style="width:17px;height:17px;"><use href="#ic-cantina"/></svg><span>Cantine e bottiglie senza limiti</span></div>
+      <div class="scan-limit-feat"><i class="ti ti-3d-cube-sphere"></i><span>Mappa 2D e vista 3D della tua cantina</span></div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="closePremiumLockModal('cellar-intro-modal');go('v-paywall');">Sblocca Premium adesso</button>
+    <button class="scan-limit-skip" onclick="closePremiumLockModal('cellar-intro-modal')">Dai prima un'occhiata</button>
   </div>
 </div>
 
@@ -4087,6 +4107,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div><!-- #app -->
 
 <script src="js/app.js?v=276"></script>
-<script src="js/cantina.js?v=9"></script>
+<script src="js/cantina.js?v=10"></script>
 </body>
 </html>

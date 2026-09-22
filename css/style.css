@@ -1502,6 +1502,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #cv-stage canvas{display:block;width:100%;height:100%;touch-action:none;}
 .cv-cam{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:8px;justify-content:center;pointer-events:none;}
 .cv-cam button{pointer-events:auto;border:1px solid rgba(255,235,200,.28);background:rgba(20,14,9,.55);color:#f3e6cc;border-radius:999px;padding:8px 14px;font-family:var(--sans);font-size:14px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);cursor:pointer;}
+.cv-cam-fs{display:inline-flex !important;align-items:center;gap:6px;}
+.cv-cam-fs i{font-size:15px;}
+.cv-fs-close{display:none;}
+.cv-stage-fs .cv-fs-close{display:flex;position:absolute;top:calc(env(safe-area-inset-top,44px) + 10px);right:14px;width:40px;height:40px;align-items:center;justify-content:center;border:1px solid rgba(255,235,200,.3);background:rgba(20,14,9,.6);color:#f3e6cc;border-radius:50%;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);cursor:pointer;z-index:2;}
+.cv-fs-close i{font-size:19px;}
 .cv-hint3d{position:absolute;top:10px;left:0;right:0;text-align:center;font-family:var(--sans);font-size:13px;color:rgba(255,235,200,.6);pointer-events:none;}
 .cv-nogl{padding:40px 24px;color:#f3e6cc;text-align:center;font-family:var(--sans);font-size:15px;}
 
@@ -1595,6 +1600,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #cv-stage.cv-th-ivory{background:radial-gradient(120% 90% at 50% 20%,#d9d1c3 0%,#bdb3a1 60%,#a49a88 100%);}
 #cv-stage.cv-th-ivory .cv-hint3d{color:rgba(50,38,22,.7);}
 #cv-stage.cv-th-ivory .cv-cam button{border-color:rgba(74,58,40,.25);background:rgba(255,255,255,.65);color:#4a3a28;}
+#cv-stage.cv-th-ivory .cv-fs-close{border-color:rgba(74,58,40,.25);background:rgba(255,255,255,.65);color:#4a3a28;}
 #cv-stage.cv-th-graphite{background:radial-gradient(120% 90% at 50% 20%,#3a3c43 0%,#25272c 60%,#141518 100%);}
 
 .cv-stage-fs{position:fixed !important;inset:0 !important;width:100vw !important;height:100vh !important;height:100dvh !important;border-radius:0 !important;z-index:500;}
