@@ -27,9 +27,47 @@ const CV = {
   moveId: null,       // bottiglia che si sta spostando
   target: null,       // posto scelto per una nuova bottiglia { unit, row, col }
   scanTarget: null,   // idem, ma memorizzato mentre si fa la scansione
-  view: '2d', fs: false,
+  view: '2d', fs: false, demo: false,
   T3: null, threeP: null
 };
+
+// Bottiglie di esempio per l'anteprima ai non Premium: nomi realistici, nessuna foto, nulla viene letto/scritto sul database
+const CV_DEMO_BOTTLES = [
+  ['Krug', 'Grande Cuvée', 'NV', 'champagne'], ['Dom Pérignon', 'Vintage 2013', '2013', 'champagne'],
+  ['Louis Roederer', 'Cristal', '2014', 'champagne'], ['Salon', 'Le Mesnil', '2012', 'champagne'],
+  ['Taittinger', 'Comtes de Champagne', '2012', 'champagne'], ['Bollinger', 'Special Cuvée', 'NV', 'champagne'],
+  ['Ruinart', 'Blanc de Blancs', 'NV', 'champagne'], ['Pol Roger', 'Brut Réserve', 'NV', 'champagne'],
+  ['Charles Heidsieck', 'Brut Réserve', 'NV', 'champagne'], ['Jacquesson', 'Cuvée 746', 'NV', 'champagne'],
+  ['Egly-Ouriet', 'Brut Tradition Grand Cru', 'NV', 'champagne'], ['Larmandier-Bernier', 'Longitude', 'NV', 'champagne'],
+  ['Perrier-Jouët', 'Belle Epoque', '2013', 'champagne'], ['Billecart-Salmon', 'Brut Rosé', 'NV', 'rose'],
+  ['Ruinart', 'Rosé', 'NV', 'rose'], ['Laurent-Perrier', 'Cuvée Rosé', 'NV', 'rose'],
+  ['Dom Pérignon', 'Rosé', '2008', 'rose'], ["Ca' del Bosco", 'Cuvée Prestige', 'NV', 'spumante'],
+  ['Ferrari', 'Perlé', '2018', 'spumante'], ['Bellavista', 'Alma Gran Cuvée', 'NV', 'spumante'],
+  ['Tenuta San Guido', 'Sassicaia', '2019', 'rosso'], ['Ornellaia', 'Bolgheri Superiore', '2018', 'rosso'],
+  ['William Fèvre', 'Chablis 1er Cru', '2021', 'bianco'], ['Livio Felluga', 'Terre Alte', '2020', 'bianco']
+].map(a => ({ maison: a[0], cuvee: a[1], year: a[2], kind: a[3] }));
+let _cvDemoView = null;
+// Una cantina finta ma verosimile: una cantinetta quasi piena e uno scaffale a metà, per far vedere anche i posti liberi
+function cvDemoView() {
+  if (_cvDemoView) return _cvDemoView;
+  const r = cvRng(20260922);
+  const pick = () => Object.assign({ id: 'demo-' + Math.floor(r() * 1e9) }, CV_DEMO_BOTTLES[Math.floor(r() * CV_DEMO_BOTTLES.length)]);
+  const mkUnit = (id, kind, name, cols, rows, fill) => {
+    const slots = {};
+    for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) if (r() < fill) slots[i + ',' + j] = pick();
+    return { id, kind, name, cols, rows, slots };
+  };
+  _cvDemoView = {
+    id: 'demo', name: 'Esempio',
+    units: [mkUnit('demo-u1', 'fridge', 'Cantinetta', 6, 4, .62), mkUnit('demo-u2', 'rack', 'Scaffale a parete', 8, 6, .8)],
+    unplaced: []
+  };
+  return _cvDemoView;
+}
+// Chi può davvero creare/modificare/eliminare: solo da Premium — così anche l'admin, usando "Disattiva Premium"
+// nel pannello di test del Profilo, vede esattamente l'anteprima che vedrà un utente free
+const cvCanEdit = () => typeof isPremium === 'function' && isPremium();
+function cvLock() { const m = cvEl('cellar-lock-modal'); if (m) m.classList.add('on'); }
 
 const cvEl = id => document.getElementById(id);
 const cvEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -88,7 +126,17 @@ const cvBottleById = id => CV.bottles.find(b => b.id === id) || null;
 async function cvEnter() {
   if (!cvEnabled()) { cvToast('La cantina non è ancora disponibile'); goBack(); return; }
   cvExitFullscreen();
+  CV.demo = !cvCanEdit();
+  cvEl('cv-demo-badge').hidden = !CV.demo;
+  cvEl('cv-premium-cta').hidden = !CV.demo;
   cvEl('cv-edit-btn').style.display = 'none';
+  if (CV.demo) {
+    CV.sel = null; CV.moveId = null; CV.error = null;
+    cvEl('cv-empty').innerHTML = '';
+    cvRefresh(true);
+    if (CV.view === '3d') cvSetView('3d');
+    return;
+  }
   try { await cvLoad(); }
   catch (e) { cvShowError(e); return; }
   cvRefresh(true);
@@ -103,6 +151,14 @@ function cvShowError(e) {
 
 /* ───────── Disegno dell'interfaccia ───────── */
 function cvRefresh(rebuild3d) {
+  if (CV.demo) {
+    CV.v = cvDemoView();
+    cvEl('cv-chips').innerHTML = '';
+    cvEl('cv-main').hidden = false;
+    cvRenderStats(); cvRenderLegend(); cvRender2D(); cvRenderUnplaced(); cvRenderInfo();
+    if (CV.T3 && CV.view === '3d') { if (rebuild3d) cvBuild3D(); cvUpdateSel3D(false); }
+    return;
+  }
   CV.v = cvBuildView();
   const has = CV.cellars.length > 0;
   cvRenderChips();
@@ -130,8 +186,8 @@ cvEl('cv-chips').addEventListener('click', e => {
   if (CV.T3 && CV.view === '3d') cvCam('over');
 });
 function cvRenderStats() {
-  const v = CV.v, mine = CV.bottles.filter(b => b.cellar_id === v.id);
-  const cap = v.units.reduce((n, u) => n + u.cols * u.rows, 0), placed = mine.filter(b => b.unit_id).length;
+  const v = CV.v, placedList = v.units.flatMap(u => Object.values(u.slots)), mine = placedList.concat(v.unplaced);
+  const cap = v.units.reduce((n, u) => n + u.cols * u.rows, 0), placed = placedList.length;
   const maisons = new Set(mine.map(b => b.maison.trim().toLowerCase())).size;
   cvEl('cv-stats').innerHTML =
     '<div class="cv-stat"><b>' + mine.length + '</b><span>Bottiglie</span></div>' +
@@ -198,6 +254,22 @@ cvEl('cv-unplaced').addEventListener('click', e => {
 
 function cvRenderInfo() {
   const el = cvEl('cv-info');
+  el.classList.toggle('cv-info-demo', CV.demo);
+  if (CV.demo) {
+    if (!CV.sel) { el.hidden = true; return; }
+    const { u, r, c } = CV.sel, un = CV.v.units.find(x => x.id === u), b = un && un.slots[r + ',' + c];
+    el.hidden = false;
+    if (!b) {
+      el.innerHTML = '<div class="cv-info-top"><div><div class="cv-maison">Posto libero</div><div class="cv-cuvee">' + cvEsc(cvPosText(u, r, c)) + '</div></div><button class="cv-x" data-a="close" aria-label="Chiudi">×</button></div>' +
+        '<div class="cv-pos">Con Premium aggiungi qui le tue bottiglie vere.</div><button class="cv-btn gold" data-a="lock" style="width:100%;">Sblocca Premium</button>';
+      return;
+    }
+    const t = CV_TYPES[b.kind] || CV_TYPES.champagne;
+    el.innerHTML = '<div class="cv-info-top"><div><div class="cv-maison">' + cvEsc(b.maison) + '</div><div class="cv-cuvee">' + cvEsc(b.cuvee) + '</div></div><button class="cv-x" data-a="close" aria-label="Chiudi">×</button></div>' +
+      '<div class="cv-tags"><span class="cv-tag"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + t.dot + ';margin-right:5px"></i>' + t.label + '</span><span class="cv-tag">' + cvEsc(cvYearText(b)) + '</span></div>' +
+      '<div class="cv-pos">' + cvEsc(cvPosText(u, r, c)) + '</div><button class="cv-btn gold" data-a="lock" style="width:100%;">Sblocca per gestire le tue bottiglie</button>';
+    return;
+  }
   if (CV.moveId) {
     const mb = cvBottleById(CV.moveId);
     if (mb) {
@@ -239,6 +311,7 @@ cvEl('cv-info').addEventListener('click', e => {
   const { u, r, c } = CV.sel, un = CV.v.units.find(x => x.id === u), b = un && un.slots[r + ',' + c];
   switch (act) {
     case 'close': CV.sel = null; cvRefresh(false); break;
+    case 'lock': cvLock(); break;
     case 'add': cvStartAdd({ unit: u, row: r, col: c }); break;
     case 'move': if (b) { CV.moveId = b.id; CV.sel = null; cvRefresh(false); } break;
     case 'open': if (b) cvStappa(b); break;
@@ -260,6 +333,7 @@ async function cvOnSlot(unitId, r, c) {
   if (CV.T3 && CV.view === '3d') cvUpdateSel3D(true);
 }
 async function cvMove(id, unitId, r, c) {
+  if (!cvCanEdit()) { cvLock(); return; }
   const { error } = await supa.from('cellar_bottles').update({ unit_id: unitId, slot_row: r, slot_col: c }).eq('id', id);
   if (error) { cvToast(cvErrText(error)); return; }
   Object.assign(cvBottleById(id), { unit_id: unitId, slot_row: r, slot_col: c });
@@ -267,6 +341,7 @@ async function cvMove(id, unitId, r, c) {
   cvRefresh(true);
 }
 async function cvDeleteBottle(b) {
+  if (!cvCanEdit()) { cvLock(); return false; }
   const { error } = await supa.from('cellar_bottles').delete().eq('id', b.id);
   if (error) { cvToast(cvErrText(error)); return false; }
   CV.bottles = CV.bottles.filter(x => x.id !== b.id); CV.sel = null;
@@ -330,6 +405,7 @@ async function cvDeleteOwnPhotos(urls) {
   if (paths.length) { try { await supa.storage.from('carnet-photos').remove(paths); } catch (_) { /* resta un file inutilizzato, non è un problema */ } }
 }
 async function cvSetPhoto(b, field, dataUrl) {
+  if (!cvCanEdit()) { cvLock(); return false; }
   const old = b[field]; let url = null;
   if (dataUrl) { try { url = await cvUploadPhoto(dataUrl); } catch (e) { cvToast('Foto non caricata: ' + cvErrText(e)); return false; } }
   const { error } = await supa.from('cellar_bottles').update({ [field]: url }).eq('id', b.id);
@@ -338,6 +414,7 @@ async function cvSetPhoto(b, field, dataUrl) {
   return true;
 }
 function cvPhotoTap(b, field) {
+  if (!cvCanEdit()) { cvLock(); return; }
   if (!b[field]) { cvPickPhoto(d => cvSetPhoto(b, field, d)); return; }
   const label = field === 'photo_url' ? 'Fronte' : 'Controetichetta';
   const ov = document.createElement('div'); ov.className = 'cv-photo';
@@ -377,6 +454,7 @@ function cvAsk(title, text, buttons) {
 
 /* ───────── Aggiungere bottiglie ───────── */
 function cvStartAdd(target) {
+  if (!cvCanEdit()) { cvLock(); return; }
   CV.target = target || null;
   cvSheet('<h2>Aggiungi bottiglia</h2>' +
     '<button class="cv-opt" data-a="scan"><span class="ic"><i class="ti ti-scan"></i></span><span>Scansiona etichetta<small>La riconosco io: Maison, cuvée e annata</small></span></button>' +
@@ -438,6 +516,7 @@ function cvPrefillFromScan(r) {
 // Punti d'ingresso dal catalogo e dalla scansione
 async function cvAddFromCatalog(bottId) {
   if (!cvEnabled()) return;
+  if (!cvCanEdit()) { cvLock(); return; }
   const b = allBottiglie.find(x => x.id === bottId) || currentBottiglia; if (!b) return;
   try { await cvLoad(); } catch (e) { cvToast('Cantina non disponibile: ' + cvErrText(e)); return; }
   CV.target = null; cvOpenForm(cvPrefillFromCatalog(b));
@@ -445,6 +524,7 @@ async function cvAddFromCatalog(bottId) {
 async function cvAddFromScan(result) {
   result = result || _scanResult;
   if (!cvEnabled() || !result) return;
+  if (!cvCanEdit()) { cvLock(); return; }
   try { await cvLoad(); } catch (e) { cvToast('Cantina non disponibile: ' + cvErrText(e)); return; }
   const st = CV.scanTarget && (Date.now() - CV.scanTarget.at < 30 * 60 * 1000) ? CV.scanTarget : null;
   CV.target = st ? st.target : null;
@@ -528,6 +608,7 @@ function cvOpenForm(pre) {
 
 /* ───────── Creare e modificare le cantine ───────── */
 function cvOpenBuilder(mode, opts) {
+  if (!cvCanEdit()) { cvLock(); return; }
   opts = opts || {};
   const isNew = mode === 'new';
   if (!isNew && !CV.v) return;
