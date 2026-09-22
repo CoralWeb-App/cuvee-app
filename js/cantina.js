@@ -2,7 +2,8 @@
    CANTINA PERSONALE
    Più cantine per utente, ognuna fatta di elementi (scaffali, cantinette)
    con le misure scelte dall'utente. Mappa 2D e vista 3D sugli stessi dati.
-   Per ora visibile solo agli admin (vedi cvEnabled).
+   Aperta a tutti; solo Premium può creare/modificare (vedi cvCanEdit) —
+   chi non lo è vede un'anteprima con dati di esempio (vedi cvDemoView).
    Tabelle: cellars, cellar_units, cellar_bottles (vedi migrazione SQL).
    ═══════════════════════════════════════════════════════════════════ */
 'use strict';
@@ -81,7 +82,8 @@ function cvMaybeShowIntro() {
 const cvEl = id => document.getElementById(id);
 const cvEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cvHex = n => '#' + n.toString(16).padStart(6, '0');
-const cvEnabled = () => typeof isAdmin === 'function' && isAdmin();
+// La cantina è aperta a tutti gli utenti registrati; chi non è Premium vede l'anteprima (cvCanEdit)
+const cvEnabled = () => !!currentUser;
 const cvToast = m => { if (typeof showAppToast === 'function') showAppToast(m, 2600); };
 function cvErrText(e) {
   const m = String((e && e.message) || e || '');
