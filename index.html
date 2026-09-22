@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=157"/>
+<link rel="stylesheet" href="css/style.css?v=159"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2514,7 +2514,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
           <div class="cv-themes" id="cv-themes"></div>
           <div id="cv-stage">
             <div class="cv-hint3d">Trascina per ruotare · pizzica per avvicinare · tocca una bottiglia</div>
-            <div class="cv-cam"><button onclick="cvCam('over')">Insieme</button><button onclick="cvCam('front')">Frontale</button></div>
+            <div class="cv-cam"><button onclick="cvCam('over')">Insieme</button><button onclick="cvCam('front')">Frontale</button><button onclick="cvToggleFullscreen()" id="cv-fs-btn" aria-label="Schermo intero"><i class="ti ti-arrows-maximize" id="cv-fs-icon"></i></button></div>
           </div>
         </div>
         <div id="cv-unplaced"></div>
@@ -3702,7 +3702,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 <!-- LIGHTBOX -->
 <div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.95);flex-direction:column;align-items:center;justify-content:center;">
-  <button onclick="event.stopPropagation();closeLightbox()" style="position:absolute;top:16px;right:16px;width:38px;height:38px;background:rgba(255,255,255,.14);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1;">
+  <button onclick="event.stopPropagation();closeLightbox()" style="position:absolute;top:calc(env(safe-area-inset-top,44px) + 10px);right:16px;width:38px;height:38px;background:rgba(255,255,255,.14);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1;">
     <i class="ti ti-x" style="font-size:18px;color:#fff;"></i>
   </button>
   <img id="lightbox-img" onclick="event.stopPropagation()" style="max-width:96%;max-height:82vh;object-fit:contain;border-radius:6px;"/>
@@ -4063,7 +4063,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=275"></script>
-<script src="js/cantina.js?v=6"></script>
+<script src="js/app.js?v=276"></script>
+<script src="js/cantina.js?v=8"></script>
 </body>
 </html>

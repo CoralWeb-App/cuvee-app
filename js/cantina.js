@@ -27,7 +27,7 @@ const CV = {
   moveId: null,       // bottiglia che si sta spostando
   target: null,       // posto scelto per una nuova bottiglia { unit, row, col }
   scanTarget: null,   // idem, ma memorizzato mentre si fa la scansione
-  view: '2d',
+  view: '2d', fs: false,
   T3: null, threeP: null
 };
 
@@ -87,6 +87,7 @@ const cvBottleById = id => CV.bottles.find(b => b.id === id) || null;
 /* ───────── Ingresso nella vista ───────── */
 async function cvEnter() {
   if (!cvEnabled()) { cvToast('La cantina non è ancora disponibile'); goBack(); return; }
+  cvExitFullscreen();
   cvEl('cv-edit-btn').style.display = 'none';
   try { await cvLoad(); }
   catch (e) { cvShowError(e); return; }
@@ -637,6 +638,7 @@ function cvEnsureThree() {
   return CV.threeP;
 }
 async function cvSetView(v) {
+  if (v !== '3d') cvExitFullscreen();
   CV.view = v;
   cvEl('cv-seg2d').classList.toggle('on', v === '2d'); cvEl('cv-seg3d').classList.toggle('on', v === '3d');
   cvEl('cv-view2d').hidden = v !== '2d'; cvEl('cv-view3d').hidden = v !== '3d';
@@ -806,6 +808,23 @@ function cvOverviewGoal(az, el) {
   const T = CV.T3, fov = THREE.MathUtils.degToRad(T.camera.fov), asp = T.camera.aspect || .8;
   const fit = Math.max((T.Wr / 2) / (Math.tan(fov / 2) * asp), ((T.wallH || 1.5) * .48) / Math.tan(fov / 2));
   return { az, el, dist: fit * .92 + .3, target: new THREE.Vector3(0, (T.wallH || 1.5) * .34, -.1) };
+}
+function cvApplyFullscreenUI() {
+  cvEl('cv-stage').classList.toggle('cv-stage-fs', CV.fs);
+  cvEl('cv-info').classList.toggle('cv-info-fs', CV.fs);
+  const icon = cvEl('cv-fs-icon'); if (icon) icon.className = 'ti ' + (CV.fs ? 'ti-arrows-minimize' : 'ti-arrows-maximize');
+  const btn = cvEl('cv-fs-btn'); if (btn) btn.setAttribute('aria-label', CV.fs ? 'Esci da schermo intero' : 'Schermo intero');
+  cvResize3D();
+}
+function cvToggleFullscreen() {
+  if (!CV.T3) return;
+  CV.fs = !CV.fs;
+  cvApplyFullscreenUI();
+}
+function cvExitFullscreen() {
+  if (!CV.fs) return;
+  CV.fs = false;
+  if (cvEl('cv-stage')) cvApplyFullscreenUI();
 }
 function cvCam(which) {
   if (!CV.T3) return;

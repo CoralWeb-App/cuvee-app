@@ -1596,3 +1596,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #cv-stage.cv-th-ivory .cv-hint3d{color:rgba(50,38,22,.7);}
 #cv-stage.cv-th-ivory .cv-cam button{border-color:rgba(74,58,40,.25);background:rgba(255,255,255,.65);color:#4a3a28;}
 #cv-stage.cv-th-graphite{background:radial-gradient(120% 90% at 50% 20%,#3a3c43 0%,#25272c 60%,#141518 100%);}
+
+.cv-stage-fs{position:fixed !important;inset:0 !important;width:100vw !important;height:100vh !important;height:100dvh !important;border-radius:0 !important;z-index:500;}
+.cv-stage-fs .cv-hint3d{top:calc(env(safe-area-inset-top,20px) + 10px);}
+.cv-stage-fs .cv-cam{bottom:calc(env(safe-area-inset-bottom,0px) + 14px);}
+.cv-info.cv-info-fs{position:fixed;left:12px;right:12px;margin:0 auto;max-width:406px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:520;}
