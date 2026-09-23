@@ -1467,6 +1467,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .cv-title{font-family:var(--serif);font-weight:500;font-size:30px;line-height:1.05;color:var(--ink);margin:6px 0 12px;}
 .cv-top-btn{border:1px solid var(--border-2);background:var(--white);border-radius:999px;padding:6px 13px;font-family:var(--sans);font-size:14px;color:var(--ink-2);cursor:pointer;}
 .cv-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 10px;margin:0 -16px;scrollbar-width:none;}
+.cv-trash-link{display:flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--ink-4);font-family:var(--sans);font-size:14px;padding:2px 2px 12px;margin-top:-2px;cursor:pointer;}
+.cv-trash-link i{font-size:15px;}
+.cv-trash-link[hidden]{display:none;}
 .cv-chips::-webkit-scrollbar{display:none;}
 .cv-chip{flex:none;border:1px solid var(--border-2);background:var(--white);border-radius:999px;padding:9px 15px;font-family:var(--sans);font-size:15px;color:var(--ink-2);display:flex;gap:8px;align-items:baseline;cursor:pointer;}
 .cv-chip small{font-size:13px;color:var(--ink-4);}
@@ -1549,6 +1552,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .cv-two{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .cv-where{font-family:var(--sans);font-size:14px;color:var(--gold);margin:0 2px 12px;}
 .cv-bu{background:var(--white);border:1px solid var(--border-2);border-radius:14px;padding:12px;margin-bottom:10px;}
+.cv-trash-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--white);border:1px solid var(--border-2);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+.cv-trash-row b{font-family:var(--serif);font-weight:600;font-size:17px;color:var(--ink);display:block;}
+.cv-trash-row small{font-family:var(--sans);font-size:13px;color:var(--ink-4);}
+.cv-trash-row .cv-btn{flex:none;padding:9px 16px;}
 .cv-bu-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;}
 .cv-kseg{display:inline-grid;grid-template-columns:1fr 1fr;background:var(--ivory-3);padding:2px;border-radius:10px;}
 .cv-kseg button{border:0;background:transparent;padding:7px 12px;border-radius:8px;font-family:var(--sans);font-size:14px;color:var(--ink-3);cursor:pointer;}

@@ -21,7 +21,7 @@ const CV_UNIT_NAME = { rack: 'Scaffale', fridge: 'Cantinetta' };
 
 const CV = {
   loaded: false, loading: null, error: null,
-  cellars: [], units: [], bottles: [],
+  cellars: [], units: [], bottles: [], trash: [],
   cur: null,          // id della cantina aperta
   v: null,            // vista calcolata della cantina aperta
   sel: null,          // { u: idElemento, r, c }
@@ -108,14 +108,42 @@ function cvLoad(force) {
   CV.loading = (async () => {
     try {
       const [c, u, b] = await Promise.all([cvFetchAll('cellars'), cvFetchAll('cellar_units'), cvFetchAll('cellar_bottles')]);
-      CV.cellars = c.sort((a, z) => a.sort - z.sort || String(a.created_at).localeCompare(String(z.created_at)));
+      CV.cellars = c.filter(x => !x.deleted_at).sort((a, z) => a.sort - z.sort || String(a.created_at).localeCompare(String(z.created_at)));
+      CV.trash = c.filter(x => x.deleted_at).sort((a, z) => Date.parse(z.deleted_at) - Date.parse(a.deleted_at));
       CV.units = u; CV.bottles = b; CV.loaded = true; CV.error = null;
       if (!CV.cellars.find(x => x.id === CV.cur)) CV.cur = CV.cellars.length ? CV.cellars[0].id : null;
+      cvPurgeExpiredTrash(); // in background, non blocca il caricamento
     } catch (e) {
       CV.error = e; throw e;
     } finally { CV.loading = null; }
   })();
   return CV.loading;
+}
+// Un anno di sicurezza in più prima di sparire per sempre: 30 giorni dalla richiesta di eliminazione
+const CV_TRASH_DAYS = 30;
+const cvTrashDaysLeft = deletedAt => Math.max(1, Math.ceil((CV_TRASH_DAYS * 86400000 - (Date.now() - Date.parse(deletedAt))) / 86400000));
+// Pulizia "pigra" delle cantine nel cestino scadute: nessun cron, parte da sola al primo caricamento
+// utile dopo i 30 giorni. Le foto vanno tolte dallo storage PRIMA di eliminare le righe dal database.
+async function cvPurgeExpiredTrash() {
+  const expired = CV.trash.filter(c => cvTrashDaysLeft(c.deleted_at) <= 0 || Date.parse(c.deleted_at) < Date.now() - CV_TRASH_DAYS * 86400000);
+  if (!expired.length) return;
+  const ids = expired.map(c => c.id);
+  try {
+    const { data: bottles } = await supa.from('cellar_bottles').select('photo_url, photo_back_url').in('cellar_id', ids);
+    const paths = (bottles || []).flatMap(b => [b.photo_url, b.photo_back_url]).filter(Boolean).map(cvOwnPath).filter(Boolean);
+    if (paths.length) await supa.storage.from('carnet-photos').remove(paths);
+  } catch (_) { /* le foto orfane non sono un problema grave, si ritenta al prossimo giro */ }
+  try {
+    const { data, error } = await supa.rpc('cellar_purge_expired');
+    if (error) throw error;
+    const purged = new Set((data || []).map(r => r.cellar_id));
+    if (purged.size) { CV.trash = CV.trash.filter(c => !purged.has(c.id)); cvRenderTrashLink(); }
+  } catch (_) { /* riproveremo al prossimo caricamento */ }
+}
+function cvRenderTrashLink() {
+  const link = cvEl('cv-trash-link'); if (!link) return;
+  link.hidden = CV.trash.length === 0;
+  const count = cvEl('cv-trash-count'); if (count) count.textContent = CV.trash.length ? '(' + CV.trash.length + ')' : '';
 }
 function cvBuildView() {
   const c = CV.cellars.find(x => x.id === CV.cur);
@@ -166,6 +194,7 @@ function cvRefresh(rebuild3d) {
   if (CV.demo) {
     CV.v = cvDemoView();
     cvEl('cv-chips').innerHTML = '';
+    cvEl('cv-trash-link').hidden = true;
     cvEl('cv-main').hidden = false;
     cvRenderStats(); cvRenderLegend(); cvRender2D(); cvRenderUnplaced(); cvRenderInfo();
     if (CV.T3 && CV.view === '3d') { if (rebuild3d) cvBuild3D(); cvUpdateSel3D(false); }
@@ -174,6 +203,7 @@ function cvRefresh(rebuild3d) {
   CV.v = cvBuildView();
   const has = CV.cellars.length > 0;
   cvRenderChips();
+  cvRenderTrashLink();
   cvEl('cv-main').hidden = !has;
   cvEl('cv-edit-btn').style.display = has ? '' : 'none';
   cvEl('cv-empty').innerHTML = has ? '' :
@@ -707,18 +737,39 @@ function cvOpenBuilder(mode, opts) {
   };
   const deleteCellar = async () => {
     const n = CV.bottles.filter(x => x.cellar_id === CV.v.id).length;
-    const i = await cvAsk('Eliminare la cantina?', '«' + CV.v.name + '»' + (n ? ' e le sue ' + n + ' bottiglie' : '') + ' verranno eliminate. Non si può annullare.', [{ label: 'Elimina cantina', cls: 'danger' }]);
+    const i = await cvAsk('Eliminare la cantina?', '«' + CV.v.name + '»' + (n ? ' e le sue ' + n + ' bottiglie' : '') + ' verranno spostate nel cestino per ' + CV_TRASH_DAYS + ' giorni: potrai ripristinarla in qualsiasi momento da lì. Dopo, spariscono per sempre.', [{ label: 'Elimina cantina', cls: 'danger' }]);
     if (i !== 0) { draw(); return; }
-    const photos = CV.bottles.filter(x => x.cellar_id === CV.v.id).flatMap(x => [x.photo_url, x.photo_back_url]);
-    const { error } = await supa.from('cellars').delete().eq('id', CV.v.id);
+    const { error } = await supa.rpc('cellar_trash', { p_cellar: CV.v.id });
     if (error) { cvToast(cvErrText(error)); return; }
     CV.cur = null; try { await cvLoad(true); } catch (_) { /* vedi sopra */ }
-    cvDeleteOwnPhotos(photos);
-    CV.sel = null; cvToast('Cantina eliminata'); cvRefresh(true);
+    CV.sel = null; cvToast('Cantina spostata nel cestino · la ripristini entro ' + CV_TRASH_DAYS + ' giorni'); cvRefresh(true);
   };
   draw();
 }
 function cvOpenBuilderIfEmpty() { if (!CV.cellars.length) cvOpenBuilder('new'); }
+
+/* ───────── Cestino ───────── */
+function cvOpenTrash() {
+  const draw = () => {
+    if (!CV.trash.length) { cvCloseSheet(); return; }
+    const rows = CV.trash.map(c => {
+      const d = cvTrashDaysLeft(c.deleted_at);
+      return '<div class="cv-trash-row"><div><b>' + cvEsc(c.name) + '</b><small>' + (d === 1 ? 'Sparisce domani' : 'Sparisce tra ' + d + ' giorni') + '</small></div>' +
+        '<button class="cv-btn gold" data-restore="' + c.id + '">Ripristina</button></div>';
+    }).join('');
+    cvSheet('<h2>Cestino</h2><p class="cv-sub">Le cantine eliminate restano qui ' + CV_TRASH_DAYS + ' giorni, poi spariscono per sempre. Puoi ripristinarle quando vuoi, prima che scada il tempo.</p>' + rows, true);
+    cvEl('cv-sheet').onclick = async e => {
+      const btn = e.target.closest('[data-restore]'); if (!btn) return;
+      const id = btn.dataset.restore;
+      btn.disabled = true; btn.textContent = 'Ripristino…';
+      const { error } = await supa.rpc('cellar_restore', { p_cellar: id });
+      if (error) { cvToast(cvErrText(error)); btn.disabled = false; btn.textContent = 'Ripristina'; return; }
+      try { await cvLoad(true); } catch (_) { /* si aggiorna alla prossima apertura */ }
+      CV.cur = id; cvCloseSheet(); cvToast('Cantina ripristinata'); cvRefresh(true);
+    };
+  };
+  draw();
+}
 
 /* ═══════════════════════ VISTA 3D ═══════════════════════ */
 function cvLoadScript(src) {

@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=162"/>
+<link rel="stylesheet" href="css/style.css?v=163"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2505,6 +2505,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="cv-body">
       <div class="cv-title-row"><div class="cv-title">La mia cantina</div><span class="cv-demo-badge" id="cv-demo-badge" hidden>Anteprima</span></div>
       <div class="cv-chips" id="cv-chips"></div>
+      <button class="cv-trash-link" id="cv-trash-link" onclick="cvOpenTrash()" hidden><i class="ti ti-trash"></i> Cestino <span id="cv-trash-count"></span></button>
       <div id="cv-main">
         <div class="cv-stats" id="cv-stats"></div>
         <div class="cv-seg"><button id="cv-seg2d" class="on" onclick="cvSetView('2d')">Mappa 2D</button><button id="cv-seg3d" onclick="cvSetView('3d')">Vista 3D</button></div>
@@ -4115,6 +4116,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div><!-- #app -->
 
 <script src="js/app.js?v=276"></script>
-<script src="js/cantina.js?v=12"></script>
+<script src="js/cantina.js?v=13"></script>
 </body>
 </html>
