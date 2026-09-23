@@ -5135,7 +5135,9 @@ async function unregisterPush() {
 // Scorciatoia alla pagina Notifiche di Cuvée dentro Impostazioni dell'iPhone — l'unico posto dove il
 // permesso di sistema si può davvero gestire (nessuna app di terzi può farlo al posto dell'utente).
 function openIOSNotificationSettings() {
-  try { window.Capacitor?.Plugins?.App?.openUrl({ url: 'app-settings:' }); } catch(e) { console.log('openUrl error:', e); }
+  // Niente plugin: il bridge nativo di Capacitor intercetta da solo la navigazione
+  // verso uno schema non-http(s) come "app-settings:" e la inoltra al sistema.
+  try { window.location.href = 'app-settings:'; } catch(e) { console.log('openIOSNotificationSettings error:', e); }
 }
 
 function _paintEnableCard(prefix, state) {
