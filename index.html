@@ -336,6 +336,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         </div>
         <label class="push-switch"><input type="checkbox" id="pns-toggle" onchange="onPushToggle(this)"><span></span></label>
       </div>
+      <button id="pns-ios-link" onclick="openIOSNotificationSettings()" style="display:none;width:100%;margin-top:10px;background:none;border:1px solid var(--border-2);border-radius:var(--radius-lg);padding:11px;font-family:var(--sans);font-size:13.5px;color:var(--ink-3);cursor:pointer;">Gestisci il permesso nelle Impostazioni dell'iPhone</button>
     </div>
     <div id="pns-note" style="padding:14px 22px 24px;font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.6;"></div>
   </div>
@@ -4116,7 +4117,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=277"></script>
+<script src="js/app.js?v=278"></script>
 <script src="js/cantina.js?v=14"></script>
 </body>
 </html>

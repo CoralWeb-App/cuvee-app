@@ -5139,8 +5139,10 @@ function _ensurePushToken() {
   });
 }
 
-// Interruttore nella schermata Profilo → Impostazioni → Notifiche. iOS non permette all'app di revocare il permesso di sistema, quindi
-// "disattiva" toglie questo telefono dal server (niente più push) e ricorda la scelta; "attiva" lo rimette.
+// Interruttore nella schermata Profilo → Impostazioni → Notifiche. iOS non permette all'app di revocare il permesso di sistema
+// (quel promemoria resta acceso nelle Impostazioni del telefono, è normale: nessuna app può spegnerlo da sé), quindi "disattiva"
+// toglie dal server TUTTI i token di questo account — non solo quello del telefono corrente — così non arriva più nulla, e lo
+// fa con una chiamata sola lato server: non dipende dal recuperare in tempo il token dal sistema operativo, che potrebbe fallire.
 async function onPushToggle(el) {
   const wantOn = el.checked;
   el.disabled = true;
@@ -5151,16 +5153,21 @@ async function onPushToggle(el) {
       else showAppToast('Notifiche attivate', 3000);
     } else {
       _setPushOptedOut(true);
-      const tk = await _ensurePushToken();
-      if (tk) { try { await supa.rpc('unregister_push_token', { p_token: tk }); } catch(e) { console.log('unregister error:', e); } }
+      try { await supa.rpc('unregister_all_push_tokens'); } catch(e) { console.log('unregister error:', e); }
       _pushToken = null;
-      showAppToast('Notifiche disattivate su questo telefono', 3000);
+      showAppToast('Notifiche disattivate: Cuvée non te ne invierà più', 3500);
     }
   } finally {
     el.disabled = false;
     await updatePushSettings();
     await updatePushCard();
   }
+}
+
+// Scorciatoia alla pagina Notifiche di Cuvée dentro Impostazioni dell'iPhone — l'unico posto dove il
+// permesso di sistema si può davvero revocare (nessuna app di terzi può farlo al posto dell'utente).
+function openIOSNotificationSettings() {
+  try { window.Capacitor?.Plugins?.App?.openUrl({ url: 'app-settings:' }); } catch(e) { console.log('openUrl error:', e); }
 }
 
 function _paintEnableCard(prefix, state) {
@@ -5172,12 +5179,12 @@ function _paintEnableCard(prefix, state) {
   card.style.display = 'block';
   if (state === 'denied') {
     if (title) title.textContent = 'Notifiche disattivate';
-    if (text) text.textContent = 'Per riceverle, attivale da Impostazioni del telefono → Cuvée → Notifiche.';
-    if (btn) btn.style.display = 'none';
+    if (text) text.textContent = 'Le hai rifiutate dal telefono: per riceverle, riattivale dalle Impostazioni dell\'iPhone → Cuvée → Notifiche.';
+    if (btn) { btn.style.display = 'block'; btn.disabled = false; btn.textContent = 'Apri Impostazioni del telefono'; btn.onclick = openIOSNotificationSettings; }
   } else {
     if (title) title.textContent = 'Ricevi le novità sul telefono';
     if (text) text.textContent = 'Novità, suggerimenti e offerte su Cuvée, direttamente sulla schermata del telefono. Puoi disattivarle quando vuoi da Profilo → Impostazioni → Notifiche.';
-    if (btn) { btn.style.display = 'block'; btn.disabled = false; }
+    if (btn) { btn.style.display = 'block'; btn.disabled = false; btn.textContent = 'Attiva le notifiche'; btn.onclick = () => onEnablePushClick(btn); }
   }
 }
 
@@ -5209,15 +5216,20 @@ async function updatePushSettings() {
     if (note) note.textContent = 'Le notifiche push sono disponibili nell\'app per iPhone.';
     return;
   }
+  const iosLink = document.getElementById('pns-ios-link');
   if (state === 'granted') {
     const on = !_pushOptedOut();
     toggleCard.style.display = 'block';
     document.getElementById('pns-toggle').checked = on;
     document.getElementById('pns-toggle-sub').textContent = on ? 'Attive su questo telefono' : 'Disattivate su questo telefono';
+    if (iosLink) iosLink.style.display = 'block';
   } else {
     _paintEnableCard('pns', state);
+    if (iosLink) iosLink.style.display = 'none';
   }
-  if (note) note.textContent = 'Le notifiche ti avvisano di novità, suggerimenti e offerte, anche in base a come usi l\'app. Ogni messaggio resta consultabile dalla campanella nella Home. La scelta vale per questo telefono.';
+  if (note) note.textContent = state === 'granted'
+    ? 'Le notifiche ti avvisano di novità, suggerimenti e offerte, anche in base a come usi l\'app. Ogni messaggio resta consultabile dalla campanella nella Home. Disattivandole qui, Cuvée smette di inviartele: il permesso resta comunque segnato come concesso nelle Impostazioni dell\'iPhone (è normale, nessuna app può cambiarlo da sé), ma semplicemente non ti manderemo più nulla.'
+    : 'Le notifiche ti avvisano di novità, suggerimenti e offerte, anche in base a come usi l\'app. Ogni messaggio resta consultabile dalla campanella nella Home. La scelta vale per questo telefono.';
 }
 
 async function onEnablePushClick(btn) {
