@@ -965,13 +965,17 @@ function cvInit3D() {
   controls.minDistance = .45; controls.maxPolarAngle = 1.5; controls.minPolarAngle = .5;
   controls.minAzimuthAngle = -1.15; controls.maxAzimuthAngle = 1.15; controls.rotateSpeed = .7;
 
-  // Bottiglia: profilo ruotato, con l'asse lungo z (collo verso chi guarda). Corpo cilindrico
-  // lungo e collo più snello e allungato — le stesse proporzioni dell'icona bottiglia usata nel
-  // resto dell'app — invece del corpo corto e collo tozzo di prima (sembrava una borraccia).
-  const prof = [[0, .006], [.018, .002], [.032, 0], [.037, .012], [.039, .045], [.039, .195], [.0345, .208], [.022, .222], [.0155, .238], [.0145, .262], [.0175, .266], [.0175, .28], [.0145, .284], [0, .285]].map(p => new THREE.Vector2(p[0], p[1]));
-  const foilP = [[.026, .215], [.019, .238], [.0185, .262], [.0215, .266], [.0215, .288], [0, .288]].map(p => new THREE.Vector2(p[0], p[1]));
+  // Bottiglia: profilo ruotato, con l'asse lungo z (collo verso chi guarda). Ricalcato sulla
+  // curva reale dell'icona bottiglia usata nel resto dell'app (stesso andamento del bordo nel
+  // path SVG), con proporzioni realistiche sul raggio — non più il corpo corto e collo tozzo
+  // di prima (sembrava una borraccia). Aggiunta anche una fascia-etichetta chiara sul corpo,
+  // altrimenti da lontano/di sbieco si perde il senso "è una bottiglia vera".
+  const prof = [[0, 0], [.018, .003], [.033, .012], [.039, .028], [.039, .0641], [.03629, .1113], [.02986, .1412], [.02216, .1652], [.01573, .195], [.013, .24], [.013, .265], [.016, .269], [.016, .281], [.0125, .284], [0, .285]].map(p => new THREE.Vector2(p[0], p[1]));
+  const foilP = [[.018, .197], [.0155, .24], [.0155, .265], [.019, .269], [.019, .281], [.015, .284], [0, .287]].map(p => new THREE.Vector2(p[0], p[1]));
   const geoGlass = new THREE.LatheGeometry(prof, 22).rotateX(Math.PI / 2);
   const geoFoil = new THREE.LatheGeometry(foilP, 22).rotateX(Math.PI / 2);
+  const geoLabel = new THREE.CylinderGeometry(.0396, .0396, .034, 22, 1, true).rotateX(Math.PI / 2).translate(0, 0, .047);
+  const labelMat = new THREE.MeshStandardMaterial({ color: 0xf1e9d8, roughness: .85, metalness: 0, side: THREE.DoubleSide });
   const mats = {};
   Object.keys(CV_TYPES).forEach(k => {
     mats[k] = {
@@ -995,7 +999,7 @@ function cvInit3D() {
   const fill = new THREE.PointLight(0xffb56b, .8, 5); fill.position.set(0, 1.3, .9); scene.add(fill);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(.056, .0045, 8, 40), goldRing); ring.visible = false; scene.add(ring);
 
-  const T = CV.T3 = { el, renderer, scene, camera, controls, mats, geoGlass, geoFoil, wood, woodDark, carcass, ledMat, glassDoor, hitMat, key, fill, ring,
+  const T = CV.T3 = { el, renderer, scene, camera, controls, mats, geoGlass, geoFoil, geoLabel, labelMat, wood, woodDark, carcass, ledMat, glassDoor, hitMat, key, fill, ring,
     room: null, pick: [], slots: {}, active: false, goal: null, raycaster: new THREE.Raycaster(), Wr: 3, wallH: CV_WALL_H, textures: [], framed: false };
 
   controls.addEventListener('start', () => { T.goal = null; });
@@ -1107,11 +1111,11 @@ function cvBuild3D() {
       if (b) {
         const kind = T.mats[b.kind] ? b.kind : 'champagne';
         const grp = new THREE.Group(); grp.position.set(lx, ly, zBase);
-        const gm = new THREE.Mesh(T.geoGlass, T.mats[kind].glass), fm = new THREE.Mesh(T.geoFoil, T.mats[kind].foil);
+        const gm = new THREE.Mesh(T.geoGlass, T.mats[kind].glass), fm = new THREE.Mesh(T.geoFoil, T.mats[kind].foil), lm = new THREE.Mesh(T.geoLabel, T.labelMat);
         gm.castShadow = fm.castShadow = true; gm.receiveShadow = true;
-        gm.userData.slot = fm.userData.slot = ref;
-        grp.add(gm, fm); grp.userData.baseZ = zBase; grp.userData.targetZ = zBase;
-        g.add(grp); T.pick.push(gm, fm); T.slots[sk] = { grp, lx, ly, gx: g.position.x, zFront: zBase + .3 };
+        gm.userData.slot = fm.userData.slot = lm.userData.slot = ref;
+        grp.add(gm, fm, lm); grp.userData.baseZ = zBase; grp.userData.targetZ = zBase;
+        g.add(grp); T.pick.push(gm, fm, lm); T.slots[sk] = { grp, lx, ly, gx: g.position.x, zFront: zBase + .3 };
       } else {
         const h = new THREE.Mesh(new THREE.BoxGeometry(.085, .085, .04), T.hitMat); h.position.set(lx, ly, zBase + .16); h.userData.slot = ref; h.userData.own = true;
         g.add(h); T.pick.push(h); T.slots[sk] = { grp: null, lx, ly, gx: g.position.x, zFront: zBase + .3 };
