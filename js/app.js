@@ -196,18 +196,17 @@ const ONB_SCAN_SVG = '<svg width="56" height="70" viewBox="0 0 56 70" xmlns="htt
   + '<rect x="20.5" y="47.5" width="15" height="6" rx=".5" fill="none" stroke="{{color}}" stroke-width="1.1" opacity=".9"/>'
   + '<line x1="10" y1="50.5" x2="46" y2="50.5" stroke="{{color}}" stroke-width="2" stroke-linecap="round" opacity=".55"/>'
   + '</svg>';
-// Griglia di scaffale con qualche bottiglia già posizionata (due posti pieni fra i vuoti).
+// Cantinetta con bottiglie di champagne vere (collo + corpo, non astratte) — stessa tecnica
+// dell'icona cantina già usata nel resto dell'app (ic-cantina), solo in stile presentazione.
 const ONB_CANTINA_SVG = '<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">'
-  + '<rect x="4" y="4" width="52" height="52" rx="4" fill="none" stroke="{{color}}" stroke-width="2.5" opacity=".55"/>'
-  + '<line x1="4" y1="21.3" x2="56" y2="21.3" stroke="{{color}}" stroke-width="2" opacity=".35"/>'
-  + '<line x1="4" y1="38.6" x2="56" y2="38.6" stroke="{{color}}" stroke-width="2" opacity=".35"/>'
-  + '<line x1="21.3" y1="4" x2="21.3" y2="56" stroke="{{color}}" stroke-width="2" opacity=".35"/>'
-  + '<line x1="38.6" y1="4" x2="38.6" y2="56" stroke="{{color}}" stroke-width="2" opacity=".35"/>'
-  + '<circle cx="12.6" cy="12.6" r="5" fill="{{color}}"/>'
-  + '<circle cx="47.3" cy="12.6" r="5" fill="none" stroke="{{color}}" stroke-width="2" opacity=".6"/>'
-  + '<circle cx="30" cy="30" r="5" fill="none" stroke="{{color}}" stroke-width="2" opacity=".6"/>'
-  + '<circle cx="12.6" cy="47.3" r="5" fill="none" stroke="{{color}}" stroke-width="2" opacity=".6"/>'
-  + '<circle cx="47.3" cy="47.3" r="5" fill="{{color}}"/>'
+  + '<rect x="6" y="6" width="48" height="48" rx="4" fill="none" stroke="{{color}}" stroke-width="2.5" opacity=".8"/>'
+  + '<line x1="6" y1="30" x2="54" y2="30" stroke="{{color}}" stroke-width="2" opacity=".4"/>'
+  + '<rect x="13" y="16" width="2" height="3.5" rx=".4" fill="{{color}}" opacity=".9"/><rect x="11" y="19.5" width="6" height="9" rx="1.3" fill="{{color}}" opacity=".9"/>'
+  + '<rect x="29" y="16" width="2" height="3.5" rx=".4" fill="{{color}}" opacity=".7"/><rect x="27" y="19.5" width="6" height="9" rx="1.3" fill="{{color}}" opacity=".7"/>'
+  + '<rect x="45" y="16" width="2" height="3.5" rx=".4" fill="{{color}}" opacity="1"/><rect x="43" y="19.5" width="6" height="9" rx="1.3" fill="{{color}}" opacity="1"/>'
+  + '<rect x="13" y="40" width="2" height="3.5" rx=".4" fill="{{color}}" opacity=".8"/><rect x="11" y="43.5" width="6" height="9" rx="1.3" fill="{{color}}" opacity=".8"/>'
+  + '<rect x="29" y="40" width="2" height="3.5" rx=".4" fill="{{color}}" opacity=".95"/><rect x="27" y="43.5" width="6" height="9" rx="1.3" fill="{{color}}" opacity=".95"/>'
+  + '<rect x="45" y="40" width="2" height="3.5" rx=".4" fill="{{color}}" opacity=".75"/><rect x="43" y="43.5" width="6" height="9" rx="1.3" fill="{{color}}" opacity=".75"/>'
   + '</svg>';
 // Taccuino aperto con due righe di appunti e una stellina di valutazione.
 const ONB_CARNET_SVG = '<svg width="54" height="66" viewBox="0 0 54 66" xmlns="http://www.w3.org/2000/svg">'
