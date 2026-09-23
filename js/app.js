@@ -1893,14 +1893,15 @@ async function initSocialLogin() {
 // usato per precompilare v-complete-profile subito dopo il routing.
 let _pendingSocialName = '';
 
-// Riconosce un account APPENA creato confrontando le due date che torna sempre Supabase Auth,
-// qualunque sia stato il metodo (email, Apple, Google): per un primo accesso vero sono uguali (o
-// quasi), per chi torna dopo giorni/mesi "ultimo accesso" è molto più avanti della "creazione".
-// Serve a decidere se incatenare benvenuto+notifiche, indipendentemente da quale delle tante
-// strade di login/registrazione ci ha portato fin qui.
+// Riconosce un account APPENA creato: la data di creazione che torna sempre Supabase Auth, qualunque
+// sia stato il metodo (email, Apple, Google), è vicinissima ad adesso solo per un primo accesso vero.
+// Finestra larga (mezz'ora) apposta per coprire anche chi mette qualche minuto a confermare l'email
+// prima di tornare nell'app — non solo il caso immediato. Serve a decidere se incatenare
+// benvenuto+notifiche, indipendentemente da quale delle tante strade di login/registrazione ci ha
+// portato fin qui.
 function _isFreshSignup(user) {
-  if (!user?.created_at || !user?.last_sign_in_at) return false;
-  return Math.abs(new Date(user.last_sign_in_at) - new Date(user.created_at)) < 120000;
+  if (!user?.created_at) return false;
+  return (Date.now() - new Date(user.created_at).getTime()) < 30 * 60000;
 }
 // Acceso una sola volta, quando _routeAfterAuth scopre che l'account è appena nato: resta vero
 // anche durante i passaggi intermedi (nome profilo, conferma età) finché non si arriva davvero
@@ -1964,6 +1965,9 @@ async function _routeAfterAuth() {
 }
 async function _routeAfterAuthRun() {
   try { await loadUserProfile(); } catch(e) { console.log('Profile load:', e); }
+  // loadUserProfile può aver scoperto che l'account è stato cancellato e già disconnesso l'utente
+  // (currentUser è tornato null): niente altro da instradare, è già su v-splash.
+  if (!currentUser) { hideBootSplash(); return; }
   _rcIdentifyUser().catch(e => console.log('RevenueCat identify:', e));
   if (_isFreshSignup(currentUser)) _pendingWelcomeFlow = true;
   // Chi ha già confermato l'età su v-age-gate-pre (prima della registrazione)
@@ -2027,6 +2031,23 @@ async function saveProfileName() {
   }
 }
 
+// Vero solo se il server rifiuta esplicitamente l'account (token che non corrisponde più a nessun
+// utente: cancellato). Un errore di rete non deve buttare fuori l'utente solo perché è offline.
+async function _accountStillExists() {
+  try {
+    const { error } = await supa.auth.getUser();
+    if (!error) return true;
+    return error.status !== 401 && error.status !== 403;
+  } catch(e) { return true; }
+}
+// Stesso pulizia/redirect di un logout normale, con un avviso che spiega perché è successo senza
+// che l'utente abbia fatto nulla.
+async function _signOutDeletedAccount() {
+  try { await signOut(); } catch(e) { console.log('_signOutDeletedAccount error:', e); }
+  hideBootSplash();
+  showAppToast('Il tuo account non esiste più — accedi di nuovo o registrati', 4000);
+}
+
 async function initAuth() {
   try {
     // Controllo diretto sull'URL: se arriviamo dal link "reset password"
@@ -2042,6 +2063,15 @@ async function initAuth() {
       currentUser = session.user;
       if (isRecoveryLink) {
         go('v-set-new-password');
+        return;
+      }
+      // getSession() legge solo la sessione salvata sul telefono: se un admin ha cancellato questo
+      // account dalla piattaforma mentre il telefono aveva ancora un token valido (non ancora scaduto),
+      // getSession() non se ne accorgerebbe da sola e farebbe comunque entrare un utente che non esiste
+      // più — dentro all'app, ma senza poter salvare nulla. getUser() invece lo verifica davvero col
+      // server ad ogni avvio.
+      if (!(await _accountStillExists())) {
+        await _signOutDeletedAccount();
         return;
       }
       await _routeAfterAuth();
@@ -2409,26 +2439,51 @@ async function signOut() {
   updateBottomNav('v-splash');
 }
 
+// Finestra molto più stretta di _isFreshSignup: qui deve coprire solo un trigger lato server
+// insolitamente lento (normalmente risolto dai tentativi sotto in meno di un secondo), non i minuti
+// che un utente può metterci a confermare l'email — quella tolleranza più larga serve solo per
+// decidere se mostrare benvenuto+notifiche, non per evitare un logout indebito.
+function _recentAccountCreation(user) {
+  if (!user?.created_at) return false;
+  return (Date.now() - new Date(user.created_at).getTime()) < 5 * 60000;
+}
+
 // LOAD USER PROFILE
 async function loadUserProfile() {
   if (!currentUser) return;
   try {
-    const { data, error } = await supa
-      .from('users')
-      .select('*')
-      .eq('id', currentUser.id)
-      .maybeSingle(); // usa maybeSingle - non lancia errore se la riga non esiste
+    // La riga su public.users può non esserci ancora per un attimo dopo la registrazione (il
+    // trigger su auth.users non ha finito): si riprova qualche volta prima di arrendersi, invece di
+    // concludere subito che l'account non esiste — altrimenti un trigger anche solo un po' lento
+    // farebbe scambiare una registrazione appena fatta per un account cancellato.
+    let data = null, error = null;
+    const MAX_ATTEMPTS = 5;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      ({ data, error } = await supa.from('users').select('*').eq('id', currentUser.id).maybeSingle());
+      if (error) throw error;
+      if (data || attempt === MAX_ATTEMPTS) break;
+      await new Promise(r => setTimeout(r, 800));
+    }
 
     if (data) {
       currentUser.profile = data;
-    } else {
-      // Profile row might not exist yet (trigger delay) - create a minimal one
+    } else if (_recentAccountCreation(currentUser)) {
+      // Ancora nessuna riga dopo tutti i tentativi, ma l'account è nato da pochissimo: trigger
+      // insolitamente lento, non una cancellazione - profilo minimo temporaneo, verrà sostituito al
+      // prossimo caricamento.
       currentUser.profile = {
         id: currentUser.id,
         email: currentUser.email,
         full_name: currentUser.user_metadata?.full_name || '',
         is_premium: false
       };
+    } else {
+      // Account non recente, riga profilo introvabile anche dopo i tentativi sopra: quasi
+      // certamente cancellato da admin mentre il telefono aveva ancora una sessione locale valida.
+      // Farlo entrare con un profilo finto lo lascerebbe dentro l'app senza poter salvare nulla -
+      // va disconnesso e rimandato all'accesso.
+      await _signOutDeletedAccount();
+      return;
     }
 
     updateProfileUI(currentUser.profile);
