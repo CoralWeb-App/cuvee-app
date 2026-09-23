@@ -5037,7 +5037,12 @@ function applyCruPremiumGating(viewId) {
 // ═══ NOTIFICHE PUSH (direttamente con Apple, senza servizi di terzi) ═══
 // Il plugin nativo esiste solo nelle build iOS che lo includono: nel browser e nelle versioni vecchie
 // dell'app _pushSupported() è falso e tutto questo resta inattivo.
-const PUSH_PROMPTED_KEY = 'cuvee_push_prompted_v2';
+// v3: prima "Più tardi" bloccava il popup per sempre. Ora lo ripresenta ogni PUSH_REPROMPT_DAYS,
+// finché l'utente non attiva le notifiche o non tocca "Non mi interessa" — cambiando il nome della
+// chiave, chi aveva già toccato "Più tardi" con il sistema vecchio riparte da zero come tutti gli altri.
+const PUSH_LAST_SHOWN_KEY = 'cuvee_push_last_shown_v3';
+const PUSH_DECLINED_KEY = 'cuvee_push_declined_v3';
+const PUSH_REPROMPT_DAYS = 3;
 const PUSH_OPTOUT_KEY = 'cuvee_push_optout';   // scelta "disattiva" fatta nell'app, valida per questo telefono
 let _pushTokenWaiters = [];
 let _pushToken = null;
@@ -5234,10 +5239,19 @@ const PUSH_SECTION_VIEWS = ['v-guida', 'v-maison', 'v-bottiglie', 'v-carnet', 'v
 // cambia sezione prima che scatti il timer) lo riceve comunque alla schermata successiva.
 const PUSH_PROMPT_VIEWS = PUSH_SECTION_VIEWS.concat(['v-home']);
 
+function _pushPromptDeclined() { try { return localStorage.getItem(PUSH_DECLINED_KEY) === '1'; } catch(e) { return false; } }
+function _pushPromptDueAgain() {
+  try {
+    const last = localStorage.getItem(PUSH_LAST_SHOWN_KEY);
+    return !last || (Date.now() - Number(last)) >= PUSH_REPROMPT_DAYS * 86400000;
+  } catch(e) { return false; }
+}
+function _markPushPromptShown() { try { localStorage.setItem(PUSH_LAST_SHOWN_KEY, String(Date.now())); } catch(e) {} }
+
 function _trackPushEngagement(viewId) {
   if (!PUSH_PROMPT_VIEWS.includes(viewId) || !_pushSupported() || !currentUser) return;
   try {
-    if (localStorage.getItem(PUSH_PROMPTED_KEY)) return;
+    if (_pushPromptDeclined() || !_pushPromptDueAgain()) return;
     const seen = JSON.parse(localStorage.getItem(PUSH_SECTIONS_KEY) || '[]');
     if (PUSH_SECTION_VIEWS.includes(viewId) && !seen.includes(viewId)) { seen.push(viewId); localStorage.setItem(PUSH_SECTIONS_KEY, JSON.stringify(seen)); }
     if (seen.length >= 2) setTimeout(maybeSoftAskPush, 1200);
@@ -5249,19 +5263,21 @@ async function maybeSoftAskPush() {
   // Solo mentre l'utente sta guardando una sezione, e mai sopra un altro popup
   if (!PUSH_PROMPT_VIEWS.includes(document.querySelector('.view.active')?.id)) return;
   if (document.querySelector('#welcome-modal.on, #delete-account-modal.on, #scan-not-champagne-modal.on, #notification-detail-modal.on, #push-prompt-modal.on')) return;
-  try { if (localStorage.getItem(PUSH_PROMPTED_KEY)) return; } catch(e) { return; }
+  if (_pushPromptDeclined() || !_pushPromptDueAgain()) return;
   let perm = null;
   try { perm = await _pushPlugin().checkPermissions(); } catch(e) { return; }
+  // Il permesso l'ha già deciso il sistema (concesso o negato): il nostro popup non ha più motivo di esistere
   if (perm.receive !== 'prompt' && perm.receive !== 'prompt-with-rationale') return;
+  _markPushPromptShown();
   document.getElementById('push-prompt-modal')?.classList.add('on');
 }
-// La richiesta si considera "fatta" solo quando l'utente sceglie uno dei due pulsanti: se chiude l'app
-// senza rispondere, la volta dopo ricompare.
-function _markPushPrompted() { try { localStorage.setItem(PUSH_PROMPTED_KEY, '1'); } catch(e) {} }
 function closePushPrompt() { document.getElementById('push-prompt-modal')?.classList.remove('on'); }
-function dismissPushPrompt() { _markPushPrompted(); closePushPrompt(); }
+// "Più tardi": non segna nulla come definitivo, l'orario appena registrato in maybeSoftAskPush
+// basta a farlo ricomparire tra qualche giorno.
+function dismissPushPrompt() { closePushPrompt(); }
+// "Non mi interessa": l'unica scelta che lo ferma per sempre.
+function declinePushPrompt() { try { localStorage.setItem(PUSH_DECLINED_KEY, '1'); } catch(e) {} closePushPrompt(); }
 async function acceptPushPrompt() {
-  _markPushPrompted();
   closePushPrompt();
   if (await enablePush()) showAppToast('Notifiche attivate', 3000);
 }

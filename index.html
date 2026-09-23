@@ -4052,6 +4052,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
     <div class="scan-limit-sep"></div>
     <button class="btn-gold" onclick="acceptPushPrompt()" style="width:100%;margin-top:0;">Attiva le notifiche</button>
     <button class="scan-limit-skip" onclick="dismissPushPrompt()">Più tardi</button>
+    <button class="scan-limit-skip" style="font-size:12px;margin-top:-6px;padding:6px;" onclick="declinePushPrompt()">Non mi interessa</button>
   </div>
 </div>
 
@@ -4115,7 +4116,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=276"></script>
+<script src="js/app.js?v=277"></script>
 <script src="js/cantina.js?v=14"></script>
 </body>
 </html>
