@@ -965,9 +965,11 @@ function cvInit3D() {
   controls.minDistance = .45; controls.maxPolarAngle = 1.5; controls.minPolarAngle = .5;
   controls.minAzimuthAngle = -1.15; controls.maxAzimuthAngle = 1.15; controls.rotateSpeed = .7;
 
-  // Bottiglia: profilo ruotato, con l'asse lungo z (collo verso chi guarda)
-  const prof = [[0, .006], [.02, .002], [.033, 0], [.0375, .008], [.0385, .03], [.0385, .15], [.037, .17], [.03, .2], [.0205, .225], [.0165, .24], [.0165, .265], [.0195, .268], [.0195, .282], [.0165, .285], [0, .285]].map(p => new THREE.Vector2(p[0], p[1]));
-  const foilP = [[.0255, .213], [.0185, .236], [.0182, .262], [.0212, .266], [.0212, .287], [0, .287]].map(p => new THREE.Vector2(p[0], p[1]));
+  // Bottiglia: profilo ruotato, con l'asse lungo z (collo verso chi guarda). Corpo cilindrico
+  // lungo e collo più snello e allungato — le stesse proporzioni dell'icona bottiglia usata nel
+  // resto dell'app — invece del corpo corto e collo tozzo di prima (sembrava una borraccia).
+  const prof = [[0, .006], [.018, .002], [.032, 0], [.037, .012], [.039, .045], [.039, .195], [.0345, .208], [.022, .222], [.0155, .238], [.0145, .262], [.0175, .266], [.0175, .28], [.0145, .284], [0, .285]].map(p => new THREE.Vector2(p[0], p[1]));
+  const foilP = [[.026, .215], [.019, .238], [.0185, .262], [.0215, .266], [.0215, .288], [0, .288]].map(p => new THREE.Vector2(p[0], p[1]));
   const geoGlass = new THREE.LatheGeometry(prof, 22).rotateX(Math.PI / 2);
   const geoFoil = new THREE.LatheGeometry(foilP, 22).rotateX(Math.PI / 2);
   const mats = {};
