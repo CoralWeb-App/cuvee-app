@@ -3322,6 +3322,37 @@ async function saveScanOverride(userId) {
   } catch(e) { showToast(e.message, 'error') }
 }
 
+// ── AVVISO DI REGALO PREMIUM ──────────────────────────
+// Durata "amichevole" dalle due date: riconosce i periodi standard (1/3/6 mesi, 1/2 anni) entro
+// pochi giorni di tolleranza (i mesi non hanno tutti la stessa lunghezza), altrimenti dice i giorni esatti.
+function formatPremiumDurationIt(fromISO, untilISO) {
+  const days = Math.round((new Date(untilISO) - new Date(fromISO)) / 86400000)
+  if (days <= 0) return null
+  const near = (n, tol) => Math.abs(days - n) <= tol
+  if (near(365, 4)) return '1 anno'
+  if (near(730, 6)) return '2 anni'
+  if (near(180, 4)) return '6 mesi'
+  if (near(90, 3)) return '3 mesi'
+  if (near(30, 2)) return '1 mese'
+  const months = Math.round(days / 30)
+  if (months >= 1 && Math.abs(days - months * 30) <= 3) return `${months} mesi`
+  return `${days} giorni`
+}
+
+// Crea il messaggio personale (campanella dell'app) e prova a mandare anche la push. Non blocca mai
+// l'attivazione del Premium, già salvata prima di questa chiamata: un eventuale errore è solo avvisato.
+async function sendPremiumGiftNotice(userId, fromISO, untilISO) {
+  try {
+    const dur = formatPremiumDurationIt(fromISO, untilISO)
+    const until = fmtDate(untilISO)
+    const body = dur
+      ? `Un amministratore di Cuvée ti ha regalato l'abbonamento Premium per ${dur}, fino al ${until}. Buona degustazione!`
+      : `Un amministratore di Cuvée ti ha regalato l'abbonamento Premium, fino al ${until}. Buona degustazione!`
+    const r = await callSendPush({ target_user_id: userId, title: 'Ti abbiamo regalato Premium', body, cta_action: 'premium', cta_label: 'Scopri Premium' })
+    showToast('Premium attivato ✓ · avviso inviato' + (r.sent ? ` (push su ${r.sent} dispositivo/i)` : ''))
+  } catch(e) { showToast('Premium attivato, ma l\'avviso non è partito: ' + e.message, 'error') }
+}
+
 // ── PREMIUM MODAL ─────────────────────────────────────
 function openPremiumModal(userId, email) {
   const today     = new Date().toISOString().slice(0, 10)
@@ -3357,6 +3388,12 @@ function openPremiumModal(userId, email) {
           <label class="adm-form-label">NOTE (opzionale)</label>
           <input id="pm-notes" class="adm-form-input" type="text" placeholder="es. Influencer, codice promo...">
         </div>
+        <div class="adm-form-field" style="grid-column:1/-1">
+          <label style="display:flex;gap:10px;align-items:center;cursor:pointer;font-size:13px;color:var(--text-2)">
+            <input type="checkbox" id="pm-notify" checked style="width:16px;height:16px;accent-color:var(--gold)">
+            Avvisa l'utente del regalo (messaggio nell'app + push)
+          </label>
+        </div>
       </div>
       <div class="adm-modal-actions">
         <button class="adm-btn adm-btn-ghost" onclick="closeModal()">Annulla</button>
@@ -3379,20 +3416,24 @@ async function assignPremiumModal(userId) {
   const from  = document.getElementById('pm-from')?.value
   const until = document.getElementById('pm-until')?.value
   const notes = document.getElementById('pm-notes')?.value
+  const notify = document.getElementById('pm-notify')?.checked
   if (!until) { showToast('Seleziona una data di scadenza', 'error'); return }
   try {
+    const fromIso  = from  ? new Date(from  + 'T00:00:00').toISOString() : new Date().toISOString()
+    const untilIso = new Date(until + 'T23:59:59').toISOString()
     const { error } = await supa.from('users').update({
       is_premium: true,
-      premium_from:  from  ? new Date(from  + 'T00:00:00').toISOString() : new Date().toISOString(),
-      premium_until: new Date(until + 'T23:59:59').toISOString(),
+      premium_from:  fromIso,
+      premium_until: untilIso,
       premium_notes: notes || null,
       premium_source: 'admin',
     }).eq('id', userId)
     if (error) throw error
     closeModal()
-    showToast('Premium attivato ✓')
     showUserDetail(userId)
     renderUtenti()
+    if (notify) await sendPremiumGiftNotice(userId, fromIso, untilIso)
+    else showToast('Premium attivato ✓')
   } catch(e) { showToast(e.message, 'error') }
 }
 
@@ -3516,23 +3557,27 @@ async function assignPremium() {
   const from  = document.getElementById('prem-from').value
   const until = document.getElementById('prem-until').value
   const notes = document.getElementById('prem-notes').value.trim()
+  const notify = document.getElementById('prem-notify')?.checked
   if (!email || !until) { showToast('Email e data di fine obbligatorie', 'error'); return }
   try {
     const { data: users, error: e1 } = await supa.from('users').select('id').eq('email', email)
     if (e1) throw e1
     if (!users.length) throw new Error(`Utente "${email}" non trovato`)
+    const fromIso  = from  ? new Date(from  + 'T00:00:00').toISOString() : new Date().toISOString()
+    const untilIso = new Date(until + 'T23:59:59').toISOString()
     const { error } = await supa.from('users').update({
       is_premium: true,
-      premium_from:  from  ? new Date(from  + 'T00:00:00').toISOString() : new Date().toISOString(),
-      premium_until: new Date(until + 'T23:59:59').toISOString(),
+      premium_from:  fromIso,
+      premium_until: untilIso,
       premium_notes: notes || null,
       premium_source: 'admin',
     }).eq('id', users[0].id)
     if (error) throw error
-    showToast(`Premium attivato per ${email} ✓`)
     document.getElementById('prem-email').value = ''
     document.getElementById('prem-notes').value = ''
     loadAbbonamenti()
+    if (notify) await sendPremiumGiftNotice(users[0].id, fromIso, untilIso)
+    else showToast(`Premium attivato per ${email} ✓`)
   } catch(e) { showToast(e.message, 'error') }
 }
 

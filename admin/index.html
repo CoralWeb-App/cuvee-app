@@ -789,6 +789,10 @@
               <input id="prem-notes" class="adm-form-input" type="text" placeholder="es. Influencer partner, codice promo…">
             </div>
           </div>
+          <label style="display:flex;gap:10px;align-items:center;cursor:pointer;font-size:13px;color:var(--text-2);margin-top:4px;">
+            <input type="checkbox" id="prem-notify" checked style="width:16px;height:16px;accent-color:var(--gold)">
+            Avvisa l'utente del regalo (messaggio nell'app + push)
+          </label>
           <div class="adm-form-actions">
             <button class="adm-btn adm-btn-primary" onclick="assignPremium()">
               <i class="ti ti-crown"></i> Attiva Premium
@@ -1112,7 +1116,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=32"></script>
+<script src="js/admin.js?v=33"></script>
 
 </body>
 </html>

@@ -235,6 +235,7 @@ serve(async (req) => {
 
     // ── Piano di invio: chi riceve cosa ──
     let plans: Plan[] = []
+    let personalMessageId: string | undefined
     if (system) {
       // Messaggi personali (notifiche automatiche): ognuno con il proprio testo e il proprio collegamento
       const raw = Array.isArray(body.deliveries) ? body.deliveries : []
@@ -255,6 +256,27 @@ serve(async (req) => {
           plans.push({ row, title: d.title, body: d.body, notificationId: d.notification_id })
         }
       }
+    } else if (isUuid(body.target_user_id)) {
+      // Messaggio a UN utente scelto dall'admin (es. "ti abbiamo regalato Premium"): come una notifica
+      // automatica ma innescata a mano. Si registra in personal_notifications (compare nella campanella
+      // dell'app anche se il telefono non ha push attive) e si prova subito a consegnarla.
+      const targetUserId = body.target_user_id as string
+      const title = String(body.title ?? '').trim()
+      const message = String(body.body ?? '').trim()
+      const ctaAction = typeof body.cta_action === 'string' && body.cta_action.trim() ? body.cta_action.trim() : null
+      const ctaLabel = typeof body.cta_label === 'string' && body.cta_label.trim() ? body.cta_label.trim() : null
+      if (!title || !message) return json({ error: 'Titolo e messaggio sono obbligatori' }, 400)
+      if (title.length > INPUT_MAX_TITLE) return json({ error: `Titolo troppo lungo (max ${INPUT_MAX_TITLE} caratteri)` }, 400)
+      if (message.length > INPUT_MAX_BODY) return json({ error: `Messaggio troppo lungo (max ${INPUT_MAX_BODY} caratteri)` }, 400)
+      const { data: created, error: insErr } = await db.from('personal_notifications').insert({
+        user_id: targetUserId, title, body: message, cta_label: ctaLabel, cta_action: ctaAction, is_test: false,
+      }).select('id').single()
+      if (insErr || !created) return json({ error: 'Messaggio personale: ' + (insErr?.message ?? 'nessun id') }, 500)
+      personalMessageId = created.id as string
+      if (!pem || !keyId || !teamId) return json({ success: true, total: 0, sent: 0, failed: 0, removed: 0, message_id: personalMessageId, note: 'Messaggio creato, ma la chiave APNs non è configurata: nessuna push inviata' })
+      const { data: tokenRows, error: tErr } = await db.from('push_tokens').select('token, user_id, environment').eq('user_id', targetUserId)
+      if (tErr) return json({ error: 'Lettura dispositivi: ' + tErr.message }, 500)
+      plans = (tokenRows ?? []).map((row: TokenRow) => ({ row, title, body: message, notificationId: 'p:' + personalMessageId }))
     } else {
       const title = String(body.title ?? '').trim()
       const message = String(body.body ?? '').trim()
@@ -269,7 +291,7 @@ serve(async (req) => {
       plans = tokens.map((row) => ({ row, title, body: message, notificationId }))
     }
 
-    if (!plans.length) return json({ success: true, total: 0, sent: 0, failed: 0, removed: 0, note: 'Nessun dispositivo registrato per questi destinatari' })
+    if (!plans.length) return json({ success: true, total: 0, sent: 0, failed: 0, removed: 0, ...(personalMessageId ? { message_id: personalMessageId } : {}), note: 'Nessun dispositivo registrato per questi destinatari' })
 
     let jwt: string
     try { jwt = await makeProviderToken(pem!, keyId!, teamId!) } catch (e) { return json({ error: 'Chiave APNs non valida: ' + (e as Error).message }, 500) }
@@ -294,8 +316,8 @@ serve(async (req) => {
       }
     }
 
-    if (fatal) return json({ error: fatal, total: plans.length, sent, failures }, 502)
-    return json({ success: true, total: plans.length, sent, failed: plans.length - sent - removed, removed, failures })
+    if (fatal) return json({ error: fatal, total: plans.length, sent, failures, ...(personalMessageId ? { message_id: personalMessageId } : {}) }, 502)
+    return json({ success: true, total: plans.length, sent, failed: plans.length - sent - removed, removed, failures, ...(personalMessageId ? { message_id: personalMessageId } : {}) })
   } catch (e) {
     return json({ error: (e as Error).message || 'Errore durante l\'invio' }, 500)
   }
