@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=164"/>
+<link rel="stylesheet" href="css/style.css?v=165"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -2499,7 +2499,10 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 <div class="view" id="v-cantina">
   <div class="topbar">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left"></i>Indietro</button>
-    <div class="topbar-icons"><button class="cv-top-btn" id="cv-edit-btn" onclick="cvOpenBuilder('edit')" style="display:none;">Modifica</button></div>
+    <div class="topbar-icons">
+      <button class="topbar-icon-btn" id="cv-search-btn" onclick="cvOpenSearch()" style="display:none;"><i class="ti ti-search" style="font-size:16px;color:var(--gold);"></i></button>
+      <button class="cv-top-btn" id="cv-edit-btn" onclick="cvOpenBuilder('edit')" style="display:none;">Modifica</button>
+    </div>
   </div>
   <div class="scroll" id="cv-scroll">
     <div class="cv-body">
@@ -4117,6 +4120,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 </div><!-- #app -->
 
 <script src="js/app.js?v=279"></script>
-<script src="js/cantina.js?v=14"></script>
+<script src="js/cantina.js?v=15"></script>
 </body>
 </html>

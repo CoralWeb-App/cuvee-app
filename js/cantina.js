@@ -82,6 +82,8 @@ function cvMaybeShowIntro() {
 const cvEl = id => document.getElementById(id);
 const cvEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cvHex = n => '#' + n.toString(16).padStart(6, '0');
+// Confronto testo tollerante ad accenti/maiuscole, usato sia dalla ricerca nel catalogo sia da quella in cantina
+const cvNorm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 // La cantina è aperta a tutti gli utenti registrati; chi non è Premium vede l'anteprima (cvCanEdit)
 const cvEnabled = () => !!currentUser;
 const cvToast = m => { if (typeof showAppToast === 'function') showAppToast(m, 2600); };
@@ -169,6 +171,7 @@ async function cvEnter() {
   cvEl('cv-demo-badge').hidden = !CV.demo;
   cvEl('cv-premium-cta').hidden = !CV.demo;
   cvEl('cv-edit-btn').style.display = 'none';
+  cvEl('cv-search-btn').style.display = 'none';
   if (CV.demo) {
     CV.sel = null; CV.moveId = null; CV.error = null;
     cvEl('cv-empty').innerHTML = '';
@@ -206,6 +209,7 @@ function cvRefresh(rebuild3d) {
   cvRenderTrashLink();
   cvEl('cv-main').hidden = !has;
   cvEl('cv-edit-btn').style.display = has ? '' : 'none';
+  cvEl('cv-search-btn').style.display = has ? '' : 'none';
   cvEl('cv-empty').innerHTML = has ? '' :
     '<div class="cv-empty"><b>La tua cantina, come nella realtà</b><p>Crea una cantina con le misure dei tuoi scaffali e delle tue cantinette, poi aggiungi le bottiglie e ritrovale al loro posto, anche in 3D.</p>' +
     '<button class="cv-btn gold" onclick="cvOpenBuilder(\'new\')">Crea la tua prima cantina</button></div>';
@@ -519,12 +523,11 @@ function cvStartAdd(target) {
 async function cvOpenCatalogSearch() {
   cvSheet('<h2>Cerca nel catalogo</h2><input type="search" id="cvq" placeholder="Maison o cuvée" aria-label="Cerca" autocomplete="off"><div id="cvq-list"><p class="cv-hintp">Carico il catalogo…</p></div>');
   try { await ensureBottiglieLoaded(); } catch (_) { /* gestito sotto */ }
-  const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const list = q => {
-    const tok = norm(q).split(/\s+/).filter(Boolean);
+    const tok = cvNorm(q).split(/\s+/).filter(Boolean);
     if (!allBottiglie.length) return '<p class="cv-hintp">Catalogo non disponibile, riprova tra poco.</p>';
-    if (norm(q).length < 2) return '<p class="cv-hintp">Scrivi almeno 2 lettere.</p>';
-    const hits = allBottiglie.filter(b => { const h = norm((b.maison && b.maison.nome) + ' ' + b.nome); return tok.every(t => h.includes(t)); }).slice(0, 40);
+    if (cvNorm(q).length < 2) return '<p class="cv-hintp">Scrivi almeno 2 lettere.</p>';
+    const hits = allBottiglie.filter(b => { const h = cvNorm((b.maison && b.maison.nome) + ' ' + b.nome); return tok.every(t => h.includes(t)); }).slice(0, 40);
     if (!hits.length) return '<p class="cv-hintp">Nessun risultato. Puoi inserirla a mano.</p>';
     return hits.map(b => '<button class="cv-row" data-id="' + b.id + '"><i style="background:' + (b.tipo === 'rose' ? CV_TYPES.rose.dot : CV_TYPES.champagne.dot) + '"></i><span>' + cvEsc(b.maison && b.maison.nome) + ' · ' + cvEsc(b.nome) + '<small>' + (b.annata ? b.annata : 'Senza annata') + '</small></span></button>').join('');
   };
@@ -747,6 +750,65 @@ function cvOpenBuilder(mode, opts) {
   draw();
 }
 function cvOpenBuilderIfEmpty() { if (!CV.cellars.length) cvOpenBuilder('new'); }
+
+/* ───────── Ricerca fra tutte le cantine ───────── */
+function cvPosTextIn(unit, r, c) {
+  return unit.kind === 'fridge' ? unit.name + ' · ripiano ' + (r + 1) + ', posto ' + (c + 1) : unit.name + ' · riga ' + CV_ROWL[r] + ', posto ' + (c + 1);
+}
+function cvSearchIndex() {
+  const cellarById = new Map(CV.cellars.map(c => [c.id, c]));
+  const unitById = new Map(CV.units.map(u => [u.id, u]));
+  return CV.bottles
+    .filter(b => cellarById.has(b.cellar_id))
+    .map(b => {
+      const cellar = cellarById.get(b.cellar_id);
+      const unit = b.unit_id ? unitById.get(b.unit_id) : null;
+      const where = unit ? cellar.name + ' · ' + cvPosTextIn(unit, b.slot_row, b.slot_col) : cellar.name + ' · non posizionata';
+      return { b, cellarId: cellar.id, unitId: b.unit_id, r: b.slot_row, c: b.slot_col, where };
+    });
+}
+function cvOpenSearch() {
+  cvSheet('<h2>Cerca in cantina</h2><input type="search" id="cvsq" placeholder="Maison o cuvée" aria-label="Cerca" autocomplete="off"><div id="cvsq-list"></div>');
+  const index = cvSearchIndex();
+  const list = q => {
+    const tok = cvNorm(q).split(/\s+/).filter(Boolean);
+    if (!tok.length) return '<p class="cv-hintp">Scrivi il nome di una maison o di una cuvée.</p>';
+    const hits = index.filter(x => { const h = cvNorm(x.b.maison + ' ' + x.b.cuvee); return tok.every(t => h.includes(t)); }).slice(0, 60);
+    if (!hits.length) return '<p class="cv-hintp">Nessuna bottiglia trovata.</p>';
+    return hits.map(x => '<button class="cv-row" data-jump="' + x.b.id + '"><i style="background:' + (CV_TYPES[x.b.kind] || CV_TYPES.champagne).dot + '"></i><span>' + cvEsc(x.b.maison) + ' · ' + cvEsc(x.b.cuvee) + '<small>' + cvEsc(cvYearText(x.b)) + ' · ' + cvEsc(x.where) + '</small></span></button>').join('');
+  };
+  const q = cvEl('cvsq'); if (!q) return;
+  q.addEventListener('input', () => { cvEl('cvsq-list').innerHTML = list(q.value); });
+  cvEl('cvsq-list').innerHTML = list('');
+  cvEl('cvsq-list').onclick = e => {
+    const r = e.target.closest('[data-jump]'); if (!r) return;
+    cvCloseSheet();
+    cvJumpToBottle(r.dataset.jump, index);
+  };
+}
+// Porta l'utente dritto alla bottiglia trovata: cambia cantina se serve, passa alla mappa 2D, la seleziona
+// e scorre fino a lì — sulle "non posizionate" non c'è un posto da cerchiare, quindi si scorre e basta.
+function cvJumpToBottle(bottleId, index) {
+  const hit = (index || cvSearchIndex()).find(x => x.b.id === bottleId);
+  if (!hit) return;
+  if (CV.cur !== hit.cellarId) { CV.cur = hit.cellarId; CV.sel = null; CV.moveId = null; }
+  CV.view = '2d';
+  cvSetView('2d');
+  if (hit.unitId) { CV.sel = { u: hit.unitId, r: hit.r, c: hit.c }; CV.moveId = null; } else { CV.sel = null; CV.moveId = null; }
+  cvRefresh(true);
+  requestAnimationFrame(() => {
+    const target = hit.unitId
+      ? cvEl('cv-view2d').querySelector('[data-u="' + hit.unitId + '"]')?.closest('.cv-unit')
+      : cvEl('cv-unplaced').querySelector('.cv-unit');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!hit.unitId) {
+        const row = [...cvEl('cv-unplaced').querySelectorAll('[data-un]')].find(el => el.dataset.un === bottleId);
+        if (row) { row.classList.add('cv-row-flash'); setTimeout(() => row.classList.remove('cv-row-flash'), 1800); }
+      }
+    }
+  });
+}
 
 /* ───────── Cestino ───────── */
 function cvOpenTrash() {
