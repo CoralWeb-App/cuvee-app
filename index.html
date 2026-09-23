@@ -25,7 +25,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <!-- App styles -->
-<link rel="stylesheet" href="css/style.css?v=163"/>
+<link rel="stylesheet" href="css/style.css?v=164"/>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script>
@@ -327,16 +327,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
         <button class="btn-gold" id="pns-card-btn" onclick="onEnablePushClick(this)" style="width:100%;margin-top:14px;">Attiva le notifiche</button>
       </div>
     </div>
-    <div id="pns-toggle-card" style="display:none;padding:16px 18px 0;">
+    <div id="pns-active-card" style="display:none;padding:16px 18px 0;">
       <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:14px;">
         <i class="ti ti-bell" style="font-size:22px;color:var(--gold);flex-shrink:0;"></i>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;">Notifiche push</div>
-          <div style="font-family:var(--sans);font-size:12.5px;color:var(--ink-4);margin-top:2px;" id="pns-toggle-sub"></div>
+          <div style="font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;">Notifiche attive</div>
+          <div style="font-family:var(--sans);font-size:12.5px;color:var(--ink-4);margin-top:2px;">Ricevi novità, suggerimenti e offerte su questo telefono</div>
         </div>
-        <label class="push-switch"><input type="checkbox" id="pns-toggle" onchange="onPushToggle(this)"><span></span></label>
       </div>
-      <button id="pns-ios-link" onclick="openIOSNotificationSettings()" style="display:none;width:100%;margin-top:10px;background:none;border:1px solid var(--border-2);border-radius:var(--radius-lg);padding:11px;font-family:var(--sans);font-size:13.5px;color:var(--ink-3);cursor:pointer;">Gestisci il permesso nelle Impostazioni dell'iPhone</button>
+      <button id="pns-ios-link" onclick="openIOSNotificationSettings()" style="width:100%;margin-top:10px;background:none;border:1px solid var(--border-2);border-radius:var(--radius-lg);padding:11px;font-family:var(--sans);font-size:13.5px;color:var(--ink-3);cursor:pointer;">Gestisci il permesso nelle Impostazioni dell'iPhone</button>
     </div>
     <div id="pns-note" style="padding:14px 22px 24px;font-family:var(--sans);font-size:13px;color:var(--ink-4);line-height:1.6;"></div>
   </div>
@@ -4117,7 +4116,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 </div><!-- #app -->
 
-<script src="js/app.js?v=278"></script>
+<script src="js/app.js?v=279"></script>
 <script src="js/cantina.js?v=14"></script>
 </body>
 </html>

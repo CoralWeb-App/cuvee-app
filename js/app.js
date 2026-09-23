@@ -5043,7 +5043,6 @@ function applyCruPremiumGating(viewId) {
 const PUSH_LAST_SHOWN_KEY = 'cuvee_push_last_shown_v3';
 const PUSH_DECLINED_KEY = 'cuvee_push_declined_v3';
 const PUSH_REPROMPT_DAYS = 3;
-const PUSH_OPTOUT_KEY = 'cuvee_push_optout';   // scelta "disattiva" fatta nell'app, valida per questo telefono
 let _pushTokenWaiters = [];
 let _pushToken = null;
 let _pushListenersBound = false;
@@ -5068,7 +5067,9 @@ function _bindPushListeners() {
   P.addListener('registration', (t) => {
     _pushToken = t?.value || null;
     _pushTokenWaiters.splice(0).forEach(fn => fn(_pushToken));
-    if (!_pushOptedOut()) _savePushToken();
+    // Il telefono si registra solo quando il permesso è concesso (vedi initPush/enablePush): se arriva un
+    // token è perché lo vogliamo davvero, nessun controllo aggiuntivo da fare qui.
+    _savePushToken();
   });
   P.addListener('registrationError', (e) => console.log('Push registration error:', e));
   // App aperta: nessun banner di sistema, quindi un avviso discreto e il pallino sulla campanella
@@ -5079,8 +5080,6 @@ function _bindPushListeners() {
   P.addListener('pushNotificationActionPerformed', (a) => { if (currentUser) _openFromPush(a?.notification?.data?.notification_id); });
 }
 
-function _pushOptedOut() { try { return localStorage.getItem(PUSH_OPTOUT_KEY) === '1'; } catch(e) { return false; } }
-function _setPushOptedOut(v) { try { v ? localStorage.setItem(PUSH_OPTOUT_KEY, '1') : localStorage.removeItem(PUSH_OPTOUT_KEY); } catch(e) {} }
 
 // Toccando una notifica si apre la pagina Notifiche e, se la push è collegata a un messaggio, direttamente
 // quel messaggio (attende che l'elenco sia caricato).
@@ -5093,22 +5092,28 @@ async function _openFromPush(notificationId) {
   }
 }
 
-// Se l'utente ha già dato il permesso (e non ha disattivato le push dall'app), il telefono si registra
-// a ogni avvio: il token può cambiare
+// Non esiste un interruttore nostro separato: l'unico permesso vero vive nelle Impostazioni dell'iPhone,
+// e nessuna app può leggerlo dal server o cambiarlo da sé. Perciò a OGNI apertura dell'app allineiamo la
+// registrazione sul server a quello che dice davvero il telefono in quel momento: concesso → registriamo
+// (il token può cambiare); non concesso (rifiutato, o mai ancora chiesto) → togliamo subito ogni token
+// rimasto sul server, così chi le disattiva dalle Impostazioni smette davvero di riceverle dalla volta dopo.
 async function initPush() {
   if (!_pushSupported() || !currentUser) return;
   _bindPushListeners();
-  if (_pushOptedOut()) return;
   try {
     const perm = await _pushPlugin().checkPermissions();
-    if (perm.receive === 'granted') await _pushPlugin().register();
+    if (perm.receive === 'granted') {
+      await _pushPlugin().register();
+    } else {
+      _pushToken = null;
+      try { await supa.rpc('unregister_all_push_tokens'); } catch(e) { console.log('unregister_all_push_tokens error:', e); }
+    }
   } catch(e) { console.log('initPush error:', e); }
 }
 
 async function enablePush() {
   if (!_pushSupported()) return false;
   _bindPushListeners();
-  _setPushOptedOut(false);
   const P = _pushPlugin();
   try {
     let perm = await P.checkPermissions();
@@ -5119,53 +5124,16 @@ async function enablePush() {
   } catch(e) { console.log('enablePush error:', e); return false; }
 }
 
-// All'uscita dall'account il telefono non deve più ricevere le notifiche di quell'utente
+// All'uscita dall'account il telefono non deve più ricevere le notifiche di quell'utente. Non dipende dal
+// recuperare il token in tempo dal sistema: toglie direttamente sul server tutto quello che c'era registrato.
 async function unregisterPush() {
-  if (!_pushToken) return;
-  try { await supa.rpc('unregister_push_token', { p_token: _pushToken }); } catch(e) { console.log('unregisterPush error:', e); }
-}
-
-// Il telefono di un utente che ha disattivato le push dall'app: serve il suo token per toglierlo dal server.
-// Se l'app non l'ha ancora ricevuto in questa sessione, lo si richiede al sistema e si attende.
-function _ensurePushToken() {
-  if (_pushToken) return Promise.resolve(_pushToken);
-  const P = _pushPlugin();
-  if (!P) return Promise.resolve(null);
-  _bindPushListeners();
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(null), 4000);
-    _pushTokenWaiters.push((t) => { clearTimeout(timer); resolve(t); });
-    P.register().catch(() => { clearTimeout(timer); resolve(null); });
-  });
-}
-
-// Interruttore nella schermata Profilo → Impostazioni → Notifiche. iOS non permette all'app di revocare il permesso di sistema
-// (quel promemoria resta acceso nelle Impostazioni del telefono, è normale: nessuna app può spegnerlo da sé), quindi "disattiva"
-// toglie dal server TUTTI i token di questo account — non solo quello del telefono corrente — così non arriva più nulla, e lo
-// fa con una chiamata sola lato server: non dipende dal recuperare in tempo il token dal sistema operativo, che potrebbe fallire.
-async function onPushToggle(el) {
-  const wantOn = el.checked;
-  el.disabled = true;
-  try {
-    if (wantOn) {
-      const ok = await enablePush();
-      if (!ok) el.checked = false;
-      else showAppToast('Notifiche attivate', 3000);
-    } else {
-      _setPushOptedOut(true);
-      try { await supa.rpc('unregister_all_push_tokens'); } catch(e) { console.log('unregister error:', e); }
-      _pushToken = null;
-      showAppToast('Notifiche disattivate: Cuvée non te ne invierà più', 3500);
-    }
-  } finally {
-    el.disabled = false;
-    await updatePushSettings();
-    await updatePushCard();
-  }
+  if (!_pushSupported()) return;
+  try { await supa.rpc('unregister_all_push_tokens'); } catch(e) { console.log('unregisterPush error:', e); }
+  _pushToken = null;
 }
 
 // Scorciatoia alla pagina Notifiche di Cuvée dentro Impostazioni dell'iPhone — l'unico posto dove il
-// permesso di sistema si può davvero revocare (nessuna app di terzi può farlo al posto dell'utente).
+// permesso di sistema si può davvero gestire (nessuna app di terzi può farlo al posto dell'utente).
 function openIOSNotificationSettings() {
   try { window.Capacitor?.Plugins?.App?.openUrl({ url: 'app-settings:' }); } catch(e) { console.log('openUrl error:', e); }
 }
@@ -5203,33 +5171,26 @@ async function updatePushCard() {
   _paintEnableCard('push', state);
 }
 
-// Schermata dedicata in Profilo → Impostazioni → Notifiche: qui si attivano e si disattivano
+// Schermata dedicata in Profilo → Impostazioni → Notifiche: sola lettura sullo stato vero del telefono.
+// Nessun interruttore nostro: l'unico modo per attivarle/disattivarle davvero è il permesso di sistema.
 async function updatePushSettings() {
   const enableCard = document.getElementById('pns-enable-card');
-  const toggleCard = document.getElementById('pns-toggle-card');
+  const activeCard = document.getElementById('pns-active-card');
   const note = document.getElementById('pns-note');
-  if (!enableCard || !toggleCard) return;
+  if (!enableCard || !activeCard) return;
   const state = await _pushState();
   enableCard.style.display = 'none';
-  toggleCard.style.display = 'none';
+  activeCard.style.display = 'none';
   if (state === null) {
     if (note) note.textContent = 'Le notifiche push sono disponibili nell\'app per iPhone.';
     return;
   }
-  const iosLink = document.getElementById('pns-ios-link');
   if (state === 'granted') {
-    const on = !_pushOptedOut();
-    toggleCard.style.display = 'block';
-    document.getElementById('pns-toggle').checked = on;
-    document.getElementById('pns-toggle-sub').textContent = on ? 'Attive su questo telefono' : 'Disattivate su questo telefono';
-    if (iosLink) iosLink.style.display = 'block';
+    activeCard.style.display = 'block';
   } else {
     _paintEnableCard('pns', state);
-    if (iosLink) iosLink.style.display = 'none';
   }
-  if (note) note.textContent = state === 'granted'
-    ? 'Le notifiche ti avvisano di novità, suggerimenti e offerte, anche in base a come usi l\'app. Ogni messaggio resta consultabile dalla campanella nella Home. Disattivandole qui, Cuvée smette di inviartele: il permesso resta comunque segnato come concesso nelle Impostazioni dell\'iPhone (è normale, nessuna app può cambiarlo da sé), ma semplicemente non ti manderemo più nulla.'
-    : 'Le notifiche ti avvisano di novità, suggerimenti e offerte, anche in base a come usi l\'app. Ogni messaggio resta consultabile dalla campanella nella Home. La scelta vale per questo telefono.';
+  if (note) note.textContent = 'Le notifiche ti avvisano di novità, suggerimenti e offerte, anche in base a come usi l\'app. Ogni messaggio resta comunque consultabile dalla campanella nella Home. Si attivano e disattivano solo dal permesso di sistema: nessuna app, nemmeno questa, può cambiarlo al posto tuo.';
 }
 
 async function onEnablePushClick(btn) {
@@ -5363,11 +5324,10 @@ function _paintUnreadBadge(count) {
 // solo azzerarlo (e svuotare il Centro Notifiche) quando non resta nulla da leggere.
 async function _syncAppIconBadge(count) {
   if (!_pushSupported()) return;
-  const n = _pushOptedOut() ? 0 : count;
   try {
     const B = window.Capacitor?.Plugins?.Badge;
-    if (B) await B.set({ count: n });
-    if (n === 0) await _pushPlugin().removeAllDeliveredNotifications();
+    if (B) await B.set({ count });
+    if (count === 0) await _pushPlugin().removeAllDeliveredNotifications();
   } catch(e) { /* il permesso "numero sull'icona" potrebbe non essere concesso: nessun problema */ }
 }
 
