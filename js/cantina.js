@@ -754,7 +754,8 @@ function cvOpenTrash() {
     if (!CV.trash.length) { cvCloseSheet(); return; }
     const rows = CV.trash.map(c => {
       const d = cvTrashDaysLeft(c.deleted_at);
-      return '<div class="cv-trash-row"><div><b>' + cvEsc(c.name) + '</b><small>' + (d === 1 ? 'Sparisce domani' : 'Sparisce tra ' + d + ' giorni') + '</small></div>' +
+      const when = new Date(c.deleted_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+      return '<div class="cv-trash-row"><div><b>' + cvEsc(c.name) + '</b><small>Eliminata il ' + when + ' · ' + (d === 1 ? 'sparisce domani' : 'sparisce tra ' + d + ' giorni') + '</small></div>' +
         '<button class="cv-btn gold" data-restore="' + c.id + '">Ripristina</button></div>';
     }).join('');
     cvSheet('<h2>Cestino</h2><p class="cv-sub">Le cantine eliminate restano qui ' + CV_TRASH_DAYS + ' giorni, poi spariscono per sempre. Puoi ripristinarle quando vuoi, prima che scada il tempo.</p>' + rows, true);
