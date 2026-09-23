@@ -48,7 +48,10 @@ function go(id){
   if(scrl)scrl.scrollTo(0,0);
   // Load dynamic data when entering certain views
   if(id==='v-onb'){ onbIdx=0; onbApplySlide(onbData[0]); }
-  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); checkWelcomeNotification(); if(typeof cvUpdateEntry==='function') cvUpdateEntry(); }
+  // Il benvenuto non si controlla più qui: farlo su OGNI ingresso in Home (bottom nav, azioni di
+  // una notifica, ecc.) era proprio la causa dell'inaffidabilità segnalata — scatta invece solo da
+  // enterHomeAfterAuth(), il punto unico usato subito dopo login/registrazione.
+  if(id==='v-home'){ updatePremiumUI(); updateHomeScanCount(); checkUnreadNotifications(); if(typeof cvUpdateEntry==='function') cvUpdateEntry(); }
   if(id==='v-notifications') renderNotificationsUI();
   if(id==='v-notif-settings') updatePushSettings();
   if(id==='v-cantina' && typeof cvEnter === 'function') cvEnter();
@@ -1890,6 +1893,56 @@ async function initSocialLogin() {
 // usato per precompilare v-complete-profile subito dopo il routing.
 let _pendingSocialName = '';
 
+// Riconosce un account APPENA creato confrontando le due date che torna sempre Supabase Auth,
+// qualunque sia stato il metodo (email, Apple, Google): per un primo accesso vero sono uguali (o
+// quasi), per chi torna dopo giorni/mesi "ultimo accesso" è molto più avanti della "creazione".
+// Serve a decidere se incatenare benvenuto+notifiche, indipendentemente da quale delle tante
+// strade di login/registrazione ci ha portato fin qui.
+function _isFreshSignup(user) {
+  if (!user?.created_at || !user?.last_sign_in_at) return false;
+  return Math.abs(new Date(user.last_sign_in_at) - new Date(user.created_at)) < 120000;
+}
+// Acceso una sola volta, quando _routeAfterAuth scopre che l'account è appena nato: resta vero
+// anche durante i passaggi intermedi (nome profilo, conferma età) finché non si arriva davvero
+// in Home, dove enterHomeAfterAuth lo consuma e fa partire benvenuto → notifiche.
+let _pendingWelcomeFlow = false;
+
+// Va sempre usata al posto di go('v-home') in ogni punto che può essere il primissimo arrivo
+// dopo una registrazione (mai per la normale navigazione — quella resta un semplice go('v-home')).
+async function enterHomeAfterAuth() {
+  go('v-home');
+  if (!_pendingWelcomeFlow) return;
+  _pendingWelcomeFlow = false;
+  try {
+    if (await checkWelcomeNotification()) await _waitModalClosed('welcome-modal');
+    await maybeAskPushNow();
+  } catch(e) { console.log('enterHomeAfterAuth error:', e); }
+}
+// Risolve quando il modale passato smette di essere visibile (classe "on" rimossa), con un tetto
+// di sicurezza: questa attesa non blocca nulla di visibile all'utente, serve solo a incatenare
+// correttamente il prossimo passo (l'invito alle notifiche) dopo che ha chiuso il benvenuto.
+function _waitModalClosed(id, timeoutMs = 10 * 60000) {
+  return new Promise(resolve => {
+    const el = document.getElementById(id);
+    if (!el || !el.classList.contains('on')) { resolve(); return; }
+    const done = () => { obs.disconnect(); clearTimeout(t); resolve(); };
+    const obs = new MutationObserver(() => { if (!el.classList.contains('on')) done(); });
+    obs.observe(el, { attributes: true, attributeFilter: ['class'] });
+    const t = setTimeout(done, timeoutMs);
+  });
+}
+// Stesso invito di maybeSoftAskPush, ma senza aspettare che l'utente esplori due sezioni: al
+// primissimo ingresso in Home, appena chiuso il benvenuto, ha senso chiederlo subito.
+async function maybeAskPushNow() {
+  if (!_pushSupported() || !currentUser) return;
+  if (_pushPromptDeclined()) return;
+  let perm = null;
+  try { perm = await _pushPlugin().checkPermissions(); } catch(e) { return; }
+  if (perm.receive !== 'prompt' && perm.receive !== 'prompt-with-rationale') return;
+  _markPushPromptShown();
+  document.getElementById('push-prompt-modal')?.classList.add('on');
+}
+
 // Controlla sessione all avvio
 // Dopo un login (email, riapertura app, Apple, Google) instrada verso l'app
 // solo se l'utente ha già confermato di essere maggiorenne — altrimenti lo
@@ -1900,9 +1953,19 @@ let _pendingSocialName = '';
 // comunicano sempre, e mai più dopo il primo accesso) passa prima da
 // v-complete-profile: senza un nome vero, avatar e Carnet mostrerebbero solo
 // l'indirizzo email generato dal relay di Apple.
+// I punti che chiamano più login/eventi ravvicinati (es. auth.signUp che fa anche scattare
+// l'evento SIGNED_IN) possono invocarla in parallelo: si esegue una volta sola, la seconda
+// chiamata aspetta e riusa il risultato della prima invece di ripartire da capo daccapo.
+let _routeAfterAuthPromise = null;
 async function _routeAfterAuth() {
+  if (_routeAfterAuthPromise) return _routeAfterAuthPromise;
+  _routeAfterAuthPromise = _routeAfterAuthRun().finally(() => { _routeAfterAuthPromise = null; });
+  return _routeAfterAuthPromise;
+}
+async function _routeAfterAuthRun() {
   try { await loadUserProfile(); } catch(e) { console.log('Profile load:', e); }
   _rcIdentifyUser().catch(e => console.log('RevenueCat identify:', e));
+  if (_isFreshSignup(currentUser)) _pendingWelcomeFlow = true;
   // Chi ha già confermato l'età su v-age-gate-pre (prima della registrazione)
   // non deve rivederla su v-age-gate: la segniamo qui sul DB, così quella
   // resta solo una rete di sicurezza per gli account creati prima di questo.
@@ -1919,7 +1982,7 @@ async function _routeAfterAuth() {
     if (backBtn) backBtn.style.display = 'none'; // niente da annullare: senza nome non si può entrare
     go('v-complete-profile');
   } else if (currentUser?.profile?.age_confirmed === true) {
-    go('v-home');
+    enterHomeAfterAuth();
   } else {
     go('v-age-gate');
   }
@@ -1958,7 +2021,7 @@ async function saveProfileName() {
     return;
   }
   if (currentUser?.profile?.age_confirmed === true) {
-    go('v-home');
+    enterHomeAfterAuth();
   } else {
     go('v-age-gate');
   }
@@ -2030,7 +2093,7 @@ async function confirmAge18() {
     await supa.from('users').update({ age_confirmed: true }).eq('id', currentUser.id);
     if (currentUser.profile) currentUser.profile.age_confirmed = true;
   } catch(e) { console.log('Age confirm error:', e); }
-  go('v-home');
+  enterHomeAfterAuth();
 }
 
 async function declineAge18() {
@@ -2766,11 +2829,9 @@ async function checkEmailVerified() {
         statusEl.style.color = '#085041';
       }
 
-      // Small delay for UX then go to home
-      setTimeout(async () => {
-        await loadUserProfile();
-        go('v-home');
-      }, 1200);
+      // Small delay for UX, poi lo stesso instradamento di ogni altro accesso (carica il profilo,
+      // e se l'account è appena nato incatena benvenuto → notifiche una volta arrivati in Home)
+      setTimeout(() => { _routeAfterAuth(); }, 1200);
       return;
     }
 
@@ -5487,8 +5548,10 @@ function closeNotificationDetailModal() {
 const WELCOME_NOTIFICATION_ID = '11111111-1111-4111-8111-111111111111';
 let _welcomeChecked = false;
 
+// Restituisce true solo se ha davvero mostrato il popup adesso (usato da enterHomeAfterAuth per
+// sapere se deve aspettarne la chiusura prima di incatenare l'invito alle notifiche).
 async function checkWelcomeNotification() {
-  if (!currentUser || _welcomeChecked) return;
+  if (!currentUser || _welcomeChecked) return false;
   _welcomeChecked = true;
   // Subito dopo una registrazione manuale (email+password) può capitare che
   // la riga su public.users non sia ancora stata creata dal trigger su
@@ -5496,9 +5559,7 @@ async function checkWelcomeNotification() {
   // prima di questo punto (a differenza del round-trip OAuth di Google/Apple,
   // che dà al trigger il tempo di completarsi). L'upsert fallisce allora per
   // violazione della foreign key notification_reads_user_id_fkey. Riproviamo
-  // qualche volta con un piccolo ritardo invece di arrenderci subito: senza
-  // questo, chi resta in Home non vede più il popup finché non riavvia l'app,
-  // perché altrimenti il retry scatta solo al prossimo ingresso in Home.
+  // qualche volta con un piccolo ritardo invece di arrenderci subito.
   const MAX_ATTEMPTS = 4;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
@@ -5508,21 +5569,22 @@ async function checkWelcomeNotification() {
         .eq('notification_id', WELCOME_NOTIFICATION_ID)
         .maybeSingle();
       if (error) throw error;
-      if (data) return;
+      if (data) return false;
       const { error: e2 } = await supa.from('notification_reads')
         .upsert({ user_id: currentUser.id, notification_id: WELCOME_NOTIFICATION_ID }, { onConflict: 'user_id,notification_id' });
       if (e2) throw e2;
       document.getElementById('welcome-modal')?.classList.add('on');
-      return;
+      return true;
     } catch(e) {
       console.log(`checkWelcomeNotification error (tentativo ${attempt}/${MAX_ATTEMPTS}):`, e);
       if (attempt < MAX_ATTEMPTS) {
         await new Promise(r => setTimeout(r, 800));
       } else {
-        _welcomeChecked = false; // esauriti i tentativi: riprova al prossimo ingresso in Home
+        _welcomeChecked = false; // esauriti i tentativi: riprova al prossimo accesso
       }
     }
   }
+  return false;
 }
 function closeWelcomeModal() {
   document.getElementById('welcome-modal').classList.remove('on');
