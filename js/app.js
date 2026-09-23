@@ -187,11 +187,49 @@ async function goToBottiglia(bottId){
 const ONB_GRAPE_SVG = '<svg width="56" height="70" viewBox="0 0 44.309 55.104" fill="{{color}}" style="opacity:.85;">'
   + '<g><path d="M38.691,7.996c-2.373-1.104-4.788-0.948-5.4,0.349c-0.608,1.294,0.82,3.239,3.194,4.345c2.375,1.106,7.147,2.046,7.757,0.75C44.852,12.143,41.063,9.101,38.691,7.996z"/><path d="M25.552,25.806c-0.864,0.293-1.79,0.454-2.752,0.454c-1.258,0-2.446-0.272-3.524-0.756c-0.049-0.019-0.104-0.046-0.152-0.067c-1.278,1.134-2.115,2.764-2.195,4.583c-0.005,0.103-0.009,0.204-0.009,0.308c0,0.951,0.205,1.854,0.572,2.672c0.165,0.37,0.366,0.722,0.594,1.05c0.332,0.482,0.729,0.912,1.173,1.282c0.626,0.528,1.353,0.938,2.147,1.206c0.541,0.179,1.113,0.293,1.703,0.322c0.13,0.013,0.259,0.015,0.394,0.015c0.276,0,0.551-0.02,0.818-0.055c2.639-0.32,4.789-2.192,5.505-4.676C27.531,30.845,25.9,28.524,25.552,25.806z"/><path d="M16.218,17.4c-0.004,0.103-0.008,0.199-0.008,0.303c0,0.377,0.031,0.742,0.095,1.104v0.005c0.24,1.415,0.939,2.674,1.933,3.622c0.23,0.223,0.482,0.426,0.746,0.619c0.13,0.088,0.258,0.172,0.393,0.251c0.196,0.122,0.397,0.229,0.608,0.331c0.447,0.21,0.926,0.368,1.422,0.475c0.448,0.098,0.914,0.146,1.392,0.146c0.729,0,1.432-0.119,2.089-0.337c0.224-0.075,0.446-0.158,0.657-0.261c0.022-0.195,0.054-0.394,0.095-0.584c0.062-0.328,0.147-0.654,0.245-0.967c0.608-1.885,1.857-3.485,3.489-4.55c-0.041-1.894-0.886-3.593-2.218-4.757c0.165-0.222,0.363-0.475,0.577-0.748c0.191-0.24,0.407-0.502,0.626-0.768c2.522-3.035,7.402-8.186,11.73-8.616c0.738-0.077,1.276-0.73,1.197-1.466c-0.071-0.733-0.724-1.263-1.467-1.197c-5.02,0.507-10.13,5.486-13.533,9.58c-0.23,0.285-0.447,0.556-0.647,0.806c-0.081,0.099-0.162,0.195-0.238,0.293l-0.401,0.523c-0.071,0.088-0.139,0.179-0.201,0.258c-0.632-0.21-1.304-0.314-2-0.314c-1.592,0-3.05,0.559-4.187,1.494c-1.387,1.133-2.299,2.823-2.394,4.726V17.4z"/><path d="M9.039,44.346c-0.777,0.23-1.602,0.356-2.451,0.356c-1.553,0-3.015-0.414-4.272-1.134C0.899,44.77,0,46.553,0,48.552c0,3.619,2.952,6.552,6.588,6.552c3.452,0,6.284-2.641,6.557-6.005C11.238,48.098,9.754,46.399,9.039,44.346z"/><path d="M2.266,41.096c0.286,0.249,0.6,0.478,0.926,0.672c0.397,0.24,0.824,0.436,1.271,0.587c0.666,0.229,1.383,0.348,2.125,0.348c0.702,0,1.383-0.11,2.018-0.311c-0.004-0.023-0.009-0.052-0.009-0.077C8.574,42.061,8.56,41.803,8.56,41.54c0-0.103,0-0.204,0.009-0.308c0.009-0.352,0.045-0.695,0.099-1.035c0.411-2.587,1.995-4.788,4.187-6.055c-0.193-0.596-0.471-1.16-0.812-1.665c-0.401,0.059-0.808,0.088-1.229,0.088c-2.447,0-4.655-1.021-6.222-2.659C1.931,30.747,0,33.226,0,36.151C0,38.127,0.876,39.899,2.266,41.096z"/><path d="M14.28,18.87c-1.234,0.684-2.655,1.077-4.17,1.077c-1.314,0-2.562-0.297-3.676-0.824c-1.356,1.196-2.205,2.944-2.205,4.888c0,1.361,0.416,2.625,1.128,3.675c0.228,0.33,0.481,0.641,0.769,0.924c0.398,0.407,0.854,0.762,1.355,1.053c0.733,0.431,1.561,0.724,2.441,0.84c0.291,0.04,0.587,0.062,0.891,0.062c0.271,0,0.545-0.019,0.811-0.054c0.41-0.044,0.809-0.132,1.188-0.253c0.81-0.258,1.548-0.663,2.187-1.185c0.269-1.832,1.123-3.482,2.375-4.741C15.725,22.998,14.58,21.067,14.28,18.87z"/><path d="M6.302,16.734c0.312,0.229,0.651,0.424,1.006,0.586c0.45,0.215,0.926,0.374,1.427,0.478c0.442,0.098,0.903,0.146,1.377,0.146c0.729,0,1.431-0.114,2.085-0.333c0.482-0.159,0.938-0.375,1.364-0.635c0.254-0.156,0.5-0.33,0.731-0.517c0.01-0.086,0.022-0.165,0.041-0.244c0.306-1.751,1.149-3.312,2.354-4.521c0.003-0.102,0.008-0.201,0.008-0.302c0-3.617-2.947-6.55-6.583-6.55c-3.637,0-6.588,2.933-6.588,6.55C3.524,13.598,4.62,15.551,6.302,16.734z"/><path d="M17.388,24.316c-0.006,0.003-0.01,0.009-0.015,0.018c0.005,0.009,0.009,0.014,0.015,0.014V24.316z"/><path d="M34.075,18.167c-0.983,0-1.914,0.212-2.75,0.601c-0.403,0.183-0.788,0.405-1.141,0.663c-1.153,0.845-2.026,2.055-2.434,3.461c-0.062,0.211-0.116,0.436-0.151,0.663c-0.026,0.124-0.045,0.249-0.059,0.377c-0.031,0.258-0.05,0.517-0.05,0.782c0,0.051,0,0.097,0.005,0.148c0,0.09,0.004,0.174,0.009,0.262c0.122,1.953,1.101,3.675,2.567,4.797c0.317,0.239,0.657,0.453,1.015,0.635c0.312,0.161,0.645,0.294,0.984,0.405c0.63,0.201,1.306,0.307,2.004,0.307c3.636,0,6.583-2.932,6.583-6.554C40.658,21.1,37.711,18.167,34.075,18.167z"/><path d="M16.337,35.043c-0.412,0.051-0.812,0.139-1.197,0.263c-0.342,0.107-0.662,0.242-0.977,0.4c-0.353,0.18-0.683,0.389-0.997,0.624c-1.427,1.087-2.393,2.726-2.562,4.602c-0.02,0.143-0.027,0.285-0.027,0.432c-0.006,0.058-0.006,0.12-0.006,0.177c0,0.19,0.009,0.384,0.028,0.575c0.008,0.137,0.026,0.281,0.049,0.413c0.053,0.352,0.133,0.693,0.241,1.021c0.005,0.019,0.015,0.042,0.019,0.059c0.376,1.127,1.047,2.114,1.927,2.875c0.386,0.333,0.815,0.626,1.271,0.863c0.35,0.182,0.716,0.333,1.096,0.454c0.617,0.19,1.275,0.293,1.959,0.293c3.636,0,6.582-2.932,6.582-6.554c0-0.952-0.205-1.858-0.571-2.672C20.323,38.761,17.823,37.266,16.337,35.043z"/></g>'
   + '</svg>';
+// Mirino di scansione su una bottiglia stilizzata, con una linea di scansione orizzontale.
+const ONB_SCAN_SVG = '<svg width="56" height="70" viewBox="0 0 56 70" xmlns="http://www.w3.org/2000/svg">'
+  + '<path d="M4 4H14M4 4V14M52 4H42M52 4V14M4 66H14M4 66V56M52 66H42M52 66V56" stroke="{{color}}" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".9"/>'
+  + '<rect x="25" y="6" width="6" height="6" rx="1" fill="{{color}}" opacity=".85"/>'
+  + '<path d="M24 10H32V17C32 17 36 20 36 26V54C36 58 33 60 28 60C23 60 20 58 20 54V26C20 20 24 17 24 17V10Z" fill="{{color}}" opacity=".85"/>'
+  + '<line x1="13" y1="33" x2="43" y2="33" stroke="{{color}}" stroke-width="2" stroke-linecap="round" opacity=".55"/>'
+  + '</svg>';
+// Griglia di scaffale con qualche bottiglia già posizionata (due posti pieni fra i vuoti).
+const ONB_CANTINA_SVG = '<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">'
+  + '<rect x="4" y="4" width="52" height="52" rx="4" fill="none" stroke="{{color}}" stroke-width="2.5" opacity=".55"/>'
+  + '<line x1="4" y1="21.3" x2="56" y2="21.3" stroke="{{color}}" stroke-width="2" opacity=".35"/>'
+  + '<line x1="4" y1="38.6" x2="56" y2="38.6" stroke="{{color}}" stroke-width="2" opacity=".35"/>'
+  + '<line x1="21.3" y1="4" x2="21.3" y2="56" stroke="{{color}}" stroke-width="2" opacity=".35"/>'
+  + '<line x1="38.6" y1="4" x2="38.6" y2="56" stroke="{{color}}" stroke-width="2" opacity=".35"/>'
+  + '<circle cx="12.6" cy="12.6" r="5" fill="{{color}}"/>'
+  + '<circle cx="47.3" cy="12.6" r="5" fill="none" stroke="{{color}}" stroke-width="2" opacity=".6"/>'
+  + '<circle cx="30" cy="30" r="5" fill="none" stroke="{{color}}" stroke-width="2" opacity=".6"/>'
+  + '<circle cx="12.6" cy="47.3" r="5" fill="none" stroke="{{color}}" stroke-width="2" opacity=".6"/>'
+  + '<circle cx="47.3" cy="47.3" r="5" fill="{{color}}"/>'
+  + '</svg>';
+// Taccuino aperto con due righe di appunti e una stellina di valutazione.
+const ONB_CARNET_SVG = '<svg width="54" height="66" viewBox="0 0 54 66" xmlns="http://www.w3.org/2000/svg">'
+  + '<rect x="6" y="4" width="42" height="58" rx="3" fill="none" stroke="{{color}}" stroke-width="2.5" opacity=".9"/>'
+  + '<line x1="6" y1="16" x2="48" y2="16" stroke="{{color}}" stroke-width="2" opacity=".4"/>'
+  + '<line x1="14" y1="26" x2="40" y2="26" stroke="{{color}}" stroke-width="2" opacity=".55"/>'
+  + '<line x1="14" y1="33" x2="34" y2="33" stroke="{{color}}" stroke-width="2" opacity=".55"/>'
+  + '<path d="M27,39 L29.12,45.09 L35.56,45.22 L30.42,49.11 L32.29,55.28 L27,51.6 L21.71,55.28 L23.58,49.11 L18.44,45.22 L24.88,45.09 Z" fill="{{color}}"/>'
+  + '</svg>';
+// Libro aperto con qualche riga di testo su ciascuna pagina.
+const ONB_GUIDA_SVG = '<svg width="60" height="54" viewBox="0 0 60 54" xmlns="http://www.w3.org/2000/svg">'
+  + '<path d="M30 10C26 6 16 4 6 6V44C16 42 26 44 30 48C34 44 44 42 54 44V6C44 4 34 6 30 10Z" fill="none" stroke="{{color}}" stroke-width="2.5" stroke-linejoin="round" opacity=".9"/>'
+  + '<line x1="30" y1="10" x2="30" y2="48" stroke="{{color}}" stroke-width="2.5" opacity=".9"/>'
+  + '<line x1="12" y1="16" x2="24" y2="14.5" stroke="{{color}}" stroke-width="2" opacity=".5"/>'
+  + '<line x1="12" y1="23" x2="24" y2="21.5" stroke="{{color}}" stroke-width="2" opacity=".5"/>'
+  + '<line x1="36" y1="14.5" x2="48" y2="16" stroke="{{color}}" stroke-width="2" opacity=".5"/>'
+  + '<line x1="36" y1="21.5" x2="48" y2="23" stroke="{{color}}" stroke-width="2" opacity=".5"/>'
+  + '</svg>';
 const onbData=[
   {title:'Il mondo dello Champagne, tutto in un posto',sub:'Dalle grandi Maison ai piccoli vigneron — ogni bottiglia racconta una storia unica. Scoprila.',loc:'Maison & Vigneron',iconSvg:ONB_GRAPE_SVG,bg:'linear-gradient(135deg,#F5EFE4 0%,#E8D5A3 100%)',iconColor:'#8a6a1e',btn:'Continua'},
-  {title:'Scansiona, scopri',sub:"Inquadra l'etichetta: riconoscimento immediato e un'analisi da Sommelier — profilo, abbinamenti e punteggio, come averne uno al tuo fianco.",loc:'Scansione Sommelier',icon:'ti-scan',bg:'linear-gradient(135deg,#1A1F2E 0%,#252B3D 100%)',iconColor:'#8BA8E0',btn:'Continua'},
-  {title:'Il tuo Carnet de dégustation',sub:'Salva ogni assaggio con note, aromi e punteggio personale. La tua storia di degustazioni, sempre con te.',loc:'Carnet personale',icon:'ti-notebook',bg:'linear-gradient(135deg,#1E1208 0%,#3A2814 100%)',iconColor:'#C8A03A',btn:'Continua'},
-  {title:'Impara ed esplora',sub:'Glossario completo, guida al metodo champenoise, terroir e formati — tutto lo Champagne, spiegato bene.',loc:'Guida & Glossario',icon:'ti-books',bg:'linear-gradient(135deg,#FBF4E4 0%,#F0E2C0 100%)',iconColor:'#8a6a1e',btn:'Inizia gratis'},
+  {title:'Scansiona, scopri',sub:"Inquadra l'etichetta: riconoscimento immediato e un'analisi da Sommelier — profilo, abbinamenti e punteggio, come averne uno al tuo fianco.",loc:'Scansione Sommelier',iconSvg:ONB_SCAN_SVG,bg:'linear-gradient(135deg,#1A1F2E 0%,#252B3D 100%)',iconColor:'#8BA8E0',btn:'Continua'},
+  {title:'La tua cantina, come nella realtà',sub:'Posiziona le bottiglie sui tuoi scaffali, in 2D o in 3D, e ritrovale sempre al loro posto — anche quando ne hai tante.',loc:'Cantina personale',iconSvg:ONB_CANTINA_SVG,bg:'linear-gradient(135deg,#241014 0%,#3D1B22 100%)',iconColor:'#D8A94A',btn:'Continua'},
+  {title:'Il tuo Carnet de dégustation',sub:'Salva ogni assaggio con note, aromi e punteggio personale. La tua storia di degustazioni, sempre con te.',loc:'Carnet personale',iconSvg:ONB_CARNET_SVG,bg:'linear-gradient(135deg,#1E1208 0%,#3A2814 100%)',iconColor:'#C8A03A',btn:'Continua'},
+  {title:'Impara ed esplora',sub:'Glossario completo, guida al metodo champenoise, terroir e formati — tutto lo Champagne, spiegato bene.',loc:'Guida & Glossario',iconSvg:ONB_GUIDA_SVG,bg:'linear-gradient(135deg,#FBF4E4 0%,#F0E2C0 100%)',iconColor:'#8a6a1e',btn:'Inizia gratis'},
 ];
 let onbIdx=0;
 function onbApplySlide(d){
@@ -202,9 +240,9 @@ function onbApplySlide(d){
   const ph=document.getElementById('onb-img-ph');
   ph.style.background=d.bg;
   ph.innerHTML = d.iconSvg
-    ? d.iconSvg.replace('{{color}}', d.iconColor)
+    ? d.iconSvg.replace(/\{\{color\}\}/g, d.iconColor)
     : '<i class="ti '+d.icon+'" id="onb-img-icon" style="color:'+d.iconColor+'"></i>';
-  [0,1,2,3].forEach(i=>document.getElementById('od'+i).classList.toggle('on',i===onbIdx));
+  onbData.forEach((_,i)=>document.getElementById('od'+i).classList.toggle('on',i===onbIdx));
   [document.getElementById('onb-img-wrap'),document.getElementById('onb-title'),document.getElementById('onb-sub'),document.getElementById('onb-loc')].forEach(el=>{
     el.classList.remove('onb-anim'); void el.offsetWidth; el.classList.add('onb-anim');
   });
