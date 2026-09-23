@@ -72,6 +72,15 @@ function norm(s) {
   return String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[^a-z0-9]/g, '')
 }
 
+// Costruisce il filtro per supa.or(...): stesso termine cercato (ilike) su più colonne.
+// Tolti i caratteri con significato speciale nella sintassi .or() di PostgREST (virgole e parentesi),
+// altrimenti romperebbero il filtro invece di limitarsi a non trovare risultati.
+function orSearch(colsAndTerm) {
+  return Object.entries(colsAndTerm)
+    .map(([col, term]) => `${col}.ilike.%${String(term).replace(/[,()]/g, '').trim()}%`)
+    .join(',')
+}
+
 // Genera uno slug URL-safe da un nome (es. "Grande Cuvée 171ème" → "grande-cuvee-171eme")
 function slugify(s) {
   return String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -2710,7 +2719,7 @@ async function renderUtenti() {
   try {
     let query = supa
       .from('users')
-      .select('id, email, is_premium, premium_until, is_admin, created_at, deletion_requested_at' + (pushColMissing ? '' : ', push_enabled'), { count: 'exact' })
+      .select('id, email, full_name, is_premium, premium_until, is_admin, created_at, deletion_requested_at' + (pushColMissing ? '' : ', push_enabled'), { count: 'exact' })
       .order('created_at', { ascending: false })
       .range((utentiPage-1)*PER_PAGE, utentiPage*PER_PAGE - 1)
 
@@ -2718,10 +2727,9 @@ async function renderUtenti() {
     if (utentiFilter === 'free')    query = notActivePremium(query)
     if (utentiFilter === 'push_on')  query = query.eq('push_enabled', true)
     if (utentiFilter === 'push_off') query = query.eq('push_enabled', false)
-    if (utentiSearch) {
-      const n = norm(utentiSearch)
-      query = query.ilike('email', `%${utentiSearch}%`)
-    }
+    // Con Apple l'email reale spesso non si vede (relay privato): si cerca anche nel nome utente,
+    // l'unica cosa che permette di riconoscere la persona in quel caso.
+    if (utentiSearch) query = query.or(orSearch({ email: utentiSearch, full_name: utentiSearch }))
 
     const { data, count, error } = await query
     if (error) {
@@ -2745,13 +2753,14 @@ async function renderUtenti() {
 
     tbody.innerHTML = data.map(u => {
       const prem = isPremiumActive(u)
+      const uname = u.full_name && u.full_name.trim() ? u.full_name.trim() : null
       return `<tr class="adm-table-row adm-utente-row" onclick="showUserDetail('${u.id}')" style="cursor:pointer">
         <td>
           <div class="adm-user-cell">
-            <div class="adm-user-avatar">${(u.email ?? '?')[0].toUpperCase()}</div>
+            <div class="adm-user-avatar">${((uname || u.email || '?'))[0].toUpperCase()}</div>
             <div>
-              <div class="adm-user-name">${esc(u.email ?? '-')}</div>
-              <div class="adm-user-sub">${u.is_admin ? '⚙ Admin · ' : ''}registrato ${timeAgo(u.created_at)}</div>
+              <div class="adm-user-name">${esc(uname || u.email || '-')}</div>
+              <div class="adm-user-sub">${u.is_admin ? '⚙ Admin · ' : ''}${uname ? esc(u.email ?? '') + ' · ' : ''}registrato ${timeAgo(u.created_at)}</div>
             </div>
           </div>
         </td>
