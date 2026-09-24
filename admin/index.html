@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="css/admin.css?v=17">
+  <link rel="stylesheet" href="css/admin.css?v=21">
 </head>
 <body>
 
@@ -985,46 +985,114 @@
           </div>
         </div>
 
-        <!-- ── SEZIONE COSTI AI ─────────────────────────────────── -->
-        <div class="adm-section-label">Analisi Costi AI — periodo selezionato</div>
+        <!-- ── SCANSIONI E COSTI AI ─────────────────────────────── -->
+        <div class="adm-section-label">Scansioni e costi AI — periodo selezionato</div>
         <div class="adm-stats-grid">
           <div class="adm-stat-card">
-            <div class="adm-stat-icon" style="background:#E8F5E9"><i class="ti ti-bolt" style="color:#388E3C"></i></div>
+            <div class="adm-stat-icon" style="background:#00FF8822"><i class="ti ti-database" style="color:#00FF88"></i></div>
             <div class="adm-stat-body">
-              <div class="adm-stat-val" id="stats-haiku-count">…</div>
-              <div class="adm-stat-label">Scan Haiku — cache hit</div>
+              <div class="adm-stat-val" id="stats-k-catalogo">…</div>
+              <div class="adm-stat-label">Da catalogo (Haiku)</div>
+              <div class="adm-stat-delta" id="stats-kavg-catalogo"></div>
             </div>
           </div>
           <div class="adm-stat-card">
-            <div class="adm-stat-icon" style="background:#E3F2FD"><i class="ti ti-brain" style="color:#1565C0"></i></div>
+            <div class="adm-stat-icon" style="background:#C8A03A22"><i class="ti ti-world-search" style="color:#C8A03A"></i></div>
             <div class="adm-stat-body">
-              <div class="adm-stat-val" id="stats-sonnet-count">…</div>
-              <div class="adm-stat-label">Scan Sonnet — full analysis</div>
+              <div class="adm-stat-val" id="stats-k-web">…</div>
+              <div class="adm-stat-label">Analisi complete (ricerca web)</div>
+              <div class="adm-stat-delta" id="stats-kavg-web"></div>
             </div>
           </div>
           <div class="adm-stat-card">
-            <div class="adm-stat-icon" style="background:#FFF3E0"><i class="ti ti-refresh-alert" style="color:#E65100"></i></div>
+            <div class="adm-stat-icon" style="background:#6B8AE822"><i class="ti ti-history" style="color:#6B8AE8"></i></div>
             <div class="adm-stat-body">
-              <div class="adm-stat-val" id="stats-fallback-count">…</div>
-              <div class="adm-stat-label">Fallback Haiku → Sonnet</div>
+              <div class="adm-stat-val" id="stats-k-sonnet">…</div>
+              <div class="adm-stat-label">Analisi vecchio sistema (Sonnet)</div>
+              <div class="adm-stat-delta" id="stats-kavg-sonnet"></div>
             </div>
           </div>
           <div class="adm-stat-card">
-            <div class="adm-stat-icon" style="background:#FCE4EC"><i class="ti ti-currency-dollar" style="color:#C62828"></i></div>
+            <div class="adm-stat-icon" style="background:#A0A0B822"><i class="ti ti-photo-off" style="color:#A0A0B8"></i></div>
             <div class="adm-stat-body">
-              <div class="adm-stat-val" id="stats-total-cost">…</div>
-              <div class="adm-stat-label">Costo AI totale (USD)</div>
+              <div class="adm-stat-val" id="stats-k-non_vino">…</div>
+              <div class="adm-stat-label">Foto non vino</div>
+              <div class="adm-stat-delta" id="stats-kavg-non_vino"></div>
             </div>
           </div>
         </div>
 
-        <!-- Breakdown dettagliato costi -->
-        <div class="adm-card" style="margin-bottom:24px">
+        <div class="adm-stats-grid">
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon" style="background:#FF445522"><i class="ti ti-currency-dollar" style="color:#FF4455"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-cost-total">…</div>
+              <div class="adm-stat-label">Costo AI totale</div>
+              <div class="adm-stat-delta" id="stats-cost-total-eur"></div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon" style="background:#FFB02022"><i class="ti ti-receipt" style="color:#FFB020"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-cost-avg">…</div>
+              <div class="adm-stat-label">Costo medio per scansione</div>
+              <div class="adm-stat-delta">tutte le scansioni con costo</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon" style="background:#C8A03A22"><i class="ti ti-sparkles" style="color:#C8A03A"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-cost-avg-web">…</div>
+              <div class="adm-stat-label">Costo medio analisi completa</div>
+              <div class="adm-stat-delta">bottiglia nuova, con ricerca web</div>
+            </div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-icon" style="background:#6B8AE822"><i class="ti ti-users" style="color:#6B8AE8"></i></div>
+            <div class="adm-stat-body">
+              <div class="adm-stat-val" id="stats-active-users">…</div>
+              <div class="adm-stat-label">Utenti che hanno scansionato</div>
+              <div class="adm-stat-delta" id="stats-cost-per-user"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="adm-card" style="margin-bottom:20px">
           <div class="adm-card-header">
-            <span class="adm-card-title"><i class="ti ti-receipt"></i> Breakdown costi per tipo scansione</span>
+            <span class="adm-card-title"><i class="ti ti-receipt"></i> Costi per tipo di scansione</span>
           </div>
           <div id="stats-cost-breakdown" style="padding:16px">
             <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento...</div>
+          </div>
+        </div>
+
+        <div class="adm-card" style="margin-bottom:20px">
+          <div class="adm-card-header">
+            <span class="adm-card-title"><i class="ti ti-crown"></i> Costo per piano</span>
+          </div>
+          <div id="stats-cost-plan" style="padding:16px">
+            <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento...</div>
+          </div>
+        </div>
+
+        <div class="adm-card" style="margin-bottom:20px">
+          <div class="adm-card-header">
+            <span class="adm-card-title"><i class="ti ti-user-dollar"></i> Costo per utente (primi 20)</span>
+          </div>
+          <div id="stats-cost-users" style="padding:16px">
+            <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento...</div>
+          </div>
+        </div>
+
+        <div class="adm-card" style="margin-bottom:24px">
+          <div class="adm-card-header">
+            <span class="adm-card-title"><i class="ti ti-chart-bar"></i> Costo AI nel periodo</span>
+          </div>
+          <div class="adm-chart-area">
+            <div class="adm-chart-bars" id="stats-cost-daily-bars">
+              <div class="adm-loading-block"><i class="ti ti-loader-2 spin"></i> Caricamento...</div>
+            </div>
+            <div class="adm-chart-label" id="stats-cost-daily-label"></div>
           </div>
         </div>
 
@@ -1119,7 +1187,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=36"></script>
+<script src="js/admin.js?v=39"></script>
 
 </body>
 </html>

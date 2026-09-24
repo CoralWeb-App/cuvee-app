@@ -3054,6 +3054,61 @@ async function cancelScheduledDeletion(userId) {
   } catch(e) { showToast(e.message, 'error') }
 }
 
+// Sezioni costi del dettaglio utente: mese corrente per tipo, budget usato, totale da sempre, ultime scansioni con il costo di ognuna
+function buildUserCostHTML(monthlyList, allScans, totalScanCount) {
+  const aggM = aggScansByKind(monthlyList), aggA = aggScansByKind(allScans)
+  const priced = a => a.total.n - a.altro.n
+  const budgetUsd = BUDGET_UTENTE_EUR / USD_TO_EUR
+  const pct = aggM.total.cost / budgetUsd * 100
+  const barCol = pct >= 100 ? 'var(--red)' : pct >= 60 ? 'var(--amber)' : 'var(--green)'
+  const kindRow = (a, k) => `<div class="adm-ud-kind"><span class="adm-ud-kind-l"><i style="background:${SCAN_KINDS[k].color}"></i>${esc(SCAN_KINDS[k].label)}</span>
+      <span class="adm-ud-kind-r">${a[k].n} × ${a[k].n ? fmtUsdCost(a[k].cost / a[k].n) : '—'}<small>= ${fmtUsdCost(a[k].cost)}</small></span></div>`
+  const monthKinds = SCAN_KIND_ORDER.filter(k => aggM[k].n > 0 || k === 'catalogo' || k === 'web').map(k => kindRow(aggM, k)).join('')
+  const fullM = aggM.web.n + aggM.web1.n + aggM.sonnet.n
+  const fullCost = aggM.web.cost + aggM.web1.cost + aggM.sonnet.cost
+  const fmtWhen = iso => new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const last = allScans.slice(0, 10).map(x => {
+    const k = scanKind(x)
+    const name = k === 'non_vino' ? 'Foto non vino' : (x.detected_maison ? `${x.detected_maison}${x.detected_cuvee ? ' — ' + x.detected_cuvee : ''}` : 'Non riconosciuta')
+    return `<div class="adm-ud-scanrow"><div class="adm-ud-scanrow-t"><div class="adm-ud-scanrow-n">${esc(name)}</div>
+      <div class="adm-ud-scanrow-s"><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${SCAN_KINDS[k].color};margin-right:5px"></i>${esc(SCAN_KINDS[k].label)} · ${fmtWhen(x.created_at)}</div></div>
+      <div class="adm-ud-scanrow-c">${k === 'altro' ? '—' : fmtUsdCost(x.cost_usd)}</div></div>`
+  }).join('')
+  return `
+        <div class="adm-ud-section">
+          <div class="adm-ud-section-title">COSTI SCANSIONI — QUESTO MESE</div>
+          <div class="adm-ud-row" style="align-items:baseline">
+            <span class="adm-ud-label">Costo del mese</span>
+            <span class="adm-ud-val" style="font-size:14px;font-weight:600">${fmtUsdCost(aggM.total.cost)} <span style="color:var(--text-3);font-weight:400;font-size:11px">${fmtEurEst(aggM.total.cost)}</span></span>
+          </div>
+          <div class="adm-ud-budget"><span style="width:${Math.min(100, pct).toFixed(1)}%;background:${barCol}"></span></div>
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">${pct < 10 ? pct.toFixed(1) : Math.round(pct)}% del budget mensile (${BUDGET_UTENTE_EUR.toString().replace('.', ',')} € ≈ ${fmtUsdCost(budgetUsd)})</div>
+          ${monthKinds}
+          <div class="adm-ud-row" style="margin-top:6px">
+            <span class="adm-ud-label">Costo medio scansione</span>
+            <span class="adm-ud-val">${priced(aggM) ? fmtUsdCost(aggM.total.cost / priced(aggM)) : '—'}</span>
+          </div>
+          <div class="adm-ud-row">
+            <span class="adm-ud-label">Costo medio analisi completa</span>
+            <span class="adm-ud-val">${fullM ? fmtUsdCost(fullCost / fullM) : '—'}</span>
+          </div>
+        </div>
+
+        <div class="adm-ud-section">
+          <div class="adm-ud-section-title">COSTI DA SEMPRE</div>
+          <div class="adm-ud-row"><span class="adm-ud-label">Scansioni</span><span class="adm-ud-val">${totalScanCount}</span></div>
+          <div class="adm-ud-row"><span class="adm-ud-label">Costo totale</span><span class="adm-ud-val">${fmtUsdCost(aggA.total.cost)} <span style="color:var(--text-3);font-size:11px">${fmtEurEst(aggA.total.cost)}</span></span></div>
+          <div class="adm-ud-row"><span class="adm-ud-label">Analisi complete</span><span class="adm-ud-val">${aggA.web.n + aggA.web1.n + aggA.sonnet.n} · ${fmtUsdCost(aggA.web.cost + aggA.web1.cost + aggA.sonnet.cost)}</span></div>
+          <div class="adm-ud-row"><span class="adm-ud-label">Da catalogo</span><span class="adm-ud-val">${aggA.catalogo.n} · ${fmtUsdCost(aggA.catalogo.cost)}</span></div>
+          ${allScans.length >= 1000 ? '<div style="font-size:10.5px;color:var(--text-3);margin-top:4px">Calcolato sulle ultime 1000 scansioni.</div>' : ''}
+        </div>
+
+        <div class="adm-ud-section">
+          <div class="adm-ud-section-title">ULTIME SCANSIONI</div>
+          ${last || '<div style="font-size:12px;color:var(--text-3)">Nessuna scansione</div>'}
+        </div>`
+}
+
 // ── USER DETAIL PANEL ─────────────────────────────────
 async function showUserDetail(userId) {
   document.querySelectorAll('.adm-utente-row').forEach(r => r.classList.remove('selected'))
@@ -3069,15 +3124,16 @@ async function showUserDetail(userId) {
     const monthStart = new Date()
     monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
 
-    const [{ data: u, error }, { count: scanCount }, { data: monthlyScans, count: monthlyScanCount }, { count: carnetCount }] = await Promise.all([
+    const [{ data: u, error }, { count: scanCount }, { data: userScans }, { count: carnetCount }] = await Promise.all([
       supa.from('users').select('*').eq('id', userId).single(),
       supa.from('bottle_scans')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId),
       supa.from('bottle_scans')
-        .select('cost_usd', { count: 'exact' })
+        .select('id,created_at,scan_type,cost_usd,ricerche:result_json->>ricerche_web,haiku_input_tokens,haiku_output_tokens,sonnet_input_tokens,sonnet_output_tokens,detected_maison,detected_cuvee,detected_annata')
         .eq('user_id', userId)
-        .gte('created_at', monthStart.toISOString()),
+        .order('created_at', { ascending: false })
+        .limit(1000),
       supa.from('carnet_notes')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
@@ -3092,15 +3148,15 @@ async function showUserDetail(userId) {
 
     // Scansioni mensili: usa l'override manuale se impostato, altrimenti il conteggio reale
     const scanLimit    = prem ? 50 : 3
-    const scansReal     = monthlyScanCount ?? 0
+    const allScans      = userScans ?? []
+    const monthlyList   = allScans.filter(x => new Date(x.created_at) >= monthStart)
+    const monthlyScanCount = monthlyList.length
+    const scansReal     = monthlyScanCount
     const scanOverride  = u.scan_override ?? null
     const scansUsed     = scanOverride ?? scansReal
 
-    // Costo AI delle scansioni di questo mese (colonna cost_usd su bottle_scans, in USD)
-    const monthlyCosts = (monthlyScans ?? []).map(s => Number(s.cost_usd) || 0)
-    const totalCostUsd = monthlyCosts.reduce((a, b) => a + b, 0)
-    const avgCostUsd    = monthlyCosts.length ? totalCostUsd / monthlyCosts.length : 0
-    const fmtUsd = (n) => '$' + n.toFixed(n < 0.01 ? 4 : 2)
+    // Costi reali delle scansioni: del mese e da sempre, per tipo (vedi buildUserCostHTML)
+    const costHTML = buildUserCostHTML(monthlyList, allScans, scanCount ?? allScans.length)
 
     panel.innerHTML = `
       <div class="adm-ud-inner">
@@ -3150,18 +3206,12 @@ async function showUserDetail(userId) {
             <span class="adm-ud-label">Reali</span>
             <span class="adm-ud-val" style="color:var(--text-3)">${scansReal} (calcolate da bottle_scans)</span>
           </div>` : ''}
-          <div class="adm-ud-row">
-            <span class="adm-ud-label">Costo totale</span>
-            <span class="adm-ud-val">${fmtUsd(totalCostUsd)}</span>
-          </div>
-          <div class="adm-ud-row">
-            <span class="adm-ud-label">Costo medio</span>
-            <span class="adm-ud-val">${monthlyCosts.length ? fmtUsd(avgCostUsd) + ' / scansione' : '-'}</span>
-          </div>
           <button class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;margin-top:6px" onclick="openScanOverrideModal('${u.id}', ${scansReal}, ${scanOverride ?? 'null'}, ${scanLimit})">
             <i class="ti ti-edit"></i> Modifica scansioni usate
           </button>
         </div>
+
+        ${costHTML}
 
         <div class="adm-ud-section">
           <div class="adm-ud-section-title">PROFILO</div>
@@ -3843,6 +3893,178 @@ function _renderTipoDonut(scans) {
 }
 
 // ══════════════════════════════════════════════════════
+// COSTI SCANSIONE — sistema attuale (Haiku + ricerca web)
+// I costi vengono da bottle_scans.cost_usd, calcolato dalla funzione con i token e le ricerche realmente usati.
+// ══════════════════════════════════════════════════════
+const USD_TO_EUR = 0.86            // cambio indicativo usato solo per la stima "≈ €"
+const BUDGET_UTENTE_EUR = 2.5      // budget mensile di costo scansioni per utente (deciso il 24/09/2026)
+const SCAN_KINDS = {
+  catalogo: { label: 'Riconoscimento da catalogo', sub: 'Haiku · bottiglia già in catalogo',        color: '#00FF88' },
+  web:      { label: 'Analisi completa',           sub: 'Haiku + 3 ricerche web · bottiglia nuova', color: '#C8A03A' },
+  web1:     { label: 'Analisi di prova (1 ricerca)', sub: 'Haiku + 1 ricerca web · 24/09 mattina',  color: '#E8B74A' },
+  sonnet:   { label: 'Analisi vecchio sistema',    sub: 'Sonnet senza ricerca · fino al 24/09',      color: '#6B8AE8' },
+  non_vino: { label: 'Foto non vino',              sub: 'fermata al primo controllo',                color: '#A0A0B8' },
+  altro:    { label: 'Senza dati di costo',        sub: 'registrate prima del tracking',             color: '#666680' },
+}
+const SCAN_KIND_ORDER = ['catalogo', 'web', 'web1', 'sonnet', 'non_vino', 'altro']
+const SCAN_CARD_KINDS = ['catalogo', 'web', 'sonnet', 'non_vino']   // le quattro card in alto
+
+// Tipo di una scansione: le analisi complete del nuovo sistema hanno ricerche web (ricerche_web) o molti token in ingresso
+function scanKind(s) {
+  const t = s.scan_type
+  if (t === 'haiku_only') return 'catalogo'
+  if (t === 'blocked_non_wine') return 'non_vino'
+  if (t === 'sonnet_full' || t === 'haiku_fallback') {
+    if (Number(s.ricerche) > 0) return 'web'                       // nuovo sistema: 3 ricerche web
+    if (Number(s.sonnet_input_tokens) > 15000) return 'web1'       // prove del 24/09: 1 ricerca web (pagine lette = tanti token)
+    return 'sonnet'
+  }
+  return 'altro'
+}
+const fmtUsdCost = n => '$' + Number(n || 0).toFixed(Number(n || 0) < 1 ? 4 : 2)
+const fmtEurEst  = n => { const e = Number(n || 0) * USD_TO_EUR; return '≈ €' + e.toFixed(e < 0.1 ? 3 : 2).replace('.', ',') }
+const fmtTokK    = n => n >= 1_000_000 ? (n/1_000_000).toFixed(2)+'M' : n >= 1_000 ? (n/1_000).toFixed(1)+'K' : String(Math.round(n))
+
+// Somma per tipo: { kind: { n, cost, inTok, outTok } } + totali
+function aggScansByKind(scans) {
+  const out = { total: { n: 0, cost: 0 } }
+  SCAN_KIND_ORDER.forEach(k => { out[k] = { n: 0, cost: 0, inTok: 0, outTok: 0 } })
+  scans.forEach(s => {
+    const k = scanKind(s), c = Number(s.cost_usd) || 0
+    out[k].n++; out[k].cost += c
+    out[k].inTok += Number(s.haiku_input_tokens || 0) + Number(s.sonnet_input_tokens || 0)
+    out[k].outTok += Number(s.haiku_output_tokens || 0) + Number(s.sonnet_output_tokens || 0)
+    out.total.n++; out.total.cost += c
+  })
+  return out
+}
+
+// Utenti per id, a blocchi (limite di lunghezza dell'URL)
+async function fetchUsersByIds(ids) {
+  const map = new Map()
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data } = await supa.from('users')
+      .select('id,email,display_name,full_name,is_premium,premium_until,premium_source')
+      .in('id', ids.slice(i, i + 100))
+    ;(data || []).forEach(u => map.set(u.id, u))
+  }
+  return map
+}
+
+function _renderDailyCost(scans, from, to) {
+  const barsEl = document.getElementById('stats-cost-daily-bars')
+  const labelEl = document.getElementById('stats-cost-daily-label')
+  if (!barsEl) return
+  const { granularity, entries } = _bucketScans(scans, from, to)
+  if (!entries.length) { barsEl.innerHTML = '<div class="adm-loading-block" style="color:var(--text-3)">Nessun dato nel periodo</div>'; if (labelEl) labelEl.textContent = ''; return }
+  const sums = new Map(entries.map(([k]) => [k, 0]))
+  scans.forEach(s => { const k = _bucketKeyFor(new Date(s.created_at), granularity); if (sums.has(k)) sums.set(k, sums.get(k) + (Number(s.cost_usd) || 0)) })
+  const vals = entries.map(([k]) => [k, sums.get(k)])
+  const maxC = Math.max(0.0001, ...vals.map(([, c]) => c))
+  barsEl.innerHTML = vals.map(([key, c]) => {
+    const h = c > 0 ? Math.max(Math.round(c / maxC * 100), 4) : 2
+    return `<div class="adm-bar-wrap" title="${esc(_bucketFullLabel(key, granularity))}: ${fmtUsdCost(c)}"><div class="adm-bar" style="height:${h}%"></div><span>${esc(_bucketShortLabel(key, granularity))}</span></div>`
+  }).join('')
+  const total = vals.reduce((t, [, c]) => t + c, 0)
+  if (labelEl) labelEl.textContent = `${fmtUsdCost(total)} nel periodo (${fmtEurEst(total)})`
+}
+
+// Sezione "Scansioni e costi AI" delle Statistiche
+async function _renderCostStats(scans, from, to) {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '-' }
+  const html = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v }
+  const agg = aggScansByKind(scans)
+
+  SCAN_CARD_KINDS.forEach(k => {
+    set('stats-k-' + k, agg[k].n.toLocaleString('it'))
+    set('stats-kavg-' + k, agg[k].n ? 'media ' + fmtUsdCost(agg[k].cost / agg[k].n) : 'nessuna')
+  })
+  const tracked = agg.catalogo.n + agg.web.n + agg.web1.n + agg.sonnet.n
+  set('stats-hit-rate', tracked ? Math.round(agg.catalogo.n / tracked * 100) + '%' : '—')
+  const priced = agg.total.n - agg.altro.n
+  set('stats-cost-total', fmtUsdCost(agg.total.cost))
+  set('stats-cost-total-eur', fmtEurEst(agg.total.cost))
+  set('stats-cost-avg', priced ? fmtUsdCost(agg.total.cost / priced) : '—')
+  set('stats-cost-avg-web', agg.web.n ? fmtUsdCost(agg.web.cost / agg.web.n) : '—')
+
+  // ── Tabella per tipo ──
+  const rows = SCAN_KIND_ORDER.filter(k => agg[k].n > 0 || k === 'catalogo' || k === 'web').map(k => {
+    const a = agg[k], kd = SCAN_KINDS[k]
+    return `<tr class="adm-table-row">
+      <td><div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:${kd.color};flex-shrink:0"></span>
+        <div><div style="font-weight:500">${esc(kd.label)}</div><div style="font-size:11px;color:var(--text-3)">${esc(kd.sub)}</div></div></div></td>
+      <td class="num">${a.n.toLocaleString('it')}</td>
+      <td class="num">${agg.total.n ? Math.round(a.n / agg.total.n * 100) : 0}%</td>
+      <td class="num">${fmtTokK(a.inTok)} / ${fmtTokK(a.outTok)}</td>
+      <td class="num">${fmtUsdCost(a.cost)}</td>
+      <td class="num">${a.n ? fmtUsdCost(a.cost / a.n) : '—'}</td>
+    </tr>`
+  }).join('')
+  html('stats-cost-breakdown', scans.length ? `
+    <div class="adm-table-wrap" style="margin:0"><table class="adm-table" style="min-width:640px"><thead><tr>
+      <th>Tipo di scansione</th><th class="num">Scansioni</th><th class="num">Quota</th><th class="num">Token in / out</th><th class="num">Costo</th><th class="num">Costo medio</th>
+    </tr></thead><tbody>${rows}
+      <tr class="adm-table-row" style="font-weight:600"><td>Totale</td><td class="num">${agg.total.n.toLocaleString('it')}</td><td class="num">100%</td><td class="num">—</td>
+        <td class="num">${fmtUsdCost(agg.total.cost)}<div style="font-size:10px;color:var(--text-3);font-weight:400">${fmtEurEst(agg.total.cost)}</div></td>
+        <td class="num">${priced ? fmtUsdCost(agg.total.cost / priced) : '—'}</td></tr>
+    </tbody></table></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-3);line-height:1.6">Costi reali registrati per ogni scansione (token e ricerche effettivamente usati). «Analisi completa» = Haiku con 3 ricerche web (1 c per ricerca + pagine lette). Il cambio in € è indicativo (1 $ ≈ ${USD_TO_EUR} €).</div>`
+    : '<div class="adm-loading-block" style="color:var(--text-3)">Nessuna scansione nel periodo selezionato</div>')
+
+  // ── Per utente e per piano ──
+  const perUser = new Map()
+  scans.forEach(s => {
+    if (!s.user_id) return
+    const u = perUser.get(s.user_id) || { id: s.user_id, n: 0, full: 0, cat: 0, cost: 0 }
+    const k = scanKind(s)
+    u.n++; u.cost += Number(s.cost_usd) || 0
+    if (k === 'web' || k === 'web1' || k === 'sonnet') u.full++
+    if (k === 'catalogo') u.cat++
+    perUser.set(s.user_id, u)
+  })
+  const usersMap = perUser.size ? await fetchUsersByIds([...perUser.keys()]) : new Map()
+  set('stats-active-users', perUser.size.toLocaleString('it'))
+  set('stats-cost-per-user', perUser.size ? fmtUsdCost(agg.total.cost / perUser.size) + ' / utente' : '—')
+
+  // per piano
+  const plans = { premium: { users: 0, n: 0, full: 0, cost: 0 }, free: { users: 0, n: 0, full: 0, cost: 0 } }
+  perUser.forEach(u => {
+    const info = usersMap.get(u.id)
+    const p = info && isPremiumActive(info) ? plans.premium : plans.free
+    p.users++; p.n += u.n; p.full += u.full; p.cost += u.cost
+  })
+  const planRow = (name, p) => `<tr class="adm-table-row">
+      <td style="font-weight:500">${name}</td><td class="num">${p.users}</td><td class="num">${p.n.toLocaleString('it')}</td><td class="num">${p.full.toLocaleString('it')}</td>
+      <td class="num">${fmtUsdCost(p.cost)}</td><td class="num">${p.users ? fmtUsdCost(p.cost / p.users) : '—'}</td><td class="num">${p.n ? fmtUsdCost(p.cost / p.n) : '—'}</td></tr>`
+  html('stats-cost-plan', perUser.size ? `<div class="adm-table-wrap" style="margin:0"><table class="adm-table" style="min-width:640px"><thead><tr>
+      <th>Piano</th><th class="num">Utenti attivi</th><th class="num">Scansioni</th><th class="num">Analisi complete</th><th class="num">Costo</th><th class="num">Per utente</th><th class="num">Per scansione</th>
+    </tr></thead><tbody>${planRow('Premium', plans.premium)}${planRow('Free', plans.free)}</tbody></table></div>`
+    : '<div class="adm-loading-block" style="color:var(--text-3)">Nessun utente ha scansionato nel periodo</div>')
+
+  // top utenti per costo
+  const top = [...perUser.values()].sort((a, b) => b.cost - a.cost).slice(0, 20)
+  const budgetUsd = BUDGET_UTENTE_EUR / USD_TO_EUR
+  html('stats-cost-users', top.length ? `<div class="adm-table-wrap" style="margin:0"><table class="adm-table" style="min-width:700px"><thead><tr>
+      <th>Utente</th><th>Piano</th><th class="num">Scansioni</th><th class="num">Da catalogo</th><th class="num">Analisi complete</th><th class="num">Costo</th><th class="num">Costo medio</th><th class="num">% budget</th>
+    </tr></thead><tbody>${top.map(u => {
+      const info = usersMap.get(u.id), prem = info && isPremiumActive(info)
+      const name = info ? (info.display_name || info.full_name || info.email || u.id.slice(0, 8)) : u.id.slice(0, 8) + '…'
+      const pct = u.cost / budgetUsd * 100
+      const col = pct >= 100 ? 'var(--red)' : pct >= 60 ? 'var(--amber)' : 'var(--text)'
+      return `<tr class="adm-table-row">
+        <td><div style="font-weight:500">${esc(name)}</div>${info && info.email && info.email !== name ? `<div style="font-size:11px;color:var(--text-3)">${esc(info.email)}</div>` : ''}</td>
+        <td>${prem ? '<span class="adm-badge premium">PREMIUM</span>' : '<span class="adm-badge free">FREE</span>'}</td>
+        <td class="num">${u.n}</td><td class="num">${u.cat}</td><td class="num">${u.full}</td>
+        <td class="num">${fmtUsdCost(u.cost)}</td><td class="num">${fmtUsdCost(u.cost / u.n)}</td>
+        <td class="num" style="color:${col};font-weight:600">${pct < 10 ? pct.toFixed(1) : Math.round(pct)}%</td></tr>`
+    }).join('')}</tbody></table></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-3);line-height:1.6">Ordinati per costo. «% budget» = costo rispetto al budget di ${BUDGET_UTENTE_EUR.toString().replace('.', ',')} € per utente (≈ ${fmtUsdCost(budgetUsd)}): pensato per un periodo mensile.</div>`
+    : '<div class="adm-loading-block" style="color:var(--text-3)">Nessuna scansione nel periodo selezionato</div>')
+
+  _renderDailyCost(scans, from, to)
+}
+
+// ══════════════════════════════════════════════════════
 // STATISTICHE — caricamento principale
 // ══════════════════════════════════════════════════════
 async function loadStats() {
@@ -3897,7 +4119,7 @@ async function loadStats() {
 
     // ── Scansioni nel periodo (un'unica query, tutto derivato client-side) ──
     const { data: scansPeriod, error: scansErr } = await dateFilter(
-      supa.from('bottle_scans').select('id,created_at,scan_type,cost_usd,haiku_input_tokens,haiku_output_tokens,sonnet_input_tokens,sonnet_output_tokens,is_champagne,added_to_carnet,detected_tipo,matched_bottle_id,bottiglie:matched_bottle_id(nome,maison_id,maison:maison_id(nome))')
+      supa.from('bottle_scans').select('id,created_at,user_id,scan_type,cost_usd,ricerche:result_json->>ricerche_web,haiku_input_tokens,haiku_output_tokens,sonnet_input_tokens,sonnet_output_tokens,is_champagne,added_to_carnet,detected_tipo,matched_bottle_id,bottiglie:matched_bottle_id(nome,maison_id,maison:maison_id(nome))')
     ).order('created_at', { ascending: true }).limit(20000)
 
     const scans = scansErr ? [] : (scansPeriod || [])
@@ -3911,91 +4133,8 @@ async function loadStats() {
     const carnetRateEl = document.getElementById('stats-carnet-rate')
     if (carnetRateEl) carnetRateEl.textContent = scans.length ? `${((carnetN/scans.length)*100).toFixed(1)}% delle scansioni` : ''
 
-    // ── Breakdown costi AI (derivato dalle stesse righe) ──────────
-    const haikuRows  = scans.filter(s => s.scan_type === 'haiku_only')
-    const sonnetRows = scans.filter(s => s.scan_type === 'sonnet_full')
-    const fbRows     = scans.filter(s => s.scan_type === 'haiku_fallback')
-    const legacyN    = scans.filter(s => s.scan_type === 'legacy').length
-
-    const haikuN = haikuRows.length, sonnetN = sonnetRows.length, fbN = fbRows.length
-    const tracked = haikuN + sonnetN + fbN
-    const hitRate = tracked > 0 ? Math.round(haikuN / tracked * 100) : null
-    const sumCost = rows => rows.reduce((s,r) => s + Number(r.cost_usd||0), 0)
-    const sumTok  = (rows, f) => rows.reduce((s,r) => s + Number(r[f]||0), 0)
-    const haikuCost = sumCost(haikuRows), sonnetCost = sumCost(sonnetRows), fbCost = sumCost(fbRows)
-    const totalCost = haikuCost + sonnetCost + fbCost
-    const haikuInTok = sumTok(haikuRows,'haiku_input_tokens'), haikuOutTok = sumTok(haikuRows,'haiku_output_tokens')
-    const sonnetInTok = sumTok(sonnetRows,'sonnet_input_tokens'), sonnetOutTok = sumTok(sonnetRows,'sonnet_output_tokens')
-    const avgHaiku = haikuN ? haikuCost/haikuN : 0
-    const avgSonnet = sonnetN ? sonnetCost/sonnetN : 0
-
-    set('stats-haiku-count', haikuN.toLocaleString('it'))
-    set('stats-sonnet-count', (sonnetN + fbN).toLocaleString('it'))
-    set('stats-fallback-count', fbN.toLocaleString('it'))
-    set('stats-hit-rate', hitRate !== null ? hitRate + '%' : '—')
-    set('stats-total-cost', '$' + totalCost.toFixed(4))
-
-    const fmtTok = n => n >= 1_000_000 ? (n/1_000_000).toFixed(2)+'M' : n >= 1_000 ? (n/1_000).toFixed(1)+'K' : String(n)
-    const breakdownEl = document.getElementById('stats-cost-breakdown')
-    if (breakdownEl) {
-      if (!scans.length) {
-        breakdownEl.innerHTML = '<div class="adm-loading-block" style="color:var(--text-3)">Nessuna scansione nel periodo selezionato</div>'
-      } else {
-        const saving = tracked > 0 && (sonnetN + fbN) > 0
-          ? (() => { const sonnetAvgCost = avgSonnet || 0.004; const savedUsd = haikuN * (sonnetAvgCost - avgHaiku); return savedUsd > 0 ? '$'+savedUsd.toFixed(4) : null })()
-          : null
-        breakdownEl.innerHTML = `
-          <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px">
-            <thead>
-              <tr style="color:var(--text-4);border-bottom:1px solid var(--border-1)">
-                <th style="text-align:left;padding:6px 8px;font-weight:600">Tipo scan</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:600">Conteggio</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:600">Token input</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:600">Token output</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:600">Costo USD</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:600">Costo medio</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom:1px solid var(--border-1)">
-                <td style="padding:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#388E3C"></span><span>Haiku — cache hit</span></td>
-                <td style="text-align:right;padding:8px">${haikuN.toLocaleString('it')}</td>
-                <td style="text-align:right;padding:8px">${fmtTok(haikuInTok)}</td>
-                <td style="text-align:right;padding:8px">${fmtTok(haikuOutTok)}</td>
-                <td style="text-align:right;padding:8px">$${haikuCost.toFixed(4)}</td>
-                <td style="text-align:right;padding:8px">$${avgHaiku.toFixed(5)}</td>
-              </tr>
-              <tr style="border-bottom:1px solid var(--border-1)">
-                <td style="padding:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1565C0"></span><span>Sonnet — full analysis</span></td>
-                <td style="text-align:right;padding:8px">${sonnetN.toLocaleString('it')}</td>
-                <td style="text-align:right;padding:8px">${fmtTok(sonnetInTok)}</td>
-                <td style="text-align:right;padding:8px">${fmtTok(sonnetOutTok)}</td>
-                <td style="text-align:right;padding:8px">$${sonnetCost.toFixed(4)}</td>
-                <td style="text-align:right;padding:8px">$${avgSonnet.toFixed(5)}</td>
-              </tr>
-              ${fbN > 0 ? `
-              <tr style="border-bottom:1px solid var(--border-1)">
-                <td style="padding:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E65100"></span><span>Haiku — fallback Sonnet</span></td>
-                <td style="text-align:right;padding:8px">${fbN.toLocaleString('it')}</td>
-                <td style="text-align:right;padding:8px">—</td>
-                <td style="text-align:right;padding:8px">—</td>
-                <td style="text-align:right;padding:8px">$${fbCost.toFixed(4)}</td>
-                <td style="text-align:right;padding:8px">—</td>
-              </tr>` : ''}
-              <tr style="font-weight:600;border-top:2px solid var(--border-2)">
-                <td style="padding:8px">Totale (scansioni tracciate)</td>
-                <td style="text-align:right;padding:8px">${tracked.toLocaleString('it')}</td>
-                <td style="text-align:right;padding:8px">${fmtTok(haikuInTok + sonnetInTok)}</td>
-                <td style="text-align:right;padding:8px">${fmtTok(haikuOutTok + sonnetOutTok)}</td>
-                <td style="text-align:right;padding:8px">$${totalCost.toFixed(4)}</td>
-                <td style="text-align:right;padding:8px">—</td>
-              </tr>
-            </tbody>
-          </table>
-          ${saving ? `<div style="margin-top:12px;padding:10px 14px;background:#E8F5E9;border-radius:8px;font-family:var(--sans);font-size:12px;color:#1B5E20;display:flex;align-items:center;gap:8px"><i class="ti ti-pig-money" style="font-size:16px"></i><span>Risparmio stimato grazie al catalogo (scan haiku al posto di Sonnet): <strong>${saving}</strong></span></div>` : ''}
-          ${legacyN > 0 ? `<div style="margin-top:8px;font-family:var(--sans);font-size:11px;color:var(--text-4)">* ${legacyN.toLocaleString('it')} scansioni nel periodo non hanno dati di costo (registrate prima del tracking).</div>` : ''}`
-      }
-    }
+    // ── Scansioni e costi AI: per tipo, per piano, per utente, per giorno ──
+    await _renderCostStats(scans, from, to)
 
     // ── Grafici ────────────────────────────────────────────────
     _renderDailyBars(scans, from, to)
