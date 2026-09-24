@@ -148,9 +148,37 @@ const toNum = (v: unknown): number | null => {
   if (typeof v === 'string' && v.trim() !== '' && isFinite(Number(v))) return Number(v)
   return null
 }
+// Solo critici e guide riconosciuti: niente voti di community (CellarTracker, Vivino), negozi o blog
+const CRITICI = /suckling|decanter|advocate|parker|spectator|enthusiast|vinous|galloni|falstaff|gambero|bibenda|gilman|view from the cellar|jancis|robinson|wine\s*&\s*spirits|dunnuck|romanelli|gusto critico|slow wine|veronelli|\bais\b|\brvf\b|revue du vin|bettane|desseauve|guide hachette|hachette|wine[- ]searcher critic|tanzer|burghound|james halliday|wine independent|robert parker/i
 const sanitizeAi = (ai: Record<string, unknown>): Record<string, unknown> => {
   const isEdition = ai.edizione_numerata === true
   if (isEdition) ai.is_sa = false
+
+  // ── prezzo e punteggio: SOLO da valori realmente trovati (liste con fonte); il calcolo lo fa il codice, mai il modello ──
+  const prezziRaw = (Array.isArray(ai.prezzi_trovati) ? ai.prezzi_trovati as any[] : [])
+    .map(x => toNum(x?.prezzo)).filter((v): v is number => v !== null && v >= 8 && v <= 20000)
+  let prezzi = prezziRaw
+  if (prezziRaw.length >= 3) {
+    // scarta i valori fuori scala (formati diversi, magnum, errori): tieni quelli tra metà e doppio della mediana
+    const ord = [...prezziRaw].sort((a, b) => a - b)
+    const med = ord[Math.floor(ord.length / 2)]
+    prezzi = prezziRaw.filter(v => v >= med * 0.5 && v <= med * 2)
+  }
+  const r5 = (v: number) => Math.round(v / 5) * 5
+  ai.prezzo_min = prezzi.length ? r5(Math.min(...prezzi)) : null
+  ai.prezzo_max = prezzi.length ? r5(Math.max(...prezzi)) : null
+  if (ai.prezzo_max === ai.prezzo_min) ai.prezzo_max = null   // un solo prezzo: l'app lo mostra come "da X €", non "X–X"
+  const punti = (Array.isArray(ai.punteggi_trovati) ? ai.punteggi_trovati as any[] : [])
+    .map(x => ({ fonte: String(x?.fonte ?? '').trim(), p: toNum(x?.punteggio) }))
+    .filter((x): x is { fonte: string; p: number } => x.fonte !== '' && x.p !== null && x.p >= 70 && x.p <= 100 && CRITICI.test(x.fonte))
+  ai.punteggio = punti.length ? Math.round(punti.reduce((t, x) => t + x.p, 0) / punti.length) : null
+  ai.score_note = punti.length ? punti.map(x => x.fonte + ' ' + x.p).join(', ') : null
+
+  // ── dosaggio: il tipo (letto in etichetta) prevale; i g/l incoerenti col tipo non sono un dato certo ──
+  const DOS: Record<string, [number, number]> = { 'brut nature': [0, 3], 'extra brut': [0, 6], 'brut': [0, 12], 'extra sec': [12, 17], 'extra dry': [12, 17], 'sec': [17, 32], 'demi-sec': [32, 50], 'demi sec': [32, 50], 'doux': [50, 300] }
+  const dRange = typeof ai.dosage === 'string' ? DOS[(ai.dosage as string).trim().toLowerCase()] : undefined
+  const dGl = toNum(ai.dosaggio_gl)
+  if (dRange && dGl !== null && (dGl < dRange[0] || dGl > dRange[1])) ai.dosaggio_gl = null
 
   // ── assemblaggio ──
   let items: Array<Record<string, unknown>> | null = null
@@ -161,9 +189,16 @@ const sanitizeAi = (ai: Record<string, unknown>): Record<string, unknown> => {
       .filter(i => i.perc !== null && (i.perc as number) > 0 && (i.perc as number) <= 100)
     if (!items.length) items = null
   }
+  // l'assemblaggio descrive annate e riserve, mai vitigni o villaggi (quelli hanno i loro campi)
+  if (items && items.some(i => 'uva' in i || 'vitigno' in i || 'provenienza' in i || 'cru' in i || 'villaggio' in i)) items = null
   if (items) {
     const total = items.reduce((t, i) => t + (i.perc as number), 0)
     if (total < 98 || total > 102) items = null // incoerente: non è un dato certo
+  }
+  // millesimato (non edizione numerata): l'assemblaggio è certo solo se tutte le voci sono l'annata della bottiglia;
+  // "50% annata + 50% riserva" spesso è l'uvaggio (Chardonnay/Pinot) scambiato per assemblaggio
+  if (items && !isEdition && ai.is_sa === false && ai.annata) {
+    if (!items.every(i => String(i.anno ?? '') === String(ai.annata))) items = null
   }
   if (items) {
     const soloSA = !isEdition && ai.is_sa !== false
@@ -200,6 +235,9 @@ const sanitizeAi = (ai: Record<string, unknown>): Record<string, unknown> => {
   const somma = presenti.reduce((t, v) => t + v, 0)
   if (presenti.length && (!okRange || somma < 98 || somma > 102)) {
     ai.pct_chardonnay = null; ai.pct_pinot_noir = null; ai.pct_meunier = null
+  } else if (presenti.length && presenti.length < 3) {
+    // uvaggio già completo (es. 100% Chardonnay, o 50/50): i vitigni non nominati sono 0, non "sconosciuti"
+    for (const k of ['pct_chardonnay', 'pct_pinot_noir', 'pct_meunier']) if (toNum(ai[k]) === null) ai[k] = 0
   }
   return ai
 }
@@ -228,8 +266,8 @@ const PRICE_HAIKU_OUT  = 5.00  / 1_000_000  // $5.00 / MTok  output
 const PRICE_WEB_SEARCH = 0.01                // $10 / 1000 ricerche
 
 // ── Ricerca web nell'analisi delle bottiglie NON in catalogo ──────────────
-// Unico percorso: Haiku 4.5 + 1 ricerca web (nessun Sonnet). Ogni ricerca costa 1 centesimo più i token delle pagine.
-const WEB_SEARCH_MAX_USES = 1
+// Unico percorso: Haiku 4.5 + 3 ricerche web (nessun Sonnet). Ogni ricerca costa 1 centesimo più i token delle pagine (~7-8 centesimi a scheda).
+const WEB_SEARCH_MAX_USES = 3   // una per scopo: scheda tecnica, prezzi, punteggi
 const RESEARCH_MODEL = 'claude-haiku-4-5-20251001'
 
 const SYSTEM_PROMPT =
@@ -315,7 +353,7 @@ const SYSTEM_PROMPT =
   'Se non sei certo al 100% di un dato -> null. Vale per assemblaggio, percentuali di uvaggio, dosaggio, dosaggio_gl, maturazione_mesi, produzione_bottiglie, ' +
   'punteggio (solo se realmente pubblicato da una guida o un critico per QUELLA cuvée e annata), prezzi, finestra di degustazione e scheda produttore. ' +
   'Anche note_degustazione, abbinamento, vinificazione, descrizione e filosofia vanno scritti solo se conosci davvero la bottiglia o il produttore, senza dettagli specifici inventati. ' +
-  'Per produttori o cuvée poco noti (piccoli vigneron, edizioni recenti) molti campi saranno null: è la risposta corretta e attesa. ' +
+  'Con la ricerca web devi trovare e compilare tutti i campi principali (uvaggio, dosaggio, maturazione, prezzo, punteggio): null solo se dopo la ricerca nessuna fonte li riporta. ' +
   'Ciò che si legge sull etichetta (produttore, cuvee, annata, dosaggio, tipo, numero di edizione) è sempre un dato affidabile da riportare.\n\n' +
 
   '=== REGOLA ASSOLUTA #8: EDIZIONI NUMERATE, COLLECTION E ASSEMBLAGGIO ===\n' +
@@ -329,7 +367,7 @@ const SYSTEM_PROMPT =
 
 const SYSTEM_PROMPT_WEB = SYSTEM_PROMPT.replace(
   'Non hai accesso a internet: rispondi solo con ciò che sai con CERTEZZA ASSOLUTA per questa specifica bottiglia. ',
-  'Hai a disposizione UNA ricerca web: usala per trovare la scheda tecnica ufficiale di questa cuvée (prima di tutto il sito del produttore, in mancanza una fonte specializzata seria) per assemblaggio, uvaggio, dosaggio, maturazione e prezzo. Rispondi solo con ciò che è CONFERMATO dalla pagina trovata o che sai con CERTEZZA ASSOLUTA per questa specifica bottiglia; non citare fonti nei testi. '
+  'Hai a disposizione la ricerca web e DEVI usarla: scheda tecnica ufficiale (sito del produttore), prezzi nei negozi italiani, punteggi dei critici. Rispondi solo con ciò che è CONFERMATO dalle pagine trovate; non citare fonti nei testi. '
 )
 if (SYSTEM_PROMPT_WEB === SYSTEM_PROMPT) throw new Error('SYSTEM_PROMPT_WEB: frase da sostituire non trovata')
 
@@ -343,12 +381,12 @@ const buildUserPrompt = (includeMaison: boolean): string => {
     'is_wine deve essere false per qualsiasi bevanda che NON sia vino: birra, superalcolici/liquori, acqua, bibite, succhi, ecc.\n\n' +
     'STEP 3 - Analisi VERITIERA, mai inventata (REGOLA #7): compila ogni campo SOLO se lo sai con certezza assoluta per QUESTA specifica bottiglia, altrimenti null. Un campo null è sempre meglio di un dato incerto o stimato. Ciò che si legge sull etichetta (produttore, cuvee, annata, dosaggio, tipo, numero di edizione) ha la priorità; tutto il resto solo se noto con certezza. Sii uguale di rigoroso per Champagne e per qualsiasi altro vino:\n' +
     '1. "cuvee": nome COMPLETO dell etichetta/vino SENZA produttore e SENZA annata. Per Champagne includi le denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs) e, se presente, il numero di edizione/collection/cuvée (es. 173ème Édition, N° 746, Collection 244).\n' +
-    '2. maturazione_mesi: solo valori che conosci con certezza per QUESTA cuvée (es. P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72, Krug GC=72); altrimenti null. Nessuna stima per stile o denominazione.\n' +
-    '3. punteggio: intero 0-100 SOLO se è un punteggio realmente pubblicato da una guida o un critico riconosciuto per QUESTA cuvée (e annata); altrimenti null. Mai stimarlo.\n' +
-    '4. Campi SOLO Champagne — pct_chardonnay, pct_pinot_noir, pct_meunier, dosage, dosaggio_gl, tipo, assemblaggio: solo se certi (dosage e tipo si leggono spesso in etichetta). Se NON è Champagne lasciali tutti null e descrivi vitigno/blend dentro "provenienza_uve" solo se lo sai con certezza.\n' +
-    '5. provenienza_uve, vinificazione, malolattica, note_degustazione, abbinamento, finestra_da, finestra_a, produzione_bottiglie: SOLO se conosci davvero questa bottiglia o questo produttore; altrimenti null. I testi descrittivi (note_degustazione 200-300 caratteri, abbinamento 2-3 abbinamenti italiani) non devono contenere dettagli specifici inventati.\n' +
-    '6. assemblaggio (solo Champagne), vedi REGOLA #8: (a) millesimato o edizione numerata: annate reali dei vins de base con % e vins de reserve con %; (b) Sans Année NON numerata: NESSUNA annata, solo percentuali senza anno. Solo se certo, e le % devono sommare 100; altrimenti null. Non Champagne: null.\n' +
-    '7. PREZZO: solo se conosci il prezzo reale di vendita al dettaglio in Italia (75cl, euro, multipli di 5) per QUESTA cuvée; altrimenti null. Vietato stimarlo dalla fascia del produttore. NON usare prezzi francesi o UK.\n\n'
+    '2. maturazione_mesi: mesi di affinamento sui lieviti dichiarati dal produttore o da fonti concordi per QUESTA cuvée e annata (non valori a memoria); altrimenti null. Nessuna stima per stile o denominazione.\n' +
+    '3. punteggi_trovati: elenca OGNI punteggio realmente letto su una pagina, pubblicato da un critico o da una guida riconosciuta (Suckling, Decanter, Wine Advocate/Parker, Wine Spectator, Wine Enthusiast, Vinous, Falstaff, Gambero Rosso, Bibenda...) per QUESTA cuvée e annata (per le Sans Année: per la cuvée), con la fonte. NON valgono voti di community (CellarTracker, Vivino), negozi, blog o influencer. Mai ricordare o stimare un punteggio: lista vuota se non ne hai letti.\n' +
+    '4. Campi SOLO Champagne — pct_chardonnay, pct_pinot_noir, pct_meunier, dosage, dosaggio_gl, tipo, assemblaggio: solo se certi (dosage e tipo si leggono spesso in etichetta: ciò che è scritto in etichetta prevale sempre sul web). Se il vino è 100% di un vitigno gli altri due valgono 0. Se NON è Champagne lasciali tutti null e descrivi vitigno/blend dentro "provenienza_uve" solo se lo sai con certezza.\n' +
+    '5. provenienza_uve, vinificazione, malolattica, produzione_bottiglie: solo se riportati dal sito del produttore o da almeno 2 fonti concordi; altrimenti null. note_degustazione, abbinamento, finestra_da/finestra_a: scrivili da sommelier esperto, coerenti con il profilo verificato (uvaggio, dosaggio, maturazione, annata) e con le descrizioni trovate; nessun dettaglio tecnico non verificato dentro i testi.\n' +
+    '6. assemblaggio (solo Champagne), vedi REGOLA #8: (a) millesimato o edizione numerata: annate reali dei vins de base con % e vins de reserve con %; (b) Sans Année NON numerata: NESSUNA annata, solo percentuali senza anno. Solo se certo, e le % devono sommare 100; altrimenti null. L assemblaggio descrive SOLO annate dei vins de base e riserve: mai vitigni o villaggi (quelli hanno i loro campi). Non Champagne: null.\n' +
+    '7. prezzi_trovati: elenca OGNI prezzo di vendita al dettaglio realmente visto in negozi ed enoteche italiani (75cl, euro) per QUESTA cuvée e annata, con il dominio del negozio. NON usare prezzi francesi, UK o USA, né magnum. Mai ricordare o stimare un prezzo: lista vuota se non ne hai visti.\n\n'
 
   const step4 = includeMaison
     ? 'STEP 4 - SOLO se is_champagne=true e hai identificato un maison: compila anche i campi maison_* (REGOLA #6), ognuno solo se certo, altrimenti null.\n\n'
@@ -367,23 +405,22 @@ const buildUserPrompt = (includeMaison: boolean): string => {
     '"dosage": "Brut Nature" o "Extra Brut" o "Brut" o "Extra Sec" o "Sec" o "Demi-Sec" o "Doux" o null — SOLO Champagne, solo se certo',
     '"tipo": "blanc de blancs" o "blanc de noirs" o "rose" o "assemblage" o null — SOLO Champagne, solo se certo',
     '"prestige": true se cuvee/etichetta di prestigio (top di gamma del produttore), false altrimenti',
-    '"punteggio": intero 0-100 solo se realmente pubblicato da un critico/guida noto per questa cuvée, altrimenti null',
-    '"note_degustazione": "200-300 caratteri italiano: colore/aspetto, profumi, gusto — solo se conosci davvero questa bottiglia, altrimenti null"',
-    '"abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola — solo se conosci davvero questa bottiglia, altrimenti null"',
-    '"finestra_da": anno intero inizio finestra ottimale, solo se certo, altrimenti null',
-    '"finestra_a": anno intero fine finestra, solo se certo, altrimenti null',
+    '"punteggi_trovati": array [{"fonte":"nome del critico o della guida","punteggio":intero 0-100}] con TUTTI i punteggi realmente letti, oppure []',
+    '"prezzi_trovati": array [{"fonte":"dominio del negozio italiano","prezzo":numero in euro, 75cl}] con TUTTI i prezzi realmente visti, oppure []',
+    '"note_degustazione": "200-300 caratteri italiano da sommelier: colore/aspetto, profumi, gusto — basati sulle descrizioni trovate e sul profilo verificato della bottiglia"',
+    '"abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola, coerenti con lo stile verificato della bottiglia"',
+    '"finestra_da": anno intero inizio finestra ottimale (valutazione da sommelier su annata e maturazione), null solo se manca ogni base',
+    '"finestra_a": anno intero fine finestra ottimale (valutazione da sommelier), null solo se manca ogni base',
     '"pct_chardonnay": integer 0-100 o null — SOLO Champagne, solo se certo',
     '"pct_pinot_noir": integer 0-100 o null — SOLO Champagne, solo se certo',
     '"pct_meunier": integer 0-100 o null — SOLO Champagne, solo se certo',
     '"assemblaggio": array di oggetti, solo se certo. Millesimato/edizione numerata: [{"anno":2017,"perc":58},{"tipo":"riserva","perc":42}] (anche con label es. {"tipo":"riserva","label":"reserve perpetuelle","perc":30}). Sans Année NON numerata: SENZA anno, [{"perc":65},{"tipo":"riserva","perc":35}]. Le % sommano 100. null se non certo o non Champagne',
     '"provenienza_uve": "zona/village/denominazione — per vini non Champagne anche vitigno/blend in forma testuale — solo se certo, altrimenti null"',
-    '"vinificazione": "breve descrizione tecnica — solo se conosci davvero questa bottiglia, altrimenti null"',
+    '"vinificazione": "breve descrizione tecnica trovata sul sito del produttore o su 2 fonti concordi, altrimenti null"',
     '"malolattica": "completa" o "parziale" o "assente" o null',
     '"dosaggio_gl": numero decimale grammi/litro solo se noto con certezza per questa cuvee, altrimenti null — SOLO Champagne',
     '"maturazione_mesi": integer solo se noto con certezza per questa cuvee, altrimenti null',
     '"produzione_bottiglie": integer solo se noto con certezza, altrimenti null',
-    '"prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, multiplo di 5, solo se noto, altrimenti null',
-    '"prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, multiplo di 5, solo se noto, altrimenti null',
     '"not_champagne_type": "denominazione/tipologia del vino/bevanda se NOT champagne (es. \'Barolo DOCG\', \'Franciacorta DOCG\', \'vino rosso fermo\'), o null se è Champagne"',
   ]
   const maisonFields = [
@@ -405,6 +442,68 @@ const buildUserPrompt = (includeMaison: boolean): string => {
   ]
   const fields = includeMaison ? baseFields.concat(maisonFields) : baseFields
   return head + step4 + 'Rispondi SOLO con JSON valido, zero testo extra:\n{\n' + fields.map(f => '  ' + f).join(',\n') + '\n}'
+}
+
+// Ricerca web guidata: identità fissa letta in etichetta + 3 ricerche con scopi diversi.
+const buildWebHint = (id: { maison?: unknown; cuvee?: unknown; annata?: unknown }): string => {
+  const s = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+  const maison = s(id.maison), cuvee = s(id.cuvee), annata = s(id.annata)
+  const ident = maison && cuvee
+    ? '\n\nIDENTITÀ FISSA (letta in etichetta): ' + maison + ' — ' + cuvee + (annata && !cuvee.includes(annata) ? ' ' + annata : '') + '. ' +
+      'Maison e cuvée sono queste: non cambiarle né correggerle, cercale esattamente così. Se le pagine trovate parlano di un vino con nome diverso (altra cuvée, altra annata), IGNORALE.'
+    : ''
+  return ident +
+    '\n\nRICERCA WEB OBBLIGATORIA: esegui TUTTE E 3 le ricerche, ciascuna con uno scopo diverso, includendo sempre produttore, cuvée e annata: ' +
+    '(1) SCHEDA TECNICA, preferendo il sito ufficiale del produttore: uvaggio, assemblaggio, dosaggio, maturazione sui lieviti, vinificazione, malolattica, produzione; ' +
+    '(2) PREZZI nei negozi e nelle enoteche italiane (euro, 75cl); ' +
+    '(3) PUNTEGGI e recensioni di critici e guide. ' +
+    'REGOLE: i dati tecnici si compilano solo se li riporta il sito ufficiale del produttore oppure almeno 2 fonti indipendenti concordi; se le fonti si contraddicono: null. ' +
+    'Ciò che si legge in etichetta (dosage, tipo, annata, numero di edizione) prevale sempre sul web. ' +
+    'Prezzi e punteggi: NON scegliere un valore, elenca in prezzi_trovati e punteggi_trovati TUTTI quelli realmente visti con la fonte (il calcolo lo fa il sistema); niente valori ricordati a memoria. ' +
+    'Compila tutto ciò che è confermato; ciò che nessuna fonte riporta resta null.'
+}
+
+// `call` = anthropic.messages.create (in produzione) oppure una fetch REST (nei test)
+const runWebAnalysis = async (
+  call: (body: any) => Promise<any>,
+  args: { imgSource: any; includeMaison: boolean; hint: string },
+) => {
+  let messages: any[] = [{ role: 'user', content: [
+    { type: 'image', source: args.imgSource },
+    { type: 'text',  text: buildUserPrompt(args.includeMaison) + args.hint },
+  ]}]
+  let inTok = 0, outTok = 0, searches = 0, text = ''
+  const domains = new Set<string>()
+  for (let turn = 0; turn < 6; turn++) {
+    const msg: any = await call({
+      model:      RESEARCH_MODEL,
+      max_tokens: 4096,
+      system:     SYSTEM_PROMPT_WEB.replace('la ricerca web', WEB_SEARCH_MAX_USES + ' ricerche web'),
+      messages,
+      tools:      [{ type: 'web_search_20250305', name: 'web_search', max_uses: WEB_SEARCH_MAX_USES }],
+      // al primo giro la ricerca è obbligatoria: il modello non può rispondere "a memoria"
+      ...(turn === 0 ? { tool_choice: { type: 'any' } } : {}),
+    })
+    inTok    += msg.usage?.input_tokens  ?? 0
+    outTok   += msg.usage?.output_tokens ?? 0
+    searches += msg.usage?.server_tool_use?.web_search_requests ?? 0
+    // Il JSON finale sta nel testo dopo l'ultimo risultato di ricerca (il testo può essere spezzato in più blocchi)
+    const blocks: any[] = msg.content || []
+    let lastResult = -1
+    blocks.forEach((bl, i) => {
+      if (bl.type === 'web_search_tool_result') {
+        lastResult = i
+        for (const x of (Array.isArray(bl.content) ? bl.content : [])) {
+          try { if (x?.url) domains.add(new URL(x.url).hostname.replace(/^www\./, '')) } catch (_e) { /* url non valido */ }
+        }
+      }
+    })
+    const after = blocks.slice(lastResult + 1).filter(bl => bl.type === 'text').map(bl => bl.text as string)
+    text = (after.length ? after : blocks.filter(bl => bl.type === 'text').map(bl => bl.text as string)).join('')
+    if (msg.stop_reason === 'pause_turn') { messages = [...messages, { role: 'assistant', content: msg.content }]; continue }
+    break
+  }
+  return { inTok, outTok, searches, text, domains: [...domains] }
 }
 
 serve(async (req) => {
@@ -726,42 +825,16 @@ serve(async (req) => {
     } catch (_e) { /* nel dubbio si richiede la scheda */ }
 
     // ── Analisi completa (bottiglia non in catalogo) ──
-    // Haiku 4.5 + una ricerca web (dati verificati sulla scheda ufficiale). Se la ricerca fallisce: errore esplicito,
-    // nessun ripiego su altri modelli.
-    const runAnalysis = async () => {
-      const model = RESEARCH_MODEL
-      const webHint = '\n\nHai UNA sola ricerca web: fai una query mirata (produttore + cuvée + scheda tecnica / assemblaggio / dosaggio), preferendo il sito ufficiale del produttore. Compila solo ciò che è confermato; tutto il resto null.'
-      let messages: any[] = [{ role: 'user', content: [
-        { type: 'image', source: imgSource },
-        { type: 'text',  text: buildUserPrompt(includeMaison) + webHint },
-      ]}]
-      let inTok = 0, outTok = 0, searches = 0, text = ''
-      for (let turn = 0; turn < 3; turn++) {
-        const msg: any = await anthropic.messages.create({
-          model,
-          max_tokens: 4096,
-          system:     SYSTEM_PROMPT_WEB,
-          messages,
-          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: WEB_SEARCH_MAX_USES }],
-        } as any)
-        inTok    += msg.usage?.input_tokens  ?? 0
-        outTok   += msg.usage?.output_tokens ?? 0
-        searches += msg.usage?.server_tool_use?.web_search_requests ?? 0
-        // Il JSON finale sta nel testo dopo l'ultimo risultato di ricerca (il testo può essere spezzato in più blocchi)
-        const blocks: any[] = msg.content || []
-        let lastResult = -1
-        blocks.forEach((bl, i) => { if (bl.type === 'web_search_tool_result') lastResult = i })
-        const after = blocks.slice(lastResult + 1).filter(bl => bl.type === 'text').map(bl => bl.text as string)
-        text = (after.length ? after : blocks.filter(bl => bl.type === 'text').map(bl => bl.text as string)).join('')
-        if (msg.stop_reason === 'pause_turn') { messages = [...messages, { role: 'assistant', content: msg.content }]; continue }
-        break
-      }
-      return { model, inTok, outTok, searches, text }
-    }
-
+    // Haiku 4.5 + 3 ricerche web obbligatorie (scheda tecnica, prezzi, punteggi). Se la ricerca fallisce: errore
+    // esplicito, nessun ripiego su altri modelli né su dati a memoria.
+    let webDomains: string[] = []
     try {
-      const run = await runAnalysis()
+      const run = await runWebAnalysis(
+        (body) => anthropic.messages.create(body),
+        { imgSource, includeMaison, hint: buildWebHint({ maison: quick.maison, cuvee: quick.cuvee, annata: quick.annata }) },
+      )
       webSearches  = run.searches
+      webDomains   = run.domains
       sonnetInTok  = run.inTok
       sonnetOutTok = run.outTok
       rawText      = run.text
@@ -783,6 +856,8 @@ serve(async (req) => {
       ai = { is_champagne: false, confidence: 0 }
     }
     ai = sanitizeAi(ai)
+    ai.fonti_lette   = webDomains   // domini realmente letti dalla ricerca (controllo in approvazione)
+    ai.ricerche_web  = webSearches
 
     // ── Auto-aggiunta al catalogo (bottiglia genuinamente nuova) ─
     let newBottleId: string | null = null
@@ -1025,6 +1100,7 @@ serve(async (req) => {
             maturazione_mesi:     ai.maturazione_mesi ?? null,
             produzione_bottiglie: ai.produzione_bottiglie ?? null,
             score_medio:          ai.punteggio ?? null,
+            score_note:           (ai.score_note as string | null) ?? null,
             assemblaggio:         ai.assemblaggio ?? null,
             prezzo_min:           ai.prezzo_min ?? null,
             prezzo_max:           ai.prezzo_max ?? null,
@@ -1064,6 +1140,7 @@ serve(async (req) => {
               produzione_bottiglie: ai.produzione_bottiglie ?? null,
               assemblaggio:         ai.assemblaggio ?? null,
               score_medio:          ai.punteggio ?? null,
+            score_note:           (ai.score_note as string | null) ?? null,
               prezzo_min:           ai.prezzo_min ?? null,
               prezzo_max:           ai.prezzo_max ?? null,
               fascia_prezzo:        fasciaFromPrezzo((ai.prezzo_min as number | null) ?? null),
