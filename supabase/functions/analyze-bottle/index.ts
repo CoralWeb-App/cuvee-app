@@ -530,6 +530,37 @@ const runWebAnalysis = async (
   return { inTok, outTok, searches, text, domains: [...domains] }
 }
 
+// Scheda produttore mostrata nel risultato della scansione. Si legge sempre dal database: per un produttore già in
+// catalogo sono i dati verificati, per uno nuovo i dati appena salvati dalla scansione (in approvazione). Finché il
+// produttore non è approvato si espone solo il sottoinsieme sicuro (niente proprietà, direzione, produzione, uvaggio).
+const loadMaisonScheda = async (sb: any, maisonId: string | null) => {
+  if (!maisonId) return null
+  try {
+    const { data: m } = await sb.from('maison')
+      .select('id, nome, tipo, sede_comune, anno_fondazione, proprieta, direzione, chef_de_cave, ettari_totali, certificazioni, descrizione, filosofia, zona_id, is_free, is_published, needs_review')
+      .eq('id', maisonId).maybeSingle()
+    if (!m) return null
+    let zona: string | null = null
+    if (m.zona_id) {
+      const { data: z } = await sb.from('zone').select('nome').eq('id', m.zona_id).maybeSingle()
+      zona = z?.nome ?? null
+    }
+    const inCatalogo = m.is_published === true && m.needs_review === false
+    return {
+      id: m.id, nome: m.nome, tipo: m.tipo ?? null, zona, sede_comune: m.sede_comune ?? null,
+      ettari_totali: m.ettari_totali ?? null,
+      certificazioni: Array.isArray(m.certificazioni) && m.certificazioni.length ? m.certificazioni : null,
+      descrizione: m.descrizione ?? null, filosofia: m.filosofia ?? null,
+      anno_fondazione: inCatalogo ? (m.anno_fondazione ?? null) : null,
+      proprieta:       inCatalogo ? (m.proprieta ?? null) : null,
+      direzione:       inCatalogo ? (m.direzione ?? null) : null,
+      chef_de_cave:    inCatalogo ? (m.chef_de_cave ?? null) : null,
+      is_free: m.is_free ?? null,
+      in_catalogo: inCatalogo,
+    }
+  } catch (_e) { return null }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
@@ -788,7 +819,16 @@ serve(async (req) => {
 
       // Risposta identica alla scansione reale — l'utente non vede differenza
       // DB HIT: i dati del catalogo hanno sempre priorità su Haiku (nomi completi e corretti)
+      let msIdHit: string | null = ((mb as any).maison_id as string | undefined) ?? null
+      if (!msIdHit) {
+        const { data: bm } = await adminSupa.from('bottiglie').select('maison_id').eq('id', (mb as any).id).maybeSingle()
+        msIdHit = bm?.maison_id ?? null
+      }
+      const maisonSchedaHit = await loadMaisonScheda(adminSupa, msIdHit)
+
       return json({
+        maison_id:          msIdHit,
+        maison_scheda:      maisonSchedaHit,
         scan_id:            scan?.id,
         is_bottle:          true,
         is_champagne:       true,
@@ -885,6 +925,7 @@ serve(async (req) => {
 
     // ── Auto-aggiunta al catalogo (bottiglia genuinamente nuova) ─
     let newBottleId: string | null = null
+    let finalMaisonId: string | null = null
     if (ai.is_champagne && ai.maison && ai.cuvee) {
       let maisonId: string | null = null
 
@@ -983,7 +1024,10 @@ serve(async (req) => {
             .select('id')
             .single()
 
+          const maisonSchedaCm = await loadMaisonScheda(adminSupa, maisonId)
           return json({
+            maison_id:          maisonId,
+            maison_scheda:      maisonSchedaCm,
             scan_id:            scanCm?.id,
             is_bottle:          true,
             is_champagne:       true,
@@ -1059,6 +1103,7 @@ serve(async (req) => {
             filosofia:            ai.maison_filosofia ?? null,
             source:               'scan',
             needs_review:         true,
+            is_published:         false,   // resta fuori dall'elenco Produttori finché non lo approvi in admin
           })
           .select('id')
           .single()
@@ -1069,6 +1114,7 @@ serve(async (req) => {
         maisonId = newMaison?.id ?? null
       }
 
+      finalMaisonId = maisonId
       if (maisonId) {
         const cuveeStr = (ai.cuvee as string) || ''
         const annataStr = ai.annata ? String(ai.annata) : ''
@@ -1302,7 +1348,10 @@ serve(async (req) => {
     }
 
     // ── Risposta ─────────────────────────────────────────────────
+    const maisonSchedaNew = await loadMaisonScheda(adminSupa, finalMaisonId)
     return json({
+      maison_id:          finalMaisonId,
+      maison_scheda:      maisonSchedaNew,
       scan_id:            scan?.id,
       is_bottle:          ai.is_bottle ?? true,
       is_champagne:       ai.is_champagne,

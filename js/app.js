@@ -7641,6 +7641,55 @@ function closeScanLimitModal() {
 // dopo una scansione vera e propria, così il popup "non è Champagne" si
 // vede una volta sola e non ricompare ogni volta che si riapre la stessa
 // scansione dallo storico.
+// Sezione "Il produttore" del risultato scansione, dopo tutto il resto. Dati dal catalogo se il produttore esiste già,
+// altrimenti quelli trovati dalla scansione (produttore in verifica: nessun pulsante finché non è approvato).
+function _buildScanMaisonHTML(result) {
+  const ms = result && result.maison_scheda;
+  if (!ms || !ms.nome) return '';
+  const e = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const tipoLabel = {
+    'NM':'Négociant-Manipulant','RM':'Récoltant-Manipulant','RC':'Récoltant-Coopérateur',
+    'CM':'Coopérative-Manipulant','SR':'Société de Récoltants','ND':'Négociant-Distributeur','MA':"Marque d'Acheteur"
+  };
+  const rows = [];
+  const row = (label, val) => {
+    if (val === null || val === undefined || val === '') return;
+    rows.push('<div style="display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:0.5px solid var(--border-2);">'
+      + '<span style="font-family:var(--sans);font-size:13px;color:var(--ink-4);flex-shrink:0;">' + label + '</span>'
+      + '<span style="font-family:var(--sans);font-size:13px;color:var(--ink-2);text-align:right;">' + val + '</span></div>');
+  };
+  row('Tipologia', ms.tipo ? e(tipoLabel[ms.tipo] || ms.tipo) : null);
+  row('Zona', e(ms.zona));
+  row('Sede', e(ms.sede_comune));
+  row('Fondazione', ms.anno_fondazione ? e(ms.anno_fondazione) : null);
+  row('Proprietà', e(ms.proprieta));
+  row('Direzione', e(ms.direzione));
+  row('Chef de cave', e(ms.chef_de_cave));
+  row('Vigneti', ms.ettari_totali ? e(String(ms.ettari_totali).replace('.', ',')) + ' ettari' : null);
+  row('Certificazioni', Array.isArray(ms.certificazioni) && ms.certificazioni.length ? e(ms.certificazioni.join(', ')) : null);
+  const testo = ms.descrizione
+    ? '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:12px;">' + e(ms.descrizione) + '</div>' : '';
+  const filo = ms.filosofia
+    ? '<div style="font-family:var(--sans);font-size:14px;color:var(--ink-3);line-height:1.7;margin-top:8px;font-style:italic;">' + e(ms.filosofia) + '</div>' : '';
+  if (!rows.length && !testo && !filo) return '';
+  let cta;
+  if (ms.in_catalogo && ms.id) {
+    const locked = !ms.is_free && !isPremium();
+    cta = '<button onclick="' + (locked ? "showPremiumLockModal('maison-limit-modal')" : "openSavedMaison('" + e(ms.id) + "')") + '" '
+      + 'style="width:100%;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--white);border:1.5px solid var(--border-2);color:var(--ink-2);border-radius:var(--radius-md);padding:12px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">'
+      + '<i class="ti ' + (locked ? 'ti-lock' : 'ti-building-community') + '"></i> Apri scheda completa</button>';
+  } else {
+    cta = '<div style="font-family:var(--sans);font-size:12px;color:var(--ink-4);margin-top:12px;line-height:1.5;">'
+      + 'Scheda produttore in verifica: i dati completi saranno presto disponibili nel catalogo.</div>';
+  }
+  return '<div class="form-section" style="margin:14px 14px 0;">'
+    + '<div class="form-section-title"><i class="ti ti-building-community"></i> Il produttore</div>'
+    + '<div style="font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:500;margin-top:10px;">' + e(ms.nome) + '</div>'
+    + '<div style="margin-top:6px;">' + rows.join('') + '</div>'
+    + testo + filo + cta
+  + '</div>';
+}
+
 function _showScanResultPage(result, photoDataUrl, isFreshScan) {
   _renderScanResult(result, photoDataUrl, isFreshScan);
   // Nasconde il cestino (visibile solo se aperto dallo storico)
@@ -7831,6 +7880,8 @@ function _renderScanResult(result, photoDataUrl, isFreshScan) {
       })()
     // ── Finestra ──
     + (finestraHtml ? '<div style="margin-top:14px;">' + finestraHtml + '</div>' : '')
+    // ── Il produttore (dal catalogo, o dai dati della scansione se nuovo) ──
+    + _buildScanMaisonHTML(result)
     // ── Debug: sorgente risultato (solo admin) ──
     + (function() {
         if (!isAdmin()) return '';
