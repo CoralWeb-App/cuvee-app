@@ -1642,7 +1642,7 @@ function _buildScanHistoryCard(s, idx) {
   const annata = s.annata && s.annata !== 'SA' ? s.annata : (s.annata === 'SA' ? 'S.A.' : '');
   // Le bottiglie di catalogo hanno spesso l'anno già scritto dentro il nome
   // (es. "Cristal 2010") — non ripeterlo se il nome finisce già con quell'anno.
-  const cuveeAlreadyHasYear = annata && String(s.cuvee_nome || '').trim().endsWith(String(annata));
+  const cuveeAlreadyHasYear = _hasEditionNumber(s.cuvee_nome) || (annata && String(s.cuvee_nome || '').trim().endsWith(String(annata)));
   // Badge fonte scansione (catalogo/AI): nota interna, visibile solo per admin
   const badge = !isAdmin() ? '' : (s.is_in_catalog
     ? '<span style="font-family:var(--sans);font-size:10px;background:#EDF7EE;color:#2A7A3A;border:0.5px solid #B8DDB8;border-radius:4px;padding:2px 6px;">✓ Catalogo</span>'
@@ -4756,7 +4756,7 @@ function _scanToCompareObj(result, photoUrl, id) {
   const b = result.matched_bottle || {};
   const annata = result.is_sa ? null : (result.annata || b.annata || null);
   const cuvee = result.cuvee || b.nome || '—';
-  const cuveeAlreadyHasYear = annata && String(cuvee).trim().endsWith(String(annata));
+  const cuveeAlreadyHasYear = _hasEditionNumber(cuvee) || (annata && String(cuvee).trim().endsWith(String(annata)));
   return {
     id: id,
     nome: cuvee + (!result.is_sa && annata && !cuveeAlreadyHasYear ? ' ' + annata : ''),
@@ -6868,6 +6868,13 @@ function renderRibbon(items, yearColors, otherColor) {
 // Versione string-based di renderAssemblaggio(), per i contesti che costruiscono
 // HTML via innerHTML in un colpo solo (risultato scansione, nota carnet) invece
 // di patchare nodi DOM fissi come fa la pagina scheda bottiglia.
+// Edizione numerata nel nome (es. "Grande Cuvée 173ème Édition", "Grand Siècle N°26"): il numero identifica
+// già la bottiglia, quindi l'annata base NON va aggiunta in coda al nome (resta nei "vini di base").
+function _hasEditionNumber(name) {
+  const t = String(name || '').normalize('NFC').toLowerCase();
+  return /(?:n\s*[°º]\s*|collection\s*|[ée]dition\s*(?:n\s*[°º]\s*)?)\d{1,4}/.test(t) || /\d{1,4}\s*(?:[èe]me\b|[èe]?\s*[ée]dition)/.test(t);
+}
+
 // Sans Année (non numerate): le annate cambiano ogni anno, quindi nei "vini di base" restano solo le
 // percentuali. Protegge da dati salvati con un'annata inventata dall'AI (scansioni e schede vecchie).
 function _assemblaggioPerDisplay(items, isSA) {
@@ -7663,7 +7670,7 @@ function _renderScanResult(result, photoDataUrl, isFreshScan) {
   // Titolo completo: cuvée + annata (per i millesimati l'anno è sempre nel titolo).
   // Le bottiglie già in catalogo hanno spesso l'anno scritto dentro il nome stesso
   // (es. "Cristal 2010") — non aggiungerlo di nuovo se è già alla fine del nome.
-  const cuveeAlreadyHasYear = annata && String(cuvee).trim().endsWith(String(annata));
+  const cuveeAlreadyHasYear = _hasEditionNumber(cuvee) || (annata && String(cuvee).trim().endsWith(String(annata)));
   const cuveeTitle = cuvee + (!result.is_sa && annata && !cuveeAlreadyHasYear ? ' ' + annata : '');
   const dosage = result.dosage || b.dosaggio_tipo || null;
   const tipo   = result.tipo   || b.tipo          || null;
