@@ -225,18 +225,12 @@ const makeSlug = (s: string) => (s || '')
 // ── Prezzi API (USD per token) — aggiornare se Anthropic cambia tariffe ──
 const PRICE_HAIKU_IN   = 1.00  / 1_000_000  // $1.00 / MTok  input
 const PRICE_HAIKU_OUT  = 5.00  / 1_000_000  // $5.00 / MTok  output
-const PRICE_SONNET_IN  = 3.00  / 1_000_000  // $3.00 / MTok  input
-const PRICE_SONNET_OUT = 15.00 / 1_000_000  // $15.00 / MTok output
 const PRICE_WEB_SEARCH = 0.01                // $10 / 1000 ricerche
 
 // ── Ricerca web nell'analisi delle bottiglie NON in catalogo ──────────────
-// Interruttore: false = si torna alla vecchia analisi Sonnet senza ricerca (basta cambiare questa riga e
-// ripubblicare). Con la ricerca l'analisi gira su Haiku 4.5 (un terzo del costo di Sonnet) così il costo
-// resta vicino a quello di prima; ogni ricerca costa circa 1 centesimo in più più i token delle pagine.
-const WEB_SEARCH_ENABLED = true
+// Unico percorso: Haiku 4.5 + 1 ricerca web (nessun Sonnet). Ogni ricerca costa 1 centesimo più i token delle pagine.
 const WEB_SEARCH_MAX_USES = 1
 const RESEARCH_MODEL = 'claude-haiku-4-5-20251001'
-const FULL_MODEL_NO_WEB = 'claude-sonnet-4-6'
 
 const SYSTEM_PROMPT =
   'Sei un maestro sommelier con 30 anni di esperienza enologica internazionale, specializzato in Champagne ma con conoscenza enciclopedica di ogni vino del mondo: rossi, bianchi, rosati, fermi e spumanti, di qualsiasi produttore, denominazione o paese. ' +
@@ -483,11 +477,8 @@ serve(async (req) => {
     let haikuOutTok = 0
     let sonnetInTok  = 0  // full-analysis sonnet tokens (0 if cache hit)
     let sonnetOutTok = 0
-    let mainModel = FULL_MODEL_NO_WEB   // modello usato per l'analisi completa (Haiku+ricerca oppure Sonnet)
     let webSearches = 0                 // ricerche web effettivamente eseguite
-    const mainCostUsd = () => mainModel.includes('haiku')
-      ? sonnetInTok * PRICE_HAIKU_IN + sonnetOutTok * PRICE_HAIKU_OUT + webSearches * PRICE_WEB_SEARCH
-      : sonnetInTok * PRICE_SONNET_IN + sonnetOutTok * PRICE_SONNET_OUT
+    const mainCostUsd = () => sonnetInTok * PRICE_HAIKU_IN + sonnetOutTok * PRICE_HAIKU_OUT + webSearches * PRICE_WEB_SEARCH
 
     // ════════════════════════════════════════════════════════════
     // STAGE 1 — Quick pre-check con Haiku (economico)
@@ -735,14 +726,11 @@ serve(async (req) => {
     } catch (_e) { /* nel dubbio si richiede la scheda */ }
 
     // ── Analisi completa (bottiglia non in catalogo) ──
-    // Con WEB_SEARCH_ENABLED: Haiku 4.5 + ricerca web (dati verificati sulla scheda ufficiale).
-    // Se la ricerca non è disponibile sull'account si ripiega sull'analisi Sonnet senza ricerca (regola
-    // "solo dati certi, il resto null"); se anche quella fallisce, errore esplicito (mai degradare di nascosto).
-    const runAnalysis = async (web: boolean) => {
-      const model = web ? RESEARCH_MODEL : FULL_MODEL_NO_WEB
-      const webHint = web
-        ? '\n\nHai UNA sola ricerca web: fai una query mirata (produttore + cuvée + scheda tecnica / assemblaggio / dosaggio), preferendo il sito ufficiale del produttore. Compila solo ciò che è confermato; tutto il resto null.'
-        : ''
+    // Haiku 4.5 + una ricerca web (dati verificati sulla scheda ufficiale). Se la ricerca fallisce: errore esplicito,
+    // nessun ripiego su altri modelli.
+    const runAnalysis = async () => {
+      const model = RESEARCH_MODEL
+      const webHint = '\n\nHai UNA sola ricerca web: fai una query mirata (produttore + cuvée + scheda tecnica / assemblaggio / dosaggio), preferendo il sito ufficiale del produttore. Compila solo ciò che è confermato; tutto il resto null.'
       let messages: any[] = [{ role: 'user', content: [
         { type: 'image', source: imgSource },
         { type: 'text',  text: buildUserPrompt(includeMaison) + webHint },
@@ -752,9 +740,9 @@ serve(async (req) => {
         const msg: any = await anthropic.messages.create({
           model,
           max_tokens: 4096,
-          system:     web ? SYSTEM_PROMPT_WEB : SYSTEM_PROMPT,
+          system:     SYSTEM_PROMPT_WEB,
           messages,
-          ...(web ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: WEB_SEARCH_MAX_USES }] } : {}),
+          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: WEB_SEARCH_MAX_USES }],
         } as any)
         inTok    += msg.usage?.input_tokens  ?? 0
         outTok   += msg.usage?.output_tokens ?? 0
@@ -772,15 +760,7 @@ serve(async (req) => {
     }
 
     try {
-      let run
-      try {
-        run = await runAnalysis(WEB_SEARCH_ENABLED)
-      } catch (webErr: any) {
-        if (!WEB_SEARCH_ENABLED) throw webErr
-        console.error('Ricerca web non disponibile, ripiego su analisi senza ricerca:', JSON.stringify(webErr))
-        run = await runAnalysis(false)
-      }
-      mainModel    = run.model
+      const run = await runAnalysis()
       webSearches  = run.searches
       sonnetInTok  = run.inTok
       sonnetOutTok = run.outTok
