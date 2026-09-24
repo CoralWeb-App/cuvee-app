@@ -83,6 +83,16 @@ const cuveeExactMatch = (db: string, ai: string): boolean => {
 // quello con Rosé) — trattata come annata/millesimato: se non coincide, mai match.
 const isRose = (s: string): boolean => /rose/.test(norm(s))
 
+// Numero di edizione/collection/cuvée presente nel nome (es. "Grande Cuvée 173ème Édition" -> "173",
+// "Grand Siècle N°26" -> "26", "Collection 244" -> "244"). null se il nome non ha un'edizione esplicita:
+// un numero qualsiasi (annata, MV20, P2) NON conta, serve un riferimento di edizione vero.
+const editionKey = (s: string): string | null => {
+  const t = (s || '').normalize('NFC').toLowerCase()
+  const m = t.match(/(?:n\s*[°º]\s*|collection\s*|[ée]dition\s*(?:n\s*[°º]\s*)?)(\d{1,4})/)
+    || t.match(/(\d{1,4})\s*(?:[èe]me\b|[èe]?\s*[ée]dition)/)
+  return m ? m[1] : null
+}
+
 // Trova un match SICURO nel catalogo — non indovina mai tra più candidati validi.
 // Regola: se esiste un solo match esatto, vince sempre quello anche se altri
 // candidati soddisfano solo il confronto approssimativo. Se ci sono più match
@@ -102,15 +112,20 @@ const findConfidentMatch = (
     if (!cuveeMatch(b.nome || '', cuveeName)) return false
     // Rosé è un discriminante assoluto: mai confondere la versione base con la Rosé
     if (isRose(b.nome || '') !== isRose(cuveeName)) return false
+    // Edizione numerata (es. Krug 173ème Édition): il numero identifica la bottiglia in modo univoco.
+    // Nel catalogo è millesimato (annata base nota) ma l'etichetta non riporta nessuna annata, quindi
+    // la scansione dice "sans année": le guardie annata/sans année non devono scartarla.
+    const dbEd = editionKey(b.nome || '')
+    const sameEdition = !!dbEd && dbEd === editionKey(cuveeName)
     // DB ha un'annata specifica e la scansione pure: devono coincidere
-    if (b.is_millesimato && b.annata && annata) {
+    if (!sameEdition && b.is_millesimato && b.annata && annata) {
       if (String(b.annata) !== String(annata)) return false
     }
     // DB è sans-année ma la scansione rileva un'annata specifica → no match
     if (!b.is_millesimato && !isSa && annata) return false
     // DB è millesimato ma la scansione dice chiaramente sans-année → no match
     // (guardia simmetrica, prima mancante: evitava match errati solo in un verso)
-    if (b.is_millesimato && isSa) return false
+    if (b.is_millesimato && isSa && !sameEdition) return false
     return true
   })
 
@@ -124,6 +139,69 @@ const findConfidentMatch = (
   // più di uno significa che non siamo sicuri di quale sia quello giusto.
   if (candidates.length === 1) return candidates[0]
   return null
+}
+
+// Controlli deterministici sul risultato dell'AI: non ci si affida solo al fatto che il modello
+// obbedisca al prompt. Annate solo dove hanno senso, percentuali coerenti, altrimenti null.
+const toNum = (v: unknown): number | null => {
+  if (typeof v === 'number' && isFinite(v)) return v
+  if (typeof v === 'string' && v.trim() !== '' && isFinite(Number(v))) return Number(v)
+  return null
+}
+const sanitizeAi = (ai: Record<string, unknown>): Record<string, unknown> => {
+  const isEdition = ai.edizione_numerata === true
+  if (isEdition) ai.is_sa = false
+
+  // ── assemblaggio ──
+  let items: Array<Record<string, unknown>> | null = null
+  if (Array.isArray(ai.assemblaggio)) {
+    items = (ai.assemblaggio as any[])
+      .filter(i => i && typeof i === 'object')
+      .map(i => ({ ...i, perc: toNum(i.perc) }))
+      .filter(i => i.perc !== null && (i.perc as number) > 0 && (i.perc as number) <= 100)
+    if (!items.length) items = null
+  }
+  if (items) {
+    const total = items.reduce((t, i) => t + (i.perc as number), 0)
+    if (total < 98 || total > 102) items = null // incoerente: non è un dato certo
+  }
+  if (items) {
+    const soloSA = !isEdition && ai.is_sa !== false
+    if (soloSA) {
+      // Sans Année non numerata: le annate cambiano ogni anno, nell'assemblaggio restano solo le percentuali
+      const conAnno = items.filter(i => i.anno !== undefined && i.anno !== null && i.anno !== '')
+      const altri = items.filter(i => !(i.anno !== undefined && i.anno !== null && i.anno !== ''))
+      const out: Array<Record<string, unknown>> = []
+      if (conAnno.length) out.push({ perc: conAnno.reduce((t, i) => t + (i.perc as number), 0) })
+      for (const i of altri) { const { anno: _a, ...rest } = i; out.push(rest) }
+      items = out
+    }
+  }
+  ai.assemblaggio = items
+
+  // Edizione numerata: annata prevalente derivata SOLO dall'assemblaggio già certo
+  if (isEdition && !ai.annata && items) {
+    const conAnno = items.filter(i => i.anno !== undefined && i.anno !== null && i.anno !== '')
+    if (conAnno.length) {
+      conAnno.sort((a, b) => (b.perc as number) - (a.perc as number))
+      ai.annata = String(conAnno[0].anno)
+    }
+  }
+  // Per le edizioni numerate il numero di edizione identifica la bottiglia: l'anno non va in coda al nome
+  if (isEdition && ai.annata && typeof ai.cuvee === 'string') {
+    ai.cuvee = (ai.cuvee as string).replace(new RegExp('\\s+' + String(ai.annata) + '\\s*$'), '')
+  }
+  if (ai.is_sa === true) ai.annata = null
+
+  // ── percentuali uvaggio: se presenti devono sommare ~100, altrimenti non sono certe ──
+  const pcts = ['pct_chardonnay', 'pct_pinot_noir', 'pct_meunier'].map(k => toNum(ai[k]))
+  const presenti = pcts.filter((v): v is number => v !== null)
+  const okRange = presenti.every(v => v >= 0 && v <= 100)
+  const somma = presenti.reduce((t, v) => t + v, 0)
+  if (presenti.length && (!okRange || somma < 98 || somma > 102)) {
+    ai.pct_chardonnay = null; ai.pct_pinot_noir = null; ai.pct_meunier = null
+  }
+  return ai
 }
 
 // Deriva fascia_prezzo dal prezzo_min (allineato ai breakpoint JS)
@@ -223,98 +301,101 @@ const SYSTEM_PROMPT =
   'e SOLO in quel caso, lascia maison null piuttosto che indovinare un nome sbagliato.\n\n' +
 
   '=== REGOLA ASSOLUTA #6: SCHEDA PRODUTTORE (maison_*) ===\n' +
-  'Oltre ai dati della bottiglia, fornisci SEMPRE anche una scheda completa del produttore stesso ' +
-  '(campi maison_*), con lo stesso livello di dettaglio e rigore enciclopedico usato per la bottiglia — ' +
-  'indipendentemente dal fatto che il produttore sia già presente nel nostro catalogo o meno (non lo sai, ' +
-  'e non importa: la scheda va sempre compilata). Usa la tua conoscenza reale del produttore: sede, anno di ' +
-  'fondazione o di primo imbottigliamento a proprio nome, proprietà/famiglia, chef de cave o responsabile, ' +
-  'ettari vitati, percentuali varietali del vigneto, produzione annua indicativa, certificazioni (bio, ' +
-  'biodinamico, HVE, sostenibile) se note, e due brevi testi editoriali (descrizione: storia e identità in ' +
-  '2-4 frasi; filosofia: approccio stilistico/enologico in 1-2 frasi). Se un singolo dato non è noto con ' +
-  'certezza, lascialo null piuttosto che inventarlo — ma il tentativo di compilare la scheda va fatto sempre, ' +
-  'anche per vigneron/RM poco conosciuti, usando ciò che sai davvero su di loro.\n\n' +
+  'Compila i campi maison_* SOLO se compaiono nello schema JSON della richiesta, e ognuno solo se lo sai con certezza assoluta ' +
+  '(sede, anno di fondazione, proprietà, direzione, chef de cave, ettari, percentuali del vigneto, produzione, certificazioni, ' +
+  'descrizione, filosofia). Per vigneron/RM poco noti la scheda può restare quasi vuota: è la risposta corretta, mai riempirla a memoria.\n\n' +
 
-  'Per campi tecnici usa la tua conoscenza enciclopedica anche se non visibili sull etichetta.'
+  '=== REGOLA ASSOLUTA #7: VERITÀ E CERTEZZA — MAI INVENTARE ===\n' +
+  'Non hai accesso a internet: rispondi solo con ciò che sai con CERTEZZA ASSOLUTA per questa specifica bottiglia. ' +
+  'È VIETATO inventare, stimare, dedurre "per stile" o "per fascia", o applicare valori tipici della maison o della denominazione a una cuvée specifica. ' +
+  'Se non sei certo al 100% di un dato -> null. Vale per assemblaggio, percentuali di uvaggio, dosaggio, dosaggio_gl, maturazione_mesi, produzione_bottiglie, ' +
+  'punteggio (solo se realmente pubblicato da una guida o un critico per QUELLA cuvée e annata), prezzi, finestra di degustazione e scheda produttore. ' +
+  'Anche note_degustazione, abbinamento, vinificazione, descrizione e filosofia vanno scritti solo se conosci davvero la bottiglia o il produttore, senza dettagli specifici inventati. ' +
+  'Per produttori o cuvée poco noti (piccoli vigneron, edizioni recenti) molti campi saranno null: è la risposta corretta e attesa. ' +
+  'Ciò che si legge sull etichetta (produttore, cuvee, annata, dosaggio, tipo, numero di edizione) è sempre un dato affidabile da riportare.\n\n' +
 
-const USER_PROMPT =
-  'Analizza questa immagine con la massima precisione.\n\n' +
-  'STEP 1 - PRIMA DI TUTTO: l immagine mostra una bottiglia o contenitore di bevanda?\n' +
-  'Se NO (persona, cibo, oggetto, parte del corpo, ecc.) -> rispondi solo: {"is_bottle":false,"is_champagne":false,"confidence":0}\n\n' +
-  'STEP 2 - Solo se is_bottle=true: segui la catena decisionale champagne dal system prompt per determinare is_champagne. ' +
-  'Determina anche is_wine: true se è vino (fermo o spumante, Champagne o qualsiasi altra denominazione/paese: Barolo, Bordeaux, Prosecco, Franciacorta, Cava, Cremant, Sekt, rosati, vini dolci, ecc — is_champagne=true implica sempre is_wine=true). ' +
-  'is_wine deve essere false per qualsiasi bevanda che NON sia vino: birra, superalcolici/liquori, acqua, bibite, succhi, ecc.\n\n' +
-  'STEP 3 - IN OGNI CASO, sia che sia Champagne sia che sia qualsiasi altro vino o bevanda alcolica, usa tutta la tua conoscenza enciclopedica per un analisi COMPLETA e approfondita — stesso identico livello di dettaglio indipendentemente dal tipo di bottiglia, MAI un analisi ridotta o superficiale solo perché non è Champagne:\n' +
-  '1. "cuvee": nome COMPLETO dell etichetta/vino SENZA produttore e SENZA annata. Per Champagne includi le denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs).\n' +
-  '2. maturazione_mesi: per Champagne usa P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72, Krug GC=72, NM standard=36. Per qualsiasi altro vino usa la tua conoscenza enologica specifica della denominazione/stile (es. Barolo tradizionale 24-36 mesi legno + affinamento bottiglia, Amarone della Valpolicella 24+ mesi, Brunello di Montalcino minimo 24 mesi + 4 in bottiglia, Bordeaux Grand Cru 18-24 mesi barrique, bianchi freschi 3-6 mesi acciaio).\n' +
-  '3. punteggio: intero 0-100 scala Parker/Wine Spectator/Vinous/RVF, da valorizzare SEMPRE con una valutazione professionale per qualsiasi vino, non solo Champagne (Champagne: P2=98, Dom Perignon=96, Cristal=95, Krug GC=95, NM Brut grande maison=87-89; altri grandi vini secondo qualità e reputazione reale, es. 88-97 per etichette importanti, 85-90 per vini quotidiani).\n' +
-  '4. Campi SOLO Champagne — pct_chardonnay, pct_pinot_noir, pct_meunier, dosage, dosaggio_gl, tipo (blanc de blancs/blanc de noirs/rose/assemblage), assemblaggio: valorizzali sempre se is_champagne=true. Se NON è Champagne lasciali tutti null (non si applicano) e descrivi invece vitigno/blend/percentuali in forma testuale dentro "provenienza_uve" (es. "Nebbiolo in purezza, Barolo DOCG, comune di La Morra" oppure "Cabernet Sauvignon 60%, Merlot 40%, margine sinistra della Gironda").\n' +
-  '5. Campi da valorizzare SEMPRE con la stessa profondità, Champagne o qualsiasi altro vino al mondo: provenienza_uve, vinificazione, malolattica, note_degustazione (200-300 caratteri, colore/aspetto, profumi, gusto), abbinamento (2-3 abbinamenti gastronomici italiani), finestra_da, finestra_a, produzione_bottiglie.\n' +
-  '6. assemblaggio (solo Champagne NV): indica le annate dei vins de base con % e i vins de reserve con %. Per millesimati o vini non Champagne lascia null.\n' +
-  '7. PREZZO (campo critico - sii preciso, SEMPRE valorizzato per qualsiasi vino): indica il prezzo REALE di vendita al dettaglio in Italia\n' +
-  '   (enoteca/online italiano, bottiglia 75cl), in euro, arrotondato a multipli di 5.\n' +
-  '   Per Champagne usa questi riferimenti precisi di mercato italiano 2025-2026:\n' +
-  '   - NM entry (Moët Brut, Veuve Clicquot Yellow, Mumm Cordon Rouge): 38-50€\n' +
-  '   - NM premium (Bollinger Special Cuvée, Pol Roger Brut, Taittinger Brut): 50-70€\n' +
-  '   - Rosé NM grande maison: 55-80€\n' +
-  '   - RM/RC artigiani noti (Egly-Ouriet, Selosse, Larmandier): 60-120€\n' +
-  '   - Prestige NM (Dom Pérignon, Cristal, Belle Epoque, Comtes de Champagne): 150-250€\n' +
-  '   - Prestige ultra (Krug GC, Dom Pérignon P2, Cristal Rosé): 200-400€\n' +
-  '   - Icone (Salon, Krug Clos du Mesnil, Dom Pérignon P3): 400-900€\n' +
-  '   Per qualsiasi altro vino usa la tua reale conoscenza di mercato enologico per produttore/denominazione (indicativamente:\n' +
-  '   vini quotidiani/IGT 8-20€, DOC regionali 15-35€, Barolo/Barbaresco base 35-60€, cru importanti 70-150€,\n' +
-  '   Super Tuscan/Bordeaux classificati 40-150€, grandi Borgogna/Bordeaux Grand Cru 100-500€+) — adatta sempre\n' +
-  '   al produttore e all etichetta reali se riconoscibili, non usare mai un valore fisso.\n' +
-  '   NON usare prezzi francesi o UK per lo Champagne.\n\n' +
-  'STEP 4 - SOLO se is_champagne=true e hai identificato un maison: compila anche la scheda produttore ' +
-  '(campi maison_*) seguendo la REGOLA ASSOLUTA #6 del system prompt — sempre, non solo se ti sembra un ' +
-  'produttore sconosciuto o raro.\n\n' +
-  'Rispondi SOLO con JSON valido, zero testo extra:\n' +
-  '{\n' +
-  '  "is_bottle": true se bottiglia/contenitore bevanda, false se altro,\n' +
-  '  "is_champagne": boolean (segui catena decisionale obbligatoria),\n' +
-  '  "is_wine": true se è vino (Champagne o qualsiasi altro vino fermo/spumante), false se è birra/superalcolico/acqua/bibita/altro non-vino, null se is_bottle=false,\n' +
-  '  "confidence": 0-100,\n' +
-  '  "maison": "nome produttore o null",\n' +
-  '  "cuvee": "nome COMPLETO dell etichetta SENZA produttore e SENZA annata (per Champagne includi denominazioni speciali), o null",\n' +
-  '  "annata": "anno stringa es 2018, o null se sans annee/non-vintage",\n' +
-  '  "is_sa": true se sans annee/non-vintage, false se ha annata,\n' +
-  '  "dosage": "Brut Nature" o "Extra Brut" o "Brut" o "Extra Sec" o "Sec" o "Demi-Sec" o "Doux" o null — SOLO Champagne, null se non è Champagne,\n' +
-  '  "tipo": "blanc de blancs" o "blanc de noirs" o "rose" o "assemblage" o null — SOLO Champagne, null se non è Champagne,\n' +
-  '  "prestige": true se cuvee/etichetta di prestigio (top di gamma del produttore), false altrimenti,\n' +
-  '  "punteggio": intero 0-100 scala Parker/Wine Spectator/Vinous/RVF, SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino,\n' +
-  '  "note_degustazione": "200-300 caratteri italiano: colore/aspetto, profumi, gusto — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino",\n' +
-  '  "abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino",\n' +
-  '  "finestra_da": anno intero inizio finestra ottimale o null,\n' +
-  '  "finestra_a": anno intero fine finestra o null,\n' +
-  '  "pct_chardonnay": integer 0-100 o null — SOLO Champagne, null se non è Champagne,\n' +
-  '  "pct_pinot_noir": integer 0-100 o null — SOLO Champagne, null se non è Champagne,\n' +
-  '  "pct_meunier": integer 0-100 o null — SOLO Champagne, null se non è Champagne,\n' +
-  '  "assemblaggio": array di oggetti per Champagne NV: [{"anno":2021,"perc":65},{"tipo":"riserva","perc":35}] oppure con label [{"tipo":"riserva","label":"reserve perpetuelle","perc":30}], null per millesimati o vini non Champagne,\n' +
-  '  "provenienza_uve": "zona/village/denominazione — per vini non Champagne includi anche vitigno/blend in forma testuale (es. \'Nebbiolo in purezza, Barolo DOCG, La Morra\'), o null",\n' +
-  '  "vinificazione": "breve descrizione tecnica — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino",\n' +
-  '  "malolattica": "completa" o "parziale" o "assente" o null,\n' +
-  '  "dosaggio_gl": numero decimale grammi/litro tipici per questa cuvee (es. Brut Nature=0, Extra Brut=4, Brut=9, Sec=25) o null — SOLO Champagne, null se non è Champagne,\n' +
-  '  "maturazione_mesi": integer — SEMPRE valorizzato per qualsiasi vino secondo lo stile/denominazione reale, o null solo se non è vino,\n' +
-  '  "produzione_bottiglie": integer o null,\n' +
-  '  "prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, arrotondato a 5 — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino,\n' +
-  '  "prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, arrotondato a 5 — SEMPRE valorizzato per qualsiasi vino, o null solo se non è vino,\n' +
-  '  "not_champagne_type": "denominazione/tipologia del vino/bevanda se NOT champagne (es. \'Barolo DOCG\', \'Franciacorta DOCG\', \'vino rosso fermo\'), o null se è Champagne",\n' +
-  '  "maison_tipo": "NM" o "RM" o "RC" o "CM" o "SR" o "ND" o "MA" o null — sigla ufficiale sul tappo/etichetta (NM=grande maison, RM=vigneron/récoltant-manipulant, RC=récoltant-coopérateur, CM=cooperativa, SR=société de récoltants, ND=négociant-distributeur, MA=marque auxiliaire), SOLO se is_champagne, altrimenti null,\n' +
-  '  "maison_sede_comune": "comune sede del produttore (es. Ay, Reims, Epernay, Le Mesnil-sur-Oger) o null",\n' +
-  '  "maison_zona": "Montagne de Reims" o "Côte des Blancs" o "Vallée de la Marne" o "Côte des Bar" o "Côte de Sézanne" o null — zona di Champagne dove ha sede il produttore,\n' +
-  '  "maison_anno_fondazione": integer anno di fondazione della maison o di primo imbottigliamento a proprio nome, o null,\n' +
-  '  "maison_proprieta": "proprietà/famiglia/gruppo proprietario (es. \'Famiglia Krug\', \'LVMH\') o null",\n' +
-  '  "maison_direzione": "nome di chi dirige la maison oggi o null",\n' +
-  '  "maison_chef_de_cave": "nome del chef de cave o null",\n' +
-  '  "maison_ettari_totali": numero decimale ettari vitati totali o null,\n' +
-  '  "maison_pct_chardonnay": integer 0-100 percentuale Chardonnay nel vigneto del produttore o null,\n' +
-  '  "maison_pct_pinot_noir": integer 0-100 percentuale Pinot Noir nel vigneto del produttore o null,\n' +
-  '  "maison_pct_meunier": integer 0-100 percentuale Meunier nel vigneto del produttore o null,\n' +
-  '  "maison_produzione_bottiglie": integer produzione annua indicativa in bottiglie o null,\n' +
-  '  "maison_certificazioni": array di stringhe (es. ["Biologico","Biodinamico (Demeter)","HVE"]) o null,\n' +
-  '  "maison_descrizione": "2-4 frasi in italiano: storia e identità del produttore, o null",\n' +
-  '  "maison_filosofia": "1-2 frasi in italiano: approccio stilistico/enologico, o null"\n' +
-  '}'
+  '=== REGOLA ASSOLUTA #8: EDIZIONI NUMERATE, COLLECTION E ASSEMBLAGGIO ===\n' +
+  'Esamina SEMPRE etichetta e nome per capire se la bottiglia è un edizione numerata: numero di edizione (173ème Édition, 174ème, Édition 172), ' +
+  'numero di cuvée o collection (Cuvée N° 746, Collection 244), numero progressivo (Krug Rosé 29ème, Grand Siècle N°26), o altro numero fisso che identifica ' +
+  'una specifica uscita (una volta uscita resta quella, non ruota in silenzio come un Brut generico). Un numero qualsiasi (annata, sigla come P2 o MV20) NON è un edizione. ' +
+  'Se è un edizione numerata: edizione_numerata=true, is_sa=false (si comporta come un millesimato), il nome cuvee contiene il numero di edizione e NON l anno in coda, ' +
+  'annata = anno base prevalente SOLO se lo sai con certezza (altrimenti null), assemblaggio con le annate reali dei vins de base e le % dei vins de reserve SOLO se certi (altrimenti null). ' +
+  'Se NON è un edizione numerata: edizione_numerata=false. ' +
+  'Sans Année NON numerata: nell assemblaggio NESSUNA annata (le annate cambiano ogni anno), solo percentuali, es. [{"perc":65},{"tipo":"riserva","perc":35}], solo se certe; altrimenti null.'
+
+const buildUserPrompt = (includeMaison: boolean): string => {
+  const head =
+    'Analizza questa immagine con la massima precisione.\n\n' +
+    'STEP 1 - PRIMA DI TUTTO: l immagine mostra una bottiglia o contenitore di bevanda?\n' +
+    'Se NO (persona, cibo, oggetto, parte del corpo, ecc.) -> rispondi solo: {"is_bottle":false,"is_champagne":false,"confidence":0}\n\n' +
+    'STEP 2 - Solo se is_bottle=true: segui la catena decisionale champagne dal system prompt per determinare is_champagne. ' +
+    'Determina anche is_wine: true se è vino (fermo o spumante, Champagne o qualsiasi altra denominazione/paese: Barolo, Bordeaux, Prosecco, Franciacorta, Cava, Cremant, Sekt, rosati, vini dolci, ecc — is_champagne=true implica sempre is_wine=true). ' +
+    'is_wine deve essere false per qualsiasi bevanda che NON sia vino: birra, superalcolici/liquori, acqua, bibite, succhi, ecc.\n\n' +
+    'STEP 3 - Analisi VERITIERA, mai inventata (REGOLA #7): compila ogni campo SOLO se lo sai con certezza assoluta per QUESTA specifica bottiglia, altrimenti null. Un campo null è sempre meglio di un dato incerto o stimato. Ciò che si legge sull etichetta (produttore, cuvee, annata, dosaggio, tipo, numero di edizione) ha la priorità; tutto il resto solo se noto con certezza. Sii uguale di rigoroso per Champagne e per qualsiasi altro vino:\n' +
+    '1. "cuvee": nome COMPLETO dell etichetta/vino SENZA produttore e SENZA annata. Per Champagne includi le denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs) e, se presente, il numero di edizione/collection/cuvée (es. 173ème Édition, N° 746, Collection 244).\n' +
+    '2. maturazione_mesi: solo valori che conosci con certezza per QUESTA cuvée (es. P2=144, P3=216, R.D.=180, Dom Perignon=84, Cristal=72, Krug GC=72); altrimenti null. Nessuna stima per stile o denominazione.\n' +
+    '3. punteggio: intero 0-100 SOLO se è un punteggio realmente pubblicato da una guida o un critico riconosciuto per QUESTA cuvée (e annata); altrimenti null. Mai stimarlo.\n' +
+    '4. Campi SOLO Champagne — pct_chardonnay, pct_pinot_noir, pct_meunier, dosage, dosaggio_gl, tipo, assemblaggio: solo se certi (dosage e tipo si leggono spesso in etichetta). Se NON è Champagne lasciali tutti null e descrivi vitigno/blend dentro "provenienza_uve" solo se lo sai con certezza.\n' +
+    '5. provenienza_uve, vinificazione, malolattica, note_degustazione, abbinamento, finestra_da, finestra_a, produzione_bottiglie: SOLO se conosci davvero questa bottiglia o questo produttore; altrimenti null. I testi descrittivi (note_degustazione 200-300 caratteri, abbinamento 2-3 abbinamenti italiani) non devono contenere dettagli specifici inventati.\n' +
+    '6. assemblaggio (solo Champagne), vedi REGOLA #8: (a) millesimato o edizione numerata: annate reali dei vins de base con % e vins de reserve con %; (b) Sans Année NON numerata: NESSUNA annata, solo percentuali senza anno. Solo se certo, e le % devono sommare 100; altrimenti null. Non Champagne: null.\n' +
+    '7. PREZZO: solo se conosci il prezzo reale di vendita al dettaglio in Italia (75cl, euro, multipli di 5) per QUESTA cuvée; altrimenti null. Vietato stimarlo dalla fascia del produttore. NON usare prezzi francesi o UK.\n\n'
+
+  const step4 = includeMaison
+    ? 'STEP 4 - SOLO se is_champagne=true e hai identificato un maison: compila anche i campi maison_* (REGOLA #6), ognuno solo se certo, altrimenti null.\n\n'
+    : ''
+
+  const baseFields = [
+    '"is_bottle": true se bottiglia/contenitore bevanda, false se altro',
+    '"is_champagne": boolean (segui catena decisionale obbligatoria)',
+    '"is_wine": true se è vino (Champagne o qualsiasi altro vino fermo/spumante), false se è birra/superalcolico/acqua/bibita/altro non-vino, null se is_bottle=false',
+    '"confidence": 0-100',
+    '"maison": "nome produttore o null"',
+    '"cuvee": "nome COMPLETO dell etichetta SENZA produttore e SENZA annata (per Champagne includi denominazioni speciali e numero di edizione/collection se presente), o null"',
+    '"edizione_numerata": true se la bottiglia ha un numero di edizione, di cuvée o di collection che identifica una specifica uscita (es. 173ème Édition, N° 746, Collection 244, Rosé 29ème, Grand Siècle N°26), false altrimenti (REGOLA #8)',
+    '"annata": "anno stringa es 2018, o null se sans annee. Per edizioni numerate: anno base prevalente SOLO se certo, altrimenti null"',
+    '"is_sa": true se sans annee/non-vintage e NON edizione numerata; false se ha annata OPPURE è un edizione numerata',
+    '"dosage": "Brut Nature" o "Extra Brut" o "Brut" o "Extra Sec" o "Sec" o "Demi-Sec" o "Doux" o null — SOLO Champagne, solo se certo',
+    '"tipo": "blanc de blancs" o "blanc de noirs" o "rose" o "assemblage" o null — SOLO Champagne, solo se certo',
+    '"prestige": true se cuvee/etichetta di prestigio (top di gamma del produttore), false altrimenti',
+    '"punteggio": intero 0-100 solo se realmente pubblicato da un critico/guida noto per questa cuvée, altrimenti null',
+    '"note_degustazione": "200-300 caratteri italiano: colore/aspetto, profumi, gusto — solo se conosci davvero questa bottiglia, altrimenti null"',
+    '"abbinamento": "2-3 abbinamenti gastronomici italiani separati da virgola — solo se conosci davvero questa bottiglia, altrimenti null"',
+    '"finestra_da": anno intero inizio finestra ottimale, solo se certo, altrimenti null',
+    '"finestra_a": anno intero fine finestra, solo se certo, altrimenti null',
+    '"pct_chardonnay": integer 0-100 o null — SOLO Champagne, solo se certo',
+    '"pct_pinot_noir": integer 0-100 o null — SOLO Champagne, solo se certo',
+    '"pct_meunier": integer 0-100 o null — SOLO Champagne, solo se certo',
+    '"assemblaggio": array di oggetti, solo se certo. Millesimato/edizione numerata: [{"anno":2017,"perc":58},{"tipo":"riserva","perc":42}] (anche con label es. {"tipo":"riserva","label":"reserve perpetuelle","perc":30}). Sans Année NON numerata: SENZA anno, [{"perc":65},{"tipo":"riserva","perc":35}]. Le % sommano 100. null se non certo o non Champagne',
+    '"provenienza_uve": "zona/village/denominazione — per vini non Champagne anche vitigno/blend in forma testuale — solo se certo, altrimenti null"',
+    '"vinificazione": "breve descrizione tecnica — solo se conosci davvero questa bottiglia, altrimenti null"',
+    '"malolattica": "completa" o "parziale" o "assente" o null',
+    '"dosaggio_gl": numero decimale grammi/litro solo se noto con certezza per questa cuvee, altrimenti null — SOLO Champagne',
+    '"maturazione_mesi": integer solo se noto con certezza per questa cuvee, altrimenti null',
+    '"produzione_bottiglie": integer solo se noto con certezza, altrimenti null',
+    '"prezzo_min": integer prezzo minimo vendita dettaglio Italia 75cl in euro, multiplo di 5, solo se noto, altrimenti null',
+    '"prezzo_max": integer prezzo massimo vendita dettaglio Italia 75cl in euro, multiplo di 5, solo se noto, altrimenti null',
+    '"not_champagne_type": "denominazione/tipologia del vino/bevanda se NOT champagne (es. \'Barolo DOCG\', \'Franciacorta DOCG\', \'vino rosso fermo\'), o null se è Champagne"',
+  ]
+  const maisonFields = [
+    '"maison_tipo": "NM" o "RM" o "RC" o "CM" o "SR" o "ND" o "MA" o null — sigla ufficiale sul tappo/etichetta (NM=grande maison, RM=vigneron/récoltant-manipulant, RC=récoltant-coopérateur, CM=cooperativa, SR=société de récoltants, ND=négociant-distributeur, MA=marque auxiliaire), SOLO se is_champagne e leggibile/certa, altrimenti null',
+    '"maison_sede_comune": "comune sede del produttore o null se non certo"',
+    '"maison_zona": "Montagne de Reims" o "Côte des Blancs" o "Vallée de la Marne" o "Côte des Bar" o "Côte de Sézanne" o null — solo se certa',
+    '"maison_anno_fondazione": integer solo se certo, altrimenti null',
+    '"maison_proprieta": "proprietà/famiglia/gruppo proprietario, solo se certo, altrimenti null"',
+    '"maison_direzione": "nome di chi dirige la maison oggi, solo se certo, altrimenti null"',
+    '"maison_chef_de_cave": "nome del chef de cave, solo se certo, altrimenti null"',
+    '"maison_ettari_totali": numero decimale ettari vitati totali, solo se certo, altrimenti null',
+    '"maison_pct_chardonnay": integer 0-100 percentuale Chardonnay nel vigneto, solo se certa, altrimenti null',
+    '"maison_pct_pinot_noir": integer 0-100 percentuale Pinot Noir nel vigneto, solo se certa, altrimenti null',
+    '"maison_pct_meunier": integer 0-100 percentuale Meunier nel vigneto, solo se certa, altrimenti null',
+    '"maison_produzione_bottiglie": integer produzione annua in bottiglie, solo se certa, altrimenti null',
+    '"maison_certificazioni": array di stringhe (es. ["Biologico","Biodinamico (Demeter)","HVE"]) solo se certe, altrimenti null',
+    '"maison_descrizione": "2-4 frasi in italiano: storia e identità del produttore, solo se lo conosci davvero, altrimenti null"',
+    '"maison_filosofia": "1-2 frasi in italiano: approccio stilistico/enologico, solo se lo conosci davvero, altrimenti null"',
+  ]
+  const fields = includeMaison ? baseFields.concat(maisonFields) : baseFields
+  return head + step4 + 'Rispondi SOLO con JSON valido, zero testo extra:\n{\n' + fields.map(f => '  ' + f).join(',\n') + '\n}'
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -399,7 +480,7 @@ serve(async (req) => {
       '  "is_wine": true se la bottiglia contiene vino (fermo o spumante, Champagne o qualsiasi altra denominazione: Barolo, Bordeaux, Prosecco, Franciacorta, Cava, Cremant, Sekt, rosati, vini dolci ecc.), false se contiene qualsiasi cosa che NON sia vino (acqua, latte, birra, superalcolici/liquori, bibite, succhi ecc.) o se is_bottle=false. Sii conservativo: se l etichetta non è leggibile ma la forma/colore della bottiglia è chiaramente da vino, true comunque.\n' +
       '  "is_champagne": true se è Champagne AOC francese,\n' +
       '  "maison": "nome ESATTO del produttore come scritto sull etichetta (es. Krug, Henri Giraud, Moët & Chandon, Jacques Selosse). Se il produttore non è scritto sull etichetta (frequente per cuvée di prestigio: Cristal->Louis Roederer, Comtes de Champagne->Taittinger, Belle Epoque->Perrier-Jouët, Grande Cuvée/Clos du Mesnil->Krug, Cuvée Sir Winston Churchill->Pol Roger, La Grande Dame->Veuve Clicquot), deducilo dal nome della cuvée con la tua conoscenza enciclopedica invece di lasciarlo vuoto — non scrivere mai il nome della cuvée al posto del produttore. null solo se davvero non identificabile.",\n' +
-      '  "cuvee": "nome ESATTO della cuvée come scritto sull etichetta SENZA maison. Includi codici alfanumerici (es. MV20, MV16, RD, R.D., P2, P3, VO, V.O., Clos du Mesnil, Grande Cuvée 173ème, Belle Epoque, Cristal, Blanc de Blancs). NON scrivere denominazioni territoriali (Grand Cru, Premier Cru, Aÿ, Reims ecc.) a meno che non siano parte del nome cuvée. SE la bottiglia ha un annata (is_sa=false), l anno va SEMPRE aggiunto alla fine del nome cuvée (es. \'Cristal 2013\', \'Comtes de Champagne 2012\', \'P2 2004\'), non solo nel campo annata separato. Se è Sans Année (is_sa=true) nessun anno nel nome. o null",\n' +
+      '  "cuvee": "nome ESATTO della cuvée come scritto sull etichetta SENZA maison. Se sull etichetta c e un numero di edizione, di cuvée o di collection (es. 173ème Édition, N° 746, Collection 244) includilo SEMPRE nel nome. Includi codici alfanumerici (es. MV20, MV16, RD, R.D., P2, P3, VO, V.O., Clos du Mesnil, Grande Cuvée 173ème, Belle Epoque, Cristal, Blanc de Blancs). NON scrivere denominazioni territoriali (Grand Cru, Premier Cru, Aÿ, Reims ecc.) a meno che non siano parte del nome cuvée. SE la bottiglia ha un annata (is_sa=false), l anno va SEMPRE aggiunto alla fine del nome cuvée (es. \'Cristal 2013\', \'Comtes de Champagne 2012\', \'P2 2004\'), non solo nel campo annata separato — TRANNE per le edizioni numerate (es. Grande Cuvée 173ème Édition), dove il numero di edizione identifica la bottiglia e l anno non va nel nome. Se è Sans Année (is_sa=true) nessun anno nel nome. o null",\n' +
       '  "annata": "anno es.2018 o null se sans année",\n' +
       '  "is_sa": true se sans année/non-vintage, false se ha annata,\n' +
       '  "confidence": 0-100,\n' +
@@ -623,6 +704,15 @@ serve(async (req) => {
     let rawText = ''
     const scanType = 'sonnet_full'
 
+    // La scheda produttore costa molti token in uscita: si chiede solo se il produttore NON è già nel database
+    let includeMaison = true
+    try {
+      if (quick.maison) {
+        const { data: knownMaisons } = await adminSupa.from('maison').select('id, nome')
+        if ((knownMaisons || []).some((m: any) => maisonMatch(m.nome || '', quick.maison as string))) includeMaison = false
+      }
+    } catch (_e) { /* nel dubbio si richiede la scheda */ }
+
     // ── Sonnet full analysis — nessun fallback silenzioso a Haiku ──
     // Se Sonnet fallisce, la scansione fallisce con errore esplicito.
     // Meglio un errore visibile che un'analisi degradata di nascosto.
@@ -633,7 +723,7 @@ serve(async (req) => {
         system:     SYSTEM_PROMPT,
         messages: [{ role: 'user', content: [
           { type: 'image', source: imgSource },
-          { type: 'text',  text: USER_PROMPT },
+          { type: 'text',  text: buildUserPrompt(includeMaison) },
         ]}],
       })
       sonnetInTok  = aiMsg.usage?.input_tokens  ?? 0
@@ -656,6 +746,7 @@ serve(async (req) => {
       console.error('JSON parse error, raw:', rawText.substring(0, 500))
       ai = { is_champagne: false, confidence: 0 }
     }
+    ai = sanitizeAi(ai)
 
     // ── Auto-aggiunta al catalogo (bottiglia genuinamente nuova) ─
     let newBottleId: string | null = null

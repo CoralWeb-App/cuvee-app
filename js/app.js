@@ -3233,7 +3233,7 @@ function openNoteDetail(note) {
 
     // Assemblaggio (vini di base, anni + %)
     (function() {
-      const ribbon = buildAssemblaggioHTML(assemblaggio);
+      const ribbon = buildAssemblaggioHTML(assemblaggio, sr.is_sa !== undefined ? sr.is_sa === true : b2.is_millesimato === false);
       if (!ribbon) return;
       innerHtml +=
         '<div style="margin-bottom:16px;">' +
@@ -6797,6 +6797,8 @@ function renderAssemblaggio(b) {
     items = [{ anno: b.annata, perc: 100 }];
   }
 
+  items = _assemblaggioPerDisplay(items, b.is_millesimato === false);
+
   if (!items || !items.length) {
     section.style.display = 'none';
     return;
@@ -6866,9 +6868,21 @@ function renderRibbon(items, yearColors, otherColor) {
 // Versione string-based di renderAssemblaggio(), per i contesti che costruiscono
 // HTML via innerHTML in un colpo solo (risultato scansione, nota carnet) invece
 // di patchare nodi DOM fissi come fa la pagina scheda bottiglia.
-function buildAssemblaggioHTML(assemblaggio) {
+// Sans Année (non numerate): le annate cambiano ogni anno, quindi nei "vini di base" restano solo le
+// percentuali. Protegge da dati salvati con un'annata inventata dall'AI (scansioni e schede vecchie).
+function _assemblaggioPerDisplay(items, isSA) {
+  if (!isSA || !Array.isArray(items)) return items;
+  const hasYear = i => i && i.anno !== undefined && i.anno !== null && i.anno !== '';
+  const yrs = items.filter(hasYear);
+  if (!yrs.length) return items;
+  const out = [{ perc: yrs.reduce((t, i) => t + (Number(i.perc) || 0), 0) }];
+  items.filter(i => !hasYear(i)).forEach(i => out.push(i));
+  return out;
+}
+
+function buildAssemblaggioHTML(assemblaggio, isSA) {
   if (!assemblaggio || !Array.isArray(assemblaggio) || !assemblaggio.length) return '';
-  let items = assemblaggio;
+  let items = _assemblaggioPerDisplay(assemblaggio, isSA);
   const colors = ['#b8922a','#8a6a1e','#d4b06a','#a68030','#e0c48a'];
   const RISERVA_COLOR = '#9a8a72';
   const hasRiserva = items.some(i => !i.anno);
@@ -7785,7 +7799,7 @@ function _renderScanResult(result, photoDataUrl, isFreshScan) {
       + '</div>' : '')
     // ── Assemblaggio (vini di base) ──
     + (function(){
-        const ribbon = buildAssemblaggioHTML(assemblaggio);
+        const ribbon = buildAssemblaggioHTML(assemblaggio, result.is_sa === true);
         if (!ribbon) return '';
         return '<div class="form-section" style="margin:14px 14px 0;">'
           + '<div class="form-section-title"><i class="ti ti-chart-bar"></i> Vini di base</div>'
