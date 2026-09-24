@@ -1060,7 +1060,7 @@ serve(async (req) => {
         // Dedup: se esiste già una bottiglia con needs_review=true per questa maison+cuvée, non inserirne un'altra
         const { data: pendingBottles } = await adminSupa
           .from('bottiglie')
-          .select('id, nome, annata, is_millesimato')
+          .select('id, nome, annata, is_millesimato, tipo, dosaggio_tipo, dosaggio_gl, note_degustazione, abbinamento, finestra_da, finestra_a, pct_chardonnay, pct_pinot_noir, pct_meunier, provenienza_uve, vinificazione, malolattica, maturazione_mesi, produzione_bottiglie, assemblaggio, score_medio, score_note, prezzo_min, prezzo_max')
           .eq('maison_id', maisonId)
           .eq('needs_review', true)
 
@@ -1075,6 +1075,31 @@ serve(async (req) => {
 
         if (existingPending) {
           newBottleId = (existingPending as any).id
+          // La riga in approvazione esiste già: si completano SOLO i campi ancora vuoti con i dati di questa
+          // scansione, senza mai sovrascrivere ciò che c'è (le scansioni migliori arricchiscono, non peggiorano).
+          try {
+            const ex: any = existingPending
+            const empty = (v: unknown) => v === null || v === undefined || v === ''
+            const patch: Record<string, unknown> = {}
+            const fill = (col: string, val: unknown) => { if (empty(ex[col]) && !empty(val)) patch[col] = val }
+            fill('tipo', ai.tipo ? (ai.tipo as string).replace(/ /g, '_') : null)
+            fill('dosaggio_tipo', ai.dosage)
+            fill('dosaggio_gl', ai.dosaggio_gl)
+            for (const c of ['note_degustazione', 'abbinamento', 'finestra_da', 'finestra_a', 'provenienza_uve', 'vinificazione', 'malolattica', 'maturazione_mesi', 'produzione_bottiglie', 'assemblaggio']) fill(c, (ai as any)[c])
+            // gruppi coerenti: si completano solo se il gruppo è interamente vuoto (niente valori presi da scansioni diverse)
+            if (empty(ex.pct_chardonnay) && empty(ex.pct_pinot_noir) && empty(ex.pct_meunier) && !empty(ai.pct_chardonnay)) {
+              patch.pct_chardonnay = ai.pct_chardonnay; patch.pct_pinot_noir = ai.pct_pinot_noir ?? null; patch.pct_meunier = ai.pct_meunier ?? null
+            }
+            if (empty(ex.prezzo_min) && empty(ex.prezzo_max) && !empty(ai.prezzo_min)) {
+              patch.prezzo_min = ai.prezzo_min; patch.prezzo_max = ai.prezzo_max ?? null
+              patch.fascia_prezzo = fasciaFromPrezzo(ai.prezzo_min as number)
+            }
+            if (empty(ex.score_medio) && !empty(ai.punteggio)) { patch.score_medio = ai.punteggio; patch.score_note = ai.score_note ?? null }
+            if (Object.keys(patch).length) {
+              const { error: upErr } = await adminSupa.from('bottiglie').update(patch).eq('id', ex.id)
+              if (upErr) { console.error('bottiglie completamento error:', JSON.stringify(upErr)); _dbErrors.push('completamento: ' + upErr.message) }
+            }
+          } catch (fillErr) { console.error('completamento riga esistente fallito:', fillErr) }
         } else {
         const { data: nb, error: bottErr } = await adminSupa
           .from('bottiglie')
