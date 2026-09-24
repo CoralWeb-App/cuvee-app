@@ -2,13 +2,13 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>CUVÉE · Cave OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="css/admin.css?v=11">
+  <link rel="stylesheet" href="css/admin.css?v=17">
 </head>
 <body>
 
@@ -67,6 +67,7 @@
   <!-- HEADER -->
   <header class="adm-header">
     <div class="adm-header-left">
+      <button class="adm-menu-btn" id="adm-menu-btn" type="button" aria-label="Apri il menu" aria-expanded="false" onclick="toggleAdminDrawer()"><i class="ti ti-menu-2"></i></button>
       <div class="adm-logo">
         <span class="adm-logo-c">C</span>uvée
       </div>
@@ -76,7 +77,7 @@
         <span id="live-label">LIVE</span>
       </span>
       <span class="adm-breadcrumb">
-        cuvée os / admin platform /
+        <span class="adm-bc-prefix">cuvée os / admin platform /</span>
         <span id="adm-header-view">Dashboard</span>
       </span>
     </div>
@@ -101,6 +102,8 @@
       </div>
     </div>
   </header>
+
+  <div class="adm-drawer-overlay" id="adm-drawer-overlay" onclick="closeAdminDrawer()"></div>
 
   <!-- LAYOUT: sidebar + main -->
   <div class="adm-layout">
@@ -1116,7 +1119,7 @@
      SCRIPTS
 ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/admin.js?v=35"></script>
+<script src="js/admin.js?v=36"></script>
 
 </body>
 </html>

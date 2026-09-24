@@ -192,7 +192,46 @@ function isPremiumActive(u) {
 }
 
 // ── NAV ───────────────────────────────────────────────
+// ── Menu laterale a comparsa (telefono) ─────────────────
+function openAdminDrawer() {
+  document.body.classList.add('adm-drawer-open')
+  const b = document.getElementById('adm-menu-btn'); if (b) b.setAttribute('aria-expanded', 'true')
+}
+function closeAdminDrawer() {
+  document.body.classList.remove('adm-drawer-open')
+  const b = document.getElementById('adm-menu-btn'); if (b) b.setAttribute('aria-expanded', 'false')
+}
+function toggleAdminDrawer() {
+  document.body.classList.contains('adm-drawer-open') ? closeAdminDrawer() : openAdminDrawer()
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAdminDrawer() })
+window.addEventListener('resize', () => { if (window.innerWidth > 768) closeAdminDrawer() })
+
+// Etichetta ogni cella con il titolo della colonna: sul telefono le tabelle diventano schede (CSS) e servono le etichette
+function adminLabelTables() {
+  document.querySelectorAll('table.adm-table').forEach(t => {
+    const heads = Array.from(t.querySelectorAll('thead th')).map(th => th.textContent.trim())
+    if (!heads.length) return
+    t.querySelectorAll('tbody tr').forEach(tr => {
+      Array.from(tr.children).forEach((td, i) => {
+        if (td.tagName === 'TD' && !td.hasAttribute('data-label') && !td.hasAttribute('colspan')) td.setAttribute('data-label', heads[i] || '')
+      })
+    })
+  })
+}
+let _adminLblRaf = 0
+document.addEventListener('DOMContentLoaded', () => {
+  const shell = document.getElementById('admin-shell')
+  if (!shell) return
+  new MutationObserver(() => {
+    if (_adminLblRaf) return
+    _adminLblRaf = setTimeout(() => { _adminLblRaf = 0; adminLabelTables() }, 30)
+  }).observe(shell, { childList: true, subtree: true })
+})
+
 function showView(id) {
+  closeAdminDrawer()
+  const _main = document.querySelector('.adm-main'); if (_main) _main.scrollTop = 0
   document.querySelectorAll('.adm-view').forEach(v => v.classList.remove('active'))
   document.querySelectorAll('.adm-nav-item').forEach(n => n.classList.remove('active'))
   const view = document.getElementById('view-' + id)
