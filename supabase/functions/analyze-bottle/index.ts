@@ -148,8 +148,6 @@ const toNum = (v: unknown): number | null => {
   if (typeof v === 'string' && v.trim() !== '' && isFinite(Number(v))) return Number(v)
   return null
 }
-// Solo critici e guide riconosciuti: niente voti di community (CellarTracker, Vivino), negozi o blog
-const CRITICI = /suckling|decanter|advocate|parker|spectator|enthusiast|vinous|galloni|falstaff|gambero|bibenda|gilman|view from the cellar|jancis|robinson|wine\s*&\s*spirits|dunnuck|romanelli|gusto critico|slow wine|veronelli|\bais\b|\brvf\b|revue du vin|bettane|desseauve|guide hachette|hachette|tanzer|burghound|james halliday|wine independent|robert parker|juhlin|stelzer|jasper morris|inside burgundy/i
 // La ricerca web lascia nei testi dei segnaposto <cite index="...">: vanno tolti prima di salvare
 const stripCite = (v: unknown): unknown => {
   if (typeof v === 'string') return v.replace(/<\/?cite[^>]*>/gi, '').replace(/\s{2,}/g, ' ').trim()
@@ -182,9 +180,17 @@ const sanitizeAi = (aiIn: Record<string, unknown>): Record<string, unknown> => {
   if (ai.prezzo_max === ai.prezzo_min) ai.prezzo_max = null   // un solo prezzo: l'app lo mostra come "da X €", non "X–X"
   const punti = (Array.isArray(ai.punteggi_trovati) ? ai.punteggi_trovati as any[] : [])
     .map(x => ({ fonte: String(x?.fonte ?? '').trim(), p: toNum(x?.punteggio) }))
-    .filter((x): x is { fonte: string; p: number } => x.fonte !== '' && x.p !== null && x.p >= 70 && x.p <= 100 && CRITICI.test(x.fonte))
-  ai.punteggio = punti.length ? Math.round(punti.reduce((t, x) => t + x.p, 0) / punti.length) : null
-  ai.score_note = punti.length ? punti.map(x => x.fonte + ' ' + x.p).join(', ') : null
+    .filter((x): x is { fonte: string; p: number } => x.fonte !== '' && x.p !== null && x.p >= 70 && x.p <= 100)
+  // Punteggio = media di tutti i punteggi su scala 100 trovati (critici, guide, community). Con 3 o più valori si
+  // scartano quelli a più di 5 punti dalla mediana (voti gonfiati o riferiti ad altre annate).
+  let puntiOk = punti
+  if (punti.length >= 3) {
+    const ord = punti.map(x => x.p).sort((a, b) => a - b)
+    const med = ord[Math.floor(ord.length / 2)]
+    puntiOk = punti.filter(x => Math.abs(x.p - med) <= 5)
+  }
+  ai.punteggio = puntiOk.length ? Math.round(puntiOk.reduce((t, x) => t + x.p, 0) / puntiOk.length) : null
+  ai.score_note = puntiOk.length ? puntiOk.map(x => x.fonte + ' ' + x.p).join(', ') : null
 
   // ── dosaggio: il tipo (letto in etichetta) prevale; i g/l incoerenti col tipo non sono un dato certo ──
   const DOS: Record<string, [number, number]> = { 'brut nature': [0, 3], 'extra brut': [0, 6], 'brut': [0, 12], 'extra sec': [12, 17], 'extra dry': [12, 17], 'sec': [17, 32], 'demi-sec': [32, 50], 'demi sec': [32, 50], 'doux': [50, 300] }
@@ -400,7 +406,7 @@ const buildUserPrompt = (includeMaison: boolean): string => {
     'STEP 3 - Analisi VERITIERA, mai inventata (REGOLA #7): compila ogni campo SOLO se lo sai con certezza assoluta per QUESTA specifica bottiglia, altrimenti null. Un campo null è sempre meglio di un dato incerto o stimato. Ciò che si legge sull etichetta (produttore, cuvee, annata, dosaggio, tipo, numero di edizione) ha la priorità; tutto il resto solo se noto con certezza. Sii uguale di rigoroso per Champagne e per qualsiasi altro vino:\n' +
     '1. "cuvee": nome COMPLETO dell etichetta/vino SENZA produttore e SENZA annata. Per Champagne includi le denominazioni speciali (P2, P3, R.D., Belle Epoque, Rose, Blanc de Blancs) e, se presente, il numero di edizione/collection/cuvée (es. 173ème Édition, N° 746, Collection 244).\n' +
     '2. maturazione_mesi: mesi di affinamento sui lieviti dichiarati dal produttore o da fonti concordi per QUESTA cuvée e annata (non valori a memoria); altrimenti null. Nessuna stima per stile o denominazione.\n' +
-    '3. punteggi_trovati: elenca OGNI punteggio realmente letto su una pagina, pubblicato da un critico o da una guida riconosciuta (Suckling, Decanter, Wine Advocate/Parker, Wine Spectator, Wine Enthusiast, Vinous, Falstaff, Gambero Rosso, Bibenda...) per QUESTA cuvée e annata (per le Sans Année: per la cuvée), con la fonte. NON valgono voti di community (CellarTracker, Vivino), negozi, blog o influencer. Mai ricordare o stimare un punteggio: lista vuota se non ne hai letti.\n' +
+    '3. punteggi_trovati (IMPORTANTE: il punteggio è il dato che l utente cerca di più): elenca OGNI punteggio su scala 100 realmente letto su una pagina, di critici, guide o community (Suckling, Decanter, Wine Advocate/Parker, Wine Spectator, Wine Enthusiast, Vinous, Falstaff, Gambero Rosso, Bibenda, Juhlin, RVF, CellarTracker...) per QUESTA cuvée e annata (per le Sans Année: per la cuvée), con la fonte. Non convertire scale diverse dalla centesimale (Vivino su 5, Jancis su 20). Mai ricordare o stimare un punteggio: lista vuota se non ne hai letti.\n' +
     '4. Campi SOLO Champagne — pct_chardonnay, pct_pinot_noir, pct_meunier, dosage, dosaggio_gl, tipo, assemblaggio: solo se certi (dosage e tipo si leggono spesso in etichetta: ciò che è scritto in etichetta prevale sempre sul web). Se il vino è 100% di un vitigno gli altri due valgono 0. Se NON è Champagne lasciali tutti null e descrivi vitigno/blend dentro "provenienza_uve" solo se lo sai con certezza.\n' +
     '5. provenienza_uve, vinificazione, malolattica, produzione_bottiglie: solo se riportati dal sito del produttore o da almeno 2 fonti concordi; altrimenti null. note_degustazione, abbinamento, finestra_da/finestra_a: scrivili da sommelier esperto, coerenti con il profilo verificato (uvaggio, dosaggio, maturazione, annata) e con le descrizioni trovate; nessun dettaglio tecnico non verificato dentro i testi.\n' +
     '6. assemblaggio (solo Champagne), vedi REGOLA #8: (a) millesimato o edizione numerata: annate reali dei vins de base con % e vins de reserve con %; (b) Sans Année NON numerata: NESSUNA annata, solo percentuali senza anno. Solo se certo, e le % devono sommare 100; altrimenti null. L assemblaggio descrive SOLO annate dei vins de base e riserve: mai vitigni o villaggi (quelli hanno i loro campi). Non Champagne: null.\n' +
@@ -474,7 +480,7 @@ const buildWebHint = (id: { maison?: unknown; cuvee?: unknown; annata?: unknown 
     '\n\nRICERCA WEB OBBLIGATORIA: esegui TUTTE E 3 le ricerche, ciascuna con uno scopo diverso, includendo sempre produttore, cuvée e annata: ' +
     '(1) SCHEDA TECNICA, preferendo il sito ufficiale del produttore: uvaggio, assemblaggio, dosaggio, maturazione sui lieviti, vinificazione, malolattica, produzione; ' +
     '(2) PREZZI nei negozi e nelle enoteche italiane (euro, 75cl): cerca di trovarne almeno 3 di negozi diversi; ' +
-    '(3) PUNTEGGI e recensioni di critici e guide. ' +
+    '(3) PUNTEGGI su scala 100 di critici, guide e community: è il dato più importante per l utente, cercalo a fondo. ' +
     'REGOLE: i dati tecnici si compilano solo se li riporta il sito ufficiale del produttore oppure almeno 2 fonti indipendenti concordi; se le fonti si contraddicono: null. ' +
     'Ciò che si legge in etichetta (dosage, tipo, annata, numero di edizione) prevale sempre sul web. ' +
     'Prezzi e punteggi: considera solo pagine che riguardano ESATTAMENTE questa cuvée e annata (niente altre annate, magnum, mezze bottiglie o cofanetti). NON scegliere un valore, elenca in prezzi_trovati e punteggi_trovati TUTTI quelli realmente visti con la fonte (il calcolo lo fa il sistema); niente valori ricordati a memoria. ' +
