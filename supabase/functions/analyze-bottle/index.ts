@@ -149,20 +149,32 @@ const toNum = (v: unknown): number | null => {
   return null
 }
 // Solo critici e guide riconosciuti: niente voti di community (CellarTracker, Vivino), negozi o blog
-const CRITICI = /suckling|decanter|advocate|parker|spectator|enthusiast|vinous|galloni|falstaff|gambero|bibenda|gilman|view from the cellar|jancis|robinson|wine\s*&\s*spirits|dunnuck|romanelli|gusto critico|slow wine|veronelli|\bais\b|\brvf\b|revue du vin|bettane|desseauve|guide hachette|hachette|wine[- ]searcher critic|tanzer|burghound|james halliday|wine independent|robert parker/i
-const sanitizeAi = (ai: Record<string, unknown>): Record<string, unknown> => {
+const CRITICI = /suckling|decanter|advocate|parker|spectator|enthusiast|vinous|galloni|falstaff|gambero|bibenda|gilman|view from the cellar|jancis|robinson|wine\s*&\s*spirits|dunnuck|romanelli|gusto critico|slow wine|veronelli|\bais\b|\brvf\b|revue du vin|bettane|desseauve|guide hachette|hachette|tanzer|burghound|james halliday|wine independent|robert parker|juhlin|stelzer|jasper morris|inside burgundy/i
+// La ricerca web lascia nei testi dei segnaposto <cite index="...">: vanno tolti prima di salvare
+const stripCite = (v: unknown): unknown => {
+  if (typeof v === 'string') return v.replace(/<\/?cite[^>]*>/gi, '').replace(/\s{2,}/g, ' ').trim()
+  if (Array.isArray(v)) return v.map(stripCite)
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, stripCite(x)]))
+  return v
+}
+const sanitizeAi = (aiIn: Record<string, unknown>): Record<string, unknown> => {
+  const ai = stripCite(aiIn) as Record<string, unknown>
   const isEdition = ai.edizione_numerata === true
   if (isEdition) ai.is_sa = false
 
   // ── prezzo e punteggio: SOLO da valori realmente trovati (liste con fonte); il calcolo lo fa il codice, mai il modello ──
   const prezziRaw = (Array.isArray(ai.prezzi_trovati) ? ai.prezzi_trovati as any[] : [])
     .map(x => toNum(x?.prezzo)).filter((v): v is number => v !== null && v >= 8 && v <= 20000)
-  let prezzi = prezziRaw
-  if (prezziRaw.length >= 3) {
-    // scarta i valori fuori scala (formati diversi, magnum, errori): tieni quelli tra metà e doppio della mediana
-    const ord = [...prezziRaw].sort((a, b) => a - b)
-    const med = ord[Math.floor(ord.length / 2)]
-    prezzi = prezziRaw.filter(v => v >= med * 0.5 && v <= med * 2)
+  // Un prezzo è attendibile se almeno un altro negozio è entro il ±25%; i valori isolati (magnum, altra annata,
+  // errori) si scartano. Un solo prezzo trovato in assoluto si tiene (è un prezzo realmente visto).
+  let prezzi: number[] = []
+  if (prezziRaw.length === 1) prezzi = prezziRaw
+  else {
+    for (const v of prezziRaw) {
+      const g = prezziRaw.filter(x => x >= v * 0.8 && x <= v * 1.25)
+      if (g.length > prezzi.length) prezzi = g
+    }
+    if (prezzi.length < 2) prezzi = []
   }
   const r5 = (v: number) => Math.round(v / 5) * 5
   ai.prezzo_min = prezzi.length ? r5(Math.min(...prezzi)) : null
@@ -212,6 +224,10 @@ const sanitizeAi = (ai: Record<string, unknown>): Record<string, unknown> => {
       items = out
     }
   }
+  // Millesimato (non edizione numerata): per disciplinare l'uvaggio è al 100% della vendemmia dichiarata
+  if (!isEdition && ai.is_champagne === true && ai.is_sa === false && /^\d{4}$/.test(String(ai.annata ?? ''))) {
+    items = [{ anno: Number(ai.annata), perc: 100 }]
+  }
   ai.assemblaggio = items
 
   // Edizione numerata: annata prevalente derivata SOLO dall'assemblaggio già certo
@@ -226,6 +242,8 @@ const sanitizeAi = (ai: Record<string, unknown>): Record<string, unknown> => {
   if (isEdition && ai.annata && typeof ai.cuvee === 'string') {
     ai.cuvee = (ai.cuvee as string).replace(new RegExp('\\s+' + String(ai.annata) + '\\s*$'), '')
   }
+  // Edizione numerata SENZA annata base nota (es. riserva perpetua): si comporta da Sans Année, non da millesimato
+  if (isEdition && !ai.annata) ai.is_sa = true
   if (ai.is_sa === true) ai.annata = null
 
   // ── percentuali uvaggio: se presenti devono sommare ~100, altrimenti non sono certe ──
@@ -455,11 +473,11 @@ const buildWebHint = (id: { maison?: unknown; cuvee?: unknown; annata?: unknown 
   return ident +
     '\n\nRICERCA WEB OBBLIGATORIA: esegui TUTTE E 3 le ricerche, ciascuna con uno scopo diverso, includendo sempre produttore, cuvée e annata: ' +
     '(1) SCHEDA TECNICA, preferendo il sito ufficiale del produttore: uvaggio, assemblaggio, dosaggio, maturazione sui lieviti, vinificazione, malolattica, produzione; ' +
-    '(2) PREZZI nei negozi e nelle enoteche italiane (euro, 75cl); ' +
+    '(2) PREZZI nei negozi e nelle enoteche italiane (euro, 75cl): cerca di trovarne almeno 3 di negozi diversi; ' +
     '(3) PUNTEGGI e recensioni di critici e guide. ' +
     'REGOLE: i dati tecnici si compilano solo se li riporta il sito ufficiale del produttore oppure almeno 2 fonti indipendenti concordi; se le fonti si contraddicono: null. ' +
     'Ciò che si legge in etichetta (dosage, tipo, annata, numero di edizione) prevale sempre sul web. ' +
-    'Prezzi e punteggi: NON scegliere un valore, elenca in prezzi_trovati e punteggi_trovati TUTTI quelli realmente visti con la fonte (il calcolo lo fa il sistema); niente valori ricordati a memoria. ' +
+    'Prezzi e punteggi: considera solo pagine che riguardano ESATTAMENTE questa cuvée e annata (niente altre annate, magnum, mezze bottiglie o cofanetti). NON scegliere un valore, elenca in prezzi_trovati e punteggi_trovati TUTTI quelli realmente visti con la fonte (il calcolo lo fa il sistema); niente valori ricordati a memoria. ' +
     'Compila tutto ciò che è confermato; ciò che nessuna fonte riporta resta null.'
 }
 
