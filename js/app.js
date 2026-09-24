@@ -7320,7 +7320,7 @@ let _scanResult       = null;
 
 // Avvia la scansione (mode: 'explore' = pagina risultato | 'carnet' = compila form)
 const FREE_SCANS_PER_MONTH = 3;
-const PREMIUM_SCANS_PER_MONTH = 100;
+const PREMIUM_SCANS_PER_MONTH = 50;
 const PREMIUM_SCAN_WARNING_THRESHOLD = 3; // sotto questa soglia avvisiamo i Premium
 let _pendingScanMode = 'explore';
 
@@ -7435,7 +7435,7 @@ async function updateScanStatsUI() {
   }
 }
 
-// isPrem=true quando è un Premium in avvicinamento alle 100 scansioni mensili:
+// isPrem=true quando è un Premium in avvicinamento alle 50 scansioni mensili:
 // niente pitch "passa a Premium", messaggio e soglia diversi dal free.
 function _showScanRemainingModal(remaining, isPrem) {
   const modal = document.getElementById('scan-remaining-modal');
@@ -7452,12 +7452,12 @@ function _showScanRemainingModal(remaining, isPrem) {
 
   if (isPrem) {
     if (suffix1) suffix1.textContent = remaining === 1 ? ' scansione Premium rimasta' : ' scansioni Premium rimaste';
-    if (suffix2) suffix2.innerHTML = ' scansioni sommelier disponibili, su <strong>100 totali</strong>. Si rinnovano il 1° del mese prossimo.';
+    if (suffix2) suffix2.innerHTML = ' scansioni sommelier disponibili, su <strong>' + PREMIUM_SCANS_PER_MONTH + ' totali</strong>. Si rinnovano il 1° del mese prossimo.';
     if (sep)     sep.style.display = 'none';
     if (skipBtn) skipBtn.style.display = 'none';
   } else {
     if (suffix1) suffix1.textContent = ' scansioni gratuite rimaste';
-    if (suffix2) suffix2.innerHTML = ' scansioni gratuite disponibili. Con <strong>Cuvée Premium</strong> hai 100 scansioni sommelier al mese.';
+    if (suffix2) suffix2.innerHTML = ' scansioni gratuite disponibili. Con <strong>Cuvée Premium</strong> hai ' + PREMIUM_SCANS_PER_MONTH + ' scansioni sommelier al mese.';
     if (sep)     sep.style.display = '';
     if (skipBtn) skipBtn.style.display = '';
   }
@@ -7533,7 +7533,7 @@ async function _processScan(file, mode) {
     // 4. Gestione rate limit
     if (resp.status === 429) {
       _showScanLoading(false);
-      _showScanLimitModal(result.scan_limit === 100);
+      _showScanLimitModal(result.scan_limit === PREMIUM_SCANS_PER_MONTH);
       return;
     }
     if (!resp.ok || result.error) {
@@ -7607,7 +7607,7 @@ function _showScanLoading(show) {
 }
 
 // Modal rate limit — overlay in-app
-// isPrem=true quando è un Premium ad aver esaurito le 100 scansioni mensili:
+// isPrem=true quando è un Premium ad aver esaurito le 50 scansioni mensili:
 // in quel caso non ha senso mostrargli il pitch "passa a Premium".
 function _showScanLimitModal(isPrem) {
   const modal = document.getElementById('scan-limit-modal');
@@ -7620,7 +7620,7 @@ function _showScanLimitModal(isPrem) {
   const cta   = modal.querySelector('.btn-gold');
   if (isPrem) {
     if (title) title.textContent = 'Scansioni del mese terminate';
-    if (desc)  desc.innerHTML = 'Hai usato le <strong>100 scansioni sommelier</strong> incluse in Premium questo mese. Si rinnovano il 1° del mese prossimo.';
+    if (desc)  desc.innerHTML = 'Hai usato le <strong>' + PREMIUM_SCANS_PER_MONTH + ' scansioni sommelier</strong> incluse in Premium questo mese. Si rinnovano il 1° del mese prossimo.';
     [sep, label, feats, cta].forEach(el => { if (el) el.style.display = 'none'; });
   } else {
     if (title) title.textContent = 'Scansioni gratuite terminate';

@@ -560,7 +560,7 @@ serve(async (req) => {
     const isPremium = profile?.is_premium === true &&
       (!profile?.premium_until || new Date(profile.premium_until) > new Date())
 
-    const SCAN_LIMIT = isPremium ? 100 : 3
+    const SCAN_LIMIT = isPremium ? 50 : 3
 
     const monthStart = new Date()
     monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
@@ -582,8 +582,8 @@ serve(async (req) => {
         scans_used: scansUsed,
         scan_limit: SCAN_LIMIT,
         message: isPremium
-          ? 'Hai usato le 100 scansioni sommelier di questo mese. Si rinnovano il mese prossimo.'
-          : 'Hai usato le 3 scansioni mensili gratuite. Passa a Premium per 100 scansioni sommelier al mese.',
+          ? 'Hai usato le 50 scansioni sommelier di questo mese. Si rinnovano il mese prossimo.'
+          : 'Hai usato le 3 scansioni mensili gratuite. Passa a Premium per 50 scansioni sommelier al mese.',
       }, 429)
     }
 

@@ -3052,7 +3052,7 @@ async function showUserDetail(userId) {
     const paying = u.is_premium === true && u.premium_source === 'revenuecat' && !!u.premium_until && new Date(u.premium_until) > new Date()
 
     // Scansioni mensili: usa l'override manuale se impostato, altrimenti il conteggio reale
-    const scanLimit    = prem ? 100 : 3
+    const scanLimit    = prem ? 50 : 3
     const scansReal     = monthlyScanCount ?? 0
     const scanOverride  = u.scan_override ?? null
     const scansUsed     = scanOverride ?? scansReal
